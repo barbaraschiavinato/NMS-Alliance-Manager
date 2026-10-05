@@ -175,6 +175,7 @@ export function MissionDashboard({ currentMember }: Readonly<{ currentMember: Al
             missions={visibleMissions}
             currentMember={member}
             canManage={canManage}
+            members={members}
             onClaim={(mission) => void claimMission(mission).catch((error: unknown) => setNotice(error instanceof Error ? error.message : "Richiesta non riuscita."))}
             onComplete={(mission) => void completeMission(mission).catch((error: unknown) => setNotice(error instanceof Error ? error.message : "Richiesta non riuscita."))}
             onEdit={(mission) => openMission(mission)}

@@ -5,7 +5,6 @@ import {
   CirclePlus,
   Crosshair,
   Orbit,
-  ShieldCheck,
   Settings2,
   LogOut,
   UserRound,
@@ -93,14 +92,17 @@ export function MissionMetrics({ missions, counts }: Readonly<{
   missions: Mission[];
   counts: Record<MissionFilter, number>;
 }>) {
-  const highPriorityCount = missions.filter((mission) => mission.priority === "Urgente" || mission.priority === "Alta").length;
+  const highPriorityCount = missions.filter((mission) =>
+    mission.status !== "Completata" && (mission.priority === "Urgente" || mission.priority === "Alta"),
+  ).length;
+  const completedShare = missions.length > 0 ? Math.round((counts.Completata / missions.length) * 100) : 0;
 
   return (
     <section aria-label="Riepilogo missioni" className="metrics-row">
-      <div className="metric"><span className="metric-label">MISSIONI ATTIVE</span><strong>{counts["In corso"]}<small> / {missions.length}</small></strong><span className="metric-foot"><span className="metric-marker marker-green" />{counts["In attesa"]} in attesa di assegnazione</span></div>
-      <div className="metric"><span className="metric-label">COMPLETATE</span><strong>{String(counts.Completata).padStart(2, "0")}</strong><span className="metric-foot"><span className="metric-marker marker-coral" />Ultima attività · oggi</span></div>
-      <div className="metric"><span className="metric-label">PRIORITÀ ALTA</span><strong>{String(highPriorityCount).padStart(2, "0")}</strong><span className="metric-foot"><span className="metric-marker marker-yellow" />Richiedono attenzione</span></div>
-      <div className="metric metric-status"><span className="metric-label">STATO ALLEANZA</span><strong><span className="alliance-pulse" /> Operativa</strong><span className="metric-foot"><ShieldCheck size={14} /> Rete nominale</span></div>
+      <div className="metric"><span className="metric-label">MISSIONI ATTIVE</span><strong>{counts["In corso"]}<small> / {missions.length}</small></strong><span className="metric-foot"><span className="metric-marker marker-green" />{counts["In attesa"]} in attesa</span></div>
+      <div className="metric"><span className="metric-label">COMPLETATE</span><strong>{counts.Completata}</strong><span className="metric-foot"><span className="metric-marker marker-coral" />{completedShare}% del totale</span></div>
+      <div className="metric"><span className="metric-label">PRIORITÀ ALTA / URGENTE</span><strong>{highPriorityCount}</strong><span className="metric-foot"><span className="metric-marker marker-yellow" />Richiedono attenzione</span></div>
+      <div className="metric"><span className="metric-label">DA ASSEGNARE</span><strong>{counts["Attesa non assegnate"]}</strong><span className="metric-foot"><span className="metric-marker marker-coral" />In attesa senza assegnatario</span></div>
     </section>
   );
 }
