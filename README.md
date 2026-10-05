@@ -14,10 +14,12 @@ Apri http://localhost:3000. Senza `NMS_READ_WRITE_TOKEN` (o `BLOB_READ_WRITE_TOK
 ## Deploy su Vercel
 
 1. Importa il repository in Vercel e crea un Blob Store privato dal pannello Storage del progetto.
-2. Configura `NMS_STORE_ID`. Se Vercel rende disponibile `VERCEL_OIDC_TOKEN`, l'app usa l'autenticazione OIDC dello store; in alternativa configura `NMS_READ_WRITE_TOKEN` (è supportato anche `BLOB_READ_WRITE_TOKEN`).
-3. Esegui il deploy. Il servizio usa il file privato `alliance-manager/missions.json` nello store Blob; non usa il filesystem effimero della Function.
+2. Nella scheda **Projects** dello store scegli **Connect to Project** e abilita **Production**. Vercel configura `BLOB_STORE_ID`; l'app supporta anche `NMS_STORE_ID`. L'SDK recupera e aggiorna automaticamente il token OIDC fornito da Vercel: non copiarlo manualmente e non serve un read-write token. Blob e OIDC sono disponibili anche sul piano Hobby, entro i limiti del piano. Per ambienti senza OIDC puoi usare `NMS_READ_WRITE_TOKEN` (o `BLOB_READ_WRITE_TOKEN`).
+3. Esegui il deploy, oppure un **Redeploy** se hai appena collegato lo store o modificato le variabili. Il servizio usa il file privato `alliance-manager/missions.json` nello store Blob; non usa il filesystem effimero della Function.
 
 In produzione l'app rifiuta le operazioni di storage se non è configurata l'autenticazione OIDC o un read-write token. `NMS_WEBHOOK_PUBLIC_KEY` non autentica le operazioni Blob. Il file `.env.example` documenta le variabili; non inserire token in Git.
+
+Se dopo l'accesso Google compare un errore 500 con un log che richiede la configurazione Blob, verifica il collegamento dello store al progetto e la presenza di `BLOB_STORE_ID` o `NMS_STORE_ID` nell'ambiente **Production**, poi esegui un redeploy. La registrazione del profilo richiede lo storage anche prima dell'approvazione dell'account.
 
 ## Accesso e ruoli
 
