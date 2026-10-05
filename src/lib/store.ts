@@ -1,6 +1,7 @@
 import { get, put } from "@vercel/blob";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { getBlobReadWriteToken } from "@/lib/blob-config";
 import type { Mission } from "@/lib/missions";
 import { initialMissions } from "@/lib/seed";
 
@@ -30,16 +31,10 @@ function migrateMissions(value: unknown): Mission[] {
   });
 }
 
-function hasBlobStoreConfig() {
-  if (process.env.VERCEL && !process.env.BLOB_READ_WRITE_TOKEN) {
-    throw new Error("Configura un Vercel Blob Store per salvare le missioni in produzione.");
-  }
-  return Boolean(process.env.BLOB_READ_WRITE_TOKEN);
-}
-
 export async function readMissions(): Promise<Mission[]> {
-  if (hasBlobStoreConfig()) {
-    const blob = await get(blobPath, { access: "private", useCache: false });
+  const token = getBlobReadWriteToken();
+  if (token) {
+    const blob = await get(blobPath, { access: "private", useCache: false, token });
     if (!blob || blob.statusCode === 304) return initialMissions;
     return migrateMissions(JSON.parse(await new Response(blob.stream).text()));
   }
@@ -54,9 +49,11 @@ export async function readMissions(): Promise<Mission[]> {
 
 export async function writeMissions(missions: Mission[]): Promise<void> {
   const json = `${JSON.stringify(missions, null, 2)}\n`;
-  if (hasBlobStoreConfig()) {
+  const token = getBlobReadWriteToken();
+  if (token) {
     await put(blobPath, json, {
       access: "private",
+      token,
       addRandomSuffix: false,
       allowOverwrite: true,
       contentType: "application/json",

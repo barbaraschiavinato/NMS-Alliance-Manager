@@ -1,6 +1,7 @@
 import { get, put } from "@vercel/blob";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { getBlobReadWriteToken } from "@/lib/blob-config";
 import { memberRoles, memberSpecialties, membershipStatuses, nmsPlatforms } from "@/lib/member-types";
 import type { AllianceMember, AllianceSettings, MemberRole, MemberSpecialty, MembershipStatus, NmsPlatform } from "@/lib/member-types";
 
@@ -18,13 +19,6 @@ const defaultData: AccessData = {
   members: [],
   alliance: { name: "Nomad Syndicate", logoUrl: "", bannerUrl: "" },
 };
-
-function hasBlobStoreConfig() {
-  if (process.env.VERCEL && !process.env.BLOB_READ_WRITE_TOKEN) {
-    throw new Error("Configura Vercel Blob per salvare ruoli e impostazioni alleanza.");
-  }
-  return Boolean(process.env.BLOB_READ_WRITE_TOKEN);
-}
 
 function normalizeAccessData(value: unknown): AccessData {
   if (!value || typeof value !== "object") return defaultData;
@@ -67,8 +61,9 @@ function normalizeMember(value: unknown): AllianceMember | null {
 }
 
 export async function readAccessData(): Promise<AccessData> {
-  if (hasBlobStoreConfig()) {
-    const blob = await get(blobPath, { access: "private", useCache: false });
+  const token = getBlobReadWriteToken();
+  if (token) {
+    const blob = await get(blobPath, { access: "private", useCache: false, token });
     if (!blob || blob.statusCode === 304) return defaultData;
     return normalizeAccessData(JSON.parse(await new Response(blob.stream).text()));
   }
@@ -83,9 +78,11 @@ export async function readAccessData(): Promise<AccessData> {
 
 export async function writeAccessData(data: AccessData): Promise<void> {
   const json = `${JSON.stringify(data, null, 2)}\n`;
-  if (hasBlobStoreConfig()) {
+  const token = getBlobReadWriteToken();
+  if (token) {
     await put(blobPath, json, {
       access: "private",
+      token,
       addRandomSuffix: false,
       allowOverwrite: true,
       contentType: "application/json",

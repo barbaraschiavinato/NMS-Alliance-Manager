@@ -1,6 +1,7 @@
 import { get, put } from "@vercel/blob";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { getBlobReadWriteToken } from "@/lib/blob-config";
 import { decodePortalAddress } from "@/lib/missions";
 
 export type StationPortal = Readonly<{ portal: string; galaxy: number }>;
@@ -9,13 +10,6 @@ type StationIndex = Record<string, StationPortal[]>;
 
 const blobPath = "alliance-manager/stations.json";
 const localPath = path.join(process.cwd(), "data", "stations.json");
-
-function hasBlobStoreConfig() {
-  if (process.env.VERCEL && !process.env.BLOB_READ_WRITE_TOKEN) {
-    throw new Error("Configura Vercel Blob per salvare le stazioni spaziali.");
-  }
-  return Boolean(process.env.BLOB_READ_WRITE_TOKEN);
-}
 
 function normalizeStationIndex(value: unknown): StationIndex {
   if (!value || typeof value !== "object" || Array.isArray(value)) return {};
@@ -36,8 +30,9 @@ function normalizeStationIndex(value: unknown): StationIndex {
 }
 
 async function readStationIndex(): Promise<StationIndex> {
-  if (hasBlobStoreConfig()) {
-    const blob = await get(blobPath, { access: "private", useCache: false });
+  const token = getBlobReadWriteToken();
+  if (token) {
+    const blob = await get(blobPath, { access: "private", useCache: false, token });
     if (!blob || blob.statusCode === 304) return {};
     return normalizeStationIndex(JSON.parse(await new Response(blob.stream).text()));
   }
@@ -52,9 +47,11 @@ async function readStationIndex(): Promise<StationIndex> {
 
 async function writeStationIndex(index: StationIndex): Promise<void> {
   const json = `${JSON.stringify(index, null, 2)}\n`;
-  if (hasBlobStoreConfig()) {
+  const token = getBlobReadWriteToken();
+  if (token) {
     await put(blobPath, json, {
       access: "private",
+      token,
       addRandomSuffix: false,
       allowOverwrite: true,
       contentType: "application/json",

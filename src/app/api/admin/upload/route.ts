@@ -1,6 +1,7 @@
 import { put } from "@vercel/blob";
 import { NextResponse } from "next/server";
 import { getCurrentMember, hasRole } from "@/lib/authorization";
+import { getBlobReadWriteToken } from "@/lib/blob-config";
 
 const allowedTypes = new Set(["image/jpeg", "image/png", "image/webp", "image/avif"]);
 const maxUploadBytes = 5 * 1024 * 1024;
@@ -9,7 +10,13 @@ export async function POST(request: Request) {
   const member = await getCurrentMember();
   if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
   if (!hasRole(member, "admin")) return NextResponse.json({ error: "Permesso admin richiesto." }, { status: 403 });
-  if (!process.env.BLOB_READ_WRITE_TOKEN) return NextResponse.json({ error: "Configura Vercel Blob per caricare immagini." }, { status: 503 });
+  let token: string | undefined;
+  try {
+    token = getBlobReadWriteToken();
+  } catch {
+    return NextResponse.json({ error: "Configura il token Vercel Blob per caricare immagini." }, { status: 503 });
+  }
+  if (!token) return NextResponse.json({ error: "Configura il token Vercel Blob per caricare immagini." }, { status: 503 });
 
   const form = await request.formData().catch(() => null);
   const file = form?.get("image");
@@ -23,6 +30,7 @@ export async function POST(request: Request) {
       access: "private",
       addRandomSuffix: false,
       contentType: file.type,
+      token,
     });
     return NextResponse.json({ url: `/api/alliance/image?path=${encodeURIComponent(blob.pathname)}` });
   } catch (error) {

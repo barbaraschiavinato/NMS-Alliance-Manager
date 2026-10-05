@@ -9,15 +9,15 @@ npm install
 npm run dev
 ```
 
-Apri http://localhost:3000. Senza `BLOB_READ_WRITE_TOKEN`, l'app salva i dati in `data/missions.json` nella cartella di progetto. Il file è escluso da Git.
+Apri http://localhost:3000. Senza `NMS_READ_WRITE_TOKEN` (o `BLOB_READ_WRITE_TOKEN` come fallback), l'app salva i dati in `data/` nella cartella di progetto. I file dati sono esclusi da Git.
 
 ## Deploy su Vercel
 
 1. Importa il repository in Vercel e crea un Blob Store privato dal pannello Storage del progetto.
-2. Collega lo store al progetto Vercel per rendere disponibile `BLOB_READ_WRITE_TOKEN` nell'ambiente.
+2. Collega lo store al progetto Vercel con prefisso `NMS` per rendere disponibili `NMS_STORE_ID` e `NMS_READ_WRITE_TOKEN` nell'ambiente.
 3. Esegui il deploy. Il servizio usa il file privato `alliance-manager/missions.json` nello store Blob; non usa il filesystem effimero della Function.
 
-In produzione l'app rifiuta le operazioni di storage se il token Blob non è configurato. Il file d'ambiente `.env.example` documenta la variabile per lo sviluppo; non inserire token in Git.
+In produzione l'app rifiuta le operazioni di storage se il token Blob non è configurato. Il file `.env.example` documenta le variabili; non inserire token in Git.
 
 ## Accesso e ruoli
 

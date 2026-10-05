@@ -1,6 +1,7 @@
 import { get, put } from "@vercel/blob";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { getBlobReadWriteToken } from "@/lib/blob-config";
 
 type AlmanacResponse = Record<string, unknown>;
 type AlmanacResponseIndex = Record<string, Record<string, AlmanacResponse>>;
@@ -8,13 +9,6 @@ export type CachedAlmanacPlanet = Readonly<{ galaxy: number; response: AlmanacRe
 
 const blobPath = "alliance-manager/almanac.json";
 const localPath = path.join(process.cwd(), "data", "almanac.json");
-
-function hasBlobStoreConfig() {
-  if (process.env.VERCEL && !process.env.BLOB_READ_WRITE_TOKEN) {
-    throw new Error("Configura Vercel Blob per archiviare le risposte Almanac.");
-  }
-  return Boolean(process.env.BLOB_READ_WRITE_TOKEN);
-}
 
 function normalizeAlmanacIndex(value: unknown): AlmanacResponseIndex {
   if (!value || typeof value !== "object" || Array.isArray(value)) return {};
@@ -33,8 +27,9 @@ function normalizeAlmanacIndex(value: unknown): AlmanacResponseIndex {
 }
 
 async function readAlmanacIndex(): Promise<AlmanacResponseIndex> {
-  if (hasBlobStoreConfig()) {
-    const blob = await get(blobPath, { access: "private", useCache: false });
+  const token = getBlobReadWriteToken();
+  if (token) {
+    const blob = await get(blobPath, { access: "private", useCache: false, token });
     if (!blob || blob.statusCode === 304) return {};
     return normalizeAlmanacIndex(JSON.parse(await new Response(blob.stream).text()));
   }
@@ -49,9 +44,11 @@ async function readAlmanacIndex(): Promise<AlmanacResponseIndex> {
 
 async function writeAlmanacIndex(index: AlmanacResponseIndex): Promise<void> {
   const json = `${JSON.stringify(index, null, 2)}\n`;
-  if (hasBlobStoreConfig()) {
+  const token = getBlobReadWriteToken();
+  if (token) {
     await put(blobPath, json, {
       access: "private",
+      token,
       addRandomSuffix: false,
       allowOverwrite: true,
       contentType: "application/json",
