@@ -24,7 +24,7 @@ function migrateMissions(value: unknown): Mission[] {
       system: typeof mission.system === "string" ? mission.system : "",
       systemAddress: missingAddress ? matchingSeed?.systemAddress ?? "" : mission.systemAddress,
       galaxy,
-      targetSpecialty: mission.targetSpecialty === "builder" || mission.targetSpecialty === "ranger" || mission.targetSpecialty === "explorer" || mission.targetSpecialty === "all"
+      targetSpecialty: mission.targetSpecialty === "builder" || mission.targetSpecialty === "ranger" || mission.targetSpecialty === "explorer" || mission.targetSpecialty === "other" || mission.targetSpecialty === "all"
         ? mission.targetSpecialty
         : "all",
     } as Mission;
