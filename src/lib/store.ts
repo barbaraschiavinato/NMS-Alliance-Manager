@@ -1,7 +1,7 @@
 import { get, put } from "@vercel/blob";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { getBlobReadWriteToken } from "@/lib/blob-config";
+import { getBlobAuthOptions } from "@/lib/blob-config";
 import type { Mission } from "@/lib/missions";
 import { initialMissions } from "@/lib/seed";
 
@@ -32,9 +32,9 @@ function migrateMissions(value: unknown): Mission[] {
 }
 
 export async function readMissions(): Promise<Mission[]> {
-  const token = getBlobReadWriteToken();
-  if (token) {
-    const blob = await get(blobPath, { access: "private", useCache: false, token });
+  const blobAuthOptions = getBlobAuthOptions();
+  if (blobAuthOptions) {
+    const blob = await get(blobPath, { access: "private", useCache: false, ...blobAuthOptions });
     if (!blob || blob.statusCode === 304) return initialMissions;
     return migrateMissions(JSON.parse(await new Response(blob.stream).text()));
   }
@@ -49,11 +49,11 @@ export async function readMissions(): Promise<Mission[]> {
 
 export async function writeMissions(missions: Mission[]): Promise<void> {
   const json = `${JSON.stringify(missions, null, 2)}\n`;
-  const token = getBlobReadWriteToken();
-  if (token) {
+  const blobAuthOptions = getBlobAuthOptions();
+  if (blobAuthOptions) {
     await put(blobPath, json, {
       access: "private",
-      token,
+      ...blobAuthOptions,
       addRandomSuffix: false,
       allowOverwrite: true,
       contentType: "application/json",

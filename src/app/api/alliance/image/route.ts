@@ -1,7 +1,7 @@
 import { get } from "@vercel/blob";
 import { NextResponse } from "next/server";
 import { getCurrentMember } from "@/lib/authorization";
-import { getBlobReadWriteToken } from "@/lib/blob-config";
+import { getBlobAuthOptions } from "@/lib/blob-config";
 
 export async function GET(request: Request) {
   const member = await getCurrentMember();
@@ -12,9 +12,9 @@ export async function GET(request: Request) {
   }
 
   try {
-    const token = getBlobReadWriteToken();
-    if (!token) return NextResponse.json({ error: "Immagine non trovata." }, { status: 404 });
-    const blob = await get(path, { access: "private", useCache: false, token });
+    const blobAuthOptions = getBlobAuthOptions();
+    if (!blobAuthOptions) return NextResponse.json({ error: "Immagine non trovata." }, { status: 404 });
+    const blob = await get(path, { access: "private", useCache: false, ...blobAuthOptions });
     if (!blob || blob.statusCode === 304) return NextResponse.json({ error: "Immagine non trovata." }, { status: 404 });
     return new Response(blob.stream, {
       headers: {

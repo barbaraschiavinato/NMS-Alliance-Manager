@@ -14,10 +14,10 @@ Apri http://localhost:3000. Senza `NMS_READ_WRITE_TOKEN` (o `BLOB_READ_WRITE_TOK
 ## Deploy su Vercel
 
 1. Importa il repository in Vercel e crea un Blob Store privato dal pannello Storage del progetto.
-2. Collega lo store al progetto Vercel con prefisso `NMS` per rendere disponibili `NMS_STORE_ID` e `NMS_READ_WRITE_TOKEN` nell'ambiente.
+2. Configura `NMS_STORE_ID`. Se Vercel rende disponibile `VERCEL_OIDC_TOKEN`, l'app usa l'autenticazione OIDC dello store; in alternativa configura `NMS_READ_WRITE_TOKEN` (è supportato anche `BLOB_READ_WRITE_TOKEN`).
 3. Esegui il deploy. Il servizio usa il file privato `alliance-manager/missions.json` nello store Blob; non usa il filesystem effimero della Function.
 
-In produzione l'app rifiuta le operazioni di storage se il token Blob non è configurato. Il file `.env.example` documenta le variabili; non inserire token in Git.
+In produzione l'app rifiuta le operazioni di storage se non è configurata l'autenticazione OIDC o un read-write token. `NMS_WEBHOOK_PUBLIC_KEY` non autentica le operazioni Blob. Il file `.env.example` documenta le variabili; non inserire token in Git.
 
 ## Accesso e ruoli
 

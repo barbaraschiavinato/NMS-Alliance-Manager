@@ -1,7 +1,7 @@
 import { get, put } from "@vercel/blob";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { getBlobReadWriteToken } from "@/lib/blob-config";
+import { getBlobAuthOptions } from "@/lib/blob-config";
 import { memberRoles, memberSpecialties, membershipStatuses, nmsPlatforms } from "@/lib/member-types";
 import type { AllianceMember, AllianceSettings, MemberRole, MemberSpecialty, MembershipStatus, NmsPlatform } from "@/lib/member-types";
 
@@ -61,9 +61,9 @@ function normalizeMember(value: unknown): AllianceMember | null {
 }
 
 export async function readAccessData(): Promise<AccessData> {
-  const token = getBlobReadWriteToken();
-  if (token) {
-    const blob = await get(blobPath, { access: "private", useCache: false, token });
+  const blobAuthOptions = getBlobAuthOptions();
+  if (blobAuthOptions) {
+    const blob = await get(blobPath, { access: "private", useCache: false, ...blobAuthOptions });
     if (!blob || blob.statusCode === 304) return defaultData;
     return normalizeAccessData(JSON.parse(await new Response(blob.stream).text()));
   }
@@ -78,11 +78,11 @@ export async function readAccessData(): Promise<AccessData> {
 
 export async function writeAccessData(data: AccessData): Promise<void> {
   const json = `${JSON.stringify(data, null, 2)}\n`;
-  const token = getBlobReadWriteToken();
-  if (token) {
+  const blobAuthOptions = getBlobAuthOptions();
+  if (blobAuthOptions) {
     await put(blobPath, json, {
       access: "private",
-      token,
+      ...blobAuthOptions,
       addRandomSuffix: false,
       allowOverwrite: true,
       contentType: "application/json",
