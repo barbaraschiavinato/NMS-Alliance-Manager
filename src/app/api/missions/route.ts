@@ -3,6 +3,7 @@ import { canViewMission, isMissionInput, type Mission } from "@/lib/missions";
 import { readMissions, writeMissions } from "@/lib/store";
 import { getCurrentMember, hasRole } from "@/lib/authorization";
 import { readStationPortals } from "@/lib/stations-store";
+import { isValidNmsFriendCode } from "@/lib/member-types";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -86,6 +87,6 @@ async function findAssignableMember(email: string) {
   const { readAccessData } = await import("@/lib/access-store");
   const data = await readAccessData();
   return data.members.find((candidate) =>
-    candidate.email === email.trim().toLowerCase() && candidate.membershipStatus === "approved" && candidate.nmsName && /^\d{12}$/.test(candidate.nmsCode) && candidate.platforms.length > 0 && candidate.specialty,
+    candidate.email === email.trim().toLowerCase() && candidate.membershipStatus === "approved" && candidate.nmsName && isValidNmsFriendCode(candidate.nmsCode) && candidate.platforms.length > 0 && candidate.specialty,
   ) ?? null;
 }

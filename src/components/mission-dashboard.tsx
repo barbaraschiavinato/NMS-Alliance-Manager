@@ -17,6 +17,7 @@ import { initialMissions } from "@/lib/seed";
 import { AdminPanel } from "@/components/admin-panel";
 import { MemberProfilePanel } from "@/components/member-profile-panel";
 import { PlanetCard } from "@/components/planet-card";
+import { isValidNmsFriendCode } from "@/lib/member-types";
 
 export function MissionDashboard({ currentMember }: Readonly<{ currentMember: AllianceMember }>) {
   const [member, setMember] = useState(currentMember);
@@ -34,7 +35,7 @@ export function MissionDashboard({ currentMember }: Readonly<{ currentMember: Al
   const [profileOpen, setProfileOpen] = useState(false);
   const searchInput = useRef<HTMLInputElement>(null);
   const canManage = member.role === "moderator" || member.role === "admin";
-  const profileComplete = Boolean(member.nmsName.trim() && /^\d{12}$/.test(member.nmsCode) && member.platforms.length > 0 && member.specialty);
+  const profileComplete = Boolean(member.nmsName.trim() && isValidNmsFriendCode(member.nmsCode) && member.platforms.length > 0 && member.specialty);
 
   useEffect(() => {
     fetch("/api/missions", { cache: "no-store" })

@@ -19,7 +19,7 @@ export async function PATCH(request: Request) {
   if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
   const input: unknown = await request.json().catch(() => null);
   if (!isMemberProfileInput(input)) {
-    return NextResponse.json({ error: "Inserisci nome NMS, codice amico di 12 cifre, almeno una piattaforma e una specializzazione." }, { status: 400 });
+    return NextResponse.json({ error: "Inserisci nome NMS, codice amico NMS di 13 caratteri alfanumerici, almeno una piattaforma e una specializzazione." }, { status: 400 });
   }
   const updated = await updateMemberProfile(member.email, input);
   if (!updated) return NextResponse.json({ error: "Profilo non trovato." }, { status: 404 });

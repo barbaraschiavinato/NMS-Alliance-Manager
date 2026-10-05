@@ -8,6 +8,14 @@ export type MemberSpecialty = (typeof memberSpecialties)[number];
 export const membershipStatuses = ["pending", "approved", "blocked"] as const;
 export type MembershipStatus = (typeof membershipStatuses)[number];
 
+export function normalizeNmsFriendCode(value: string) {
+  return value.toUpperCase().replace(/[\s-]/g, "");
+}
+
+export function isValidNmsFriendCode(value: string) {
+  return /^[A-Z0-9]{13}$/.test(normalizeNmsFriendCode(value));
+}
+
 export type AllianceMember = {
   email: string;
   name: string;

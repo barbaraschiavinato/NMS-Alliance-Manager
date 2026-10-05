@@ -29,7 +29,7 @@ Gli account Google verificati entrano come utenti normali; l'admin può promuove
 
 Ogni nuovo account Google resta in attesa finché un moderatore o admin non lo approva. Gli account pendenti possono completare solo il proprio profilo; missioni, membri e branding restano inaccessibili fino all'approvazione. Moderatori e admin possono anche bloccare account o rimuoverli dalla lista alleanza; il blocco nega l'accesso, mentre la cancellazione rimuove il profilo e un successivo nuovo login richiede una nuova approvazione. I moderatori possono gestire utenti normali, l'admin anche moderatori; l'account admin configurato non può essere bloccato o eliminato. L'admin iniziale configurato in `ALLIANCE_ADMIN_EMAIL` viene approvato automaticamente.
 
-Ogni membro completa il proprio profilo con nome in gioco, codice amico NMS di 12 cifre, una o più piattaforme (PC, PlayStation, Xbox, Nintendo Switch, Mac) e una specializzazione (Costruttore, Ranger o Esploratore). Il ruolo non è modificabile dall'utente. Non si possono prendere o assegnare missioni a profili incompleti.
+Ogni membro completa il proprio profilo con nome in gioco, codice amico NMS alfanumerico di 13 caratteri, una o più piattaforme (PC, PlayStation, Xbox, Nintendo Switch, Mac) e una specializzazione (Costruttore, Ranger o Esploratore). Il ruolo non è modificabile dall'utente. Non si possono prendere o assegnare missioni a profili incompleti.
 
 ## Verifica
 

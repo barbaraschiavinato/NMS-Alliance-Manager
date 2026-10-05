@@ -2,7 +2,7 @@ import { get, put } from "@vercel/blob";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { getBlobAuthOptions } from "@/lib/blob-config";
-import { memberRoles, memberSpecialties, membershipStatuses, nmsPlatforms } from "@/lib/member-types";
+import { isValidNmsFriendCode, memberRoles, memberSpecialties, membershipStatuses, normalizeNmsFriendCode, nmsPlatforms } from "@/lib/member-types";
 import type { AllianceMember, AllianceSettings, MemberRole, MemberSpecialty, MembershipStatus, NmsPlatform } from "@/lib/member-types";
 
 export { memberRoles, memberSpecialties, membershipStatuses, nmsPlatforms } from "@/lib/member-types";
@@ -167,7 +167,7 @@ export function isMemberProfileInput(value: unknown): value is MemberProfileInpu
   const profile = value as Record<string, unknown>;
   return typeof profile.nmsName === "string" &&
     profile.nmsName.trim().length > 0 && profile.nmsName.trim().length <= 40 &&
-    typeof profile.nmsCode === "string" && /^\d{12}$/.test(profile.nmsCode) &&
+    typeof profile.nmsCode === "string" && isValidNmsFriendCode(profile.nmsCode) &&
     Array.isArray(profile.platforms) && profile.platforms.length > 0 &&
     profile.platforms.every((platform) => nmsPlatforms.includes(platform as NmsPlatform)) &&
     memberSpecialties.includes(profile.specialty as MemberSpecialty);
@@ -179,7 +179,7 @@ export async function updateMemberProfile(email: string, profile: MemberProfileI
   const member = data.members.find((item) => item.email === normalizedEmail);
   if (!member) return null;
   member.nmsName = profile.nmsName.trim();
-  member.nmsCode = profile.nmsCode;
+  member.nmsCode = normalizeNmsFriendCode(profile.nmsCode);
   member.platforms = [...new Set(profile.platforms)];
   member.specialty = profile.specialty;
   await writeAccessData(data);

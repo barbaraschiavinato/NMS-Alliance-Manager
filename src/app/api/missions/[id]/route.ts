@@ -3,6 +3,7 @@ import { isMissionInput, type MissionStatus } from "@/lib/missions";
 import { readMissions, writeMissions } from "@/lib/store";
 import { getCurrentMember, hasRole } from "@/lib/authorization";
 import { missionStatuses } from "@/lib/missions";
+import { isValidNmsFriendCode } from "@/lib/member-types";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -25,7 +26,7 @@ export async function PATCH(request: Request, context: RouteContext) {
         const { readAccessData } = await import("@/lib/access-store");
         const access = await readAccessData();
         const assignee = access.members.find((candidate) =>
-          candidate.email === assignedEmail && candidate.membershipStatus === "approved" && candidate.nmsName && /^\d{12}$/.test(candidate.nmsCode) && candidate.platforms.length > 0 && candidate.specialty,
+          candidate.email === assignedEmail && candidate.membershipStatus === "approved" && candidate.nmsName && isValidNmsFriendCode(candidate.nmsCode) && candidate.platforms.length > 0 && candidate.specialty,
         );
         if (!assignee) return NextResponse.json({ error: "Membro assegnatario non trovato." }, { status: 400 });
         assignedTo = assignee.nmsName || assignee.name;

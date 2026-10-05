@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentMember } from "@/lib/authorization";
 import { readMissions, writeMissions } from "@/lib/store";
+import { isValidNmsFriendCode } from "@/lib/member-types";
 import type { Mission } from "@/lib/missions";
 
 type RouteContext = { params: Promise<{ id: string }> };
@@ -8,7 +9,7 @@ type RouteContext = { params: Promise<{ id: string }> };
 export async function POST(_request: Request, context: RouteContext) {
   const member = await getCurrentMember();
   if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
-  if (!member.nmsName.trim() || !/^\d{12}$/.test(member.nmsCode) || member.platforms.length === 0 || !member.specialty) {
+  if (!member.nmsName.trim() || !isValidNmsFriendCode(member.nmsCode) || member.platforms.length === 0 || !member.specialty) {
     return NextResponse.json({ error: "Completa prima il tuo profilo NMS con nome, codice amico, piattaforme e specializzazione." }, { status: 409 });
   }
 

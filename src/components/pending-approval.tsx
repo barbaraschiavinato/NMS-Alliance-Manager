@@ -4,12 +4,12 @@ import { useState } from "react";
 import { signOut } from "next-auth/react";
 import { CircleAlert, LogOut, Orbit, UserRound } from "lucide-react";
 import { MemberProfilePanel } from "@/components/member-profile-panel";
-import type { AllianceMember } from "@/lib/member-types";
+import { isValidNmsFriendCode, type AllianceMember } from "@/lib/member-types";
 
 export function PendingApproval({ member }: Readonly<{ member: AllianceMember }>) {
   const [profile, setProfile] = useState(member);
   const [profileOpen, setProfileOpen] = useState(false);
-  const complete = Boolean(profile.nmsName && profile.nmsCode && profile.platforms.length && profile.specialty);
+  const complete = Boolean(profile.nmsName && isValidNmsFriendCode(profile.nmsCode) && profile.platforms.length && profile.specialty);
 
   return (
     <main className="login-screen">

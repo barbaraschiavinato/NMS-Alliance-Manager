@@ -2,7 +2,7 @@
 
 import { useState, type SubmitEvent } from "react";
 import { Compass, Hammer, Search, Check, CircleAlert, X } from "lucide-react";
-import { memberSpecialties, nmsPlatforms, type AllianceMember, type MemberRole, type MemberSpecialty, type NmsPlatform } from "@/lib/member-types";
+import { isValidNmsFriendCode, memberSpecialties, normalizeNmsFriendCode, nmsPlatforms, type AllianceMember, type MemberRole, type MemberSpecialty, type NmsPlatform } from "@/lib/member-types";
 
 const roleLabels: Record<MemberRole, string> = {
   user: "Utente",
@@ -74,14 +74,15 @@ export function MemberProfilePanel({ member, onClose, onSaved }: Readonly<{
             <input autoComplete="nickname" maxLength={40} onChange={(event) => setNmsName(event.target.value)} placeholder="Nome comandante" required value={nmsName} />
           </label>
           <label className="field full-field">
-            <span>Codice amico NMS <small>12 cifre</small></span>
+            <span>Codice amico NMS <small>13 caratteri alfanumerici</small></span>
             <input
               autoComplete="off"
-              inputMode="numeric"
-              maxLength={12}
-              onChange={(event) => setNmsCode(event.target.value.replace(/\D/g, "").slice(0, 12))}
-              pattern="\d{12}"
-              placeholder="0000 0000 0000"
+              autoCapitalize="characters"
+              inputMode="text"
+              maxLength={15}
+              onChange={(event) => setNmsCode(normalizeNmsFriendCode(event.target.value).slice(0, 13))}
+              pattern="[A-Z0-9]{13}"
+              placeholder="JZKW-8HFP-6DCAG"
               required
               value={nmsCode}
             />
@@ -113,7 +114,7 @@ export function MemberProfilePanel({ member, onClose, onSaved }: Readonly<{
           <div className="dialog-actions">
             <span className="action-spacer" />
             <button className="quiet-button" onClick={onClose} type="button">Chiudi</button>
-            <button className="primary-button" disabled={busy || !nmsName.trim() || nmsCode.length !== 12 || platforms.length === 0 || !specialty} type="submit">{busy ? "Salvataggio…" : "Salva profilo"}</button>
+            <button className="primary-button" disabled={busy || !nmsName.trim() || !isValidNmsFriendCode(nmsCode) || platforms.length === 0 || !specialty} type="submit">{busy ? "Salvataggio…" : "Salva profilo"}</button>
           </div>
         </form>
       </dialog>
