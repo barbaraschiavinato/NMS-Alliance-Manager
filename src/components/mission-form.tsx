@@ -16,6 +16,7 @@ import { galaxyNames, galaxyLabel } from "@/lib/galaxies";
 
 const specialtyNames: Record<MemberSpecialty, string> = { builder: "Costruttore", ranger: "Ranger", explorer: "Esploratore" };
 const targetNames: Record<MissionSpecialty, string> = { all: "Tutti", builder: "Costruttori", ranger: "Ranger", explorer: "Esploratori", other: "Altro" };
+export type StationOwnerOption = Readonly<{ portal: string; galaxy: number; owner: string }>;
 
 const emptyMission: MissionInput = {
   title: "",
@@ -39,6 +40,7 @@ export function MissionForm({
   onSave,
   onDelete,
   members,
+  stationOwners,
   initialValues,
   availableSpecialties,
 }: Readonly<{
@@ -47,6 +49,7 @@ export function MissionForm({
   onSave: (input: MissionInput) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
   members: AllianceMember[];
+  stationOwners: StationOwnerOption[];
   initialValues?: Partial<MissionInput>;
   availableSpecialties?: MissionSpecialty[];
 }>) {
@@ -63,6 +66,9 @@ export function MissionForm({
   const systemLookup = addressComplete
     ? matchingLookup ?? { address: form.systemAddress, galaxy: form.galaxy, status: "checking" as const }
     : null;
+  const matchingStationOwners = stationOwners.filter((station) =>
+    station.portal === form.systemAddress.toUpperCase() && station.galaxy === form.galaxy,
+  );
   let submitLabel = "Crea missione";
   if (saving) submitLabel = "Salvataggio…";
   else if (mission) submitLabel = "Salva modifiche";
@@ -142,6 +148,8 @@ export function MissionForm({
           </label>
           <SystemAddressField address={form.systemAddress} galaxy={form.galaxy} onChange={(value) => {
             update("systemAddress", value);
+            update("stationOwnerEmail", undefined);
+            update("stationOwnerName", undefined);
             resetAlmanacSystemData();
             setAddressValidation({ valid: false, lookup: null });
           }} onLookupResolved={handleSystemLookup} onStateChange={setAddressValidation} />
@@ -157,6 +165,8 @@ export function MissionForm({
               <span>Galassia <b>{galaxyLabel(form.galaxy)}</b></span>
               <select aria-label="Galassia" onChange={(event) => {
                 update("galaxy", Number(event.target.value));
+                update("stationOwnerEmail", undefined);
+                update("stationOwnerName", undefined);
                 resetAlmanacSystemData();
                 setAddressValidation((current) => ({ ...current, lookup: null }));
               }} required value={form.galaxy}>
@@ -167,6 +177,20 @@ export function MissionForm({
               <span>Missione per</span>
               <select onChange={(event) => update("targetSpecialty", event.target.value as MissionSpecialty)} value={form.targetSpecialty}>
                 {(availableSpecialties ?? missionSpecialties).map((specialty) => <option disabled={Boolean(mission) && specialty === "all"} key={specialty} value={specialty}>{targetNames[specialty]}</option>)}
+              </select>
+            </label>
+            <label className="field">
+              <span>Scopritore del sistema</span>
+              <select onChange={(event) => {
+                update("stationOwnerEmail", event.target.value || undefined);
+                update("stationOwnerName", undefined);
+              }} value={form.stationOwnerEmail ?? ""}>
+                <option value="">Non indicato</option>
+                {form.stationOwnerEmail && !matchingStationOwners.some((station) => station.owner === form.stationOwnerEmail) && <option value={form.stationOwnerEmail}>{form.stationOwnerName || form.stationOwnerEmail}</option>}
+                {matchingStationOwners.map((station) => {
+                  const owner = members.find((candidate) => candidate.email === station.owner);
+                  return <option key={station.owner} value={station.owner}>{owner?.nmsName || owner?.name || station.owner}</option>;
+                })}
               </select>
             </label>
             <label className="field">
@@ -186,10 +210,6 @@ export function MissionForm({
                   {form.assignedTo && !form.assignedEmail && <option value="__legacy">{form.assignedTo} · assegnazione esistente</option>}
                   {members.map((candidate) => <option key={candidate.email} value={candidate.email}>{candidate.nmsName || candidate.name} · {candidate.specialty ? specialtyNames[candidate.specialty] : "Specializzazione da completare"} · {candidate.nmsCode} · {candidate.platforms.join(", ")}</option>)}
                 </select>
-            </label>
-            <label className="field">
-              <span>Scadenza</span>
-              <input onChange={(event) => update("dueDate", event.target.value)} required type="date" value={form.dueDate} />
             </label>
             <label className="field">
               <span>Priorità</span>

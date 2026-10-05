@@ -314,6 +314,7 @@ export function StationsPage({ currentMember, alliance, missionCount }: Readonly
         onClose={() => setMissionStation(null)}
         onDelete={async () => undefined}
         onSave={(input) => createMissionFromStation({ ...input, stationOwnerEmail: missionStation.ownerEmail })}
+        stationOwners={stations}
       />}
     </div>
   );

@@ -9,7 +9,7 @@ import {
   MissionHero,
   MissionMetrics,
 } from "@/components/dashboard-chrome";
-import { MissionForm } from "@/components/mission-form";
+import { MissionForm, type StationOwnerOption } from "@/components/mission-form";
 import { MissionTable, type MissionFilter } from "@/components/mission-table";
 import { canViewMission, type Mission, type MissionInput } from "@/lib/missions";
 import type { AllianceMember, AllianceSettings } from "@/lib/access-store";
@@ -28,8 +28,8 @@ export function MissionDashboard({ currentMember }: Readonly<{ currentMember: Al
   const [planetMission, setPlanetMission] = useState<Mission | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [notice, setNotice] = useState("");
-  const [sortAscending, setSortAscending] = useState(true);
   const [members, setMembers] = useState<AllianceMember[]>([]);
+  const [stationOwners, setStationOwners] = useState<StationOwnerOption[]>([]);
   const [alliance, setAlliance] = useState<AllianceSettings>({ name: "Nomad Syndicate", logoUrl: "", bannerUrl: "" });
   const [adminOpen, setAdminOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -57,6 +57,23 @@ export function MissionDashboard({ currentMember }: Readonly<{ currentMember: Al
           setMembers(await response.json() as AllianceMember[]);
         })
         .catch(() => setMembers([]));
+      fetch("/api/stations", { cache: "no-store" })
+        .then(async (response) => {
+          if (!response.ok) throw new Error("Impossibile caricare i proprietari delle stazioni.");
+          const body: unknown = await response.json();
+          if (!body || typeof body !== "object" || !("stations" in body) || !Array.isArray(body.stations)) {
+            throw new Error("Elenco stazioni non valido.");
+          }
+          const options = body.stations.flatMap((value): StationOwnerOption[] => {
+            if (!value || typeof value !== "object") return [];
+            const station = value as Record<string, unknown>;
+            return typeof station.portal === "string" && typeof station.galaxy === "number" && typeof station.owner === "string"
+              ? [{ portal: station.portal, galaxy: station.galaxy, owner: station.owner }]
+              : [];
+          });
+          setStationOwners(options);
+        })
+        .catch(() => setStationOwners([]));
     }
   }, [canManage]);
 
@@ -84,7 +101,7 @@ export function MissionDashboard({ currentMember }: Readonly<{ currentMember: Al
       return mission.status === filter;
     })
     .filter((mission) => `${mission.title} ${mission.system} ${mission.assignedTo}`.toLowerCase().includes(search.toLowerCase()))
-    .sort((a, b) => a.dueDate.localeCompare(b.dueDate) * (sortAscending ? 1 : -1)), [availableMissions, filter, search, sortAscending]);
+    , [availableMissions, filter, search]);
 
   async function saveMission(input: MissionInput) {
     const editing = dialogMission;
@@ -168,16 +185,14 @@ export function MissionDashboard({ currentMember }: Readonly<{ currentMember: Al
             onOpenPlanet={setPlanetMission}
             onFilterChange={setFilter}
             onSearchChange={setSearch}
-            onSortChange={() => setSortAscending((current) => !current)}
             search={search}
             searchInput={searchInput}
-            sortAscending={sortAscending}
           />
           <DashboardFooter />
         </div>
       </section>
       {notice && <output className="toast" aria-live="polite"><Check size={15} />{notice}<button aria-label="Chiudi notifica" onClick={() => setNotice("")} type="button"><X size={14} /></button></output>}
-      {dialogOpen && <MissionForm members={members} mission={dialogMission} onClose={() => setDialogOpen(false)} onDelete={deleteMission} onSave={saveMission} />}
+      {dialogOpen && <MissionForm members={members} mission={dialogMission} onClose={() => setDialogOpen(false)} onDelete={deleteMission} onSave={saveMission} stationOwners={stationOwners} />}
       {planetMission && <PlanetCard key={planetMission.id} contextLabel={planetMission.system} galaxy={planetMission.galaxy} onClose={() => setPlanetMission(null)} portal={planetMission.systemAddress} title={planetMission.title} />}
       {adminOpen && <AdminPanel onClose={() => setAdminOpen(false)} onSaved={setAlliance} />}
       {profileOpen && <MemberProfilePanel member={member} onClose={() => setProfileOpen(false)} onSaved={(profile) => setMember((current) => ({ ...current, ...profile }))} />}

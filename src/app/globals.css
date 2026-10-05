@@ -156,7 +156,8 @@ kbd { display: inline-flex; align-items: center; gap: 2px; padding: 2px 4px; col
 .sector-cell, .assignee-cell { display: inline-flex; align-items: center; gap: 7px; }
 .sector-dot { width: 6px; height: 6px; border-radius: 50%; background: #d4a767; }
 .system-cell { display: grid; gap: 5px; justify-items: start; }
-.system-caption { max-width: 205px; overflow: hidden; color: #68756c; font-size: 8px; text-overflow: ellipsis; }
+.system-caption { max-width: 205px; display: grid; gap: 3px; overflow: hidden; color: #68756c; font-size: 8px; text-overflow: ellipsis; }
+.mission-discoverer { color: #879188; font-size: 7px; overflow-wrap: anywhere; }
 .glyph-strip { min-height: 16px; display: inline-flex; align-items: center; gap: 2px; }
 .glyph-slot { width: 16px; height: 17px; display: grid; flex: 0 0 16px; place-items: center; border-bottom: 1px dashed #b9c5b7; }
 .glyph-slot-filled { border-bottom-style: solid; border-bottom-color: #70886f; }
