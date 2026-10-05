@@ -1,0 +1,222 @@
+import { useState, type SubmitEvent } from "react";
+import { ArrowUpRight, CircleAlert, Trash2, X } from "lucide-react";
+import {
+  missionPriorities,
+  missionStatuses,
+  type Mission,
+  type MissionInput,
+  type MissionPriority,
+  type MissionStatus,
+} from "@/lib/missions";
+import { SystemAddressField, type SystemAddressLookup, type SystemAddressValidation } from "@/components/portal-address-field";
+import type { AllianceMember } from "@/lib/access-store";
+import type { MemberSpecialty } from "@/lib/member-types";
+import { missionSpecialties, type MissionSpecialty } from "@/lib/missions";
+import { galaxyNames, galaxyLabel } from "@/lib/galaxies";
+
+const specialtyNames: Record<MemberSpecialty, string> = { builder: "Costruttore", ranger: "Ranger", explorer: "Esploratore" };
+const targetNames: Record<MissionSpecialty, string> = { all: "Tutti", builder: "Costruttori", ranger: "Ranger", explorer: "Esploratori", other: "Altro" };
+
+const emptyMission: MissionInput = {
+  title: "",
+  description: "",
+  system: "",
+  systemAddress: "",
+  galaxy: 0,
+  systemVerified: false,
+  systemLabelFromAlmanac: false,
+  assignedTo: "",
+  targetSpecialty: "all",
+  dueDate: new Date().toISOString().slice(0, 10),
+  status: "In attesa",
+  priority: "Normale",
+  progress: 0,
+};
+
+export function MissionForm({
+  mission,
+  onClose,
+  onSave,
+  onDelete,
+  members,
+  initialValues,
+  availableSpecialties,
+}: Readonly<{
+  mission: Mission | null;
+  onClose: () => void;
+  onSave: (input: MissionInput) => Promise<void>;
+  onDelete: (id: string) => Promise<void>;
+  members: AllianceMember[];
+  initialValues?: Partial<MissionInput>;
+  availableSpecialties?: MissionSpecialty[];
+}>) {
+  const [form, setForm] = useState<MissionInput>(() => mission
+    ? { ...mission, systemAddress: mission.systemAddress ?? "", galaxy: mission.galaxy ?? 0 }
+    : { ...emptyMission, ...initialValues });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [addressValidation, setAddressValidation] = useState<SystemAddressValidation>({ valid: false, lookup: null });
+  const addressComplete = addressValidation.valid;
+  const matchingLookup = addressValidation.lookup?.address === form.systemAddress && addressValidation.lookup.galaxy === form.galaxy
+    ? addressValidation.lookup
+    : null;
+  const systemLookup = addressComplete
+    ? matchingLookup ?? { address: form.systemAddress, galaxy: form.galaxy, status: "checking" as const }
+    : null;
+  let submitLabel = "Crea missione";
+  if (saving) submitLabel = "Salvataggio…";
+  else if (mission) submitLabel = "Salva modifiche";
+  const update = <K extends keyof MissionInput>(key: K, value: MissionInput[K]) =>
+    setForm((current) => ({ ...current, [key]: value }));
+  const resetAlmanacSystemData = () => {
+    if (form.systemLabelFromAlmanac) update("system", "");
+    update("systemVerified", false);
+    update("systemLabelFromAlmanac", false);
+  };
+  const handleSystemLookup = (lookup: SystemAddressLookup) => {
+    const verified = lookup.status === "found";
+    setForm((current) => ({
+      ...current,
+      systemVerified: verified,
+      ...(verified && lookup.systemLabel && (!current.system.trim() || current.systemLabelFromAlmanac)
+        ? { system: lookup.systemLabel, systemLabelFromAlmanac: true }
+        : !verified && current.systemLabelFromAlmanac
+          ? { system: "", systemLabelFromAlmanac: false }
+          : {}),
+    }));
+  };
+
+  async function submit(event: SubmitEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!addressComplete) {
+      setError("Inserisci un codice sistema o portale valido prima di salvare.");
+      return;
+    }
+    if (systemLookup?.status === "checking") {
+      setError("Attendi il completamento del controllo dell’archivio.");
+      return;
+    }
+    setSaving(true);
+    setError("");
+    try {
+      await onSave(form);
+      onClose();
+    } catch (error_) {
+      setError(error_ instanceof Error ? error_.message : "Salvataggio non riuscito.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function remove() {
+    if (!mission || !window.confirm(`Eliminare "${mission.title}"?`)) return;
+    setSaving(true);
+    try {
+      await onDelete(mission.id);
+      onClose();
+    } catch (error_) {
+      setError(error_ instanceof Error ? error_.message : "Eliminazione non riuscita.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="dialog-backdrop">
+      <dialog aria-labelledby="dialog-title" aria-modal="true" className="mission-dialog" open>
+        <div className="dialog-heading">
+          <div>
+            <span className="eyebrow">REGISTRO OPERATIVO</span>
+            <h2 id="dialog-title">{mission ? "Modifica missione" : "Nuova missione"}</h2>
+          </div>
+          <button aria-label="Chiudi" className="icon-button" onClick={onClose} type="button"><X size={18} /></button>
+        </div>
+        <form onSubmit={submit}>
+          <label className="field full-field">
+            <span>Nome missione</span>
+            <input autoFocus maxLength={120} onChange={(event) => update("title", event.target.value)} placeholder="Es. Mappare il settore" required value={form.title} />
+          </label>
+          <label className="field full-field">
+            <span>Obiettivo</span>
+            <textarea onChange={(event) => update("description", event.target.value)} placeholder="Dettagli e criteri di completamento" rows={3} value={form.description} />
+          </label>
+          <SystemAddressField address={form.systemAddress} galaxy={form.galaxy} onChange={(value) => {
+            update("systemAddress", value);
+            resetAlmanacSystemData();
+            setAddressValidation({ valid: false, lookup: null });
+          }} onLookupResolved={handleSystemLookup} onStateChange={setAddressValidation} />
+          <div className="form-grid">
+            <label className="field">
+              <span>Nome sistema / settore <small>facoltativo</small></span>
+              <input onChange={(event) => {
+                update("system", event.target.value);
+                update("systemLabelFromAlmanac", false);
+              }} placeholder="Etichetta per riconoscerlo" value={form.system} />
+            </label>
+            <label className="field">
+              <span>Galassia <b>{galaxyLabel(form.galaxy)}</b></span>
+              <select aria-label="Galassia" onChange={(event) => {
+                update("galaxy", Number(event.target.value));
+                resetAlmanacSystemData();
+                setAddressValidation((current) => ({ ...current, lookup: null }));
+              }} required value={form.galaxy}>
+                {galaxyNames.map((name, index) => <option key={index} value={index}>{name}</option>)}
+              </select>
+            </label>
+            <label className="field">
+              <span>Missione per</span>
+              <select onChange={(event) => update("targetSpecialty", event.target.value as MissionSpecialty)} value={form.targetSpecialty}>
+                {(availableSpecialties ?? missionSpecialties).map((specialty) => <option disabled={Boolean(mission) && specialty === "all"} key={specialty} value={specialty}>{targetNames[specialty]}</option>)}
+              </select>
+            </label>
+            <label className="field">
+                <span>Assegna a</span>
+                <select onChange={(event) => {
+                  const selectedEmail = event.target.value;
+                  if (selectedEmail === "__legacy") {
+                    update("assignedEmail", undefined);
+                    return;
+                  }
+                  const assignedEmail = selectedEmail;
+                  const assignedMember = members.find((candidate) => candidate.email === assignedEmail);
+                  update("assignedEmail", assignedEmail || undefined);
+                  update("assignedTo", assignedMember?.nmsName || assignedMember?.name || "");
+                }} value={form.assignedEmail ?? (form.assignedTo ? "__legacy" : "")}>
+                  <option value="">Non assegnata</option>
+                  {form.assignedTo && !form.assignedEmail && <option value="__legacy">{form.assignedTo} · assegnazione esistente</option>}
+                  {members.map((candidate) => <option key={candidate.email} value={candidate.email}>{candidate.nmsName || candidate.name} · {candidate.specialty ? specialtyNames[candidate.specialty] : "Specializzazione da completare"} · {candidate.nmsCode} · {candidate.platforms.join(", ")}</option>)}
+                </select>
+            </label>
+            <label className="field">
+              <span>Scadenza</span>
+              <input onChange={(event) => update("dueDate", event.target.value)} required type="date" value={form.dueDate} />
+            </label>
+            <label className="field">
+              <span>Priorità</span>
+              <select onChange={(event) => update("priority", event.target.value as MissionPriority)} value={form.priority}>
+                {missionPriorities.map((priority) => <option key={priority}>{priority}</option>)}
+              </select>
+            </label>
+            <label className="field">
+              <span>Stato</span>
+              <select onChange={(event) => update("status", event.target.value as MissionStatus)} value={form.status}>
+                {missionStatuses.map((status) => <option key={status}>{status}</option>)}
+              </select>
+            </label>
+            <label className="field">
+              <span>Avanzamento <b>{form.progress}%</b></span>
+              <input max={100} min={0} onChange={(event) => update("progress", Number(event.target.value))} type="range" value={form.progress} />
+            </label>
+          </div>
+          {error && <p className="form-error"><CircleAlert size={15} />{error}</p>}
+          <div className="dialog-actions">
+            {mission && <button className="delete-button" disabled={saving} onClick={remove} type="button"><Trash2 size={15} /> Elimina</button>}
+            <span className="action-spacer" />
+            <button className="quiet-button" onClick={onClose} type="button">Annulla</button>
+            <button className="primary-button" disabled={saving || !addressComplete || systemLookup?.status === "checking"} type="submit">{submitLabel}<ArrowUpRight size={15} /></button>
+          </div>
+        </form>
+      </dialog>
+    </div>
+  );
+}
