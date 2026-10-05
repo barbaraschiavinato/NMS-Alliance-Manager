@@ -9,6 +9,7 @@ import { AdminPanel } from "@/components/admin-panel";
 import { MemberProfilePanel } from "@/components/member-profile-panel";
 
 type MemberFilter = "all" | MembershipStatus;
+type ManagedMember = AllianceMember & { protectedAdmin: boolean };
 
 const roleLabels: Record<MemberRole, string> = { user: "Utente", moderator: "Moderatore", admin: "Admin" };
 const statusLabels: Record<MembershipStatus, string> = { pending: "In attesa", approved: "Approvato", blocked: "Bloccato" };
@@ -21,19 +22,29 @@ function updateNotice(update: { membershipStatus: MembershipStatus } | { role: M
   return "Utente in attesa di approvazione.";
 }
 
-function MemberActions({ member, canChangeRole, onStatus, onRole, onDelete }: Readonly<{
-  member: AllianceMember;
+function MemberActions({ member, canChangeRole, currentMemberEmail, onStatus, onRole, onDelete }: Readonly<{
+  member: ManagedMember;
   canChangeRole: boolean;
+  currentMemberEmail: string;
   onStatus: (email: string, status: MembershipStatus) => void;
   onRole: (email: string, role: MemberRole) => void;
   onDelete: (member: AllianceMember) => void;
 }>) {
   const canManage = canChangeRole || member.role === "user";
-  if (!canManage || member.role === "admin") return <span className="role-lock">Protetto</span>;
+  if (!canManage || member.protectedAdmin || member.email.toLowerCase() === currentMemberEmail.toLowerCase()) {
+    return <span className="role-lock">Protetto</span>;
+  }
+
+  if (member.role === "admin") return <div className="member-page-actions">
+    <select aria-label={`Ruolo di ${member.email}`} onChange={(event) => onRole(member.email, event.target.value as MemberRole)} value={member.role}>
+      {(Object.keys(roleLabels) as MemberRole[]).map((role) => <option key={role} value={role}>{roleLabels[role]}</option>)}
+    </select>
+    <button aria-label={`Elimina ${member.email}`} className="member-icon-action delete-member" onClick={() => onDelete(member)} title="Elimina admin" type="button"><Trash2 size={14} /></button>
+  </div>;
 
   return (
     <div className="member-page-actions">
-      {member.membershipStatus === "pending" && <button className="approval-button" onClick={() => onStatus(member.email, "approved")} type="button"><Check size={14} /> Approva</button>}
+      {member.membershipStatus === "pending" && <button className="approval-button" onClick={() => onStatus(member.email, "approved")} type="button">Approva</button>}
       {member.membershipStatus === "approved" && <button className="approval-button revoke-approval" onClick={() => onStatus(member.email, "pending")} type="button">Revoca</button>}
       {member.membershipStatus === "blocked"
         ? <button className="approval-button" onClick={() => onStatus(member.email, "pending")} type="button"><UserRoundCheck size={14} /> Sblocca</button>
@@ -47,7 +58,7 @@ function MemberActions({ member, canChangeRole, onStatus, onRole, onDelete }: Re
 export function MembersPage({ currentMember, alliance, missionCount }: Readonly<{ currentMember: AllianceMember; alliance: AllianceSettings; missionCount: number }>) {
   const [pageMember, setPageMember] = useState(currentMember);
   const [allianceSettings, setAllianceSettings] = useState(alliance);
-  const [members, setMembers] = useState<AllianceMember[]>([]);
+  const [members, setMembers] = useState<ManagedMember[]>([]);
   const [filter, setFilter] = useState<MemberFilter>("all");
   const [search, setSearch] = useState("");
   const [error, setError] = useState("");
@@ -61,7 +72,7 @@ export function MembersPage({ currentMember, alliance, missionCount }: Readonly<
       .then(async (response) => {
         const body = await response.json();
         if (!response.ok) throw new Error(body.error ?? "Impossibile caricare la lista utenti.");
-        setMembers(body as AllianceMember[]);
+        setMembers(body as ManagedMember[]);
       })
       .catch((error_: unknown) => setError(error_ instanceof Error ? error_.message : "Impossibile caricare la lista utenti."));
   }, []);
@@ -160,7 +171,7 @@ export function MembersPage({ currentMember, alliance, missionCount }: Readonly<
                 <td>{member.specialty ? specialtyLabels[member.specialty] : "Da scegliere"}</td>
                 <td><span className={`member-status-pill member-status-${member.membershipStatus}`}>{statusLabels[member.membershipStatus]}</span></td>
                 <td>{roleLabels[member.role]}</td>
-                <td><MemberActions canChangeRole={canChangeRole} member={member} onDelete={(target) => void deleteMember(target)} onRole={(email, role) => void patchMember(email, { role })} onStatus={(email, membershipStatus) => void patchMember(email, { membershipStatus })} /></td>
+                <td><MemberActions canChangeRole={canChangeRole} currentMemberEmail={pageMember.email} member={member} onDelete={(target) => void deleteMember(target)} onRole={(email, role) => void patchMember(email, { role })} onStatus={(email, membershipStatus) => void patchMember(email, { membershipStatus })} /></td>
               </tr>)}
               {visibleMembers.length === 0 && <tr><td className="members-empty" colSpan={7}>{emptyMessage}</td></tr>}
             </tbody>

@@ -7,7 +7,11 @@ export async function GET() {
   const member = await getCurrentMember();
   if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
   if (!hasRole(member, "moderator")) return NextResponse.json({ error: "Permesso moderator richiesto." }, { status: 403 });
-  return NextResponse.json((await readAccessData()).members);
+  const protectedAdminEmail = process.env.ALLIANCE_ADMIN_EMAIL?.trim().toLowerCase();
+  return NextResponse.json((await readAccessData()).members.map((profile) => ({
+    ...profile,
+    protectedAdmin: profile.email.trim().toLowerCase() === protectedAdminEmail,
+  })));
 }
 
 export async function PATCH(request: Request) {
@@ -45,7 +49,7 @@ export async function DELETE(request: Request) {
   if (!input || typeof input !== "object" || typeof (input as Record<string, unknown>).email !== "string") {
     return NextResponse.json({ error: "Email membro non valida." }, { status: 400 });
   }
-  const removed = await deleteMember((input as { email: string }).email, member.role);
+  const removed = await deleteMember((input as { email: string }).email, member.role, member.email);
   if (!removed) return NextResponse.json({ error: "Membro non trovato o non eliminabile con il tuo ruolo." }, { status: 404 });
   return NextResponse.json({ ok: true });
 }

@@ -142,14 +142,16 @@ export async function updateMemberApproval(email: string, approvedBy: string, me
   return member;
 }
 
-export async function deleteMember(email: string, actorRole: MemberRole) {
+export async function deleteMember(email: string, actorRole: MemberRole, actorEmail: string) {
   const normalizedEmail = email.trim().toLowerCase();
   const adminEmail = process.env.ALLIANCE_ADMIN_EMAIL?.trim().toLowerCase();
-  if (!normalizedEmail || normalizedEmail === adminEmail) return false;
+  const normalizedActorEmail = actorEmail.trim().toLowerCase();
+  if (!normalizedEmail || normalizedEmail === adminEmail || normalizedEmail === normalizedActorEmail) return false;
   const data = await readAccessData();
   const index = data.members.findIndex((member) => member.email === normalizedEmail);
-  if (index === -1 || data.members[index].role === "admin") return false;
+  if (index === -1) return false;
   if (actorRole === "moderator" && data.members[index].role !== "user") return false;
+  if (data.members[index].role === "admin" && actorRole !== "admin") return false;
   data.members.splice(index, 1);
   await writeAccessData(data);
   return true;
