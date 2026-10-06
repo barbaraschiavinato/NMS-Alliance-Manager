@@ -19,7 +19,7 @@ export async function PATCH(request: Request) {
       typeof value.logoUrl !== "string" || typeof value.bannerUrl !== "string" ||
       typeof value.discordUrl !== "string" || value.discordUrl.length > 300 || !isCommunityInviteUrl(value.discordUrl, ["discord.gg", "discord.com", "t.co"]) ||
       typeof value.telegramUrl !== "string" || value.telegramUrl.length > 300 || !isCommunityInviteUrl(value.telegramUrl, ["t.me", "telegram.me", "t.co"]) ||
-      typeof value.heroGradientEnabled !== "boolean" ||
+      (value.heroGradientMode !== "none" && value.heroGradientMode !== "left" && value.heroGradientMode !== "full") ||
       (value.defaultTableView !== "list" && value.defaultTableView !== "cards")) {
     return NextResponse.json({ error: "Controlla il nome, le immagini e i link Discord/Telegram." }, { status: 400 });
   }
@@ -29,7 +29,7 @@ export async function PATCH(request: Request) {
     bannerUrl: value.bannerUrl,
     discordUrl: value.discordUrl.trim(),
     telegramUrl: value.telegramUrl.trim(),
-    heroGradientEnabled: value.heroGradientEnabled,
+    heroGradientMode: value.heroGradientMode,
     defaultTableView: value.defaultTableView,
   });
   return NextResponse.json(settings);

@@ -8,7 +8,7 @@ export function AdminPanel({ onClose, onSaved }: Readonly<{
   onClose: () => void;
   onSaved: (settings: AllianceSettings) => void;
 }>) {
-  const [settings, setSettings] = useState<AllianceSettings>({ name: "", logoUrl: "", bannerUrl: "", discordUrl: "", telegramUrl: "", heroGradientEnabled: true, defaultTableView: "list" });
+  const [settings, setSettings] = useState<AllianceSettings>({ name: "", logoUrl: "", bannerUrl: "", discordUrl: "", telegramUrl: "", heroGradientMode: "full", defaultTableView: "list" });
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -85,10 +85,14 @@ export function AdminPanel({ onClose, onSaved }: Readonly<{
                 <button aria-pressed={settings.defaultTableView === "cards"} className={settings.defaultTableView === "cards" ? "selected" : ""} onClick={() => setSettings((current) => ({ ...current, defaultTableView: "cards" }))} type="button"><LayoutGrid size={14} /> Schede</button>
               </div>
             </div>
-            <label className="admin-feature-toggle">
-              <input checked={settings.heroGradientEnabled} onChange={(event) => setSettings((current) => ({ ...current, heroGradientEnabled: event.target.checked }))} type="checkbox" />
-              <span>Applica la sfumatura all’immagine hero</span>
-            </label>
+            <div className="field admin-default-view">
+              <span>Sfumatura immagine hero</span>
+              <div aria-label="Sfumatura immagine hero" className="view-toggle admin-view-toggle" role="group">
+                <button aria-pressed={settings.heroGradientMode === "none"} className={settings.heroGradientMode === "none" ? "selected" : ""} onClick={() => setSettings((current) => ({ ...current, heroGradientMode: "none" }))} type="button">Nessuna</button>
+                <button aria-pressed={settings.heroGradientMode === "left"} className={settings.heroGradientMode === "left" ? "selected" : ""} onClick={() => setSettings((current) => ({ ...current, heroGradientMode: "left" }))} type="button">Solo testi</button>
+                <button aria-pressed={settings.heroGradientMode === "full"} className={settings.heroGradientMode === "full" ? "selected" : ""} onClick={() => setSettings((current) => ({ ...current, heroGradientMode: "full" }))} type="button">Completa</button>
+              </div>
+            </div>
             <div className="branding-grid">
               <label className="upload-field">
                 <span>Logo</span>
@@ -97,7 +101,7 @@ export function AdminPanel({ onClose, onSaved }: Readonly<{
               </label>
               <label className="upload-field">
                 <span>Immagine banner</span>
-                <span className="image-preview banner-preview" style={settings.bannerUrl ? { backgroundImage: `${settings.heroGradientEnabled ? "linear-gradient(100deg, #101719ed 0%, #171d20c7 55%, #52371886 100%), " : ""}url("${settings.bannerUrl}")` } : undefined}>{!settings.bannerUrl && <ImagePlus size={20} />}</span>
+                <span className="image-preview banner-preview" style={settings.bannerUrl ? { backgroundImage: `${settings.heroGradientMode === "full" ? "linear-gradient(100deg, #101719ed 0%, #171d20c7 55%, #52371886 100%), " : settings.heroGradientMode === "left" ? "linear-gradient(90deg, #101719ed 0%, #171d20c7 48%, transparent 72%), " : ""}url("${settings.bannerUrl}")` } : undefined}>{!settings.bannerUrl && <ImagePlus size={20} />}</span>
                 <input accept="image/png,image/jpeg,image/webp,image/avif" disabled={busy} onChange={(event) => void uploadImage("bannerUrl", event.target.files?.[0])} type="file" />
               </label>
             </div>

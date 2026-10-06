@@ -17,24 +17,27 @@ const blobPath = "alliance-manager/access.json";
 const localPath = path.join(process.cwd(), "data", "access.json");
 const defaultData: AccessData = {
   members: [],
-  alliance: { name: "Nomad Syndicate", logoUrl: "", bannerUrl: "", discordUrl: "", telegramUrl: "", heroGradientEnabled: true, defaultTableView: "list" },
+  alliance: { name: "Nomad Syndicate", logoUrl: "", bannerUrl: "", discordUrl: "", telegramUrl: "", heroGradientMode: "full", defaultTableView: "list" },
 };
 
 function normalizeAccessData(value: unknown): AccessData {
   if (!value || typeof value !== "object") return defaultData;
   const data = value as Partial<AccessData>;
+  const storedAlliance = data.alliance as (Partial<AllianceSettings> & { heroGradientEnabled?: unknown }) | undefined;
   return {
     members: Array.isArray(data.members)
       ? data.members.map((member) => normalizeMember(member)).filter((member) => member !== null)
       : [],
     alliance: {
-      name: typeof data.alliance?.name === "string" ? data.alliance.name : defaultData.alliance.name,
-      logoUrl: typeof data.alliance?.logoUrl === "string" ? data.alliance.logoUrl : "",
-      bannerUrl: typeof data.alliance?.bannerUrl === "string" ? data.alliance.bannerUrl : "",
-      discordUrl: typeof data.alliance?.discordUrl === "string" ? data.alliance.discordUrl : "",
-      telegramUrl: typeof data.alliance?.telegramUrl === "string" ? data.alliance.telegramUrl : "",
-      heroGradientEnabled: typeof data.alliance?.heroGradientEnabled === "boolean" ? data.alliance.heroGradientEnabled : true,
-      defaultTableView: data.alliance?.defaultTableView === "cards" ? "cards" : "list",
+      name: typeof storedAlliance?.name === "string" ? storedAlliance.name : defaultData.alliance.name,
+      logoUrl: typeof storedAlliance?.logoUrl === "string" ? storedAlliance.logoUrl : "",
+      bannerUrl: typeof storedAlliance?.bannerUrl === "string" ? storedAlliance.bannerUrl : "",
+      discordUrl: typeof storedAlliance?.discordUrl === "string" ? storedAlliance.discordUrl : "",
+      telegramUrl: typeof storedAlliance?.telegramUrl === "string" ? storedAlliance.telegramUrl : "",
+      heroGradientMode: storedAlliance?.heroGradientMode === "none" || storedAlliance?.heroGradientMode === "left" || storedAlliance?.heroGradientMode === "full"
+        ? storedAlliance.heroGradientMode
+        : storedAlliance?.heroGradientEnabled === false ? "none" : "full",
+      defaultTableView: storedAlliance?.defaultTableView === "cards" ? "cards" : "list",
     },
   };
 }

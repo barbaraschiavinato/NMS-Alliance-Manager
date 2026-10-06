@@ -37,6 +37,6 @@ export type AllianceSettings = {
   bannerUrl: string;
   discordUrl: string;
   telegramUrl: string;
-  heroGradientEnabled: boolean;
+  heroGradientMode: "none" | "left" | "full";
   defaultTableView: "list" | "cards";
 };

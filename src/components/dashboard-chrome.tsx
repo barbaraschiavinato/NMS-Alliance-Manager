@@ -111,7 +111,7 @@ export function MissionHero({
   actionLabel?: string;
 }>) {
   return (
-    <section className={`mission-banner${settings.heroGradientEnabled ? " mission-banner-gradient" : ""}`} id="riepilogo" style={settings.bannerUrl ? { backgroundImage: `url("${settings.bannerUrl}")` } : undefined}>
+    <section className={`mission-banner${settings.heroGradientMode !== "none" ? ` mission-banner-gradient-${settings.heroGradientMode}` : ""}`} id="riepilogo" style={settings.bannerUrl ? { backgroundImage: `url("${settings.bannerUrl}")` } : undefined}>
       <div className="banner-grid" aria-hidden="true" />
       <div className="mission-banner-inner">
         <div className="banner-copy">
