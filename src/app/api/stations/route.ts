@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentMember, hasRole } from "@/lib/authorization";
-import type { AllianceMember } from "@/lib/access-store";
+import { readAccessData, type AllianceMember } from "@/lib/access-store";
 import { readAlmanacResponse, readAlmanacResponses, writeAlmanacResponse } from "@/lib/almanac-store";
 import { decodePortalAddress, missionSpecialties, type MissionSpecialty } from "@/lib/missions";
 import { addStationPortal, readAllStationPortals, readStationPortals, removeStationPortal } from "@/lib/stations-store";
@@ -29,13 +29,29 @@ export async function POST(request: Request) {
     ? payload.portal.toUpperCase()
     : "";
   const galaxy = payload.galaxy;
+  const requestedOwner = typeof payload.owner === "string" ? payload.owner.trim().toLowerCase() : member.email.toLowerCase();
   const decoded = decodePortalAddress(portal);
   if (!decoded || decoded.errors.length > 0 || typeof galaxy !== "number" || !Number.isInteger(galaxy) || galaxy < 0 || galaxy > 255) {
     return NextResponse.json({ error: "Inserisci un portale valido e seleziona una galassia." }, { status: 400 });
   }
+  if (!requestedOwner) {
+    return NextResponse.json({ error: "Seleziona il proprietario della stazione." }, { status: 400 });
+  }
+  if (!hasRole(member, "moderator") && requestedOwner !== member.email.toLowerCase()) {
+    return NextResponse.json({ error: "Non puoi creare stazioni per un altro membro." }, { status: 403 });
+  }
 
   try {
-    await addStationPortal(member.email, portal, galaxy);
+    const ownerMember = (await readAccessData()).members.find((candidate) =>
+      candidate.email.toLowerCase() === requestedOwner && candidate.membershipStatus === "approved",
+    );
+    if (!ownerMember) {
+      return NextResponse.json({ error: "Il proprietario selezionato non è un membro approvato." }, { status: 400 });
+    }
+    if ((await readStationPortals(requestedOwner)).some((station) => station.portal === portal && station.galaxy === galaxy)) {
+      return NextResponse.json({ error: "Questo portale è già presente nella lista del proprietario selezionato." }, { status: 409 });
+    }
+    await addStationPortal(requestedOwner, portal, galaxy);
     await cacheStationPlanet(portal, galaxy);
     return NextResponse.json({ stations: await readStations(member) }, { status: 201 });
   } catch (error) {

@@ -103,6 +103,7 @@ export function StationsPage({ currentMember, alliance, missionCount }: Readonly
   const [viewOverride, setViewOverride] = useState<"list" | "cards" | null>(null);
   const [portal, setPortal] = useState("");
   const [galaxy, setGalaxy] = useState(0);
+  const [stationOwnerEmail, setStationOwnerEmail] = useState(currentMember.email);
   const [validation, setValidation] = useState<SystemAddressValidation>({ valid: false, lookup: null });
   const [addOpen, setAddOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -136,6 +137,7 @@ export function StationsPage({ currentMember, alliance, missionCount }: Readonly
   function openAddStation() {
     setPortal("");
     setGalaxy(0);
+    setStationOwnerEmail(pageMember.email);
     setValidation({ valid: false, lookup: null });
     setError("");
     setAddOpen(true);
@@ -153,7 +155,10 @@ export function StationsPage({ currentMember, alliance, missionCount }: Readonly
           if (!response.ok || !Array.isArray(body)) throw new Error("Impossibile caricare i membri assegnabili.");
           setMembers(body as AllianceMember[]);
         })
-        .catch(() => setMembers([]));
+        .catch((error_: unknown) => {
+          setMembers([]);
+          setError(error_ instanceof Error ? error_.message : "Impossibile caricare i membri.");
+        });
     }
   }, [canCreateMissions]);
 
@@ -165,8 +170,15 @@ export function StationsPage({ currentMember, alliance, missionCount }: Readonly
       return;
     }
     const canonicalPortal = portal.toUpperCase();
-    if (stations.some((station) => station.portal === canonicalPortal && station.galaxy === galaxy)) {
-      setError("Questo portale è già presente nella tua lista.");
+    const requestedOwner = canSeeAll ? stationOwnerEmail.trim().toLowerCase() : pageMember.email.toLowerCase();
+    if (!requestedOwner) {
+      setError("Seleziona il proprietario della stazione.");
+      return;
+    }
+    if (stations.some((station) =>
+      station.portal === canonicalPortal && station.galaxy === galaxy && station.owner.toLowerCase() === requestedOwner,
+    )) {
+      setError("Questo portale è già presente nella lista del proprietario selezionato.");
       return;
     }
 
@@ -177,7 +189,7 @@ export function StationsPage({ currentMember, alliance, missionCount }: Readonly
       const response = await fetch("/api/stations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ portal: canonicalPortal, galaxy }),
+        body: JSON.stringify({ portal: canonicalPortal, galaxy, owner: requestedOwner }),
       });
       const body: unknown = await response.json();
       if (!response.ok || !body || typeof body !== "object" || !("stations" in body) || !Array.isArray(body.stations)) {
@@ -188,7 +200,9 @@ export function StationsPage({ currentMember, alliance, missionCount }: Readonly
       setPortal("");
       setValidation({ valid: false, lookup: null });
       setAddOpen(false);
-      setNotice("Portale aggiunto alle tue stazioni.");
+      setNotice(canSeeAll && requestedOwner !== pageMember.email.toLowerCase()
+        ? `Stazione aggiunta all’archivio di ${members.find((candidate) => candidate.email.toLowerCase() === requestedOwner)?.nmsName || members.find((candidate) => candidate.email.toLowerCase() === requestedOwner)?.name || requestedOwner}.`
+        : "Portale aggiunto alle tue stazioni.");
     } catch (error_: unknown) {
       setError(error_ instanceof Error ? error_.message : "Impossibile salvare il portale.");
     } finally {
@@ -299,7 +313,7 @@ export function StationsPage({ currentMember, alliance, missionCount }: Readonly
       {addOpen && <div className="dialog-backdrop">
         <dialog aria-labelledby="station-dialog-title" aria-modal="true" className="mission-dialog station-dialog" open>
           <div className="dialog-heading">
-            <div><span className="eyebrow">ARCHIVIO PERSONALE</span><h2 id="station-dialog-title">Aggiungi stazione</h2></div>
+            <div><span className="eyebrow">{canSeeAll ? "ARCHIVIO STAZIONI" : "ARCHIVIO PERSONALE"}</span><h2 id="station-dialog-title">Aggiungi stazione</h2></div>
             <button aria-label="Chiudi" className="icon-button" onClick={() => setAddOpen(false)} type="button"><X size={18} /></button>
           </div>
           <form className="station-add-form" onSubmit={addStation}>
@@ -314,6 +328,17 @@ export function StationsPage({ currentMember, alliance, missionCount }: Readonly
                 {galaxyNames.map((name, index) => <option key={index} value={index}>{name}</option>)}
               </select>
             </label>
+            {canSeeAll && <label className="field">
+              <span>Proprietario della stazione</span>
+              <select onChange={(event) => setStationOwnerEmail(event.target.value)} required value={stationOwnerEmail}>
+                {[pageMember, ...members.filter((candidate) => candidate.email.toLowerCase() !== pageMember.email.toLowerCase())]
+                  .map((candidate) => (
+                    <option key={candidate.email} value={candidate.email}>
+                      {candidate.nmsName || candidate.name} · {candidate.email}
+                    </option>
+                  ))}
+              </select>
+            </label>}
             {error && <p className="form-error"><CircleAlert size={15} />{error}</p>}
             <div className="dialog-actions">
               <span className="action-spacer" />
