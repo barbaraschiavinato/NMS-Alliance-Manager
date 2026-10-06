@@ -162,7 +162,7 @@ export function MissionDashboard({ currentMember }: Readonly<{ currentMember: Al
 
   return (
     <main className="app-shell">
-      <AllianceSidebar activeSection="missioni" currentMember={member} missionCount={missions.length} />
+      <AllianceSidebar activeSection="missioni" currentMember={member} missionCount={missions.length} settings={alliance} />
       <section className="main-panel" id="missioni">
         <DashboardTopbar currentMember={member} onAdminOpen={() => setAdminOpen(true)} onProfileOpen={() => setProfileOpen(true)} settings={alliance} />
         <div className="content-wrap">

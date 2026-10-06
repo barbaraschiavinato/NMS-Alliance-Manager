@@ -14,9 +14,10 @@ import type { Mission } from "@/lib/missions";
 import type { MissionFilter } from "@/components/mission-table";
 import type { AllianceMember, AllianceSettings } from "@/lib/access-store";
 
-export function AllianceSidebar({ missionCount, currentMember, activeSection }: Readonly<{
+export function AllianceSidebar({ missionCount, currentMember, settings, activeSection }: Readonly<{
   missionCount: number;
   currentMember: AllianceMember;
+  settings: AllianceSettings;
   activeSection: "missioni" | "utenti" | "stazioni";
 }>) {
   const displayName = currentMember.nmsName || currentMember.name;
@@ -26,8 +27,8 @@ export function AllianceSidebar({ missionCount, currentMember, activeSection }: 
   return (
     <aside className="sidebar">
       <a className="brand" href="#missioni">
-        <span className="brand-mark"><Orbit size={21} strokeWidth={1.8} /></span>
-        <span><strong>NMS ALLIANCE</strong></span>
+        <span className="brand-mark" style={settings.logoUrl ? { backgroundImage: `url("${settings.logoUrl}")` } : undefined}>{!settings.logoUrl && <Orbit size={21} strokeWidth={1.8} />}</span>
+        <span><strong>{settings.name}</strong></span>
       </a>
       <span className="nav-caption">GESTIONE</span>
       <nav className="side-nav" aria-label="Navigazione principale">
