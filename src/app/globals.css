@@ -620,6 +620,8 @@ select { appearance: none; padding-right: 29px; background-image: linear-gradien
 .mission-dialog .address-input-row .square-button { width: 34px; height: 34px; }
 .mission-dialog .portal-field-heading b,
 .mission-dialog .field > span b { color: var(--lime); }
+.mission-dialog .primary-button { color: #fff; border: 2px solid var(--lime); background: transparent; }
+.mission-dialog .primary-button:hover:not(:disabled) { color: #fff; border-color: var(--lime); background-color: var(--lime); }
 .mission-dialog .dialog-actions,
 .mission-dialog .admin-section,
 .mission-dialog .member-role-row,
