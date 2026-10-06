@@ -396,6 +396,8 @@ select { appearance: none; padding-right: 29px; background-image: linear-gradien
 .loading-spinner { animation: loading-spin 1.2s linear infinite; }
 @keyframes loading-spin { to { transform: rotate(360deg); } }
 .mission-table-loading { height: 100px; }
+.mission-table-loading .loading-indicator { width: 100%; }
+.mission-table-loading .loading-spinner { margin: 0; }
 .mission-cards-loading { grid-column: 1 / -1; }
 .station-list-loading { padding: 0; border: 0; }
 .auth-setup-note { width: 100%; min-height: 40px; display: flex; align-items: center; gap: 8px; padding: 0 10px; color: #f0dba1; border: 1px solid #706548; background: #413c2c; font-size: 10px; }

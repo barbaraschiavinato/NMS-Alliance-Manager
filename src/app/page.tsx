@@ -25,5 +25,5 @@ export default async function Home({ searchParams }: Readonly<{
   if (member.membershipStatus !== "approved") return <PendingApproval member={member} />;
   const params = await searchParams;
   const initialSearch = typeof params.search === "string" ? params.search.slice(0, 80) : "";
-  return <MissionDashboard currentMember={member} initialSearch={initialSearch} />;
+  return <MissionDashboard alliance={alliance} currentMember={member} initialSearch={initialSearch} />;
 }

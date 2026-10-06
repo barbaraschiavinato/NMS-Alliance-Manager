@@ -26,8 +26,9 @@ const missionTypeLabels: Record<Mission["targetSpecialty"], string> = {
   other: "Altro",
 };
 
-export function MissionDashboard({ currentMember, initialSearch = "" }: Readonly<{
+export function MissionDashboard({ currentMember, alliance: initialAlliance, initialSearch = "" }: Readonly<{
   currentMember: AllianceMember;
+  alliance: AllianceSettings;
   initialSearch?: string;
 }>) {
   const [member, setMember] = useState(currentMember);
@@ -42,7 +43,7 @@ export function MissionDashboard({ currentMember, initialSearch = "" }: Readonly
   const [notice, setNotice] = useState("");
   const [members, setMembers] = useState<AllianceMember[]>([]);
   const [stationOwners, setStationOwners] = useState<StationOwnerOption[]>([]);
-  const [alliance, setAlliance] = useState<AllianceSettings>({ name: "", logoUrl: "", bannerUrl: "", discordUrl: "", telegramUrl: "", heroGradientMode: "full", defaultTableView: "list" });
+  const [alliance, setAlliance] = useState(initialAlliance);
   const [adminOpen, setAdminOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const searchInput = useRef<HTMLInputElement>(null);
@@ -57,12 +58,6 @@ export function MissionDashboard({ currentMember, initialSearch = "" }: Readonly
       })
       .catch((error: unknown) => setNotice(error instanceof Error ? error.message : "Archivio missioni non disponibile."))
       .finally(() => setLoadingMissions(false));
-    fetch("/api/alliance", { cache: "no-store" })
-      .then(async (response) => {
-        if (!response.ok) throw new Error("Impossibile caricare l'alleanza.");
-        setAlliance(await response.json() as AllianceSettings);
-      })
-      .catch((error: unknown) => setNotice(error instanceof Error ? error.message : "Impossibile caricare l’alleanza."));
     fetch("/api/planet-status", { cache: "no-store" })
       .then(async (response) => {
         const body: unknown = await response.json();
