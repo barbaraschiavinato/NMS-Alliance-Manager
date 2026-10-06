@@ -14,9 +14,9 @@ export async function POST(request: Request) {
   try {
     blobAuthOptions = getBlobAuthOptions();
   } catch {
-    return NextResponse.json({ error: "Configura l'accesso a Vercel Blob per caricare immagini." }, { status: 503 });
+    return NextResponse.json({ error: "Configura NMS_READ_WRITE_TOKEN oppure NMS_STORE_ID con VERCEL_OIDC_TOKEN per caricare immagini." }, { status: 503 });
   }
-  if (!blobAuthOptions) return NextResponse.json({ error: "Configura l'accesso a Vercel Blob per caricare immagini." }, { status: 503 });
+  if (!blobAuthOptions) return NextResponse.json({ error: "Configura NMS_READ_WRITE_TOKEN oppure NMS_STORE_ID con VERCEL_OIDC_TOKEN per caricare immagini." }, { status: 503 });
 
   const form = await request.formData().catch(() => null);
   const file = form?.get("image");

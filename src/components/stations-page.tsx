@@ -221,9 +221,9 @@ export function StationsPage({ currentMember, alliance, missionCount }: Readonly
 
   return (
     <div className="app-shell">
-      <AllianceSidebar activeSection="stazioni" currentMember={pageMember} missionCount={missionCount} settings={allianceSettings} />
+      <AllianceSidebar activeSection="stazioni" currentMember={pageMember} missionCount={missionCount} />
       <section className="main-panel">
-        <DashboardTopbar currentMember={pageMember} onAdminOpen={() => setAdminOpen(true)} onProfileOpen={() => setProfileOpen(true)} sectionTitle="Stazioni" />
+        <DashboardTopbar currentMember={pageMember} onAdminOpen={() => setAdminOpen(true)} onProfileOpen={() => setProfileOpen(true)} sectionTitle="Stazioni" settings={allianceSettings} />
         <main className="members-page stations-page">
           <header className="members-page-header">
             <Link aria-label="Torna alle missioni" className="members-back" href="/">Missioni</Link>

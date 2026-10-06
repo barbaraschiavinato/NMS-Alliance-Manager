@@ -162,9 +162,9 @@ export function MissionDashboard({ currentMember }: Readonly<{ currentMember: Al
 
   return (
     <main className="app-shell">
-      <AllianceSidebar activeSection="missioni" currentMember={member} missionCount={missions.length} settings={alliance} />
+      <AllianceSidebar activeSection="missioni" currentMember={member} missionCount={missions.length} />
       <section className="main-panel" id="missioni">
-        <DashboardTopbar currentMember={member} onAdminOpen={() => setAdminOpen(true)} onProfileOpen={() => setProfileOpen(true)} />
+        <DashboardTopbar currentMember={member} onAdminOpen={() => setAdminOpen(true)} onProfileOpen={() => setProfileOpen(true)} settings={alliance} />
         <div className="content-wrap">
           {!profileComplete && <section className="profile-required-banner"><span><strong>Completa il profilo NMS</strong><small>Inserisci nome in gioco, codice amico, piattaforme e specializzazione per prendere missioni o essere assegnato.</small></span><button className="claim-button" onClick={() => setProfileOpen(true)} type="button">Completa profilo</button></section>}
           <MissionHero onCreate={() => openMission(null)} settings={alliance} showCreate={canManage} />

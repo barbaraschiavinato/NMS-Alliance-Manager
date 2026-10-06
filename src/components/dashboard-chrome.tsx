@@ -1,7 +1,7 @@
+import { useEffect } from "react";
 import { signOut } from "next-auth/react";
 import Link from "next/link";
 import {
-  ChevronDown,
   CirclePlus,
   Crosshair,
   Orbit,
@@ -14,9 +14,8 @@ import type { Mission } from "@/lib/missions";
 import type { MissionFilter } from "@/components/mission-table";
 import type { AllianceMember, AllianceSettings } from "@/lib/access-store";
 
-export function AllianceSidebar({ missionCount, settings, currentMember, activeSection }: Readonly<{
+export function AllianceSidebar({ missionCount, currentMember, activeSection }: Readonly<{
   missionCount: number;
-  settings: AllianceSettings;
   currentMember: AllianceMember;
   activeSection: "missioni" | "utenti" | "stazioni";
 }>) {
@@ -27,14 +26,9 @@ export function AllianceSidebar({ missionCount, settings, currentMember, activeS
   return (
     <aside className="sidebar">
       <a className="brand" href="#missioni">
-        <span className="brand-mark" style={settings.logoUrl ? { backgroundImage: `url("${settings.logoUrl}")` } : undefined}>{!settings.logoUrl && <Orbit size={21} strokeWidth={1.8} />}</span>
-        <span><strong>WAYFARER</strong><small>ALLIANCE NETWORK</small></span>
+        <span className="brand-mark"><Orbit size={21} strokeWidth={1.8} /></span>
+        <span><strong>NMS ALLIANCE</strong></span>
       </a>
-      <div className="alliance-switcher">
-        <span className="alliance-emblem">N</span>
-        <span className="alliance-copy"><small>LA TUA ALLEANZA</small><strong>{settings.name}</strong></span>
-        <ChevronDown size={15} />
-      </div>
       <span className="nav-caption">GESTIONE</span>
       <nav className="side-nav" aria-label="Navigazione principale">
         <Link className={`nav-item ${activeSection === "missioni" ? "active" : ""}`} href="/"><Crosshair size={17} /><span>Missioni</span><span className="nav-count">{missionCount}</span></Link>
@@ -42,19 +36,34 @@ export function AllianceSidebar({ missionCount, settings, currentMember, activeS
         {(currentMember.role === "admin" || currentMember.role === "moderator") && <Link className={`nav-item ${activeSection === "utenti" ? "active" : ""}`} href="/utenti"><UsersRound size={17} /><span>Utenti</span></Link>}
       </nav>
       <div className="sidebar-bottom">
-        <div className="season-chip"><span className="live-dot" /> STAGIONE 08 <span>·</span> FRONTIERA</div>
         <div className="profile"><span className="avatar">{displayName.slice(0, 2).toUpperCase()}</span><span><strong>{displayName}</strong><small>{roleLabel}</small></span></div>
       </div>
     </aside>
   );
 }
 
-export function DashboardTopbar({ currentMember, sectionTitle = "Missioni", onAdminOpen, onProfileOpen }: Readonly<{
+export function DashboardTopbar({ currentMember, settings, sectionTitle = "Missioni", onAdminOpen, onProfileOpen }: Readonly<{
   currentMember: AllianceMember;
+  settings: AllianceSettings;
   sectionTitle?: string;
   onAdminOpen?: () => void;
   onProfileOpen?: () => void;
 }>) {
+  useEffect(() => {
+    document.title = settings.name.trim() || "NMS Alliance Manager";
+    if (!settings.logoUrl) return;
+
+    let icon = document.querySelector<HTMLLinkElement>('link[rel~="icon"]');
+    if (!icon) {
+      icon = document.createElement("link");
+      icon.rel = "icon";
+      document.head.append(icon);
+    }
+    icon.href = settings.logoUrl;
+    icon.removeAttribute("type");
+    icon.removeAttribute("sizes");
+  }, [settings.logoUrl, settings.name]);
+
   let roleLabel = "Utente";
   if (currentMember.role === "admin") roleLabel = "Admin";
   else if (currentMember.role === "moderator") roleLabel = "Moderatore";
@@ -68,6 +77,12 @@ export function DashboardTopbar({ currentMember, sectionTitle = "Missioni", onAd
         {currentMember.role === "moderator" && <Link aria-label="Gestione utenti" className="square-button" href="/utenti" title="Gestione utenti"><UsersRound size={16} /></Link>}
         <button aria-label="Esci" className="square-button" onClick={() => signOut({ callbackUrl: "/" })} title="Esci" type="button"><LogOut size={16} /></button>
         <span className="top-avatar">{(currentMember.nmsName || currentMember.name).slice(0, 2).toUpperCase()}</span>
+        <span aria-label={settings.name} className="topbar-alliance" title={settings.name}>
+          <span className="topbar-alliance-mark" style={settings.logoUrl ? { backgroundImage: `url("${settings.logoUrl}")` } : undefined}>
+            {!settings.logoUrl && <Orbit size={16} />}
+          </span>
+          <strong className="topbar-alliance-name">{settings.name}</strong>
+        </span>
       </div>
     </header>
   );
@@ -108,5 +123,5 @@ export function MissionMetrics({ missions, counts }: Readonly<{
 }
 
 export function DashboardFooter() {
-  return <footer className="app-footer"><span><Orbit size={14} /> WAYFARER ALLIANCE NETWORK</span><span>SETTORE EUCLIDE <span className="footer-separator">/</span> CANALE SICURO</span></footer>;
+  return <footer className="app-footer"><span><Orbit size={14} /> NMS ALLIANCE NETWORK</span><span>SETTORE EUCLIDE <span className="footer-separator">/</span> CANALE SICURO</span></footer>;
 }

@@ -9,7 +9,7 @@ export function GoogleLogin({ missingConfiguration = [] }: Readonly<{ missingCon
     <main className="login-screen">
       <div className="login-panel">
         <span className="login-mark"><Orbit size={28} /></span>
-        <span className="eyebrow login-eyebrow">WAYFARER · ALLIANCE NETWORK</span>
+        <span className="eyebrow login-eyebrow">NMS ALLIANCE · NETWORK</span>
         <h1>Accedi alle operazioni<span>.</span></h1>
         <p>Entra con Google per visualizzare e coordinare le missioni dell’alleanza.</p>
         {ready ? <button className="google-login-button" onClick={() => signIn("google")} type="button"><GoogleMark /> Continua con Google</button> : <div className="auth-setup-note"><CircleSetupIcon /> Accesso da configurare nel progetto</div>}

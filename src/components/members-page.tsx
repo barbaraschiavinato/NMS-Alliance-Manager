@@ -131,9 +131,9 @@ export function MembersPage({ currentMember, alliance, missionCount }: Readonly<
 
   return (
     <div className="app-shell">
-      <AllianceSidebar activeSection="utenti" currentMember={pageMember} missionCount={missionCount} settings={allianceSettings} />
+      <AllianceSidebar activeSection="utenti" currentMember={pageMember} missionCount={missionCount} />
       <section className="main-panel">
-        <DashboardTopbar currentMember={pageMember} onAdminOpen={() => setAdminOpen(true)} onProfileOpen={() => setProfileOpen(true)} sectionTitle="Utenti" />
+        <DashboardTopbar currentMember={pageMember} onAdminOpen={() => setAdminOpen(true)} onProfileOpen={() => setProfileOpen(true)} sectionTitle="Utenti" settings={allianceSettings} />
         <main className="members-page">
           <header className="members-page-header">
             <Link aria-label="Torna alle missioni" className="members-back" href="/"><ArrowLeft size={16} /> Missioni</Link>
