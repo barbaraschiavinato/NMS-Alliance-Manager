@@ -8,7 +8,7 @@ export function AdminPanel({ onClose, onSaved }: Readonly<{
   onClose: () => void;
   onSaved: (settings: AllianceSettings) => void;
 }>) {
-  const [settings, setSettings] = useState<AllianceSettings>({ name: "", logoUrl: "", bannerUrl: "", heroGradientEnabled: true, defaultTableView: "list" });
+  const [settings, setSettings] = useState<AllianceSettings>({ name: "", logoUrl: "", bannerUrl: "", discordUrl: "", telegramUrl: "", heroGradientEnabled: true, defaultTableView: "list" });
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -103,7 +103,19 @@ export function AdminPanel({ onClose, onSaved }: Readonly<{
             </div>
             <p className="field-hint">PNG, JPEG, WebP o AVIF · massimo 5 MB. Le immagini restano nel Blob privato dell’alleanza.</p>
           </section>
-          <div className="admin-save-row"><span className="action-spacer" /><button className="primary-button" disabled={busy || !settings.name.trim()} type="submit">Salva identità</button></div>
+          <section className="admin-section admin-community-section">
+            <h3>LINK COMMUNITY</h3>
+            <label className="field">
+              <span>Invito Discord</span>
+              <input autoComplete="url" maxLength={300} onChange={(event) => setSettings((current) => ({ ...current, discordUrl: event.target.value }))} placeholder="https://discord.gg/… o link abbreviato t.co" type="url" value={settings.discordUrl} />
+            </label>
+            <label className="field">
+              <span>Link Telegram</span>
+              <input autoComplete="url" maxLength={300} onChange={(event) => setSettings((current) => ({ ...current, telegramUrl: event.target.value }))} placeholder="https://t.me/… o link abbreviato t.co" type="url" value={settings.telegramUrl} />
+            </label>
+            <p className="field-hint">I link configurati saranno visibili nella barra laterale a tutti i membri.</p>
+          </section>
+          <div className="admin-save-row"><span className="action-spacer" /><button className="primary-button" disabled={busy || !settings.name.trim()} type="submit">Salva impostazioni</button></div>
         </form>
         {(message || error) && <p className={error ? "admin-feedback admin-error" : "admin-feedback admin-success"}>{error ? <CircleAlert size={14} /> : <Check size={14} />}{error || message}</p>}
       </dialog>

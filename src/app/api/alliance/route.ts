@@ -17,16 +17,34 @@ export async function PATCH(request: Request) {
   const value = input as Record<string, unknown>;
   if (typeof value.name !== "string" || !value.name.trim() || value.name.length > 80 ||
       typeof value.logoUrl !== "string" || typeof value.bannerUrl !== "string" ||
+      typeof value.discordUrl !== "string" || value.discordUrl.length > 300 || !isCommunityInviteUrl(value.discordUrl, ["discord.gg", "discord.com", "t.co"]) ||
+      typeof value.telegramUrl !== "string" || value.telegramUrl.length > 300 || !isCommunityInviteUrl(value.telegramUrl, ["t.me", "telegram.me", "t.co"]) ||
       typeof value.heroGradientEnabled !== "boolean" ||
       (value.defaultTableView !== "list" && value.defaultTableView !== "cards")) {
-    return NextResponse.json({ error: "Nome o immagini alleanza non validi." }, { status: 400 });
+    return NextResponse.json({ error: "Controlla il nome, le immagini e i link Discord/Telegram." }, { status: 400 });
   }
   const settings = await updateAllianceSettings({
     name: value.name.trim(),
     logoUrl: value.logoUrl,
     bannerUrl: value.bannerUrl,
+    discordUrl: value.discordUrl.trim(),
+    telegramUrl: value.telegramUrl.trim(),
     heroGradientEnabled: value.heroGradientEnabled,
     defaultTableView: value.defaultTableView,
   });
   return NextResponse.json(settings);
+}
+
+function isCommunityInviteUrl(value: string, allowedHosts: readonly string[]) {
+  const trimmed = value.trim();
+  if (!trimmed) return true;
+  try {
+    const url = new URL(trimmed);
+    return url.protocol === "https:" &&
+      allowedHosts.includes(url.hostname.toLowerCase()) &&
+      !url.username &&
+      !url.password;
+  } catch {
+    return false;
+  }
 }

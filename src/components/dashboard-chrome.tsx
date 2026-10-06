@@ -5,7 +5,9 @@ import Link from "next/link";
 import {
   CirclePlus,
   Crosshair,
+  MessageCircle,
   Orbit,
+  Send,
   Settings2,
   LogOut,
   UserRound,
@@ -40,6 +42,10 @@ export function AllianceSidebar({ missionCount, currentMember, settings, activeS
         <div className="profile"><span className="avatar">{currentMember.image
           ? <Image alt="" aria-hidden="true" height={31} src={currentMember.image} unoptimized width={31} />
           : displayName.slice(0, 2).toUpperCase()}</span><span><strong>{displayName}</strong><small>{roleLabel}</small></span></div>
+        {(settings.discordUrl || settings.telegramUrl) && <div className="community-links">
+          {settings.discordUrl && <Link aria-label="Apri il server Discord dell’alleanza" href={settings.discordUrl} rel="noreferrer" target="_blank"><MessageCircle size={15} /><span>Discord</span></Link>}
+          {settings.telegramUrl && <Link aria-label="Apri il gruppo Telegram dell’alleanza" href={settings.telegramUrl} rel="noreferrer" target="_blank"><Send size={15} /><span>Telegram</span></Link>}
+        </div>}
       </div>
     </aside>
   );

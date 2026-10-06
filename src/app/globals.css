@@ -65,6 +65,9 @@ a { color: inherit; text-decoration: none; }
 .nav-item.active { color: var(--lime); background: #252d30; box-shadow: inset 2px 0 var(--lime); }
 .nav-item.active svg { color: var(--lime); }
 .nav-count { margin-left: auto; color: var(--lime); font-family: "SFMono-Regular", Consolas, monospace; font-size: 10px; }
+.community-links { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; padding: 10px 4px 0; border-top: 1px solid #303a3d; }
+.community-links a { display: inline-flex; align-items: center; gap: 6px; padding: 6px 8px; color: #a4adae; border: 1px solid #303a3d; background: #171e21; font-family: var(--font-accent); font-size: 9px; letter-spacing: .08em; text-transform: uppercase; }
+.community-links a:hover { color: var(--lime); border-color: var(--lime); background: #252d30; }
 .sidebar-bottom { margin-top: auto; }
 .live-dot { width: 6px; height: 6px; display: inline-block; flex: 0 0 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 3px #71d0c422; }
 .profile { display: flex; align-items: center; gap: 9px; margin-top: 14px; padding: 13px 4px 0; border-top: 1px solid #303a3d; }
