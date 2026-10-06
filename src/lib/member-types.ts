@@ -1,7 +1,7 @@
 export const memberRoles = ["user", "moderator", "admin"] as const;
 export type MemberRole = (typeof memberRoles)[number];
 
-export const nmsPlatforms = ["PC", "PlayStation", "Xbox", "Nintendo Switch", "Mac"] as const;
+export const nmsPlatforms = ["PC", "SteamOS", "PlayStation", "Xbox", "Nintendo Switch", "Mac"] as const;
 export type NmsPlatform = (typeof nmsPlatforms)[number];
 export const memberSpecialties = ["builder", "ranger", "explorer"] as const;
 export type MemberSpecialty = (typeof memberSpecialties)[number];
