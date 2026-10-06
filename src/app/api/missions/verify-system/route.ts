@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getCurrentMember, hasRole } from "@/lib/authorization";
+import { getCurrentMember } from "@/lib/authorization";
 import { readAlmanacResponse, writeAlmanacResponse } from "@/lib/almanac-store";
 import { decodePortalAddress } from "@/lib/missions";
 
@@ -9,9 +9,6 @@ export const dynamic = "force-dynamic";
 export async function GET(request: Request) {
   const member = await getCurrentMember();
   if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
-  if (!hasRole(member, "moderator")) {
-    return NextResponse.json({ error: "Permesso moderator richiesto." }, { status: 403 });
-  }
 
   const params = new URL(request.url).searchParams;
   const address = (params.get("address") ?? "").toUpperCase();
@@ -36,7 +33,7 @@ export async function GET(request: Request) {
   try {
     const cachedResponse = await readAlmanacResponse(address, galaxy);
     if (cachedResponse) {
-      return NextResponse.json({ found: true, systemLabel: almanacSystemLabel(cachedResponse), cached: true }, {
+      return NextResponse.json({ found: true, systemLabel: almanacSystemLabel(cachedResponse), planetType: almanacPlanetType(cachedResponse), cached: true }, {
         headers: { "Cache-Control": "no-store" },
       });
     }
@@ -65,7 +62,7 @@ export async function GET(request: Request) {
 
     await writeAlmanacResponse(address, galaxy, result);
 
-    return NextResponse.json({ found: true, systemLabel: almanacSystemLabel(result), cached: false }, {
+    return NextResponse.json({ found: true, systemLabel: almanacSystemLabel(result), planetType: almanacPlanetType(result), cached: false }, {
       headers: { "Cache-Control": "no-store" },
     });
   } catch (error) {
@@ -89,4 +86,13 @@ function almanacSystemLabel(response: Record<string, unknown>) {
       : [];
   });
   return words.length > 0 ? words.join(" · ") : null;
+}
+
+function almanacPlanetType(response: Record<string, unknown>) {
+  const lines = isRecord(response.lines) ? response.lines : null;
+  const headline = lines && isRecord(lines.headline) ? lines.headline : null;
+  if (headline && typeof headline.word === "string" && headline.word.trim()) return headline.word.trim();
+  const band = lines && isRecord(lines.band) ? lines.band : null;
+  const type = band && isRecord(band.type) ? band.type : null;
+  return type && typeof type.word === "string" && type.word.trim() ? type.word.trim() : null;
 }

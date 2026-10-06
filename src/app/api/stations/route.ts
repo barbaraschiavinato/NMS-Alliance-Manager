@@ -29,6 +29,7 @@ export async function POST(request: Request) {
     ? payload.portal.toUpperCase()
     : "";
   const galaxy = payload.galaxy;
+  const name = typeof payload.name === "string" ? payload.name.trim() : "";
   const requestedOwner = typeof payload.owner === "string" ? payload.owner.trim().toLowerCase() : member.email.toLowerCase();
   const decoded = decodePortalAddress(portal);
   if (!decoded || decoded.errors.length > 0 || typeof galaxy !== "number" || !Number.isInteger(galaxy) || galaxy < 0 || galaxy > 255) {
@@ -36,6 +37,9 @@ export async function POST(request: Request) {
   }
   if (!requestedOwner) {
     return NextResponse.json({ error: "Seleziona il proprietario della stazione." }, { status: 400 });
+  }
+  if (name.length > 80) {
+    return NextResponse.json({ error: "Il nome della stazione non può superare 80 caratteri." }, { status: 400 });
   }
   if (!hasRole(member, "moderator") && requestedOwner !== member.email.toLowerCase()) {
     return NextResponse.json({ error: "Non puoi creare stazioni per un altro membro." }, { status: 403 });
@@ -51,7 +55,7 @@ export async function POST(request: Request) {
     if ((await readStationPortals(requestedOwner)).some((station) => station.portal === portal && station.galaxy === galaxy)) {
       return NextResponse.json({ error: "Questo portale è già presente nella lista del proprietario selezionato." }, { status: 409 });
     }
-    await addStationPortal(requestedOwner, portal, galaxy);
+    await addStationPortal(requestedOwner, portal, galaxy, name);
     await cacheStationPlanet(portal, galaxy);
     return NextResponse.json({ stations: await readStations(member) }, { status: 201 });
   } catch (error) {
@@ -69,9 +73,14 @@ export async function DELETE(request: Request) {
     ? payload.portal.toUpperCase()
     : "";
   const galaxy = payload.galaxy;
+  const owner = typeof payload.owner === "string" ? payload.owner.trim().toLowerCase() : member.email.toLowerCase();
   const decoded = decodePortalAddress(portal);
   if (!decoded || decoded.errors.length > 0 || typeof galaxy !== "number" || !Number.isInteger(galaxy) || galaxy < 0 || galaxy > 255) {
     return NextResponse.json({ error: "Portale o galassia non validi." }, { status: 400 });
+  }
+  if (!owner) return NextResponse.json({ error: "Proprietario della stazione non valido." }, { status: 400 });
+  if (!hasRole(member, "moderator") && owner !== member.email.toLowerCase()) {
+    return NextResponse.json({ error: "Non puoi rimuovere stazioni appartenenti a un altro membro." }, { status: 403 });
   }
 
   try {
@@ -79,7 +88,11 @@ export async function DELETE(request: Request) {
     if (missions.some((mission) => mission.systemAddress.toUpperCase() === portal && mission.galaxy === galaxy)) {
       return NextResponse.json({ error: "Questa stazione è associata a una missione e non può essere rimossa." }, { status: 409 });
     }
-    await removeStationPortal(member.email, portal, galaxy);
+    const ownedStations = await readStationPortals(owner);
+    if (!ownedStations.some((station) => station.portal === portal && station.galaxy === galaxy)) {
+      return NextResponse.json({ error: "Stazione non trovata nell’archivio del proprietario." }, { status: 404 });
+    }
+    await removeStationPortal(owner, portal, galaxy);
     return NextResponse.json({ stations: await readStations(member) });
   } catch (error) {
     console.error("Unable to remove station portal", error);

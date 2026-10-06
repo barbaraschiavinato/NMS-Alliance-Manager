@@ -4,7 +4,7 @@ import path from "node:path";
 import { getBlobAuthOptions } from "@/lib/blob-config";
 import { decodePortalAddress } from "@/lib/missions";
 
-export type StationPortal = Readonly<{ portal: string; galaxy: number }>;
+export type StationPortal = Readonly<{ portal: string; galaxy: number; name?: string }>;
 export type OwnedStationPortal = StationPortal & Readonly<{ owner: string }>;
 type StationIndex = Record<string, StationPortal[]>;
 
@@ -22,7 +22,8 @@ function normalizeStationIndex(value: unknown): StationIndex {
       if (!station || typeof station !== "object" || !("portal" in station) || typeof station.portal !== "string") return [];
       const galaxy = "galaxy" in station && typeof station.galaxy === "number" ? station.galaxy : 0;
       if (!Number.isInteger(galaxy) || galaxy < 0 || galaxy > 255 || decodePortalAddress(station.portal)?.errors.length !== 0) return [];
-      return [{ portal: station.portal.toUpperCase(), galaxy }];
+      const name = "name" in station && typeof station.name === "string" ? station.name.trim().slice(0, 80) : "";
+      return [{ portal: station.portal.toUpperCase(), galaxy, ...(name ? { name } : {}) }];
     });
     index[email.trim().toLowerCase()] = [...new Map(stations.map((station) => [`${station.portal}:${station.galaxy}`, station])).values()];
   }
@@ -73,11 +74,14 @@ export async function readAllStationPortals(): Promise<OwnedStationPortal[]> {
   return Object.entries(index).flatMap(([owner, stations]) => stations.map((station) => ({ ...station, owner })));
 }
 
-export async function addStationPortal(email: string, portal: string, galaxy: number): Promise<StationPortal[]> {
+export async function addStationPortal(email: string, portal: string, galaxy: number, name?: string): Promise<StationPortal[]> {
   const index = await readStationIndex();
   const owner = email.trim().toLowerCase();
   const stations = index[owner] ?? [];
-  if (!stations.some((station) => station.portal === portal && station.galaxy === galaxy)) stations.push({ portal, galaxy });
+  if (!stations.some((station) => station.portal === portal && station.galaxy === galaxy)) {
+    const normalizedName = name?.trim().slice(0, 80);
+    stations.push({ portal, galaxy, ...(normalizedName ? { name: normalizedName } : {}) });
+  }
   index[owner] = stations;
   await writeStationIndex(index);
   return stations;

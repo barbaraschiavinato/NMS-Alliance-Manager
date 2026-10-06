@@ -18,6 +18,7 @@ type StationEntry = Readonly<{
   portal: string;
   galaxy: number;
   owner: string;
+  name?: string;
   planet: CachedPlanet | null;
   hasMissions: boolean;
   availableSpecialties: MissionSpecialty[];
@@ -26,6 +27,13 @@ type StationMissionSeed = Readonly<{ portal: string; galaxy: number; title: stri
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : null;
+}
+
+function cachedPlanetType(planet: CachedPlanet | null) {
+  const title = cachedPlanetTitle(planet);
+  if (title) return title;
+  const lines = asRecord(planet?.response.lines);
+  return planetWord(asRecord(lines?.band), "type") ?? "";
 }
 
 function parseStations(value: unknown): StationEntry[] {
@@ -42,7 +50,15 @@ function parseStations(value: unknown): StationEntry[] {
         missionSpecialties.includes(specialty as MissionSpecialty),
       )
       : [];
-    return [{ portal: station.portal, galaxy: station.galaxy, owner: station.owner, planet, hasMissions: station.hasMissions === true, availableSpecialties }];
+    return [{
+      portal: station.portal,
+      galaxy: station.galaxy,
+      owner: station.owner,
+      ...(typeof station.name === "string" ? { name: station.name } : {}),
+      planet,
+      hasMissions: station.hasMissions === true,
+      availableSpecialties,
+    }];
   });
 }
 
@@ -104,6 +120,9 @@ export function StationsPage({ currentMember, alliance, missionCount }: Readonly
   const [portal, setPortal] = useState("");
   const [galaxy, setGalaxy] = useState(0);
   const [stationOwnerEmail, setStationOwnerEmail] = useState(currentMember.email);
+  const [stationName, setStationName] = useState("");
+  const [planetType, setPlanetType] = useState("");
+  const [stationNameEdited, setStationNameEdited] = useState(false);
   const [validation, setValidation] = useState<SystemAddressValidation>({ valid: false, lookup: null });
   const [addOpen, setAddOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -117,7 +136,7 @@ export function StationsPage({ currentMember, alliance, missionCount }: Readonly
   const canCreateMissions = canSeeAll;
   const viewMode = viewOverride ?? allianceSettings.defaultTableView;
   const visibleStations = useMemo(() => stations.filter((station) =>
-    `${station.portal} ${station.owner} ${galaxyLabel(station.galaxy)}`.toLowerCase().includes(search.toLowerCase()),
+    `${station.name ?? cachedPlanetType(station.planet)} ${station.portal} ${station.owner} ${galaxyLabel(station.galaxy)}`.toLowerCase().includes(search.toLowerCase()),
   ), [search, stations]);
 
   async function fetchStations() {
@@ -138,6 +157,9 @@ export function StationsPage({ currentMember, alliance, missionCount }: Readonly
     setPortal("");
     setGalaxy(0);
     setStationOwnerEmail(pageMember.email);
+    setStationName("");
+    setPlanetType("");
+    setStationNameEdited(false);
     setValidation({ valid: false, lookup: null });
     setError("");
     setAddOpen(true);
@@ -161,6 +183,12 @@ export function StationsPage({ currentMember, alliance, missionCount }: Readonly
         });
     }
   }, [canCreateMissions]);
+
+  function handleStationLookup(lookup: NonNullable<SystemAddressValidation["lookup"]>) {
+    const nextPlanetType = lookup.planetType?.trim() ?? "";
+    setPlanetType(nextPlanetType);
+    if (!stationNameEdited) setStationName(nextPlanetType);
+  }
 
   async function addStation(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -189,7 +217,7 @@ export function StationsPage({ currentMember, alliance, missionCount }: Readonly
       const response = await fetch("/api/stations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ portal: canonicalPortal, galaxy, owner: requestedOwner }),
+        body: JSON.stringify({ portal: canonicalPortal, galaxy, owner: requestedOwner, name: stationName }),
       });
       const body: unknown = await response.json();
       if (!response.ok || !body || typeof body !== "object" || !("stations" in body) || !Array.isArray(body.stations)) {
@@ -198,6 +226,9 @@ export function StationsPage({ currentMember, alliance, missionCount }: Readonly
       }
       setStations(parseStations(body.stations));
       setPortal("");
+      setStationName("");
+      setPlanetType("");
+      setStationNameEdited(false);
       setValidation({ valid: false, lookup: null });
       setAddOpen(false);
       setNotice(canSeeAll && requestedOwner !== pageMember.email.toLowerCase()
@@ -210,14 +241,14 @@ export function StationsPage({ currentMember, alliance, missionCount }: Readonly
     }
   }
 
-  async function removeStation(stationPortal: string, stationGalaxy: number) {
+  async function removeStation(stationPortal: string, stationGalaxy: number, owner: string) {
     setError("");
     setNotice("");
     try {
       const response = await fetch("/api/stations", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ portal: stationPortal, galaxy: stationGalaxy }),
+        body: JSON.stringify({ portal: stationPortal, galaxy: stationGalaxy, owner }),
       });
       const body: unknown = await response.json();
       if (!response.ok || !body || typeof body !== "object" || !("stations" in body) || !Array.isArray(body.stations)) {
@@ -225,7 +256,7 @@ export function StationsPage({ currentMember, alliance, missionCount }: Readonly
         throw new Error(typeof message === "string" ? message : "Impossibile rimuovere il portale.");
       }
       setStations(parseStations(body.stations));
-      setNotice("Portale rimosso dalle tue stazioni.");
+      setNotice("Stazione rimossa dall’archivio del proprietario.");
     } catch (error_: unknown) {
       setError(error_ instanceof Error ? error_.message : "Impossibile rimuovere il portale.");
     }
@@ -283,15 +314,16 @@ export function StationsPage({ currentMember, alliance, missionCount }: Readonly
             {!loading && visibleStations.length === 0 && <p className="station-list-empty">{search ? "Nessuna stazione trovata." : "Nessun portale salvato."}</p>}
             {visibleStations.length > 0 && <ul className={`station-list ${viewMode === "cards" ? "station-list-cards" : ""}`}>{visibleStations.map((station) => {
               const planetImageUrl = cachedPlanetImageUrl(station.planet);
-              return <li key={`${station.portal}:${station.galaxy}`}>
+              const stationDisplayName = station.name || cachedPlanetType(station.planet) || cachedPlanetTitle(station.planet) || "Pianeta senza nome";
+              return <li key={`${station.portal}:${station.galaxy}:${station.owner}`}>
                 {viewMode === "cards" && <button className={`station-card-title${planetImageUrl ? " station-card-title-with-image" : ""}`} onClick={() => setSelectedStation({ portal: station.portal, galaxy: station.galaxy })} type="button">
                   {planetImageUrl && <Image alt="" className="station-card-planet-image" height={112} src={planetImageUrl} unoptimized width={112} />}
                   <span className="station-card-title-copy">
                     <span>{galaxyLabel(station.galaxy)}</span>
-                    <strong>{cachedPlanetTitle(station.planet) || "Pianeta senza nome"}</strong>
+                    <strong>{stationDisplayName}</strong>
                   </span>
                 </button>}
-                <div className="station-portal-code"><GlyphStrip address={station.portal} /><code>{station.portal}</code>{canSeeAll && <span className="station-owner">{station.owner}</span>}</div>
+                <div className="station-portal-code"><strong className="station-name">{stationDisplayName}</strong><GlyphStrip address={station.portal} /><code>{station.portal}</code>{canSeeAll && <span className="station-owner">{station.owner}</span>}</div>
                 <div className="station-planet-info-list">
                   {station.planet
                     ? <CachedPlanetInfo onOpen={() => setSelectedStation({ portal: station.portal, galaxy: station.galaxy })} planet={station.planet} />
@@ -303,7 +335,7 @@ export function StationsPage({ currentMember, alliance, missionCount }: Readonly
                   {canCreateMissions && station.availableSpecialties.length > 0 && <button aria-label={`Crea missione da ${station.portal}`} className="member-icon-action create-station-mission" onClick={() => setMissionStation({ portal: station.portal, galaxy: station.galaxy, title: cachedPlanetTitle(station.planet), ownerEmail: station.owner })} title="Crea missione"><CirclePlus size={14} /></button>}
                   {station.hasMissions
                     ? <span className="station-mission-lock">Missione associata</span>
-                    : station.owner.toLowerCase() === pageMember.email.toLowerCase() && <button aria-label={`Rimuovi il portale ${station.portal} in ${galaxyLabel(station.galaxy)}`} className="member-icon-action delete-member" onClick={() => void removeStation(station.portal, station.galaxy)} title="Rimuovi stazione" type="button"><Trash2 size={14} /></button>}
+                    : (canSeeAll || station.owner.toLowerCase() === pageMember.email.toLowerCase()) && <button aria-label={`Rimuovi il portale ${station.portal} in ${galaxyLabel(station.galaxy)} dall’archivio di ${station.owner}`} className="member-icon-action delete-member" onClick={() => void removeStation(station.portal, station.galaxy, station.owner)} title="Rimuovi stazione" type="button"><Trash2 size={14} /></button>}
                 </div>
               </li>;
             })}</ul>}
@@ -317,14 +349,36 @@ export function StationsPage({ currentMember, alliance, missionCount }: Readonly
             <button aria-label="Chiudi" className="icon-button" onClick={() => setAddOpen(false)} type="button"><X size={18} /></button>
           </div>
           <form className="station-add-form" onSubmit={addStation}>
-            <SystemAddressField address={portal} galaxy={undefined} onChange={(value) => {
+            <label className="field full-field station-name-field">
+              <span>Nome stazione <small>modificabile · max 80 caratteri</small></span>
+              <input
+                aria-label="Nome della stazione"
+                maxLength={80}
+                onChange={(event) => {
+                  setStationName(event.target.value);
+                  setStationNameEdited(true);
+                }}
+                placeholder={planetType || "Es. Large irradiated planet"}
+                value={stationName}
+              />
+            </label>
+            <SystemAddressField address={portal} galaxy={galaxy} onChange={(value) => {
               setPortal(value);
+              setStationName("");
+              setPlanetType("");
+              setStationNameEdited(false);
               setError("");
               setValidation({ valid: false, lookup: null });
-            }} onStateChange={setValidation} />
+            }} onLookupResolved={handleStationLookup} onStateChange={setValidation} />
             <label className="field station-galaxy-select">
               <span>Galassia</span>
-              <select onChange={(event) => setGalaxy(Number(event.target.value))} value={galaxy}>
+              <select onChange={(event) => {
+                setGalaxy(Number(event.target.value));
+                setStationName("");
+                setPlanetType("");
+                setStationNameEdited(false);
+                setValidation({ valid: false, lookup: null });
+              }} value={galaxy}>
                 {galaxyNames.map((name, index) => <option key={index} value={index}>{name}</option>)}
               </select>
             </label>

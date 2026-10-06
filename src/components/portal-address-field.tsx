@@ -8,6 +8,7 @@ export type SystemAddressLookup = Readonly<{
   galaxy: number;
   status: "checking" | "found" | "not-found" | "unavailable";
   systemLabel?: string | null;
+  planetType?: string | null;
 }>;
 
 export type SystemAddressValidation = Readonly<{
@@ -158,8 +159,11 @@ export function SystemAddressField({ address, galaxy, onChange, onStateChange, o
         const systemLabel = "systemLabel" in result && typeof result.systemLabel === "string"
           ? result.systemLabel
           : null;
+        const planetType = "planetType" in result && typeof result.planetType === "string"
+          ? result.planetType
+          : null;
         if (active) {
-          const lookupResult = { address, galaxy, status: found ? "found" as const : "not-found" as const, systemLabel };
+          const lookupResult = { address, galaxy, status: found ? "found" as const : "not-found" as const, systemLabel, planetType };
           setLookup(lookupResult);
           emitLookupResult(lookupResult);
         }

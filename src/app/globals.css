@@ -453,6 +453,8 @@ select { appearance: none; padding-right: 29px; background-image: linear-gradien
 .station-list-cards .station-planet-open { display: none; }
 .station-list-cards .station-planet-unknown { display: none; }
 .station-card-no-planet { margin: 0; color: #a4adae; font-size: 9px; }
+.station-list:not(.station-list-cards) .station-name { color: #526a55; font-size: 10px; }
+.station-list-cards .station-name { display: none; }
 .station-list-cards .station-actions { grid-column: 2; grid-row: 1; align-self: start; }
 .station-portal-code { min-width: 0; display: grid; justify-items: start; gap: 4px; }
 .station-owner { color: #b4bfbe; font-size: 8px; line-height: 1.3; overflow-wrap: anywhere; }
