@@ -2,6 +2,12 @@
 
 Dashboard Next.js per coordinare le missioni di un'alleanza: stato, responsabile, settore, priorità, scadenza e avanzamento. Include ricerca, filtri e gestione completa delle missioni.
 
+## Lingue
+
+L'interfaccia è disponibile in italiano e inglese. La prima visita usa la lingua preferita dal browser (inglese se la lingua del browser è inglese, italiano negli altri casi); la scelta può essere cambiata dal selettore nell'intestazione e viene salvata nel browser. La lingua selezionata non modifica gli URL.
+
+I cataloghi sono separati per lingua in `src/lib/translations/`. Le chiavi canoniche sono stringhe inglesi; `en.ts` usa queste chiavi come testo sorgente, mentre `it.ts` organizza le traduzioni per area (`common`, `navigation`, `missions`, `stations`, `members`, `profile`, `admin`, `planet`, `auth`, `system`, `errors`). Per aggiungere una lingua, crea un catalogo in questa cartella usando le stesse chiavi inglesi, aggiungila al tipo `Locale` e registrala in `src/lib/translations.ts`. Le nuove voci senza traduzione usano automaticamente la chiave inglese. Le forme italiane attualmente usate come chiavi nei componenti vengono ricondotte alla traduzione partendo dal catalogo; `aliases` in `it.ts` contiene solo le varianti legacy aggiuntive.
+
 ## Avvio locale
 
 ```bash

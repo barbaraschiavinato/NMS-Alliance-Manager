@@ -14,6 +14,7 @@ import { LoadingSpinner } from "@/components/loading-spinner";
 import type { AllianceMember, AllianceSettings } from "@/lib/access-store";
 import { galaxyNames, galaxyLabel } from "@/lib/galaxies";
 import { decodePortalAddress, missionSpecialties, type Mission, type MissionInput, type MissionSpecialty } from "@/lib/missions";
+import { useLocale } from "@/components/locale-provider";
 
 type CachedPlanet = Readonly<{ galaxy: number; response: Record<string, unknown> }>;
 type StationEntry = Readonly<{
@@ -84,23 +85,24 @@ function cachedPlanetImageUrl(planet: CachedPlanet | null) {
 }
 
 function CachedPlanetInfo({ planet, onOpen }: Readonly<{ planet: CachedPlanet; onOpen: () => void }>) {
+  const { t } = useLocale();
   const lines = asRecord(planet.response.lines);
   const band = lines ? asRecord(lines.band) : null;
   const headline = lines ? asRecord(lines.headline) : null;
   const title = typeof headline?.word === "string" ? headline.word : planetWord(band, "type");
   const facts = [
-    ["Tipo", planetWord(band, "type")],
-    ["Meteo", planetWord(band, "weather")],
-    ["Acqua", planetWord(band, "water")],
-    ["Stella", planetWord(band, "star")],
-    ["Economia", planetWord(band, "economy")],
-    ["Razza", planetWord(band, "race")],
+    [t("Tipo"), planetWord(band, "type")],
+    [t("Meteo"), planetWord(band, "weather")],
+    [t("Acqua"), planetWord(band, "water")],
+    [t("Stella"), planetWord(band, "star")],
+    [t("Economia"), planetWord(band, "economy")],
+    [t("Razza"), planetWord(band, "race")],
   ].filter((fact): fact is [string, string] => Boolean(fact[1]));
 
   return (
     <div className="station-planet-info">
-      <button className="station-planet-open" onClick={onOpen} type="button" aria-label={`Apri la scheda di ${title || "questo pianeta"}`}>
-        <span>{galaxyLabel(planet.galaxy)}</span><strong>{title || "Dati pianeta"}</strong>
+      <button className="station-planet-open" onClick={onOpen} type="button" aria-label={`${t("Apri la scheda di")} ${title || t("questo pianeta")}`}>
+        <span>{galaxyLabel(planet.galaxy)}</span><strong>{title || t("Dati pianeta")}</strong>
       </button>
       <dl>{facts.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>
     </div>
@@ -115,6 +117,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
   sidebarStationCount: number;
   sidebarUserCount?: number;
 }>) {
+  const { t } = useLocale();
   const [pageMember, setPageMember] = useState(currentMember);
   const [allianceSettings, setAllianceSettings] = useState(alliance);
   const [stations, setStations] = useState<StationEntry[]>([]);
@@ -237,8 +240,8 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
       setValidation({ valid: false, lookup: null });
       setAddOpen(false);
       setNotice(canSeeAll && requestedOwner !== pageMember.email.toLowerCase()
-        ? `Stazione aggiunta all’archivio di ${members.find((candidate) => candidate.email.toLowerCase() === requestedOwner)?.nmsName || members.find((candidate) => candidate.email.toLowerCase() === requestedOwner)?.name || requestedOwner}.`
-        : "Portale aggiunto alle tue stazioni.");
+        ? t("Stazione aggiunta all’archivio di {owner}.", { owner: members.find((candidate) => candidate.email.toLowerCase() === requestedOwner)?.nmsName || members.find((candidate) => candidate.email.toLowerCase() === requestedOwner)?.name || requestedOwner })
+        : t("Portale aggiunto alle tue stazioni."));
     } catch (error_: unknown) {
       setError(error_ instanceof Error ? error_.message : "Impossibile salvare il portale.");
     } finally {
@@ -261,7 +264,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
         throw new Error(typeof message === "string" ? message : "Impossibile rimuovere il portale.");
       }
       setStations(parseStations(body.stations));
-      setNotice("Stazione rimossa dall’archivio del proprietario.");
+      setNotice(t("Stazione rimossa dall’archivio del proprietario."));
     } catch (error_: unknown) {
       setError(error_ instanceof Error ? error_.message : "Impossibile rimuovere il portale.");
     }
@@ -279,7 +282,9 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
       throw new Error(typeof message === "string" ? message : "Impossibile creare la missione.");
     }
     const created = body as Mission[];
-    setNotice(created.length > 1 ? `Create ${created.length} missioni dalla stazione.` : "Missione creata dalla stazione.");
+    setNotice(created.length > 1
+      ? t("{count} missioni create dalla stazione.", { count: created.length })
+      : t("Missione creata dalla stazione."));
     try {
       await refreshStations();
     } catch {
@@ -301,25 +306,25 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
           title={canSeeAll ? "Stazioni spaziali" : "Le mie stazioni"}
         />
         <main className="content-wrap stations-page">
-          {(error || notice) && <p className={error ? "form-error" : "address-validation address-valid"}>{error ? <CircleAlert size={15} /> : null}{error || notice}</p>}
+          {(error || notice) && <p className={error ? "form-error" : "address-validation address-valid"}>{error ? <CircleAlert size={15} /> : null}{t(error || notice)}</p>}
 
-          <section aria-label="Le mie stazioni spaziali" className="station-list-section">
+          <section aria-label={t("Le mie stazioni spaziali")} className="station-list-section">
             <div className="station-list-heading">
-              <h2>Portali salvati</h2>
+              <h2>{t("Portali salvati")}</h2>
               <div className="station-list-heading-tools">
                 <span className="station-count">{visibleStations.length}</span>
-                <label className="search-field station-search"><Search size={15} /><input aria-label="Cerca stazioni per portale, proprietario o galassia" onChange={(event) => setSearch(event.target.value)} placeholder="Cerca portale, utente o galassia" value={search} /></label>
-                <div aria-label="Vista stazioni" className="view-toggle" role="group">
-                  <button aria-label="Vista lista" aria-pressed={viewMode === "list"} className={viewMode === "list" ? "selected" : ""} onClick={() => setViewOverride("list")} title="Vista lista" type="button"><List size={15} /></button>
-                  <button aria-label="Vista schede" aria-pressed={viewMode === "cards"} className={viewMode === "cards" ? "selected" : ""} onClick={() => setViewOverride("cards")} title="Vista schede" type="button"><LayoutGrid size={15} /></button>
+                <label className="search-field station-search"><Search size={15} /><input aria-label={t("Cerca stazioni per portale, proprietario o galassia")} onChange={(event) => setSearch(event.target.value)} placeholder={t("Cerca portale, utente o galassia")} value={search} /></label>
+                <div aria-label={t("Vista stazioni")} className="view-toggle" role="group">
+                  <button aria-label={t("Vista lista")} aria-pressed={viewMode === "list"} className={viewMode === "list" ? "selected" : ""} onClick={() => setViewOverride("list")} title={t("Vista lista")} type="button"><List size={15} /></button>
+                  <button aria-label={t("Vista schede")} aria-pressed={viewMode === "cards"} className={viewMode === "cards" ? "selected" : ""} onClick={() => setViewOverride("cards")} title={t("Vista schede")} type="button"><LayoutGrid size={15} /></button>
                 </div>
               </div>
             </div>
             {loading && <div className="station-list-empty station-list-loading"><LoadingSpinner /></div>}
-            {!loading && visibleStations.length === 0 && <p className="station-list-empty">{search ? "Nessuna stazione trovata." : "Nessun portale salvato."}</p>}
+            {!loading && visibleStations.length === 0 && <p className="station-list-empty">{t(search ? "Nessuna stazione trovata." : "Nessun portale salvato.")}</p>}
             {visibleStations.length > 0 && <ul className={`station-list ${viewMode === "cards" ? "station-list-cards" : ""}`}>{visibleStations.map((station) => {
               const planetImageUrl = cachedPlanetImageUrl(station.planet);
-              const stationDisplayName = station.name || cachedPlanetType(station.planet) || cachedPlanetTitle(station.planet) || "Pianeta senza nome";
+              const stationDisplayName = station.name || cachedPlanetType(station.planet) || cachedPlanetTitle(station.planet) || t("Pianeta senza nome");
               return <li key={`${station.portal}:${station.galaxy}:${station.owner}`}>
                 {viewMode === "cards" && <button className={`station-card-title${planetImageUrl ? " station-card-title-with-image" : ""}`} onClick={() => setSelectedStation({ portal: station.portal, galaxy: station.galaxy })} type="button">
                   {planetImageUrl && <Image alt="" className="station-card-planet-image" height={112} src={planetImageUrl} unoptimized width={112} />}
@@ -333,16 +338,16 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
                   {station.planet
                     ? <CachedPlanetInfo onOpen={() => setSelectedStation({ portal: station.portal, galaxy: station.galaxy })} planet={station.planet} />
                     : viewMode === "cards"
-                      ? <p className="station-card-no-planet">Nessun dato Almanac</p>
-                      : <button className="station-planet-open station-planet-unknown" onClick={() => setSelectedStation({ portal: station.portal, galaxy: station.galaxy })} type="button"><span>{galaxyLabel(station.galaxy)}</span><strong>Nessun dato Almanac · apri scheda</strong></button>}
+                      ? <p className="station-card-no-planet">{t("Nessun dato Almanac")}</p>
+                      : <button className="station-planet-open station-planet-unknown" onClick={() => setSelectedStation({ portal: station.portal, galaxy: station.galaxy })} type="button"><span>{galaxyLabel(station.galaxy)}</span><strong>{t("Nessun dato Almanac · apri scheda")}</strong></button>}
                 </div>
                 <div className="station-actions">
-                  {canCreateMissions && station.availableSpecialties.length > 0 && <button aria-label={`Crea missione da ${station.portal}`} className="member-icon-action create-station-mission" data-tooltip="Crea missione da stazione" onClick={() => setMissionStation({ portal: station.portal, galaxy: station.galaxy, title: cachedPlanetTitle(station.planet), ownerEmail: station.owner })} type="button"><CirclePlus size={14} /></button>}
+                  {canCreateMissions && station.availableSpecialties.length > 0 && <button aria-label={t("Crea missione da {portal}", { portal: station.portal })} className="member-icon-action create-station-mission" data-tooltip={t("Crea missione da stazione")} onClick={() => setMissionStation({ portal: station.portal, galaxy: station.galaxy, title: cachedPlanetTitle(station.planet), ownerEmail: station.owner })} type="button"><CirclePlus size={14} /></button>}
                   {station.hasMissions
                     ? canSeeAll
-                      ? <Link aria-label={`Apri le missioni del pianeta ${station.portal}`} className="member-icon-action station-missions-link" data-tooltip="Apri le missioni associate" href={`/?search=${encodeURIComponent(station.portal)}`}><Crosshair size={14} /></Link>
-                      : <span className="station-mission-lock">Missione associata</span>
-                    : (canSeeAll || station.owner.toLowerCase() === pageMember.email.toLowerCase()) && <button aria-label={`Rimuovi il portale ${station.portal} in ${galaxyLabel(station.galaxy)} dall’archivio di ${station.owner}`} className="member-icon-action delete-member" data-tooltip="Cancella stazione" onClick={() => void removeStation(station.portal, station.galaxy, station.owner)} type="button"><Trash2 size={14} /></button>}
+                      ? <Link aria-label={t("Apri le missioni del pianeta {portal}", { portal: station.portal })} className="member-icon-action station-missions-link" data-tooltip={t("Apri le missioni associate")} href={`/?search=${encodeURIComponent(station.portal)}`}><Crosshair size={14} /></Link>
+                      : <span className="station-mission-lock">{t("Missione associata")}</span>
+                    : (canSeeAll || station.owner.toLowerCase() === pageMember.email.toLowerCase()) && <button aria-label={t("Rimuovi il portale {portal} in {galaxy} dall’archivio di {owner}", { portal: station.portal, galaxy: galaxyLabel(station.galaxy), owner: station.owner })} className="member-icon-action delete-member" data-tooltip={t("Cancella stazione")} onClick={() => void removeStation(station.portal, station.galaxy, station.owner)} type="button"><Trash2 size={14} /></button>}
                 </div>
               </li>;
             })}</ul>}
@@ -352,20 +357,20 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
       {addOpen && <div className="dialog-backdrop">
         <dialog aria-labelledby="station-dialog-title" aria-modal="true" className="mission-dialog station-dialog" open>
           <div className="dialog-heading">
-            <div><span className="eyebrow">{canSeeAll ? "ARCHIVIO STAZIONI" : "ARCHIVIO PERSONALE"}</span><h2 id="station-dialog-title">Aggiungi stazione</h2></div>
-            <button aria-label="Chiudi" className="icon-button" onClick={() => setAddOpen(false)} type="button"><X size={18} /></button>
+            <div><span className="eyebrow">{t(canSeeAll ? "ARCHIVIO STAZIONI" : "ARCHIVIO PERSONALE")}</span><h2 id="station-dialog-title">{t("Aggiungi stazione")}</h2></div>
+              <button aria-label={t("Chiudi")} className="icon-button" onClick={() => setAddOpen(false)} type="button"><X size={18} /></button>
           </div>
           <form className="station-add-form" onSubmit={addStation}>
             <label className="field full-field station-name-field">
-              <span>Nome stazione <small>modificabile · max 80 caratteri</small></span>
+              <span>{t("Nome stazione")} <small>{t("modificabile · max 80 caratteri")}</small></span>
               <input
-                aria-label="Nome della stazione"
+                aria-label={t("Nome della stazione")}
                 maxLength={80}
                 onChange={(event) => {
                   setStationName(event.target.value);
                   setStationNameEdited(true);
                 }}
-                placeholder={planetType || "Es. Large irradiated planet"}
+                placeholder={planetType || t("Es. Large irradiated planet")}
                 value={stationName}
               />
             </label>
@@ -378,7 +383,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
               setValidation({ valid: false, lookup: null });
             }} onLookupResolved={handleStationLookup} onStateChange={setValidation} />
             <label className="field station-galaxy-select">
-              <span>Galassia</span>
+              <span>{t("Galassia")}</span>
               <select onChange={(event) => {
                 setGalaxy(Number(event.target.value));
                 setStationName("");
@@ -390,7 +395,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
               </select>
             </label>
             {canSeeAll && <label className="field">
-              <span>Proprietario della stazione</span>
+              <span>{t("Proprietario della stazione")}</span>
               <select onChange={(event) => setStationOwnerEmail(event.target.value)} required value={stationOwnerEmail}>
                 {[pageMember, ...members.filter((candidate) => candidate.email.toLowerCase() !== pageMember.email.toLowerCase())]
                   .map((candidate) => (
@@ -403,8 +408,8 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
             {error && <p className="form-error"><CircleAlert size={15} />{error}</p>}
             <div className="dialog-actions">
               <span className="action-spacer" />
-              <button className="quiet-button" onClick={() => setAddOpen(false)} type="button">Annulla</button>
-              <button className="primary-button" disabled={saving || !validation.valid} type="submit">{saving ? "Salvataggio…" : "Aggiungi"}<Plus size={15} /></button>
+              <button className="quiet-button" onClick={() => setAddOpen(false)} type="button">{t("Annulla")}</button>
+              <button className="primary-button" disabled={saving || !validation.valid} type="submit">{saving ? t("Salvataggio…") : t("Aggiungi")}<Plus size={15} /></button>
             </div>
           </form>
         </dialog>
@@ -414,7 +419,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
         galaxy={selectedStation.galaxy}
         onClose={() => setSelectedStation(null)}
         portal={selectedStation.portal}
-        title="Stazione spaziale"
+        title={t("Stazione spaziale")}
       />}
       {adminOpen && pageMember.role === "admin" && <AdminPanel onClose={() => setAdminOpen(false)} onSaved={setAllianceSettings} />}
       {profileOpen && <MemberProfilePanel member={pageMember} onClose={() => setProfileOpen(false)} onSaved={(profile) => setPageMember((current) => ({ ...current, ...profile }))} />}

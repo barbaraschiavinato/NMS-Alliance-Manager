@@ -8,6 +8,7 @@ import { AllianceSidebar, DashboardTopbar, MissionHero } from "@/components/dash
 import { AdminPanel } from "@/components/admin-panel";
 import { MemberProfilePanel } from "@/components/member-profile-panel";
 import { LoadingSpinner } from "@/components/loading-spinner";
+import { useLocale } from "@/components/locale-provider";
 
 type MemberFilter = "all" | MembershipStatus;
 type ManagedMember = AllianceMember & { protectedAdmin: boolean };
@@ -31,26 +32,27 @@ function MemberActions({ member, canChangeRole, currentMemberEmail, onStatus, on
   onRole: (email: string, role: MemberRole) => void;
   onDelete: (member: AllianceMember) => void;
 }>) {
+  const { t } = useLocale();
   const canManage = canChangeRole || member.role === "user";
   const isCurrentMember = member.email.toLowerCase() === currentMemberEmail.toLowerCase();
   if (member.protectedAdmin || isCurrentMember || !canManage) return null;
 
   if (member.role === "admin") return <div className="member-page-actions">
-    <select aria-label={`Ruolo di ${member.email}`} onChange={(event) => onRole(member.email, event.target.value as MemberRole)} value={member.role}>
-      {(Object.keys(roleLabels) as MemberRole[]).map((role) => <option key={role} value={role}>{roleLabels[role]}</option>)}
+    <select aria-label={t("Ruolo di {email}", { email: member.email })} onChange={(event) => onRole(member.email, event.target.value as MemberRole)} value={member.role}>
+      {(Object.keys(roleLabels) as MemberRole[]).map((role) => <option key={role} value={role}>{t(roleLabels[role])}</option>)}
     </select>
-    <button aria-label={`Elimina ${member.email}`} className="member-icon-action delete-member" data-tooltip="Elimina admin" onClick={() => onDelete(member)} type="button"><Trash2 size={14} /></button>
+    <button aria-label={t("Elimina {email}", { email: member.email })} className="member-icon-action delete-member" data-tooltip={t("Elimina admin")} onClick={() => onDelete(member)} type="button"><Trash2 size={14} /></button>
   </div>;
 
   return (
     <div className="member-page-actions">
-      {canChangeRole && <select aria-label={`Ruolo di ${member.email}`} onChange={(event) => onRole(member.email, event.target.value as MemberRole)} value={member.role}>{(Object.keys(roleLabels) as MemberRole[]).map((role) => <option key={role} value={role}>{roleLabels[role]}</option>)}</select>}
-      {member.membershipStatus === "pending" && <button aria-label={`Approva ${member.email}`} className="member-icon-action approval-button" data-tooltip="Approva utente" onClick={() => onStatus(member.email, "approved")} type="button"><Check size={14} /></button>}
-      {member.membershipStatus === "approved" && <button aria-label={`Revoca approvazione a ${member.email}`} className="member-icon-action approval-button revoke-approval" data-tooltip="Revoca approvazione" onClick={() => onStatus(member.email, "pending")} type="button"><CircleX size={14} /></button>}
+      {canChangeRole && <select aria-label={t("Ruolo di {email}", { email: member.email })} onChange={(event) => onRole(member.email, event.target.value as MemberRole)} value={member.role}>{(Object.keys(roleLabels) as MemberRole[]).map((role) => <option key={role} value={role}>{t(roleLabels[role])}</option>)}</select>}
+      {member.membershipStatus === "pending" && <button aria-label={t("Approva {email}", { email: member.email })} className="member-icon-action approval-button" data-tooltip={t("Approva utente")} onClick={() => onStatus(member.email, "approved")} type="button"><Check size={14} /></button>}
+      {member.membershipStatus === "approved" && <button aria-label={t("Revoca approvazione a {email}", { email: member.email })} className="member-icon-action approval-button revoke-approval" data-tooltip={t("Revoca approvazione")} onClick={() => onStatus(member.email, "pending")} type="button"><CircleX size={14} /></button>}
       {member.membershipStatus === "blocked"
-        ? <button aria-label={`Sblocca ${member.email}`} className="member-icon-action approval-button" data-tooltip="Sblocca utente" onClick={() => onStatus(member.email, "pending")} type="button"><UserRoundCheck size={14} /></button>
-        : <button aria-label={`Blocca ${member.email}`} className="member-icon-action block-member" data-tooltip="Blocca utente" onClick={() => onStatus(member.email, "blocked")} type="button"><Ban size={14} /></button>}
-      <button aria-label={`Elimina ${member.email}`} className="member-icon-action delete-member" data-tooltip="Elimina utente" onClick={() => onDelete(member)} type="button"><Trash2 size={14} /></button>
+        ? <button aria-label={t("Sblocca {email}", { email: member.email })} className="member-icon-action approval-button" data-tooltip={t("Sblocca utente")} onClick={() => onStatus(member.email, "pending")} type="button"><UserRoundCheck size={14} /></button>
+        : <button aria-label={t("Blocca {email}", { email: member.email })} className="member-icon-action block-member" data-tooltip={t("Blocca utente")} onClick={() => onStatus(member.email, "blocked")} type="button"><Ban size={14} /></button>}
+      <button aria-label={t("Elimina {email}", { email: member.email })} className="member-icon-action delete-member" data-tooltip={t("Elimina utente")} onClick={() => onDelete(member)} type="button"><Trash2 size={14} /></button>
     </div>
   );
 }
@@ -62,6 +64,7 @@ export function MembersPage({ currentMember, alliance, missionCount, sidebarStat
   sidebarStationCount: number;
   sidebarUserCount: number;
 }>) {
+  const { t } = useLocale();
   const [pageMember, setPageMember] = useState(currentMember);
   const [allianceSettings, setAllianceSettings] = useState(alliance);
   const [members, setMembers] = useState<ManagedMember[]>([]);
@@ -98,9 +101,9 @@ export function MembersPage({ currentMember, alliance, missionCount, sidebarStat
     .filter((member) => filter === "all" || member.membershipStatus === filter)
     .filter((member) => `${member.name} ${member.nmsName} ${member.email} ${member.nmsCode} ${member.specialty ? specialtyLabels[member.specialty] : ""}`.toLowerCase().includes(search.toLowerCase()))
     .sort((a, b) => a.name.localeCompare(b.name)), [filter, members, search]);
-  let emptyMessage = "Nessun utente in questo filtro.";
-  if (counts.all === 0) emptyMessage = "Nessun utente registrato: i membri compariranno dopo il primo accesso con Google.";
-  else if (filter === "pending") emptyMessage = "Nessuna richiesta in attesa di approvazione.";
+  let emptyMessage = t("Nessun utente in questo filtro.");
+  if (counts.all === 0) emptyMessage = t("Nessun utente registrato: i membri compariranno dopo il primo accesso con Google.");
+  else if (filter === "pending") emptyMessage = t("Nessuna richiesta in attesa di approvazione.");
 
   async function patchMember(email: string, update: { membershipStatus: MembershipStatus } | { role: MemberRole }) {
     setError("");
@@ -121,7 +124,7 @@ export function MembersPage({ currentMember, alliance, missionCount, sidebarStat
   }
 
   async function deleteMember(member: AllianceMember) {
-    if (!window.confirm(`Eliminare ${member.nmsName || member.email} dall’alleanza? Un nuovo accesso richiederà una nuova approvazione.`)) return;
+    if (!window.confirm(t("Eliminare {member} dall’alleanza? Un nuovo accesso richiederà una nuova approvazione.", { member: member.nmsName || member.email }))) return;
     setError("");
     setNotice("");
     try {
@@ -150,43 +153,43 @@ export function MembersPage({ currentMember, alliance, missionCount, sidebarStat
           showCreate={false}
           title="Utenti"
         />
-        <section aria-label="Stato utenti" className="metrics-row">
+        <section aria-label={t("Stato utenti")} className="metrics-row">
           <div className="metrics-inner">
-            <div className="metric"><span className="metric-label">RICHIESTE IN ATTESA</span><strong>{counts.pending}</strong></div>
-            <div className="metric"><span className="metric-label">APPROVATI</span><strong>{counts.approved}</strong></div>
-            <div className="metric"><span className="metric-label">BLOCCATI</span><strong>{counts.blocked}</strong></div>
-            <div className="metric"><span className="metric-label">TOTALE</span><strong>{counts.all}</strong></div>
+            <div className="metric"><span className="metric-label">{t("RICHIESTE IN ATTESA")}</span><strong>{counts.pending}</strong></div>
+            <div className="metric"><span className="metric-label">{t("APPROVATI")}</span><strong>{counts.approved}</strong></div>
+            <div className="metric"><span className="metric-label">{t("BLOCCATI")}</span><strong>{counts.blocked}</strong></div>
+            <div className="metric"><span className="metric-label">{t("TOTALE")}</span><strong>{counts.all}</strong></div>
           </div>
         </section>
         <main className="content-wrap">
       <section className="members-list-section">
         <div className="members-toolbar">
-          <div className="member-filter-tabs" role="tablist" aria-label="Filtra utenti per stato">
-            {(["pending", "approved", "blocked", "all"] as MemberFilter[]).map((status) => <button aria-selected={filter === status} className={filter === status ? "member-filter-tab selected" : "member-filter-tab"} key={status} onClick={() => setFilter(status)} role="tab" type="button">{status === "all" ? "Tutti" : statusLabels[status]}<span>{counts[status]}</span></button>)}
+          <div className="member-filter-tabs" role="tablist" aria-label={t("Filtra utenti per stato")}>
+            {(["pending", "approved", "blocked", "all"] as MemberFilter[]).map((status) => <button aria-selected={filter === status} className={filter === status ? "member-filter-tab selected" : "member-filter-tab"} key={status} onClick={() => setFilter(status)} role="tab" type="button">{t(status === "all" ? "Tutti" : statusLabels[status])}<span>{counts[status]}</span></button>)}
           </div>
-          <label className="search-field member-search"><Search size={15} /><input aria-label="Cerca utenti" onChange={(event) => setSearch(event.target.value)} placeholder="Cerca nome, email o codice" value={search} /></label>
-          <div aria-label="Vista utenti" className="view-toggle" role="group">
-            <button aria-label="Vista lista" aria-pressed={viewMode === "list"} className={viewMode === "list" ? "selected" : ""} onClick={() => setViewOverride("list")} title="Vista lista" type="button"><List size={15} /></button>
-            <button aria-label="Vista schede" aria-pressed={viewMode === "cards"} className={viewMode === "cards" ? "selected" : ""} onClick={() => setViewOverride("cards")} title="Vista schede" type="button"><LayoutGrid size={15} /></button>
+          <label className="search-field member-search"><Search size={15} /><input aria-label={t("Cerca utenti")} onChange={(event) => setSearch(event.target.value)} placeholder={t("Cerca nome, email o codice")} value={search} /></label>
+          <div aria-label={t("Vista utenti")} className="view-toggle" role="group">
+            <button aria-label={t("Vista lista")} aria-pressed={viewMode === "list"} className={viewMode === "list" ? "selected" : ""} onClick={() => setViewOverride("list")} title={t("Vista lista")} type="button"><List size={15} /></button>
+            <button aria-label={t("Vista schede")} aria-pressed={viewMode === "cards"} className={viewMode === "cards" ? "selected" : ""} onClick={() => setViewOverride("cards")} title={t("Vista schede")} type="button"><LayoutGrid size={15} /></button>
           </div>
         </div>
 
-        {error && <p className="form-error"><CircleAlert size={15} />{error}</p>}
-        {notice && <p className="address-validation address-valid"><Check size={14} />{notice}</p>}
+        {error && <p className="form-error"><CircleAlert size={15} />{t(error)}</p>}
+        {notice && <p className="address-validation address-valid"><Check size={14} />{t(notice)}</p>}
 
         {loadingMembers ? <LoadingSpinner /> : viewMode === "list" ? <div className="members-table-wrap">
           <table className="members-table">
-            <thead><tr><th>MEMBRO</th><th>CODICE AMICO</th><th>PIATTAFORME</th><th>SPECIALIZZAZIONE</th><th>STATO</th><th>RUOLO</th><th>AZIONI</th></tr></thead>
+            <thead><tr><th>{t("MEMBRO")}</th><th>{t("CODICE AMICO")}</th><th>{t("PIATTAFORME")}</th><th>{t("SPECIALIZZAZIONE")}</th><th>{t("STATO")}</th><th>{t("RUOLO")}</th><th>{t("AZIONI")}</th></tr></thead>
             <tbody>
               {visibleMembers.map((member) => <tr key={member.email}>
-                <td><div className="member-page-identity"><span className="member-admin-avatar">{member.image ? <span style={{ backgroundImage: `url("${member.image}")` }} /> : (member.nmsName || member.name).slice(0, 1).toUpperCase()}</span><span><strong>{member.nmsName || "Nome NMS da completare"}</strong><small>{member.email}</small></span></div></td>
-                <td className="member-code-cell">{member.nmsCode || "Da completare"}</td>
-                <td>{member.platforms.length ? member.platforms.join(", ") : "Da selezionare"}</td>
-                <td>{member.specialty ? specialtyLabels[member.specialty] : "Da scegliere"}</td>
+                <td><div className="member-page-identity"><span className="member-admin-avatar">{member.image ? <span style={{ backgroundImage: `url("${member.image}")` }} /> : (member.nmsName || member.name).slice(0, 1).toUpperCase()}</span><span><strong>{member.nmsName || t("Nome NMS da completare")}</strong><small>{member.email}</small></span></div></td>
+                <td className="member-code-cell">{member.nmsCode || t("Da completare")}</td>
+                <td>{member.platforms.length ? member.platforms.join(", ") : t("Da selezionare")}</td>
+                <td>{member.specialty ? t(specialtyLabels[member.specialty]) : t("Da scegliere")}</td>
                 <td>{member.protectedAdmin
-                  ? <span className="badge badge--protected">Protetto</span>
-                  : <span className={`badge badge--member-status badge--member-status-${member.membershipStatus}`}>{statusLabels[member.membershipStatus]}</span>}</td>
-                <td>{roleLabels[member.role]}</td>
+                  ? <span className="badge badge--protected">{t("Protetto")}</span>
+                  : <span className={`badge badge--member-status badge--member-status-${member.membershipStatus}`}>{t(statusLabels[member.membershipStatus])}</span>}</td>
+                <td>{t(roleLabels[member.role])}</td>
                 <td><MemberActions canChangeRole={canChangeRole} currentMemberEmail={pageMember.email} member={member} onDelete={(target) => void deleteMember(target)} onRole={(email, role) => void patchMember(email, { role })} onStatus={(email, membershipStatus) => void patchMember(email, { membershipStatus })} /></td>
               </tr>)}
               {visibleMembers.length === 0 && <tr><td className="members-empty" colSpan={7}>{emptyMessage}</td></tr>}
@@ -197,29 +200,29 @@ export function MembersPage({ currentMember, alliance, missionCount, sidebarStat
             <div className="member-card-heading">
               <div className="member-page-identity">
                 <span className="member-admin-avatar">{member.image ? <span style={{ backgroundImage: `url("${member.image}")` }} /> : (member.nmsName || member.name).slice(0, 1).toUpperCase()}</span>
-                <span><strong>{member.nmsName || "Nome NMS da completare"}</strong><small>{member.email}</small></span>
+                <span><strong>{member.nmsName || t("Nome NMS da completare")}</strong><small>{member.email}</small></span>
               </div>
               {member.protectedAdmin
-                ? <span className="badge badge--protected">Protetto</span>
-                : <span className={`badge badge--member-status badge--member-status-${member.membershipStatus}`}>{statusLabels[member.membershipStatus]}</span>}
+                ? <span className="badge badge--protected">{t("Protetto")}</span>
+                : <span className={`badge badge--member-status badge--member-status-${member.membershipStatus}`}>{t(statusLabels[member.membershipStatus])}</span>}
             </div>
             <dl className="member-card-details">
-              <div><dt>Codice amico</dt><dd>{member.nmsCode || "Da completare"}</dd></div>
-              <div><dt>Piattaforme</dt><dd>{member.platforms.length ? member.platforms.join(", ") : "Da selezionare"}</dd></div>
-              <div><dt>Specializzazione</dt><dd>{member.specialty ? specialtyLabels[member.specialty] : "Da scegliere"}</dd></div>
-              <div><dt>Ruolo</dt><dd>{roleLabels[member.role]}</dd></div>
+              <div><dt>{t("Codice amico")}</dt><dd>{member.nmsCode || t("Da completare")}</dd></div>
+              <div><dt>{t("Piattaforme")}</dt><dd>{member.platforms.length ? member.platforms.join(", ") : t("Da selezionare")}</dd></div>
+              <div><dt>{t("Specializzazione")}</dt><dd>{member.specialty ? t(specialtyLabels[member.specialty]) : t("Da scegliere")}</dd></div>
+              <div><dt>{t("Ruolo")}</dt><dd>{t(roleLabels[member.role])}</dd></div>
             </dl>
             <div className="member-card-actions">
               <div className="member-page-actions">
-                <Link aria-label={`Cerca missioni di ${member.nmsName || member.email}`} className="member-icon-action" data-tooltip="Missioni dell’utente" href={`/?search=${encodeURIComponent(member.email)}`}><Crosshair size={14} /></Link>
-                <Link aria-label={`Cerca stazioni di ${member.nmsName || member.email}`} className="member-icon-action" data-tooltip="Stazioni dell’utente" href={`/stations?search=${encodeURIComponent(member.email)}`}><Orbit size={14} /></Link>
+                <Link aria-label={t("Cerca missioni di {member}", { member: member.nmsName || member.email })} className="member-icon-action" data-tooltip={t("Missioni dell’utente")} href={`/?search=${encodeURIComponent(member.email)}`}><Crosshair size={14} /></Link>
+                <Link aria-label={t("Cerca stazioni di {member}", { member: member.nmsName || member.email })} className="member-icon-action" data-tooltip={t("Stazioni dell’utente")} href={`/stations?search=${encodeURIComponent(member.email)}`}><Orbit size={14} /></Link>
               </div>
               <MemberActions canChangeRole={canChangeRole} currentMemberEmail={pageMember.email} member={member} onDelete={(target) => void deleteMember(target)} onRole={(email, role) => void patchMember(email, { role })} onStatus={(email, membershipStatus) => void patchMember(email, { membershipStatus })} />
             </div>
           </article>)}
           {visibleMembers.length === 0 && <p className="member-cards-empty">{emptyMessage}</p>}
         </div>}
-        <footer className="members-list-footer">{loadingMembers ? "Caricamento utenti…" : `Visualizzati ${visibleMembers.length} di ${counts.all} utenti`}</footer>
+        <footer className="members-list-footer">{loadingMembers ? t("Caricamento utenti") : t("Visualizzati {visible} di {total} utenti", { visible: visibleMembers.length, total: counts.all })}</footer>
       </section>
         </main>
       </section>

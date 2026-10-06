@@ -4,25 +4,29 @@ import { useState } from "react";
 import Image from "next/image";
 import { signIn } from "next-auth/react";
 import { Orbit } from "lucide-react";
+import { useLocale } from "@/components/locale-provider";
+import { LanguageSelector } from "@/components/language-selector";
 
 export function GoogleLogin({ allianceName, allianceLogoUrl, missingConfiguration = [] }: Readonly<{ allianceName?: string; allianceLogoUrl?: string; missingConfiguration?: string[] }>) {
   const [logoLoadFailed, setLogoLoadFailed] = useState(false);
+  const { t } = useLocale();
   const ready = missingConfiguration.length === 0;
   const displayAllianceName = allianceName?.trim() || "NMS ALLIANCE";
   const hasAllianceLogo = Boolean(allianceLogoUrl?.trim()) && !logoLoadFailed;
   return (
     <main className="login-screen">
       <div className="login-panel">
+        <LanguageSelector />
         <span aria-hidden="true" className={`login-mark${hasAllianceLogo ? " login-mark--custom" : ""}`}>
           {hasAllianceLogo && <Image alt="" height={52} onError={() => setLogoLoadFailed(true)} src="/api/alliance/login-logo" unoptimized width={52} />}
           {!hasAllianceLogo && <Orbit size={28} />}
         </span>
         <span className="eyebrow login-eyebrow">{displayAllianceName}</span>
-        <h1>Accedi alle operazioni<span>.</span></h1>
-        <p>Entra con Google per visualizzare e coordinare le missioni dell’alleanza.</p>
-        {ready ? <button className="google-login-button" onClick={() => signIn("google")} type="button"><GoogleMark /> Continua con Google</button> : <div className="auth-setup-note"><CircleSetupIcon /> Accesso da configurare nel progetto</div>}
+        <h1>{t("Accedi alle operazioni")}<span>.</span></h1>
+        <p>{t("Entra con Google per visualizzare e coordinare le missioni dell’alleanza.")}</p>
+        {ready ? <button className="google-login-button" onClick={() => signIn("google")} type="button"><GoogleMark /> {t("Continua con Google")}</button> : <div className="auth-setup-note"><CircleSetupIcon /> {t("Accesso da configurare nel progetto")}</div>}
         {!ready && <ul className="auth-config-list">{missingConfiguration.map((key) => <li key={key}>{key}</li>)}</ul>}
-        <small>Account verificati · Accesso protetto</small>
+        <small>{t("Account verificati · Accesso protetto")}</small>
       </div>
     </main>
   );

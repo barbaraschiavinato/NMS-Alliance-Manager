@@ -17,6 +17,7 @@ import { MemberProfilePanel } from "@/components/member-profile-panel";
 import { PlanetCard } from "@/components/planet-card";
 import { isValidNmsFriendCode } from "@/lib/member-types";
 import { planetSystemStatusKey, type MissionSystemStatus, type PlanetSystemStatuses } from "@/lib/planet-system-status";
+import { useLocale } from "@/components/locale-provider";
 
 const missionTypeLabels: Record<Mission["targetSpecialty"], string> = {
   all: "Tutti",
@@ -33,6 +34,7 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
   sidebarStationCount: number;
   sidebarUserCount?: number;
 }>) {
+  const { t } = useLocale();
   const [member, setMember] = useState(currentMember);
   const [missions, setMissions] = useState<Mission[]>([]);
   const [loadingMissions, setLoadingMissions] = useState(true);
@@ -228,7 +230,7 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
         <MissionHero onCreate={() => openMission(null)} settings={alliance} showCreate={canManage} />
         <MissionMetrics counts={counts} missions={availableMissions} />
         <div className="content-wrap">
-          {!profileComplete && <section className="profile-required-banner"><span><strong>Completa il profilo NMS</strong><small>Inserisci nome in gioco, codice amico, piattaforme e specializzazione per prendere missioni o essere assegnato.</small></span><button className="claim-button" onClick={() => setProfileOpen(true)} type="button">Completa profilo</button></section>}
+          {!profileComplete && <section className="profile-required-banner"><span><strong>{t("Completa il profilo NMS")}</strong><small>{t("Inserisci nome in gioco, codice amico, piattaforme e specializzazione per prendere missioni o essere assegnato.")}</small></span><button className="claim-button" onClick={() => setProfileOpen(true)} type="button">{t("Completa profilo")}</button></section>}
           <MissionTable
             counts={counts}
             filter={filter}
@@ -243,7 +245,7 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
             onToggleSystemStatus={(mission, status, checked) => void togglePlanetSystemStatus(mission, status, checked).catch((error: unknown) => setNotice(error instanceof Error ? error.message : "Richiesta non riuscita."))}
             onEdit={(mission) => openMission(mission)}
             onDeleteMission={(mission) => {
-              if (!window.confirm(`Eliminare "${mission.title}"?`)) return;
+              if (!window.confirm(t("Eliminare \"{title}\"?", { title: mission.title }))) return;
               void deleteMission(mission.id).catch((error: unknown) => setNotice(error instanceof Error ? error.message : "Eliminazione non riuscita."));
             }}
             onOpenPlanet={setPlanetMission}
@@ -255,7 +257,7 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
           />
         </div>
       </section>
-      {notice && <output className="toast" aria-live="polite"><Check size={15} />{notice}<button aria-label="Chiudi notifica" onClick={() => setNotice("")} type="button"><X size={14} /></button></output>}
+      {notice && <output className="toast" aria-live="polite"><Check size={15} />{t(notice)}<button aria-label={t("Chiudi notifica")} onClick={() => setNotice("")} type="button"><X size={14} /></button></output>}
       {dialogOpen && <MissionForm
         members={members}
         mission={dialogMission}

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { CircleAlert, X } from "lucide-react";
 import type { MemberRole, MemberSpecialty, NmsPlatform } from "@/lib/member-types";
+import { useLocale } from "@/components/locale-provider";
 
 type MemberCard = {
   name: string;
@@ -28,6 +29,7 @@ const roleLabels: Record<MemberRole, string> = {
 };
 
 export function MemberCardDialog({ email, onClose }: Readonly<{ email: string; onClose: () => void }>) {
+  const { t } = useLocale();
   const [profile, setProfile] = useState<MemberCard | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -53,22 +55,22 @@ export function MemberCardDialog({ email, onClose }: Readonly<{ email: string; o
     <div className="dialog-backdrop">
       <dialog aria-labelledby="member-card-title" aria-modal="true" className="mission-dialog member-card-dialog" open>
         <div className="dialog-heading">
-          <div><span className="eyebrow">SCHEDA MEMBRO</span><h2 id="member-card-title">Profilo NMS</h2></div>
-          <button aria-label="Chiudi" className="icon-button" onClick={onClose} type="button"><X size={18} /></button>
+          <div><span className="eyebrow">{t("SCHEDA MEMBRO")}</span><h2 id="member-card-title">{t("Profilo NMS")}</h2></div>
+          <button aria-label={t("Chiudi")} className="icon-button" onClick={onClose} type="button"><X size={18} /></button>
         </div>
-        {loading && <p>Caricamento profilo…</p>}
-        {error && <p className="form-error"><CircleAlert size={15} />{error}</p>}
+        {loading && <p>{t("Caricamento profilo")}</p>}
+        {error && <p className="form-error"><CircleAlert size={15} />{t(error)}</p>}
         {profile && <>
           <div className="profile-identity">
             <span className="profile-google-avatar">{profile.image ? <span style={{ backgroundImage: `url("${profile.image}")` }} /> : (profile.nmsName || profile.name).slice(0, 1).toUpperCase()}</span>
-            <span><strong>{profile.nmsName || profile.name}</strong><small>{profile.nmsName ? profile.name : "Membro dell’alleanza"}</small></span>
+            <span><strong>{profile.nmsName || profile.name}</strong><small>{profile.nmsName ? profile.name : t("Membro dell’alleanza")}</small></span>
           </div>
           <dl className="member-card-details">
-            <div><dt>Specializzazione</dt><dd>{profile.specialty ? specialtyLabels[profile.specialty] : "Non indicata"}</dd></div>
-            <div><dt>Piattaforme</dt><dd>{profile.platforms.length ? profile.platforms.join(", ") : "Non indicate"}</dd></div>
-            {profile.nmsCode && <div><dt>Codice amico NMS</dt><dd>{profile.nmsCode}</dd></div>}
-            {profile.role && <div><dt>Ruolo</dt><dd>{roleLabels[profile.role]}</dd></div>}
-            {profile.email && <div><dt>Email</dt><dd>{profile.email}</dd></div>}
+            <div><dt>{t("Specializzazione")}</dt><dd>{profile.specialty ? t(specialtyLabels[profile.specialty]) : t("Non indicata")}</dd></div>
+            <div><dt>{t("Piattaforme")}</dt><dd>{profile.platforms.length ? profile.platforms.join(", ") : t("Non indicate")}</dd></div>
+            {profile.nmsCode && <div><dt>{t("Codice amico NMS")}</dt><dd>{profile.nmsCode}</dd></div>}
+            {profile.role && <div><dt>{t("Ruolo")}</dt><dd>{t(roleLabels[profile.role])}</dd></div>}
+            {profile.email && <div><dt>{t("Email")}</dt><dd>{profile.email}</dd></div>}
           </dl>
         </>}
       </dialog>
