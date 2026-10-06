@@ -222,7 +222,7 @@ export function MissionForm({
                 {missionStatuses.map((status) => <option key={status}>{status}</option>)}
               </select>
             </label>
-            <label className="field">
+            <label className="field mission-progress-field">
               <span>Avanzamento <b>{form.progress}%</b></span>
               <input max={100} min={0} onChange={(event) => update("progress", Number(event.target.value))} type="range" value={form.progress} />
             </label>

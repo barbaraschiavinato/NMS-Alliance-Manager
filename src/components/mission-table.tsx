@@ -9,6 +9,10 @@ import { MemberCardDialog } from "@/components/member-card-dialog";
 
 export type MissionFilter = "Tutte" | MissionStatus | "Attesa assegnate" | "Attesa non assegnate";
 type MissionCounts = Record<MissionFilter, number>;
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : null;
+}
+
 const targetSpecialtyNames: Record<MissionSpecialty, string> = {
   all: "Tutti",
   builder: "Costruttori",
@@ -92,6 +96,50 @@ function MemberAvatar({ image, label }: Readonly<{ image?: string; label: string
   </span>;
 }
 
+function MissionPlanetThumbnail({ mission }: Readonly<{ mission: Mission }>) {
+  const [imageUrl, setImageUrl] = useState("");
+  const [imageFailed, setImageFailed] = useState(false);
+  const address = mission.systemAddress ?? "";
+  const validPortalAddress = /^[0-9a-f]{12}$/i.test(address);
+
+  useEffect(() => {
+    if (!validPortalAddress || !Number.isInteger(mission.galaxy) || mission.galaxy < 0 || mission.galaxy > 255) return;
+    const controller = new AbortController();
+    const params = new URLSearchParams({ address, galaxy: String(mission.galaxy) });
+
+    fetch(`/api/missions/planet?${params}`, { signal: controller.signal, cache: "no-store" })
+      .then(async (response) => {
+        const body: unknown = await response.json();
+        if (!response.ok) {
+          if (response.status !== 404) throw new Error("Impossibile caricare l’immagine del pianeta.");
+          return;
+        }
+        const planet = asRecord(asRecord(body)?.planet);
+        const pictures = asRecord(planet?.pictures);
+        const disc = pictures?.disc;
+        if (typeof disc === "string" && disc.startsWith("/planets/")) {
+          setImageUrl(`https://nmsalmanac.com/api${disc}`);
+        }
+      })
+      .catch((error: unknown) => {
+        if (!controller.signal.aborted) console.error("Unable to load mission planet thumbnail", error);
+      });
+
+    return () => controller.abort();
+  }, [address, mission.galaxy, validPortalAddress]);
+
+  const completed = mission.status === "Completata";
+  if (imageUrl && !imageFailed) {
+    return <span aria-hidden="true" className={`mission-card-planet-thumb${completed ? " mission-card-planet-thumb-done" : ""}`}>
+      <Image alt="" height={56} onError={() => setImageFailed(true)} src={imageUrl} unoptimized width={56} />
+    </span>;
+  }
+
+  return <span aria-hidden="true" className={`mission-card-planet-thumb mission-card-planet-fallback${completed ? " mission-card-planet-thumb-done" : ""}`}>
+    {completed ? <Check size={15} /> : <Compass size={15} />}
+  </span>;
+}
+
 function MissionCard({ mission, currentMember, canManage, members, onEdit, onDeleteMission, onOpenPlanet, onClaim, onComplete, onOpenProfile, getDiscovererImage }: Readonly<{
   mission: Mission;
   currentMember: AllianceMember;
@@ -108,7 +156,7 @@ function MissionCard({ mission, currentMember, canManage, members, onEdit, onDel
   return <article className="mission-card">
     <div className="mission-card-heading">
       <div className="mission-name-cell">
-        <span className={`mission-icon ${mission.status === "Completata" ? "mission-icon-done" : ""}`}>{mission.status === "Completata" ? <Check size={15} /> : <Compass size={15} />}</span>
+        <MissionPlanetThumbnail mission={mission} />
         <div>
           <button aria-label={`Apri la scheda del pianeta per ${mission.title}`} className="mission-title" onClick={() => onOpenPlanet(mission)} type="button">{mission.title}</button>
           {mission.description && <span className="mission-description">{mission.description}</span>}
