@@ -365,7 +365,7 @@ select { appearance: none; padding-right: 29px; background-image: linear-gradien
 .planet-card-summary { margin: 11px 0 0; color: #748076; font-size: 10px; line-height: 1.5; }
 .planet-resources-section { border-top: 1px solid var(--line); padding-top: 12px; }
 .planet-resources-section h4 { margin: 0 0 12px; color: #69786e; font-family: "SFMono-Regular", Consolas, monospace; font-size: 8px; letter-spacing: .8px; text-transform: uppercase; }
-.planet-resource-groups { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.planet-resource-groups { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); row-gap: 14px; }
 .planet-resource-group { min-width: 0; padding: 0 10px; border-left: 1px solid var(--line); }
 .planet-resource-group:first-child { padding-left: 0; border-left: 0; }
 .planet-resource-group h5 { display: flex; justify-content: space-between; gap: 6px; margin: 0 0 8px; color: #627065; font-size: 9px; font-weight: 650; }
@@ -769,8 +769,10 @@ select { appearance: none; padding-right: 29px; background-image: linear-gradien
   .planet-card-image { width: 104px; height: 104px; }
   .planet-card-intro h3 { font-size: 16px; }
   .planet-fact-row, .planet-sky-row { grid-template-columns: 92px minmax(0, 1fr); gap: 8px; }
-  .planet-resource-groups { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 14px; }
+  .planet-resource-groups { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .planet-resource-group { padding: 0 10px; border-left: 1px solid var(--line); }
   .planet-resource-group:nth-child(odd) { padding-left: 0; border-left: 0; }
+  .planet-resource-group:nth-child(even) { padding-left: 10px; border-left: 1px solid var(--line); }
   .login-panel { padding: 25px 21px; }
   .branding-grid { grid-template-columns: 1fr; }
   .banner-preview { max-width: 100%; }
