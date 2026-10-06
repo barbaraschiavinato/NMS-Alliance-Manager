@@ -1,15 +1,14 @@
 export function getBlobAuthOptions() {
-  const localBlobOptIn = process.env.NMS_USE_BLOB_IN_DEV === "true";
-  if (process.env.NODE_ENV !== "production" && !localBlobOptIn) return null;
+  const storeId = process.env.NMS_STORE_ID || process.env.BLOB_STORE_ID;
+  if (storeId && (process.env.VERCEL || process.env.VERCEL_OIDC_TOKEN)) return { storeId };
 
   const token = process.env.NMS_READ_WRITE_TOKEN || process.env.BLOB_READ_WRITE_TOKEN;
   if (token) return { token };
 
-  if (!process.env.VERCEL) return null;
+  if (storeId) return { storeId };
 
-  const storeId = process.env.NMS_STORE_ID || process.env.BLOB_STORE_ID;
-  const oidcToken = process.env.VERCEL_OIDC_TOKEN;
-  if (storeId && oidcToken) return { storeId, oidcToken };
-
-  throw new Error("Configura OIDC Vercel e collega lo store Blob tramite NMS_STORE_ID per accedere ai dati in produzione.");
+  if (process.env.VERCEL) {
+    throw new Error("Collega uno store Vercel Blob privato al progetto e configura BLOB_STORE_ID o NMS_STORE_ID per usare OIDC.");
+  }
+  return null;
 }
