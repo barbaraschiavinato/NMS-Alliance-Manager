@@ -26,10 +26,12 @@ const missionTypeLabels: Record<Mission["targetSpecialty"], string> = {
   other: "Altro",
 };
 
-export function MissionDashboard({ currentMember, alliance: initialAlliance, initialSearch = "" }: Readonly<{
+export function MissionDashboard({ currentMember, alliance: initialAlliance, initialSearch = "", sidebarStationCount, sidebarUserCount }: Readonly<{
   currentMember: AllianceMember;
   alliance: AllianceSettings;
   initialSearch?: string;
+  sidebarStationCount: number;
+  sidebarUserCount?: number;
 }>) {
   const [member, setMember] = useState(currentMember);
   const [missions, setMissions] = useState<Mission[]>([]);
@@ -220,7 +222,7 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
 
   return (
     <main className="app-shell">
-      <AllianceSidebar activeSection="missioni" currentMember={member} missionCount={missions.length} settings={alliance} />
+      <AllianceSidebar activeSection="missioni" currentMember={member} missionCount={missions.length} settings={alliance} stationCount={sidebarStationCount} userCount={sidebarUserCount} />
       <section className="main-panel" id="missioni">
         <DashboardTopbar currentMember={member} onAdminOpen={() => setAdminOpen(true)} onProfileOpen={() => setProfileOpen(true)} settings={alliance} />
         <MissionHero onCreate={() => openMission(null)} settings={alliance} showCreate={canManage} />

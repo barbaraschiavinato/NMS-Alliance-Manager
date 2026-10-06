@@ -17,8 +17,10 @@ import type { Mission } from "@/lib/missions";
 import type { MissionFilter } from "@/components/mission-table";
 import type { AllianceMember, AllianceSettings } from "@/lib/access-store";
 
-export function AllianceSidebar({ missionCount, currentMember, settings, activeSection }: Readonly<{
+export function AllianceSidebar({ missionCount, stationCount, userCount, currentMember, settings, activeSection }: Readonly<{
   missionCount: number;
+  stationCount: number;
+  userCount?: number;
   currentMember: AllianceMember;
   settings: AllianceSettings;
   activeSection: "missioni" | "utenti" | "stazioni";
@@ -35,8 +37,8 @@ export function AllianceSidebar({ missionCount, currentMember, settings, activeS
       </Link>
       <nav className="side-nav" aria-label="Navigazione principale">
         <Link className={`nav-item ${activeSection === "missioni" ? "active" : ""}`} href="/"><Crosshair size={17} /><span>Missioni</span><span className="nav-count">{missionCount}</span></Link>
-        <Link className={`nav-item ${activeSection === "stazioni" ? "active" : ""}`} href="/stazioni"><Orbit size={17} /><span>Stazioni</span></Link>
-        {(currentMember.role === "admin" || currentMember.role === "moderator") && <Link className={`nav-item ${activeSection === "utenti" ? "active" : ""}`} href="/utenti"><UsersRound size={17} /><span>Utenti</span></Link>}
+        <Link className={`nav-item ${activeSection === "stazioni" ? "active" : ""}`} href="/stazioni"><Orbit size={17} /><span>Stazioni</span><span className="nav-count">{stationCount}</span></Link>
+        {(currentMember.role === "admin" || currentMember.role === "moderator") && <Link className={`nav-item ${activeSection === "utenti" ? "active" : ""}`} href="/utenti"><UsersRound size={17} /><span>Utenti</span><span className="nav-count">{userCount ?? 0}</span></Link>}
       </nav>
       <div className="sidebar-bottom">
         <div className="profile"><span className="avatar">{currentMember.image

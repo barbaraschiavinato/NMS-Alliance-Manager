@@ -6,6 +6,7 @@ import { PendingApproval } from "@/components/pending-approval";
 import { getCurrentMember } from "@/lib/authorization";
 import { readAccessData } from "@/lib/access-store";
 import { readMissions } from "@/lib/store";
+import { readAllStationPortals } from "@/lib/stations-store";
 
 export const dynamic = "force-dynamic";
 
@@ -25,6 +26,12 @@ export default async function UsersPage() {
   if (member.membershipStatus !== "approved") return <PendingApproval member={member} />;
   if (member.role !== "admin" && member.role !== "moderator") redirect("/");
 
-  const missions = await readMissions();
-  return <MembersPage alliance={accessData.alliance} currentMember={member} missionCount={missions.length} />;
+  const [missions, stations] = await Promise.all([readMissions(), readAllStationPortals()]);
+  return <MembersPage
+    alliance={accessData.alliance}
+    currentMember={member}
+    missionCount={missions.length}
+    sidebarStationCount={stations.length}
+    sidebarUserCount={accessData.members.length}
+  />;
 }

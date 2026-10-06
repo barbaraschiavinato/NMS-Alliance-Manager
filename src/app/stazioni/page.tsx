@@ -5,6 +5,7 @@ import { StationsPage } from "@/components/stations-page";
 import { getCurrentMember } from "@/lib/authorization";
 import { readAccessData } from "@/lib/access-store";
 import { readMissions } from "@/lib/store";
+import { readAllStationPortals, readStationPortals } from "@/lib/stations-store";
 
 export const dynamic = "force-dynamic";
 
@@ -26,7 +27,17 @@ export default async function StationsRoute({ searchParams }: Readonly<{
   if (member.membershipStatus !== "approved") return <PendingApproval member={member} />;
 
   const missions = await readMissions();
+  const stations = member.role === "admin" || member.role === "moderator"
+    ? await readAllStationPortals()
+    : await readStationPortals(member.email);
   const params = await searchParams;
   const initialSearch = typeof params.search === "string" ? params.search.slice(0, 254) : "";
-  return <StationsPage alliance={accessData.alliance} currentMember={member} initialSearch={initialSearch} missionCount={missions.length} />;
+  return <StationsPage
+    alliance={accessData.alliance}
+    currentMember={member}
+    initialSearch={initialSearch}
+    missionCount={missions.length}
+    sidebarStationCount={stations.length}
+    sidebarUserCount={member.role === "admin" || member.role === "moderator" ? accessData.members.length : undefined}
+  />;
 }

@@ -4,13 +4,15 @@ import { auth } from "@/auth";
 import { getCurrentMember } from "@/lib/authorization";
 import { PendingApproval } from "@/components/pending-approval";
 import { readAccessData } from "@/lib/access-store";
+import { readAllStationPortals, readStationPortals } from "@/lib/stations-store";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home({ searchParams }: Readonly<{
   searchParams: Promise<{ search?: string | string[] }>;
 }>) {
-  const { alliance } = await readAccessData();
+  const accessData = await readAccessData();
+  const { alliance } = accessData;
   const allianceName = alliance.name;
   const allianceLogoUrl = alliance.logoUrl;
   const missingConfiguration = ["AUTH_SECRET", "AUTH_GOOGLE_ID", "AUTH_GOOGLE_SECRET", "ALLIANCE_ADMIN_EMAIL"]
@@ -25,5 +27,14 @@ export default async function Home({ searchParams }: Readonly<{
   if (member.membershipStatus !== "approved") return <PendingApproval member={member} />;
   const params = await searchParams;
   const initialSearch = typeof params.search === "string" ? params.search.slice(0, 80) : "";
-  return <MissionDashboard alliance={alliance} currentMember={member} initialSearch={initialSearch} />;
+  const stations = member.role === "admin" || member.role === "moderator"
+    ? await readAllStationPortals()
+    : await readStationPortals(member.email);
+  return <MissionDashboard
+    alliance={alliance}
+    currentMember={member}
+    initialSearch={initialSearch}
+    sidebarStationCount={stations.length}
+    sidebarUserCount={member.role === "admin" || member.role === "moderator" ? accessData.members.length : undefined}
+  />;
 }
