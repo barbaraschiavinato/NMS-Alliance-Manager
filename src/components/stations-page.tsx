@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState, type SubmitEvent } from "react";
-import { CircleAlert, CirclePlus, Compass, LayoutGrid, List, Plus, Search, Trash2, X } from "lucide-react";
+import { CircleAlert, CirclePlus, Crosshair, LayoutGrid, List, Plus, Search, Trash2, X } from "lucide-react";
 import { AllianceSidebar, DashboardTopbar, MissionHero } from "@/components/dashboard-chrome";
 import { AdminPanel } from "@/components/admin-panel";
 import { MemberProfilePanel } from "@/components/member-profile-panel";
@@ -106,10 +106,11 @@ function CachedPlanetInfo({ planet, onOpen }: Readonly<{ planet: CachedPlanet; o
   );
 }
 
-export function StationsPage({ currentMember, alliance, missionCount }: Readonly<{
+export function StationsPage({ currentMember, alliance, missionCount, initialSearch = "" }: Readonly<{
   currentMember: AllianceMember;
   alliance: AllianceSettings;
   missionCount: number;
+  initialSearch?: string;
 }>) {
   const [pageMember, setPageMember] = useState(currentMember);
   const [allianceSettings, setAllianceSettings] = useState(alliance);
@@ -130,7 +131,7 @@ export function StationsPage({ currentMember, alliance, missionCount }: Readonly
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(initialSearch);
   const [adminOpen, setAdminOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const canSeeAll = pageMember.role === "moderator" || pageMember.role === "admin";
@@ -336,7 +337,7 @@ export function StationsPage({ currentMember, alliance, missionCount }: Readonly
                   {canCreateMissions && station.availableSpecialties.length > 0 && <button aria-label={`Crea missione da ${station.portal}`} className="member-icon-action create-station-mission" data-tooltip="Crea missione da stazione" onClick={() => setMissionStation({ portal: station.portal, galaxy: station.galaxy, title: cachedPlanetTitle(station.planet), ownerEmail: station.owner })} type="button"><CirclePlus size={14} /></button>}
                   {station.hasMissions
                     ? canSeeAll
-                      ? <Link aria-label={`Apri le missioni del pianeta ${station.portal}`} className="member-icon-action station-missions-link" data-tooltip="Apri le missioni associate" href={`/?search=${encodeURIComponent(station.portal)}`}><Compass size={14} /></Link>
+                      ? <Link aria-label={`Apri le missioni del pianeta ${station.portal}`} className="member-icon-action station-missions-link" data-tooltip="Apri le missioni associate" href={`/?search=${encodeURIComponent(station.portal)}`}><Crosshair size={14} /></Link>
                       : <span className="station-mission-lock">Missione associata</span>
                     : (canSeeAll || station.owner.toLowerCase() === pageMember.email.toLowerCase()) && <button aria-label={`Rimuovi il portale ${station.portal} in ${galaxyLabel(station.galaxy)} dall’archivio di ${station.owner}`} className="member-icon-action delete-member" data-tooltip="Cancella stazione" onClick={() => void removeStation(station.portal, station.galaxy, station.owner)} type="button"><Trash2 size={14} /></button>}
                 </div>

@@ -1,6 +1,7 @@
 import { get, put } from "@vercel/blob";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { randomUUID } from "node:crypto";
 import { getBlobAuthOptions } from "@/lib/blob-config";
 import { isValidNmsFriendCode, memberRoles, memberSpecialties, membershipStatuses, normalizeNmsFriendCode, nmsPlatforms } from "@/lib/member-types";
 import type { AllianceMember, AllianceSettings, MemberRole, MemberSpecialty, MembershipStatus, NmsPlatform } from "@/lib/member-types";
@@ -97,7 +98,9 @@ export async function writeAccessData(data: AccessData): Promise<void> {
     return;
   }
   await mkdir(path.dirname(localPath), { recursive: true });
-  await writeFile(localPath, json, "utf8");
+  const temporaryPath = `${localPath}.${randomUUID()}.tmp`;
+  await writeFile(temporaryPath, json, { encoding: "utf8", flag: "wx" });
+  await rename(temporaryPath, localPath);
 }
 
 export async function registerMember(identity: Pick<AllianceMember, "email" | "name" | "image">) {

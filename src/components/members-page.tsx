@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Ban, Check, CircleAlert, LayoutGrid, List, Search, Trash2, UserRoundCheck } from "lucide-react";
+import Link from "next/link";
+import { Ban, Check, CircleAlert, CircleX, Crosshair, LayoutGrid, List, Orbit, Search, Trash2, UserRoundCheck } from "lucide-react";
 import type { AllianceMember, AllianceSettings, MemberRole, MemberSpecialty, MembershipStatus } from "@/lib/member-types";
 import { AllianceSidebar, DashboardTopbar, MissionHero } from "@/components/dashboard-chrome";
 import { AdminPanel } from "@/components/admin-panel";
@@ -30,7 +31,8 @@ function MemberActions({ member, canChangeRole, currentMemberEmail, onStatus, on
   onDelete: (member: AllianceMember) => void;
 }>) {
   const canManage = canChangeRole || member.role === "user";
-  if (!canManage || member.protectedAdmin || member.email.toLowerCase() === currentMemberEmail.toLowerCase()) {
+  if (member.protectedAdmin) return null;
+  if (!canManage || member.email.toLowerCase() === currentMemberEmail.toLowerCase()) {
     return <span className="badge badge--protected">Protetto</span>;
   }
 
@@ -43,10 +45,10 @@ function MemberActions({ member, canChangeRole, currentMemberEmail, onStatus, on
 
   return (
     <div className="member-page-actions">
-      {member.membershipStatus === "pending" && <button className="approval-button" onClick={() => onStatus(member.email, "approved")} type="button">Approva</button>}
-      {member.membershipStatus === "approved" && <button className="approval-button revoke-approval" onClick={() => onStatus(member.email, "pending")} type="button">Revoca</button>}
+      {member.membershipStatus === "pending" && <button aria-label={`Approva ${member.email}`} className="member-icon-action approval-button" data-tooltip="Approva utente" onClick={() => onStatus(member.email, "approved")} type="button"><Check size={14} /></button>}
+      {member.membershipStatus === "approved" && <button aria-label={`Revoca approvazione a ${member.email}`} className="member-icon-action approval-button revoke-approval" data-tooltip="Revoca approvazione" onClick={() => onStatus(member.email, "pending")} type="button"><CircleX size={14} /></button>}
       {member.membershipStatus === "blocked"
-        ? <button className="approval-button" onClick={() => onStatus(member.email, "pending")} type="button"><UserRoundCheck size={14} /> Sblocca</button>
+        ? <button aria-label={`Sblocca ${member.email}`} className="member-icon-action approval-button" data-tooltip="Sblocca utente" onClick={() => onStatus(member.email, "pending")} type="button"><UserRoundCheck size={14} /></button>
         : <button aria-label={`Blocca ${member.email}`} className="member-icon-action block-member" data-tooltip="Blocca utente" onClick={() => onStatus(member.email, "blocked")} type="button"><Ban size={14} /></button>}
       {canChangeRole && <select aria-label={`Ruolo di ${member.email}`} onChange={(event) => onRole(member.email, event.target.value as MemberRole)} value={member.role}>{(Object.keys(roleLabels) as MemberRole[]).map((role) => <option key={role} value={role}>{roleLabels[role]}</option>)}</select>}
       <button aria-label={`Elimina ${member.email}`} className="member-icon-action delete-member" data-tooltip="Elimina utente" onClick={() => onDelete(member)} type="button"><Trash2 size={14} /></button>
@@ -174,7 +176,9 @@ export function MembersPage({ currentMember, alliance, missionCount }: Readonly<
                 <td className="member-code-cell">{member.nmsCode || "Da completare"}</td>
                 <td>{member.platforms.length ? member.platforms.join(", ") : "Da selezionare"}</td>
                 <td>{member.specialty ? specialtyLabels[member.specialty] : "Da scegliere"}</td>
-                <td><span className={`badge badge--member-status badge--member-status-${member.membershipStatus}`}>{statusLabels[member.membershipStatus]}</span></td>
+                <td>{member.protectedAdmin
+                  ? <span className="badge badge--protected">Protetto</span>
+                  : <span className={`badge badge--member-status badge--member-status-${member.membershipStatus}`}>{statusLabels[member.membershipStatus]}</span>}</td>
                 <td>{roleLabels[member.role]}</td>
                 <td><MemberActions canChangeRole={canChangeRole} currentMemberEmail={pageMember.email} member={member} onDelete={(target) => void deleteMember(target)} onRole={(email, role) => void patchMember(email, { role })} onStatus={(email, membershipStatus) => void patchMember(email, { membershipStatus })} /></td>
               </tr>)}
@@ -188,7 +192,9 @@ export function MembersPage({ currentMember, alliance, missionCount }: Readonly<
                 <span className="member-admin-avatar">{member.image ? <span style={{ backgroundImage: `url("${member.image}")` }} /> : (member.nmsName || member.name).slice(0, 1).toUpperCase()}</span>
                 <span><strong>{member.nmsName || "Nome NMS da completare"}</strong><small>{member.email}</small></span>
               </div>
-              <span className={`badge badge--member-status badge--member-status-${member.membershipStatus}`}>{statusLabels[member.membershipStatus]}</span>
+              {member.protectedAdmin
+                ? <span className="badge badge--protected">Protetto</span>
+                : <span className={`badge badge--member-status badge--member-status-${member.membershipStatus}`}>{statusLabels[member.membershipStatus]}</span>}
             </div>
             <dl className="member-card-details">
               <div><dt>Codice amico</dt><dd>{member.nmsCode || "Da completare"}</dd></div>
@@ -197,6 +203,10 @@ export function MembersPage({ currentMember, alliance, missionCount }: Readonly<
               <div><dt>Ruolo</dt><dd>{roleLabels[member.role]}</dd></div>
             </dl>
             <div className="member-card-actions">
+              <div className="member-page-actions">
+                <Link aria-label={`Cerca missioni di ${member.nmsName || member.email}`} className="member-icon-action" data-tooltip="Missioni dell’utente" href={`/?search=${encodeURIComponent(member.email)}`}><Crosshair size={14} /></Link>
+                <Link aria-label={`Cerca stazioni di ${member.nmsName || member.email}`} className="member-icon-action" data-tooltip="Stazioni dell’utente" href={`/stazioni?search=${encodeURIComponent(member.email)}`}><Orbit size={14} /></Link>
+              </div>
               <MemberActions canChangeRole={canChangeRole} currentMemberEmail={pageMember.email} member={member} onDelete={(target) => void deleteMember(target)} onRole={(email, role) => void patchMember(email, { role })} onStatus={(email, membershipStatus) => void patchMember(email, { membershipStatus })} />
             </div>
           </article>)}

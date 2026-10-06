@@ -8,7 +8,9 @@ import { readMissions } from "@/lib/store";
 
 export const dynamic = "force-dynamic";
 
-export default async function StationsRoute() {
+export default async function StationsRoute({ searchParams }: Readonly<{
+  searchParams: Promise<{ search?: string | string[] }>;
+}>) {
   const missingConfiguration = ["AUTH_SECRET", "AUTH_GOOGLE_ID", "AUTH_GOOGLE_SECRET", "ALLIANCE_ADMIN_EMAIL"]
     .filter((key) => !process.env[key]);
   if (missingConfiguration.length > 0) return <GoogleLogin missingConfiguration={missingConfiguration} />;
@@ -21,5 +23,7 @@ export default async function StationsRoute() {
   if (member.membershipStatus !== "approved") return <PendingApproval member={member} />;
 
   const [accessData, missions] = await Promise.all([readAccessData(), readMissions()]);
-  return <StationsPage alliance={accessData.alliance} currentMember={member} missionCount={missions.length} />;
+  const params = await searchParams;
+  const initialSearch = typeof params.search === "string" ? params.search.slice(0, 254) : "";
+  return <StationsPage alliance={accessData.alliance} currentMember={member} initialSearch={initialSearch} missionCount={missions.length} />;
 }
