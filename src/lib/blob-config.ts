@@ -11,5 +11,5 @@ export function getBlobAuthOptions() {
   const oidcToken = process.env.VERCEL_OIDC_TOKEN;
   if (storeId && oidcToken) return { storeId, oidcToken };
 
-  throw new Error("Configura NMS_READ_WRITE_TOKEN oppure collega uno store con NMS_STORE_ID e VERCEL_OIDC_TOKEN per accedere a Vercel Blob.");
+  throw new Error("Configura OIDC Vercel e collega lo store Blob tramite NMS_STORE_ID per accedere ai dati in produzione.");
 }
