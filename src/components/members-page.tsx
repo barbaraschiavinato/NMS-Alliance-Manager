@@ -212,7 +212,7 @@ export function MembersPage({ currentMember, alliance, missionCount, sidebarStat
             <div className="member-card-actions">
               <div className="member-page-actions">
                 <Link aria-label={`Cerca missioni di ${member.nmsName || member.email}`} className="member-icon-action" data-tooltip="Missioni dell’utente" href={`/?search=${encodeURIComponent(member.email)}`}><Crosshair size={14} /></Link>
-                <Link aria-label={`Cerca stazioni di ${member.nmsName || member.email}`} className="member-icon-action" data-tooltip="Stazioni dell’utente" href={`/stazioni?search=${encodeURIComponent(member.email)}`}><Orbit size={14} /></Link>
+                <Link aria-label={`Cerca stazioni di ${member.nmsName || member.email}`} className="member-icon-action" data-tooltip="Stazioni dell’utente" href={`/stations?search=${encodeURIComponent(member.email)}`}><Orbit size={14} /></Link>
               </div>
               <MemberActions canChangeRole={canChangeRole} currentMemberEmail={pageMember.email} member={member} onDelete={(target) => void deleteMember(target)} onRole={(email, role) => void patchMember(email, { role })} onStatus={(email, membershipStatus) => void patchMember(email, { membershipStatus })} />
             </div>

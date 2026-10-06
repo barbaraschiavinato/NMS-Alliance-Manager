@@ -8,7 +8,7 @@ export function getBlobAuthOptions() {
   if (storeId) return { storeId };
 
   if (process.env.VERCEL) {
-    throw new Error("Collega uno store Vercel Blob privato al progetto e configura BLOB_STORE_ID o NMS_STORE_ID per usare OIDC.");
+    throw new Error("Connect a private Vercel Blob store and configure BLOB_STORE_ID or NMS_STORE_ID to use OIDC.");
   }
   return null;
 }

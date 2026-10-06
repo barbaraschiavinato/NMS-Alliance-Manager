@@ -26,10 +26,12 @@ export default async function StationsRoute({ searchParams }: Readonly<{
   if (!member) return <GoogleLogin allianceLogoUrl={allianceLogoUrl} allianceName={allianceName} />;
   if (member.membershipStatus !== "approved") return <PendingApproval member={member} />;
 
-  const missions = await readMissions();
-  const stations = member.role === "admin" || member.role === "moderator"
-    ? await readAllStationPortals()
-    : await readStationPortals(member.email);
+  const [missions, stations] = await Promise.all([
+    readMissions(),
+    member.role === "admin" || member.role === "moderator"
+      ? readAllStationPortals()
+      : readStationPortals(member.email),
+  ]);
   const params = await searchParams;
   const initialSearch = typeof params.search === "string" ? params.search.slice(0, 254) : "";
   return <StationsPage
