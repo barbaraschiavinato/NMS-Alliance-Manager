@@ -11,18 +11,21 @@ export const dynamic = "force-dynamic";
 export default async function StationsRoute({ searchParams }: Readonly<{
   searchParams: Promise<{ search?: string | string[] }>;
 }>) {
+  const accessData = await readAccessData();
+  const allianceName = accessData.alliance.name;
+  const allianceLogoUrl = accessData.alliance.logoUrl;
   const missingConfiguration = ["AUTH_SECRET", "AUTH_GOOGLE_ID", "AUTH_GOOGLE_SECRET", "ALLIANCE_ADMIN_EMAIL"]
     .filter((key) => !process.env[key]);
-  if (missingConfiguration.length > 0) return <GoogleLogin missingConfiguration={missingConfiguration} />;
+  if (missingConfiguration.length > 0) return <GoogleLogin allianceLogoUrl={allianceLogoUrl} allianceName={allianceName} missingConfiguration={missingConfiguration} />;
 
   const session = await auth();
-  if (!session?.user?.email) return <GoogleLogin />;
+  if (!session?.user?.email) return <GoogleLogin allianceLogoUrl={allianceLogoUrl} allianceName={allianceName} />;
 
   const member = await getCurrentMember({ allowPending: true, allowBlocked: true });
-  if (!member) return <GoogleLogin />;
+  if (!member) return <GoogleLogin allianceLogoUrl={allianceLogoUrl} allianceName={allianceName} />;
   if (member.membershipStatus !== "approved") return <PendingApproval member={member} />;
 
-  const [accessData, missions] = await Promise.all([readAccessData(), readMissions()]);
+  const missions = await readMissions();
   const params = await searchParams;
   const initialSearch = typeof params.search === "string" ? params.search.slice(0, 254) : "";
   return <StationsPage alliance={accessData.alliance} currentMember={member} initialSearch={initialSearch} missionCount={missions.length} />;

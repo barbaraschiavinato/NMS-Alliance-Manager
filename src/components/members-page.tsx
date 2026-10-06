@@ -31,10 +31,8 @@ function MemberActions({ member, canChangeRole, currentMemberEmail, onStatus, on
   onDelete: (member: AllianceMember) => void;
 }>) {
   const canManage = canChangeRole || member.role === "user";
-  if (member.protectedAdmin) return null;
-  if (!canManage || member.email.toLowerCase() === currentMemberEmail.toLowerCase()) {
-    return <span className="badge badge--protected">Protetto</span>;
-  }
+  const isCurrentMember = member.email.toLowerCase() === currentMemberEmail.toLowerCase();
+  if (member.protectedAdmin || isCurrentMember || !canManage) return null;
 
   if (member.role === "admin") return <div className="member-page-actions">
     <select aria-label={`Ruolo di ${member.email}`} onChange={(event) => onRole(member.email, event.target.value as MemberRole)} value={member.role}>

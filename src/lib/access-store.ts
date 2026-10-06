@@ -18,19 +18,20 @@ const blobPath = "alliance-manager/access.json";
 const localPath = path.join(process.cwd(), "data", "access.json");
 const defaultData: AccessData = {
   members: [],
-  alliance: { name: "Nomad Syndicate", logoUrl: "", bannerUrl: "", discordUrl: "", telegramUrl: "", heroGradientMode: "full", defaultTableView: "list" },
+  alliance: { name: "", logoUrl: "", bannerUrl: "", discordUrl: "", telegramUrl: "", heroGradientMode: "full", defaultTableView: "list" },
 };
 
 function normalizeAccessData(value: unknown): AccessData {
   if (!value || typeof value !== "object") return defaultData;
   const data = value as Partial<AccessData>;
   const storedAlliance = data.alliance as (Partial<AllianceSettings> & { heroGradientEnabled?: unknown }) | undefined;
+  const storedAllianceName = typeof storedAlliance?.name === "string" ? storedAlliance.name : "";
   return {
     members: Array.isArray(data.members)
       ? data.members.map((member) => normalizeMember(member)).filter((member) => member !== null)
       : [],
     alliance: {
-      name: typeof storedAlliance?.name === "string" ? storedAlliance.name : defaultData.alliance.name,
+      name: storedAllianceName.trim().toLowerCase() === "nomad syndicate" ? "" : storedAllianceName,
       logoUrl: typeof storedAlliance?.logoUrl === "string" ? storedAlliance.logoUrl : "",
       bannerUrl: typeof storedAlliance?.bannerUrl === "string" ? storedAlliance.bannerUrl : "",
       discordUrl: typeof storedAlliance?.discordUrl === "string" ? storedAlliance.discordUrl : "",

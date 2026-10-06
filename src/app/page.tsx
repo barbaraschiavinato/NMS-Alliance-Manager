@@ -3,21 +3,25 @@ import { GoogleLogin } from "@/components/google-login";
 import { auth } from "@/auth";
 import { getCurrentMember } from "@/lib/authorization";
 import { PendingApproval } from "@/components/pending-approval";
+import { readAccessData } from "@/lib/access-store";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home({ searchParams }: Readonly<{
   searchParams: Promise<{ search?: string | string[] }>;
 }>) {
+  const { alliance } = await readAccessData();
+  const allianceName = alliance.name;
+  const allianceLogoUrl = alliance.logoUrl;
   const missingConfiguration = ["AUTH_SECRET", "AUTH_GOOGLE_ID", "AUTH_GOOGLE_SECRET", "ALLIANCE_ADMIN_EMAIL"]
     .filter((key) => !process.env[key]);
-  if (missingConfiguration.length > 0) return <GoogleLogin missingConfiguration={missingConfiguration} />;
+  if (missingConfiguration.length > 0) return <GoogleLogin allianceLogoUrl={allianceLogoUrl} allianceName={allianceName} missingConfiguration={missingConfiguration} />;
 
   const session = await auth();
-  if (!session?.user?.email) return <GoogleLogin />;
+  if (!session?.user?.email) return <GoogleLogin allianceLogoUrl={allianceLogoUrl} allianceName={allianceName} />;
 
   const member = await getCurrentMember({ allowPending: true, allowBlocked: true });
-  if (!member) return <GoogleLogin />;
+  if (!member) return <GoogleLogin allianceLogoUrl={allianceLogoUrl} allianceName={allianceName} />;
   if (member.membershipStatus !== "approved") return <PendingApproval member={member} />;
   const params = await searchParams;
   const initialSearch = typeof params.search === "string" ? params.search.slice(0, 80) : "";

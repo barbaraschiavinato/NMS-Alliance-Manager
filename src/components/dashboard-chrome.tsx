@@ -83,7 +83,6 @@ export function DashboardTopbar({ currentMember, settings, sectionTitle = "Missi
         <span className="account-label">{currentMember.nmsName || currentMember.name} · {roleLabel}</span>
         {onProfileOpen && <button aria-label="Il mio profilo" className="square-button" onClick={onProfileOpen} title="Il mio profilo" type="button"><UserRound size={16} /></button>}
         {currentMember.role === "admin" && onAdminOpen && <button aria-label="Gestione alleanza" className="square-button" onClick={onAdminOpen} title="Gestione alleanza" type="button"><Settings2 size={16} /></button>}
-        {currentMember.role === "moderator" && <Link aria-label="Gestione utenti" className="square-button" href="/utenti" title="Gestione utenti"><UsersRound size={16} /></Link>}
         <button aria-label="Esci" className="square-button" onClick={() => signOut({ callbackUrl: "/" })} title="Esci" type="button"><LogOut size={16} /></button>
         <span className="top-avatar">
           {currentMember.image

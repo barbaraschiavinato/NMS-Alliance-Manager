@@ -3,13 +3,17 @@
 import { signIn } from "next-auth/react";
 import { Orbit } from "lucide-react";
 
-export function GoogleLogin({ missingConfiguration = [] }: Readonly<{ missingConfiguration?: string[] }>) {
+export function GoogleLogin({ allianceName, allianceLogoUrl, missingConfiguration = [] }: Readonly<{ allianceName?: string; allianceLogoUrl?: string; missingConfiguration?: string[] }>) {
   const ready = missingConfiguration.length === 0;
+  const displayAllianceName = allianceName?.trim() || "NMS ALLIANCE";
+  const hasAllianceLogo = Boolean(allianceLogoUrl?.trim());
   return (
     <main className="login-screen">
       <div className="login-panel">
-        <span className="login-mark"><Orbit size={28} /></span>
-        <span className="eyebrow login-eyebrow">NMS ALLIANCE · NETWORK</span>
+        <span aria-hidden="true" className={`login-mark${hasAllianceLogo ? " login-mark--custom" : ""}`} style={hasAllianceLogo ? { backgroundImage: `url("${allianceLogoUrl}")` } : undefined}>
+          {!hasAllianceLogo && <Orbit size={28} />}
+        </span>
+        <span className="eyebrow login-eyebrow">{displayAllianceName}</span>
         <h1>Accedi alle operazioni<span>.</span></h1>
         <p>Entra con Google per visualizzare e coordinare le missioni dell’alleanza.</p>
         {ready ? <button className="google-login-button" onClick={() => signIn("google")} type="button"><GoogleMark /> Continua con Google</button> : <div className="auth-setup-note"><CircleSetupIcon /> Accesso da configurare nel progetto</div>}
