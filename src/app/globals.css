@@ -106,7 +106,7 @@ kbd { display: inline-flex; align-items: center; gap: 2px; padding: 2px 4px; col
 .mission-banner h1 { margin: 0 0 8px; font-size: 38px; font-weight: 700; letter-spacing: .148em; line-height: 1.08; }
 .mission-banner h1 > span { color: var(--lime); }
 .mission-banner p { margin: 0; color: #d1ded1; font-size: 13px; }
-.banner-alliance-logo { width: 148px; height: 148px; display: grid; flex: 0 0 148px; place-items: center; overflow: hidden; color: var(--lime); border: 1px solid #ff840070; border-radius: 50%; background-color: #ff840018; background-position: center; background-size: contain; background-repeat: no-repeat; }
+.banner-alliance-logo { width: 148px; height: 148px; display: grid; flex: 0 0 148px; place-items: center; overflow: hidden; color: var(--lime); background-position: center; background-size: contain; background-repeat: no-repeat; }
 .banner-add, .primary-button { height: 37px; position: relative; z-index: 2; display: inline-flex; align-items: center; justify-content: center; gap: 9px; padding: 0 13px; color: #213329; border: 0; background: var(--lime); cursor: pointer; font-size: 10px; font-weight: 700; }
 .banner-add, .primary-button, .claim-button, .google-login-button, .approval-button { font-family: var(--font-accent); letter-spacing: .148em; text-transform: uppercase; }
 .banner-add { margin-left: auto; align-self: flex-end; }
