@@ -44,12 +44,12 @@ function MemberActions({ member, canChangeRole, currentMemberEmail, onStatus, on
 
   return (
     <div className="member-page-actions">
+      {canChangeRole && <select aria-label={`Ruolo di ${member.email}`} onChange={(event) => onRole(member.email, event.target.value as MemberRole)} value={member.role}>{(Object.keys(roleLabels) as MemberRole[]).map((role) => <option key={role} value={role}>{roleLabels[role]}</option>)}</select>}
       {member.membershipStatus === "pending" && <button aria-label={`Approva ${member.email}`} className="member-icon-action approval-button" data-tooltip="Approva utente" onClick={() => onStatus(member.email, "approved")} type="button"><Check size={14} /></button>}
       {member.membershipStatus === "approved" && <button aria-label={`Revoca approvazione a ${member.email}`} className="member-icon-action approval-button revoke-approval" data-tooltip="Revoca approvazione" onClick={() => onStatus(member.email, "pending")} type="button"><CircleX size={14} /></button>}
       {member.membershipStatus === "blocked"
         ? <button aria-label={`Sblocca ${member.email}`} className="member-icon-action approval-button" data-tooltip="Sblocca utente" onClick={() => onStatus(member.email, "pending")} type="button"><UserRoundCheck size={14} /></button>
         : <button aria-label={`Blocca ${member.email}`} className="member-icon-action block-member" data-tooltip="Blocca utente" onClick={() => onStatus(member.email, "blocked")} type="button"><Ban size={14} /></button>}
-      {canChangeRole && <select aria-label={`Ruolo di ${member.email}`} onChange={(event) => onRole(member.email, event.target.value as MemberRole)} value={member.role}>{(Object.keys(roleLabels) as MemberRole[]).map((role) => <option key={role} value={role}>{roleLabels[role]}</option>)}</select>}
       <button aria-label={`Elimina ${member.email}`} className="member-icon-action delete-member" data-tooltip="Elimina utente" onClick={() => onDelete(member)} type="button"><Trash2 size={14} /></button>
     </div>
   );
