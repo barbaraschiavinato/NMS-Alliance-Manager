@@ -1,16 +1,20 @@
 "use client";
 
+import { useState } from "react";
+import Image from "next/image";
 import { signIn } from "next-auth/react";
 import { Orbit } from "lucide-react";
 
 export function GoogleLogin({ allianceName, allianceLogoUrl, missingConfiguration = [] }: Readonly<{ allianceName?: string; allianceLogoUrl?: string; missingConfiguration?: string[] }>) {
+  const [logoLoadFailed, setLogoLoadFailed] = useState(false);
   const ready = missingConfiguration.length === 0;
   const displayAllianceName = allianceName?.trim() || "NMS ALLIANCE";
-  const hasAllianceLogo = Boolean(allianceLogoUrl?.trim());
+  const hasAllianceLogo = Boolean(allianceLogoUrl?.trim()) && !logoLoadFailed;
   return (
     <main className="login-screen">
       <div className="login-panel">
-        <span aria-hidden="true" className={`login-mark${hasAllianceLogo ? " login-mark--custom" : ""}`} style={hasAllianceLogo ? { backgroundImage: `url("${allianceLogoUrl}")` } : undefined}>
+        <span aria-hidden="true" className={`login-mark${hasAllianceLogo ? " login-mark--custom" : ""}`}>
+          {hasAllianceLogo && <Image alt="" height={52} onError={() => setLogoLoadFailed(true)} src="/api/alliance/login-logo" unoptimized width={52} />}
           {!hasAllianceLogo && <Orbit size={28} />}
         </span>
         <span className="eyebrow login-eyebrow">{displayAllianceName}</span>
