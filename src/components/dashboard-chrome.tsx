@@ -77,12 +77,10 @@ export function DashboardTopbar({ currentMember, settings, sectionTitle = "Missi
         {currentMember.role === "admin" && onAdminOpen && <button aria-label="Gestione alleanza" className="square-button" onClick={onAdminOpen} title="Gestione alleanza" type="button"><Settings2 size={16} /></button>}
         {currentMember.role === "moderator" && <Link aria-label="Gestione utenti" className="square-button" href="/utenti" title="Gestione utenti"><UsersRound size={16} /></Link>}
         <button aria-label="Esci" className="square-button" onClick={() => signOut({ callbackUrl: "/" })} title="Esci" type="button"><LogOut size={16} /></button>
-        <span className="top-avatar">{(currentMember.nmsName || currentMember.name).slice(0, 2).toUpperCase()}</span>
-        <span aria-label={settings.name} className="topbar-alliance" title={settings.name}>
-          <span className="topbar-alliance-mark" style={settings.logoUrl ? { backgroundImage: `url("${settings.logoUrl}")` } : undefined}>
-            {!settings.logoUrl && <Orbit size={16} />}
-          </span>
-          <strong className="topbar-alliance-name">{settings.name}</strong>
+        <span className="top-avatar">
+          {currentMember.image
+            ? <span style={{ backgroundImage: `url("${currentMember.image}")` }} />
+            : (currentMember.nmsName || currentMember.name).slice(0, 2).toUpperCase()}
         </span>
       </div>
     </header>
