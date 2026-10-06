@@ -10,6 +10,7 @@ import { MemberProfilePanel } from "@/components/member-profile-panel";
 import { GlyphStrip, SystemAddressField, type SystemAddressValidation } from "@/components/portal-address-field";
 import { MissionForm } from "@/components/mission-form";
 import { PlanetCard } from "@/components/planet-card";
+import { LoadingSpinner } from "@/components/loading-spinner";
 import type { AllianceMember, AllianceSettings } from "@/lib/access-store";
 import { galaxyNames, galaxyLabel } from "@/lib/galaxies";
 import { decodePortalAddress, missionSpecialties, type Mission, type MissionInput, type MissionSpecialty } from "@/lib/missions";
@@ -312,7 +313,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
                 </div>
               </div>
             </div>
-            {loading && <p className="station-list-empty">Caricamento…</p>}
+            {loading && <div className="station-list-empty station-list-loading"><LoadingSpinner /></div>}
             {!loading && visibleStations.length === 0 && <p className="station-list-empty">{search ? "Nessuna stazione trovata." : "Nessun portale salvato."}</p>}
             {visibleStations.length > 0 && <ul className={`station-list ${viewMode === "cards" ? "station-list-cards" : ""}`}>{visibleStations.map((station) => {
               const planetImageUrl = cachedPlanetImageUrl(station.planet);

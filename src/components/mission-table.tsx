@@ -7,6 +7,7 @@ import { galaxyLabel } from "@/lib/galaxies";
 import { missionSystemStatuses, planetSystemStatusKey, type MissionSystemStatus, type PlanetSystemStatuses } from "@/lib/planet-system-status";
 import { useEffect, useState } from "react";
 import { MemberCardDialog } from "@/components/member-card-dialog";
+import { LoadingSpinner } from "@/components/loading-spinner";
 
 export type MissionFilter = "Tutte" | MissionStatus | "Attesa assegnate" | "Attesa non assegnate";
 type MissionCounts = Record<MissionFilter, number>;
@@ -239,6 +240,7 @@ export function MissionTable({
   members,
   defaultView,
   planetStatuses,
+  loading = false,
 }: Readonly<{
   missions: Mission[];
   counts: MissionCounts;
@@ -258,6 +260,7 @@ export function MissionTable({
   members: AllianceMember[];
   defaultView: "list" | "cards";
   planetStatuses: PlanetSystemStatuses;
+  loading?: boolean;
 }>) {
   const [profileEmail, setProfileEmail] = useState<string | null>(null);
   const [viewOverride, setViewOverride] = useState<"list" | "cards" | null>(null);
@@ -328,12 +331,14 @@ export function MissionTable({
               <td><div className="progress-cell"><div className="progress-track"><span style={{ width: `${mission.progress}%` }} /></div><span>{mission.progress}%</span></div></td>
               <td><MissionRowAction canManage={canManage} currentMember={currentMember} mission={mission} onClaim={onClaim} onComplete={onComplete} onDeleteMission={onDeleteMission} onEdit={onEdit} /></td>
             </tr>)}
-            {missions.length === 0 && <tr><td className="empty-state" colSpan={8}><Search size={18} />Nessuna missione corrisponde ai filtri.</td></tr>}
+            {loading && <tr><td className="empty-state mission-table-loading" colSpan={8}><LoadingSpinner /></td></tr>}
+            {!loading && missions.length === 0 && <tr><td className="empty-state" colSpan={8}><Search size={18} />Nessuna missione corrisponde ai filtri.</td></tr>}
           </tbody>
         </table>
       </div> : <div className="mission-card-grid">
         {missions.map((mission) => <MissionCard canManage={canManage} currentMember={currentMember} getDiscovererImage={getDiscovererImage} key={mission.id} members={members} mission={mission} onClaim={onClaim} onComplete={onComplete} onDeleteMission={onDeleteMission} onEdit={onEdit} onOpenPlanet={onOpenPlanet} onOpenProfile={setProfileEmail} onToggleSystemStatus={onToggleSystemStatus} systemStatuses={planetStatuses} />)}
-        {missions.length === 0 && <p className="mission-cards-empty">Nessuna missione corrisponde ai filtri.</p>}
+        {loading && <div className="mission-cards-loading"><LoadingSpinner /></div>}
+        {!loading && missions.length === 0 && <p className="mission-cards-empty">Nessuna missione corrisponde ai filtri.</p>}
       </div>}
       <div className="table-footer"><span><span className="footer-live" /> Mostrate <strong>{missions.length}</strong> di <strong>{counts.Tutte}</strong> missioni</span></div>
       {profileEmail && <MemberCardDialog email={profileEmail} onClose={() => setProfileEmail(null)} />}

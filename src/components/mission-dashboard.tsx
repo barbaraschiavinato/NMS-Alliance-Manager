@@ -32,6 +32,7 @@ export function MissionDashboard({ currentMember, initialSearch = "" }: Readonly
 }>) {
   const [member, setMember] = useState(currentMember);
   const [missions, setMissions] = useState<Mission[]>([]);
+  const [loadingMissions, setLoadingMissions] = useState(true);
   const [planetStatuses, setPlanetStatuses] = useState<PlanetSystemStatuses>({});
   const [filter, setFilter] = useState<MissionFilter>("Tutte");
   const [search, setSearch] = useState(initialSearch);
@@ -54,7 +55,8 @@ export function MissionDashboard({ currentMember, initialSearch = "" }: Readonly
         if (!response.ok) throw new Error("Archivio missioni non disponibile.");
         setMissions(await response.json() as Mission[]);
       })
-      .catch((error: unknown) => setNotice(error instanceof Error ? error.message : "Archivio missioni non disponibile."));
+      .catch((error: unknown) => setNotice(error instanceof Error ? error.message : "Archivio missioni non disponibile."))
+      .finally(() => setLoadingMissions(false));
     fetch("/api/alliance", { cache: "no-store" })
       .then(async (response) => {
         if (!response.ok) throw new Error("Impossibile caricare l'alleanza.");
@@ -252,6 +254,7 @@ export function MissionDashboard({ currentMember, initialSearch = "" }: Readonly
             onSearchChange={setSearch}
             search={search}
             searchInput={searchInput}
+            loading={loadingMissions}
           />
         </div>
       </section>

@@ -7,6 +7,7 @@ import type { AllianceMember, AllianceSettings, MemberRole, MemberSpecialty, Mem
 import { AllianceSidebar, DashboardTopbar, MissionHero } from "@/components/dashboard-chrome";
 import { AdminPanel } from "@/components/admin-panel";
 import { MemberProfilePanel } from "@/components/member-profile-panel";
+import { LoadingSpinner } from "@/components/loading-spinner";
 
 type MemberFilter = "all" | MembershipStatus;
 type ManagedMember = AllianceMember & { protectedAdmin: boolean };
@@ -58,6 +59,7 @@ export function MembersPage({ currentMember, alliance, missionCount }: Readonly<
   const [pageMember, setPageMember] = useState(currentMember);
   const [allianceSettings, setAllianceSettings] = useState(alliance);
   const [members, setMembers] = useState<ManagedMember[]>([]);
+  const [loadingMembers, setLoadingMembers] = useState(true);
   const [filter, setFilter] = useState<MemberFilter>("all");
   const [viewOverride, setViewOverride] = useState<"list" | "cards" | null>(null);
   const viewMode = viewOverride ?? allianceSettings.defaultTableView;
@@ -75,7 +77,8 @@ export function MembersPage({ currentMember, alliance, missionCount }: Readonly<
         if (!response.ok) throw new Error(body.error ?? "Impossibile caricare la lista utenti.");
         setMembers(body as ManagedMember[]);
       })
-      .catch((error_: unknown) => setError(error_ instanceof Error ? error_.message : "Impossibile caricare la lista utenti."));
+      .catch((error_: unknown) => setError(error_ instanceof Error ? error_.message : "Impossibile caricare la lista utenti."))
+      .finally(() => setLoadingMembers(false));
   }, []);
 
   const counts = useMemo(() => ({
@@ -165,7 +168,7 @@ export function MembersPage({ currentMember, alliance, missionCount }: Readonly<
         {error && <p className="form-error"><CircleAlert size={15} />{error}</p>}
         {notice && <p className="address-validation address-valid"><Check size={14} />{notice}</p>}
 
-        {viewMode === "list" ? <div className="members-table-wrap">
+        {loadingMembers ? <LoadingSpinner /> : viewMode === "list" ? <div className="members-table-wrap">
           <table className="members-table">
             <thead><tr><th>MEMBRO</th><th>CODICE AMICO</th><th>PIATTAFORME</th><th>SPECIALIZZAZIONE</th><th>STATO</th><th>RUOLO</th><th>AZIONI</th></tr></thead>
             <tbody>
@@ -210,7 +213,7 @@ export function MembersPage({ currentMember, alliance, missionCount }: Readonly<
           </article>)}
           {visibleMembers.length === 0 && <p className="member-cards-empty">{emptyMessage}</p>}
         </div>}
-        <footer className="members-list-footer">Visualizzati {visibleMembers.length} di {counts.all} utenti</footer>
+        <footer className="members-list-footer">{loadingMembers ? "Caricamento utenti…" : `Visualizzati ${visibleMembers.length} di ${counts.all} utenti`}</footer>
       </section>
         </main>
       </section>

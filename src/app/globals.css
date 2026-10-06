@@ -391,6 +391,13 @@ select { appearance: none; padding-right: 29px; background-image: linear-gradien
 .google-login-button { width: 100%; height: 44px; display: flex; align-items: center; justify-content: center; gap: 10px; color: #253129; border: 0; background: #f6f8f4; cursor: pointer; font-size: 12px; font-weight: 700; }
 .google-login-button:hover { background: #e8eee4; }
 .login-panel > small { margin-top: 16px; color: #a8b5ab; font-size: 9px; }
+.route-loading { position: fixed; z-index: 100; inset: 0; display: grid; place-items: center; padding: 24px; background: rgb(13 18 21 / 38%); }
+.loading-indicator { min-height: 88px; display: flex; align-items: center; justify-content: center; color: var(--lime); }
+.loading-spinner { animation: loading-spin 1.2s linear infinite; }
+@keyframes loading-spin { to { transform: rotate(360deg); } }
+.mission-table-loading { height: 100px; }
+.mission-cards-loading { grid-column: 1 / -1; }
+.station-list-loading { padding: 0; border: 0; }
 .auth-setup-note { width: 100%; min-height: 40px; display: flex; align-items: center; gap: 8px; padding: 0 10px; color: #f0dba1; border: 1px solid #706548; background: #413c2c; font-size: 10px; }
 .setup-marker { width: 17px; height: 17px; display: grid; place-items: center; border: 1px solid #cbb56f; border-radius: 50%; font-weight: 700; }
 .auth-config-list { display: grid; gap: 5px; margin: 12px 0 0; padding-left: 18px; color: #c6d0c7; font-family: "SFMono-Regular", Consolas, monospace; font-size: 9px; }
