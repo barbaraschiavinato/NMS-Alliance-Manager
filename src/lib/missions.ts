@@ -125,6 +125,7 @@ export function isMissionInput(value: unknown): value is MissionInput {
     typeof mission.progress === "number" &&
     Number.isInteger(mission.progress) &&
     mission.progress >= 0 &&
-    mission.progress <= 100
+    mission.progress <= 100 &&
+    mission.systemStatus === undefined
   );
 }

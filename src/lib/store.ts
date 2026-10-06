@@ -3,6 +3,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { getBlobAuthOptions } from "@/lib/blob-config";
 import type { Mission } from "@/lib/missions";
+import { migrateLegacyPlanetSystemStatuses } from "@/lib/planet-system-status-store";
 import { initialMissions } from "@/lib/seed";
 
 const blobPath = "alliance-manager/missions.json";
@@ -13,6 +14,9 @@ function migrateMissions(value: unknown): Mission[] {
 
   return value.map((entry) => {
     const mission = entry as Partial<Mission>;
+    const missionData = Object.fromEntries(
+      Object.entries(entry as Record<string, unknown>).filter(([key]) => key !== "systemStatus"),
+    );
     const matchingSeed = initialMissions.find((seed) =>
       seed.id === mission.id && seed.title === mission.title && seed.system === mission.system,
     );
@@ -20,7 +24,7 @@ function migrateMissions(value: unknown): Mission[] {
     let galaxy = typeof mission.galaxy === "number" ? mission.galaxy : 0;
     if (missingAddress && matchingSeed) galaxy = matchingSeed.galaxy;
     return {
-      ...mission,
+      ...missionData,
       system: typeof mission.system === "string" ? mission.system : "",
       systemAddress: missingAddress ? matchingSeed?.systemAddress ?? "" : mission.systemAddress,
       galaxy,
@@ -31,16 +35,21 @@ function migrateMissions(value: unknown): Mission[] {
   });
 }
 
+async function readAndMigrateMissions(value: unknown): Promise<Mission[]> {
+  await migrateLegacyPlanetSystemStatuses(value);
+  return migrateMissions(value);
+}
+
 export async function readMissions(): Promise<Mission[]> {
   const blobAuthOptions = getBlobAuthOptions();
   if (blobAuthOptions) {
     const blob = await get(blobPath, { access: "private", useCache: false, ...blobAuthOptions });
     if (!blob || blob.statusCode === 304) return initialMissions;
-    return migrateMissions(JSON.parse(await new Response(blob.stream).text()));
+    return readAndMigrateMissions(JSON.parse(await new Response(blob.stream).text()));
   }
 
   try {
-    return migrateMissions(JSON.parse(await readFile(localPath, "utf8")));
+    return await readAndMigrateMissions(JSON.parse(await readFile(localPath, "utf8")));
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === "ENOENT") return initialMissions;
     throw error;

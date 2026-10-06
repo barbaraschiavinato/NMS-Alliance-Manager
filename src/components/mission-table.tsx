@@ -4,6 +4,7 @@ import type { Mission, MissionSpecialty, MissionStatus } from "@/lib/missions";
 import { GlyphStrip } from "@/components/portal-address-field";
 import type { AllianceMember } from "@/lib/access-store";
 import { galaxyLabel } from "@/lib/galaxies";
+import { missionSystemStatuses, planetSystemStatusKey, type MissionSystemStatus, type PlanetSystemStatuses } from "@/lib/planet-system-status";
 import { useEffect, useState } from "react";
 import { MemberCardDialog } from "@/components/member-card-dialog";
 
@@ -20,6 +21,8 @@ const targetSpecialtyNames: Record<MissionSpecialty, string> = {
   explorer: "Esploratori",
   other: "Altro",
 };
+
+const missionProgressStatuses = missionSystemStatuses.filter((status) => status !== "Errore dati");
 
 function MissionRowAction({ mission, currentMember, canManage, onEdit, onDeleteMission, onClaim, onComplete }: Readonly<{
   mission: Mission;
@@ -140,8 +143,9 @@ function MissionPlanetThumbnail({ mission }: Readonly<{ mission: Mission }>) {
   </span>;
 }
 
-function MissionCard({ mission, currentMember, canManage, members, onEdit, onDeleteMission, onOpenPlanet, onClaim, onComplete, onOpenProfile, getDiscovererImage }: Readonly<{
+function MissionCard({ mission, systemStatuses, currentMember, canManage, members, onEdit, onDeleteMission, onOpenPlanet, onClaim, onComplete, onToggleSystemStatus, onOpenProfile, getDiscovererImage }: Readonly<{
   mission: Mission;
+  systemStatuses: PlanetSystemStatuses;
   currentMember: AllianceMember;
   canManage: boolean;
   members: AllianceMember[];
@@ -150,9 +154,13 @@ function MissionCard({ mission, currentMember, canManage, members, onEdit, onDel
   onOpenPlanet: (mission: Mission) => void;
   onClaim: (mission: Mission) => void;
   onComplete: (mission: Mission) => void;
+  onToggleSystemStatus: (mission: Mission, status: MissionSystemStatus, checked: boolean) => void;
   onOpenProfile: (email: string) => void;
   getDiscovererImage: (email?: string) => string | undefined;
 }>) {
+  const statuses = systemStatuses[planetSystemStatusKey(mission.systemAddress, mission.galaxy)] ?? [];
+  const hasDataError = statuses.includes("Errore dati");
+  const canUpdateSystemStatus = mission.assignedEmail?.toLowerCase() === currentMember.email.toLowerCase();
   return <article className="mission-card">
     <div className="mission-card-heading">
       <div className="mission-name-cell">
@@ -177,6 +185,36 @@ function MissionCard({ mission, currentMember, canManage, members, onEdit, onDel
       <div className="progress-cell"><div className="progress-track"><span style={{ width: `${mission.progress}%` }} /></div><span>{mission.progress}%</span></div>
     </div>
     <div className="mission-card-actions">
+      <span
+        aria-label={hasDataError
+          ? "Avanzamento sistema: errore dati"
+          : `Avanzamento sistema: ${missionProgressStatuses.filter((status) => statuses.includes(status)).length} di ${missionProgressStatuses.length} completati`}
+        className="mission-system-progress"
+        role="group"
+      >
+        {missionProgressStatuses.map((status) => {
+          const tooltip = hasDataError ? "Errore dati" : status;
+          return (
+            <label aria-label={tooltip} className={`mission-system-progress-item${canUpdateSystemStatus ? " mission-system-progress-item-editable" : ""}`} key={status} title={tooltip}>
+              {canUpdateSystemStatus && (
+                <input
+                  aria-label={tooltip}
+                  checked={statuses.includes(status)}
+                  onChange={(event) => onToggleSystemStatus(mission, status, event.target.checked)}
+                  type="checkbox"
+                />
+              )}
+              <span
+                aria-hidden="true"
+                className={hasDataError
+                  ? "mission-system-progress-square mission-system-progress-square-error"
+                  : `mission-system-progress-square${statuses.includes(status) ? " mission-system-progress-square-done" : ""}`}
+              />
+              <span aria-hidden="true" className="mission-system-progress-tooltip">{tooltip}</span>
+            </label>
+          );
+        })}
+      </span>
       <MissionRowAction canManage={canManage} currentMember={currentMember} mission={mission} onClaim={onClaim} onComplete={onComplete} onDeleteMission={onDeleteMission} onEdit={onEdit} />
     </div>
   </article>;
@@ -195,10 +233,12 @@ export function MissionTable({
   onOpenPlanet,
   onClaim,
   onComplete,
+  onToggleSystemStatus,
   currentMember,
   canManage,
   members,
   defaultView,
+  planetStatuses,
 }: Readonly<{
   missions: Mission[];
   counts: MissionCounts;
@@ -212,10 +252,12 @@ export function MissionTable({
   onOpenPlanet: (mission: Mission) => void;
   onClaim: (mission: Mission) => void;
   onComplete: (mission: Mission) => void;
+  onToggleSystemStatus: (mission: Mission, status: MissionSystemStatus, checked: boolean) => void;
   currentMember: AllianceMember;
   canManage: boolean;
   members: AllianceMember[];
   defaultView: "list" | "cards";
+  planetStatuses: PlanetSystemStatuses;
 }>) {
   const [profileEmail, setProfileEmail] = useState<string | null>(null);
   const [viewOverride, setViewOverride] = useState<"list" | "cards" | null>(null);
@@ -290,7 +332,7 @@ export function MissionTable({
           </tbody>
         </table>
       </div> : <div className="mission-card-grid">
-        {missions.map((mission) => <MissionCard canManage={canManage} currentMember={currentMember} getDiscovererImage={getDiscovererImage} key={mission.id} members={members} mission={mission} onClaim={onClaim} onComplete={onComplete} onDeleteMission={onDeleteMission} onEdit={onEdit} onOpenPlanet={onOpenPlanet} onOpenProfile={setProfileEmail} />)}
+        {missions.map((mission) => <MissionCard canManage={canManage} currentMember={currentMember} getDiscovererImage={getDiscovererImage} key={mission.id} members={members} mission={mission} onClaim={onClaim} onComplete={onComplete} onDeleteMission={onDeleteMission} onEdit={onEdit} onOpenPlanet={onOpenPlanet} onOpenProfile={setProfileEmail} onToggleSystemStatus={onToggleSystemStatus} systemStatuses={planetStatuses} />)}
         {missions.length === 0 && <p className="mission-cards-empty">Nessuna missione corrisponde ai filtri.</p>}
       </div>}
       <div className="table-footer"><span><span className="footer-live" /> Mostrate <strong>{missions.length}</strong> di <strong>{counts.Tutte}</strong> missioni</span></div>

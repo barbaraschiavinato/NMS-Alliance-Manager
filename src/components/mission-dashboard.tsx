@@ -17,10 +17,12 @@ import { AdminPanel } from "@/components/admin-panel";
 import { MemberProfilePanel } from "@/components/member-profile-panel";
 import { PlanetCard } from "@/components/planet-card";
 import { isValidNmsFriendCode } from "@/lib/member-types";
+import { planetSystemStatusKey, type MissionSystemStatus, type PlanetSystemStatuses } from "@/lib/planet-system-status";
 
 export function MissionDashboard({ currentMember }: Readonly<{ currentMember: AllianceMember }>) {
   const [member, setMember] = useState(currentMember);
   const [missions, setMissions] = useState(initialMissions);
+  const [planetStatuses, setPlanetStatuses] = useState<PlanetSystemStatuses>({});
   const [filter, setFilter] = useState<MissionFilter>("Tutte");
   const [search, setSearch] = useState("");
   const [dialogMission, setDialogMission] = useState<Mission | null>(null);
@@ -49,6 +51,16 @@ export function MissionDashboard({ currentMember }: Readonly<{ currentMember: Al
         setAlliance(await response.json() as AllianceSettings);
       })
       .catch((error: unknown) => setNotice(error instanceof Error ? error.message : "Impossibile caricare l’alleanza."));
+    fetch("/api/planet-status", { cache: "no-store" })
+      .then(async (response) => {
+        const body: unknown = await response.json();
+        if (!response.ok) throw new Error("Impossibile caricare gli stati dei pianeti.");
+        if (!body || typeof body !== "object" || !("planets" in body) || !body.planets || typeof body.planets !== "object") {
+          throw new Error("Elenco stati pianeta non valido.");
+        }
+        setPlanetStatuses(body.planets as PlanetSystemStatuses);
+      })
+      .catch((error: unknown) => setNotice(error instanceof Error ? error.message : "Impossibile caricare gli stati dei pianeti."));
     if (canManage) {
       fetch("/api/members", { cache: "no-store" })
         .then(async (response) => {
@@ -154,6 +166,27 @@ export function MissionDashboard({ currentMember }: Readonly<{ currentMember: Al
     setNotice("Missione completata.");
   }
 
+  async function togglePlanetSystemStatus(mission: Mission, status: MissionSystemStatus, checked: boolean) {
+    const key = planetSystemStatusKey(mission.systemAddress, mission.galaxy);
+    const currentStatuses = planetStatuses[key] ?? [];
+    const nextStatuses = checked
+      ? [...currentStatuses, status]
+      : currentStatuses.filter((selected) => selected !== status);
+    const response = await fetch("/api/planet-status", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ portal: mission.systemAddress, galaxy: mission.galaxy, systemStatuses: nextStatuses }),
+    });
+    const body: unknown = await response.json();
+    if (!response.ok) {
+      const message = body && typeof body === "object" && "error" in body ? body.error : null;
+      throw new Error(typeof message === "string" ? message : "Impossibile aggiornare lo stato del pianeta.");
+    }
+    const savedStatuses = body && typeof body === "object" && "systemStatuses" in body ? body.systemStatuses : null;
+    if (!Array.isArray(savedStatuses)) throw new Error("Risposta dello stato pianeta non valida.");
+    setPlanetStatuses((current) => ({ ...current, [key]: savedStatuses }));
+  }
+
   function openMission(mission: Mission | null) {
     setDialogMission(mission);
     setDialogOpen(true);
@@ -176,8 +209,10 @@ export function MissionDashboard({ currentMember }: Readonly<{ currentMember: Al
             canManage={canManage}
             members={members}
             defaultView={alliance.defaultTableView}
+            planetStatuses={planetStatuses}
             onClaim={(mission) => void claimMission(mission).catch((error: unknown) => setNotice(error instanceof Error ? error.message : "Richiesta non riuscita."))}
             onComplete={(mission) => void completeMission(mission).catch((error: unknown) => setNotice(error instanceof Error ? error.message : "Richiesta non riuscita."))}
+            onToggleSystemStatus={(mission, status, checked) => void togglePlanetSystemStatus(mission, status, checked).catch((error: unknown) => setNotice(error instanceof Error ? error.message : "Richiesta non riuscita."))}
             onEdit={(mission) => openMission(mission)}
             onDeleteMission={(mission) => {
               if (!window.confirm(`Eliminare "${mission.title}"?`)) return;
@@ -192,8 +227,26 @@ export function MissionDashboard({ currentMember }: Readonly<{ currentMember: Al
         </div>
       </section>
       {notice && <output className="toast" aria-live="polite"><Check size={15} />{notice}<button aria-label="Chiudi notifica" onClick={() => setNotice("")} type="button"><X size={14} /></button></output>}
-      {dialogOpen && <MissionForm members={members} mission={dialogMission} onClose={() => setDialogOpen(false)} onDelete={deleteMission} onSave={saveMission} stationOwners={stationOwners} />}
-      {planetMission && <PlanetCard key={planetMission.id} contextLabel={planetMission.system} galaxy={planetMission.galaxy} onClose={() => setPlanetMission(null)} portal={planetMission.systemAddress} title={planetMission.title} />}
+      {dialogOpen && <MissionForm
+        members={members}
+        mission={dialogMission}
+        onClose={() => setDialogOpen(false)}
+        onDelete={deleteMission}
+        onSave={saveMission}
+        onSystemStatusesSaved={(portal, galaxy, statuses) => setPlanetStatuses((current) => ({
+          ...current,
+          [planetSystemStatusKey(portal, galaxy)]: statuses,
+        }))}
+        stationOwners={stationOwners}
+      />}
+      {planetMission && <PlanetCard
+        contextLabel={planetMission.system}
+        galaxy={planetMission.galaxy}
+        key={planetMission.id}
+        onClose={() => setPlanetMission(null)}
+        portal={planetMission.systemAddress}
+        title={planetMission.title}
+      />}
       {adminOpen && <AdminPanel onClose={() => setAdminOpen(false)} onSaved={setAlliance} />}
       {profileOpen && <MemberProfilePanel member={member} onClose={() => setProfileOpen(false)} onSaved={(profile) => setMember((current) => ({ ...current, ...profile }))} />}
     </main>

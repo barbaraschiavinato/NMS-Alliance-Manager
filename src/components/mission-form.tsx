@@ -1,6 +1,7 @@
-import { useState, type SubmitEvent } from "react";
+import { useEffect, useState, type SubmitEvent } from "react";
 import { ArrowUpRight, CircleAlert, Trash2, X } from "lucide-react";
 import {
+  decodePortalAddress,
   missionPriorities,
   missionStatuses,
   type Mission,
@@ -13,6 +14,7 @@ import type { AllianceMember } from "@/lib/access-store";
 import type { MemberSpecialty } from "@/lib/member-types";
 import { missionSpecialties, type MissionSpecialty } from "@/lib/missions";
 import { galaxyNames, galaxyLabel } from "@/lib/galaxies";
+import { isMissionSystemStatus, missionSystemStatuses, planetSystemStatusKey, type MissionSystemStatus } from "@/lib/planet-system-status";
 
 const specialtyNames: Record<MemberSpecialty, string> = { builder: "Costruttore", ranger: "Ranger", explorer: "Esploratore" };
 const targetNames: Record<MissionSpecialty, string> = { all: "Tutti", builder: "Costruttori", ranger: "Ranger", explorer: "Esploratori", other: "Altro" };
@@ -43,6 +45,7 @@ export function MissionForm({
   stationOwners,
   initialValues,
   availableSpecialties,
+  onSystemStatusesSaved,
 }: Readonly<{
   mission: Mission | null;
   onClose: () => void;
@@ -52,12 +55,18 @@ export function MissionForm({
   stationOwners: StationOwnerOption[];
   initialValues?: Partial<MissionInput>;
   availableSpecialties?: MissionSpecialty[];
+  onSystemStatusesSaved?: (portal: string, galaxy: number, statuses: MissionSystemStatus[]) => void;
 }>) {
   const [form, setForm] = useState<MissionInput>(() => mission
     ? { ...mission, systemAddress: mission.systemAddress ?? "", galaxy: mission.galaxy ?? 0 }
     : { ...emptyMission, ...initialValues });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [systemStatuses, setSystemStatuses] = useState<MissionSystemStatus[]>([]);
+  const [loadedStatusKey, setLoadedStatusKey] = useState("");
+  const [systemStatusesSaving, setSystemStatusesSaving] = useState(false);
+  const [systemStatusesError, setSystemStatusesError] = useState("");
+  const [loadedStatusErrorKey, setLoadedStatusErrorKey] = useState("");
   const [addressValidation, setAddressValidation] = useState<SystemAddressValidation>({ valid: false, lookup: null });
   const addressComplete = addressValidation.valid;
   const matchingLookup = addressValidation.lookup?.address === form.systemAddress && addressValidation.lookup.galaxy === form.galaxy
@@ -74,6 +83,75 @@ export function MissionForm({
   else if (mission) submitLabel = "Salva modifiche";
   const update = <K extends keyof MissionInput>(key: K, value: MissionInput[K]) =>
     setForm((current) => ({ ...current, [key]: value }));
+  const currentPlanetKey = /^[0-9a-f]{12}$/i.test(form.systemAddress) &&
+    Number.isInteger(form.galaxy) && form.galaxy >= 0 && form.galaxy <= 255 &&
+    decodePortalAddress(form.systemAddress)?.errors.length === 0
+    ? planetSystemStatusKey(form.systemAddress, form.galaxy)
+    : "";
+  const systemStatusesLoading = Boolean(currentPlanetKey && loadedStatusKey !== currentPlanetKey);
+  useEffect(() => {
+    const address = form.systemAddress;
+    const galaxy = form.galaxy;
+    if (!/^[0-9a-f]{12}$/i.test(address) || !Number.isInteger(galaxy) || galaxy < 0 || galaxy > 255 ||
+      decodePortalAddress(address)?.errors.length !== 0) return;
+    const controller = new AbortController();
+    const params = new URLSearchParams({ portal: address, galaxy: String(galaxy) });
+    fetch(`/api/planet-status?${params}`, { signal: controller.signal, cache: "no-store" })
+      .then(async (response) => {
+        const body: unknown = await response.json();
+        if (!response.ok) {
+          const message = body && typeof body === "object" && "error" in body ? body.error : null;
+          throw new Error(typeof message === "string" ? message : "Impossibile leggere lo stato del pianeta.");
+        }
+        const statuses = body && typeof body === "object" && "systemStatuses" in body ? body.systemStatuses : null;
+        if (!Array.isArray(statuses) || !statuses.every(isMissionSystemStatus)) {
+          throw new Error("Risposta dello stato pianeta non valida.");
+        }
+        setSystemStatuses(statuses);
+        setLoadedStatusErrorKey("");
+      })
+      .catch((error_: unknown) => {
+        if (!controller.signal.aborted) {
+          setSystemStatusesError(error_ instanceof Error ? error_.message : "Impossibile leggere lo stato del pianeta.");
+          setLoadedStatusErrorKey(planetSystemStatusKey(address, galaxy));
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoadedStatusKey(planetSystemStatusKey(address, galaxy));
+      });
+    return () => controller.abort();
+  }, [form.galaxy, form.systemAddress]);
+
+  async function updateSystemStatus(status: MissionSystemStatus, checked: boolean) {
+    const nextStatuses = checked
+      ? [...systemStatuses, status]
+      : systemStatuses.filter((selected) => selected !== status);
+    setSystemStatusesSaving(true);
+    setSystemStatusesError("");
+    try {
+      const response = await fetch("/api/planet-status", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ portal: form.systemAddress, galaxy: form.galaxy, systemStatuses: nextStatuses }),
+      });
+      const body: unknown = await response.json();
+      if (!response.ok) {
+        const message = body && typeof body === "object" && "error" in body ? body.error : null;
+        throw new Error(typeof message === "string" ? message : "Impossibile salvare lo stato del pianeta.");
+      }
+      const statuses = body && typeof body === "object" && "systemStatuses" in body ? body.systemStatuses : null;
+      if (!Array.isArray(statuses) || !statuses.every(isMissionSystemStatus)) {
+        throw new Error("Risposta dello stato pianeta non valida.");
+      }
+      setSystemStatuses(statuses);
+      setSystemStatusesError("");
+      onSystemStatusesSaved?.(form.systemAddress, form.galaxy, statuses);
+    } catch (error_: unknown) {
+      setSystemStatusesError(error_ instanceof Error ? error_.message : "Impossibile salvare lo stato del pianeta.");
+    } finally {
+      setSystemStatusesSaving(false);
+    }
+  }
   const resetAlmanacSystemData = () => {
     if (form.systemLabelFromAlmanac) update("system", "");
     update("systemVerified", false);
@@ -226,6 +304,27 @@ export function MissionForm({
               <span>Avanzamento <b>{form.progress}%</b></span>
               <input max={100} min={0} onChange={(event) => update("progress", Number(event.target.value))} type="range" value={form.progress} />
             </label>
+            <fieldset className="system-status-fieldset">
+              <legend>Stato sistema · condiviso per pianeta</legend>
+              {!currentPlanetKey && <p className="field-hint">Inserisci un indirizzo portale valido per gestire lo stato del pianeta.</p>}
+              {systemStatusesLoading && <p className="field-hint">Caricamento stato pianeta…</p>}
+              {systemStatusesError && <p className="form-error"><CircleAlert size={14} />{systemStatusesError}</p>}
+              {currentPlanetKey && !systemStatusesLoading && loadedStatusErrorKey !== currentPlanetKey && (
+                <div className="system-status-options">
+                  {missionSystemStatuses.map((status) => (
+                    <label className="system-status-option" key={status}>
+                      <input
+                        checked={loadedStatusKey === currentPlanetKey && systemStatuses.includes(status)}
+                        disabled={systemStatusesSaving || !addressComplete}
+                        onChange={(event) => void updateSystemStatus(status, event.target.checked)}
+                        type="checkbox"
+                      />
+                      <span>{status}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
+            </fieldset>
           </div>
           {error && <p className="form-error"><CircleAlert size={15} />{error}</p>}
           <div className="dialog-actions">
