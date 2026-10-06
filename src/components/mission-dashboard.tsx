@@ -19,6 +19,14 @@ import { PlanetCard } from "@/components/planet-card";
 import { isValidNmsFriendCode } from "@/lib/member-types";
 import { planetSystemStatusKey, type MissionSystemStatus, type PlanetSystemStatuses } from "@/lib/planet-system-status";
 
+const missionTypeLabels: Record<Mission["targetSpecialty"], string> = {
+  all: "Tutti",
+  builder: "Costruttori",
+  ranger: "Ranger",
+  explorer: "Esploratori",
+  other: "Altro",
+};
+
 export function MissionDashboard({ currentMember, initialSearch = "" }: Readonly<{
   currentMember: AllianceMember;
   initialSearch?: string;
@@ -118,7 +126,18 @@ export function MissionDashboard({ currentMember, initialSearch = "" }: Readonly
       const searchText = search.trim().toLowerCase();
       if (!searchText) return true;
 
-      const textMatches = `${mission.title} ${mission.system} ${mission.assignedTo}`.toLowerCase().includes(searchText);
+      const searchableText = [
+        mission.title,
+        mission.system,
+        mission.assignedTo,
+        mission.assignedEmail,
+        mission.stationOwnerName,
+        mission.stationOwnerEmail,
+        mission.createdByName,
+        mission.createdByEmail,
+        missionTypeLabels[mission.targetSpecialty],
+      ].filter(Boolean).join(" ").toLowerCase();
+      const textMatches = searchableText.includes(searchText);
       const normalizedSearch = search.replace(/[\s-]/g, "").toUpperCase();
       const normalizedAddress = mission.systemAddress.replace(/[\s-]/g, "").toUpperCase();
       return textMatches || normalizedAddress.includes(normalizedSearch);
