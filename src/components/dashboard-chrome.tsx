@@ -29,10 +29,10 @@ export function AllianceSidebar({ missionCount, currentMember, settings, activeS
   else if (currentMember.role === "moderator") roleLabel = "Moderatore";
   return (
     <aside className="sidebar">
-      <a className="brand" href="#missioni">
+      <Link className="brand" href="/">
         <span className="brand-mark" style={settings.logoUrl ? { backgroundImage: `url("${settings.logoUrl}")` } : undefined}>{!settings.logoUrl && <Orbit size={21} strokeWidth={1.8} />}</span>
         <span><strong>{settings.name}</strong></span>
-      </a>
+      </Link>
       <nav className="side-nav" aria-label="Navigazione principale">
         <Link className={`nav-item ${activeSection === "missioni" ? "active" : ""}`} href="/"><Crosshair size={17} /><span>Missioni</span><span className="nav-count">{missionCount}</span></Link>
         <Link className={`nav-item ${activeSection === "stazioni" ? "active" : ""}`} href="/stazioni"><Orbit size={17} /><span>Stazioni</span></Link>

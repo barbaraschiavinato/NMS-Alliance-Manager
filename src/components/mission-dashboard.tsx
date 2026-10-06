@@ -12,7 +12,6 @@ import { MissionForm, type StationOwnerOption } from "@/components/mission-form"
 import { MissionTable, type MissionFilter } from "@/components/mission-table";
 import { canViewMission, type Mission, type MissionInput } from "@/lib/missions";
 import type { AllianceMember, AllianceSettings } from "@/lib/access-store";
-import { initialMissions } from "@/lib/seed";
 import { AdminPanel } from "@/components/admin-panel";
 import { MemberProfilePanel } from "@/components/member-profile-panel";
 import { PlanetCard } from "@/components/planet-card";
@@ -32,7 +31,7 @@ export function MissionDashboard({ currentMember, initialSearch = "" }: Readonly
   initialSearch?: string;
 }>) {
   const [member, setMember] = useState(currentMember);
-  const [missions, setMissions] = useState(initialMissions);
+  const [missions, setMissions] = useState<Mission[]>([]);
   const [planetStatuses, setPlanetStatuses] = useState<PlanetSystemStatuses>({});
   const [filter, setFilter] = useState<MissionFilter>("Tutte");
   const [search, setSearch] = useState(initialSearch);
