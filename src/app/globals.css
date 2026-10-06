@@ -242,6 +242,8 @@ kbd { display: inline-flex; align-items: center; gap: 2px; padding: 2px 4px; col
 .row-action-delete:hover, .delete-member:hover { color: #ef8067; }
 .claim-button { min-height: 27px; padding: 0 9px; color: #355b43; border: 1px solid #cbd9c6; background: #eef4e9; cursor: pointer; font-size: 9px; font-weight: 700; }
 .claim-button:hover { background: #e2edd9; }
+.mission-action-button { color: #72d1c4; border-color: #315b55; border-radius: 3px; background: #192a29; transition: color .15s, border-color .15s, background-color .15s; }
+.mission-action-button:hover { border-color: #72d1c4; background: #203835; }
 .no-row-action { color: #89948c; }
 .empty-state { height: 100px !important; color: #89948c !important; text-align: center; }
 .empty-state svg { margin-right: 8px; vertical-align: middle; }

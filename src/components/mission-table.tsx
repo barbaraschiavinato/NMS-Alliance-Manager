@@ -37,10 +37,10 @@ function MissionRowAction({ mission, currentMember, canManage, onEdit, onDeleteM
     </span>;
   }
   if (mission.assignedEmail === currentMember.email && mission.status !== "Completata") {
-    return <button className="claim-button" onClick={() => onComplete(mission)} type="button">Completa</button>;
+    return <button className="claim-button mission-action-button" onClick={() => onComplete(mission)} type="button">Completa</button>;
   }
   if (!mission.assignedEmail && !mission.assignedTo.trim()) {
-    return <button className="claim-button" onClick={() => onClaim(mission)} type="button">Prendi</button>;
+    return <button className="claim-button mission-action-button" onClick={() => onClaim(mission)} type="button">Prendi</button>;
   }
   return <span className="no-row-action">—</span>;
 }
