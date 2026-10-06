@@ -400,7 +400,7 @@ select { appearance: none; padding-right: 29px; background-image: linear-gradien
 .mission-table-loading .loading-indicator { width: 100%; }
 .mission-table-loading .loading-spinner { margin: 0; }
 .mission-cards-loading { grid-column: 1 / -1; }
-.station-list-loading { padding: 0; border: 0; }
+.station-list-empty.station-list-loading { padding: 0; border: 0; }
 .auth-setup-note { width: 100%; min-height: 40px; display: flex; align-items: center; gap: 8px; padding: 0 10px; color: #f0dba1; border: 1px solid #706548; background: #413c2c; font-size: 10px; }
 .setup-marker { width: 17px; height: 17px; display: grid; place-items: center; border: 1px solid #cbb56f; border-radius: 50%; font-weight: 700; }
 .auth-config-list { display: grid; gap: 5px; margin: 12px 0 0; padding-left: 18px; color: #c6d0c7; font-family: "SFMono-Regular", Consolas, monospace; font-size: 9px; }
