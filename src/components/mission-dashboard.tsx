@@ -19,12 +19,15 @@ import { PlanetCard } from "@/components/planet-card";
 import { isValidNmsFriendCode } from "@/lib/member-types";
 import { planetSystemStatusKey, type MissionSystemStatus, type PlanetSystemStatuses } from "@/lib/planet-system-status";
 
-export function MissionDashboard({ currentMember }: Readonly<{ currentMember: AllianceMember }>) {
+export function MissionDashboard({ currentMember, initialSearch = "" }: Readonly<{
+  currentMember: AllianceMember;
+  initialSearch?: string;
+}>) {
   const [member, setMember] = useState(currentMember);
   const [missions, setMissions] = useState(initialMissions);
   const [planetStatuses, setPlanetStatuses] = useState<PlanetSystemStatuses>({});
   const [filter, setFilter] = useState<MissionFilter>("Tutte");
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(initialSearch);
   const [dialogMission, setDialogMission] = useState<Mission | null>(null);
   const [planetMission, setPlanetMission] = useState<Mission | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -111,7 +114,15 @@ export function MissionDashboard({ currentMember }: Readonly<{ currentMember: Al
       if (filter === "Attesa non assegnate") return mission.status === "In attesa" && !isAssigned;
       return mission.status === filter;
     })
-    .filter((mission) => `${mission.title} ${mission.system} ${mission.assignedTo}`.toLowerCase().includes(search.toLowerCase()))
+    .filter((mission) => {
+      const searchText = search.trim().toLowerCase();
+      if (!searchText) return true;
+
+      const textMatches = `${mission.title} ${mission.system} ${mission.assignedTo}`.toLowerCase().includes(searchText);
+      const normalizedSearch = search.replace(/[\s-]/g, "").toUpperCase();
+      const normalizedAddress = mission.systemAddress.replace(/[\s-]/g, "").toUpperCase();
+      return textMatches || normalizedAddress.includes(normalizedSearch);
+    })
     , [availableMissions, filter, search]);
 
   async function saveMission(input: MissionInput) {

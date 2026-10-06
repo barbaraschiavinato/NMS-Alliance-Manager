@@ -6,7 +6,9 @@ import { PendingApproval } from "@/components/pending-approval";
 
 export const dynamic = "force-dynamic";
 
-export default async function Home() {
+export default async function Home({ searchParams }: Readonly<{
+  searchParams: Promise<{ search?: string | string[] }>;
+}>) {
   const missingConfiguration = ["AUTH_SECRET", "AUTH_GOOGLE_ID", "AUTH_GOOGLE_SECRET", "ALLIANCE_ADMIN_EMAIL"]
     .filter((key) => !process.env[key]);
   if (missingConfiguration.length > 0) return <GoogleLogin missingConfiguration={missingConfiguration} />;
@@ -17,5 +19,7 @@ export default async function Home() {
   const member = await getCurrentMember({ allowPending: true, allowBlocked: true });
   if (!member) return <GoogleLogin />;
   if (member.membershipStatus !== "approved") return <PendingApproval member={member} />;
-  return <MissionDashboard currentMember={member} />;
+  const params = await searchParams;
+  const initialSearch = typeof params.search === "string" ? params.search.slice(0, 80) : "";
+  return <MissionDashboard currentMember={member} initialSearch={initialSearch} />;
 }

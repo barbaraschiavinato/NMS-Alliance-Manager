@@ -35,8 +35,8 @@ function MissionRowAction({ mission, currentMember, canManage, onEdit, onDeleteM
 }>) {
   if (canManage) {
     return <span className="mission-row-actions">
-      <button aria-label={`Modifica ${mission.title}`} className="row-action" onClick={() => onEdit(mission)} title="Modifica missione" type="button"><Pencil size={15} /></button>
-      <button aria-label={`Elimina ${mission.title}`} className="row-action row-action-delete" onClick={() => onDeleteMission(mission)} title="Elimina missione" type="button"><Trash2 size={15} /></button>
+      <button aria-label={`Modifica ${mission.title}`} className="row-action" data-tooltip="Modifica missione" onClick={() => onEdit(mission)} type="button"><Pencil size={15} /></button>
+      <button aria-label={`Elimina ${mission.title}`} className="row-action row-action-delete" data-tooltip="Elimina missione" onClick={() => onDeleteMission(mission)} type="button"><Trash2 size={15} /></button>
     </span>;
   }
   if (mission.assignedEmail === currentMember.email && mission.status !== "Completata") {
@@ -307,7 +307,7 @@ export function MissionTable({
           {(["Tutte", "In corso", "Attesa assegnate", "Attesa non assegnate", "Completata"] as MissionFilter[]).map((item) => <button aria-selected={filter === item} className={filter === item ? "filter-tab selected" : "filter-tab"} key={item} onClick={() => onFilterChange(item)} role="tab" type="button">{item}<span>{counts[item]}</span></button>)}
         </div>
         <div className="toolbar-actions">
-          <label className="search-field"><Search size={15} /><input aria-label="Cerca per missione, sistema o responsabile" onChange={(event) => onSearchChange(event.target.value)} placeholder="Cerca missione" ref={searchInput} value={search} /><kbd>/</kbd></label>
+          <label className="search-field"><Search size={15} /><input aria-label="Cerca missione, sistema, codice pianeta o responsabile" onChange={(event) => onSearchChange(event.target.value)} placeholder="Cerca missione o codice pianeta" ref={searchInput} value={search} /><kbd>/</kbd></label>
           <div aria-label="Vista missioni" className="view-toggle" role="group">
             <button aria-label="Vista lista" aria-pressed={viewMode === "list"} className={viewMode === "list" ? "selected" : ""} onClick={() => setViewOverride("list")} title="Vista lista" type="button"><List size={15} /></button>
             <button aria-label="Vista schede" aria-pressed={viewMode === "cards"} className={viewMode === "cards" ? "selected" : ""} onClick={() => setViewOverride("cards")} title="Vista schede" type="button"><LayoutGrid size={15} /></button>

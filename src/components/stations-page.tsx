@@ -1,8 +1,9 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useMemo, useState, type SubmitEvent } from "react";
-import { CircleAlert, CirclePlus, LayoutGrid, List, Plus, Search, Trash2, X } from "lucide-react";
+import { CircleAlert, CirclePlus, Compass, LayoutGrid, List, Plus, Search, Trash2, X } from "lucide-react";
 import { AllianceSidebar, DashboardTopbar, MissionHero } from "@/components/dashboard-chrome";
 import { AdminPanel } from "@/components/admin-panel";
 import { MemberProfilePanel } from "@/components/member-profile-panel";
@@ -332,10 +333,12 @@ export function StationsPage({ currentMember, alliance, missionCount }: Readonly
                       : <button className="station-planet-open station-planet-unknown" onClick={() => setSelectedStation({ portal: station.portal, galaxy: station.galaxy })} type="button"><span>{galaxyLabel(station.galaxy)}</span><strong>Nessun dato Almanac · apri scheda</strong></button>}
                 </div>
                 <div className="station-actions">
-                  {canCreateMissions && station.availableSpecialties.length > 0 && <button aria-label={`Crea missione da ${station.portal}`} className="member-icon-action create-station-mission" onClick={() => setMissionStation({ portal: station.portal, galaxy: station.galaxy, title: cachedPlanetTitle(station.planet), ownerEmail: station.owner })} title="Crea missione"><CirclePlus size={14} /></button>}
+                  {canCreateMissions && station.availableSpecialties.length > 0 && <button aria-label={`Crea missione da ${station.portal}`} className="member-icon-action create-station-mission" data-tooltip="Crea missione da stazione" onClick={() => setMissionStation({ portal: station.portal, galaxy: station.galaxy, title: cachedPlanetTitle(station.planet), ownerEmail: station.owner })} type="button"><CirclePlus size={14} /></button>}
                   {station.hasMissions
-                    ? <span className="station-mission-lock">Missione associata</span>
-                    : (canSeeAll || station.owner.toLowerCase() === pageMember.email.toLowerCase()) && <button aria-label={`Rimuovi il portale ${station.portal} in ${galaxyLabel(station.galaxy)} dall’archivio di ${station.owner}`} className="member-icon-action delete-member" onClick={() => void removeStation(station.portal, station.galaxy, station.owner)} title="Rimuovi stazione" type="button"><Trash2 size={14} /></button>}
+                    ? canSeeAll
+                      ? <Link aria-label={`Apri le missioni del pianeta ${station.portal}`} className="member-icon-action station-missions-link" data-tooltip="Apri le missioni associate" href={`/?search=${encodeURIComponent(station.portal)}`}><Compass size={14} /></Link>
+                      : <span className="station-mission-lock">Missione associata</span>
+                    : (canSeeAll || station.owner.toLowerCase() === pageMember.email.toLowerCase()) && <button aria-label={`Rimuovi il portale ${station.portal} in ${galaxyLabel(station.galaxy)} dall’archivio di ${station.owner}`} className="member-icon-action delete-member" data-tooltip="Cancella stazione" onClick={() => void removeStation(station.portal, station.galaxy, station.owner)} type="button"><Trash2 size={14} /></button>}
                 </div>
               </li>;
             })}</ul>}

@@ -38,7 +38,7 @@ function MemberActions({ member, canChangeRole, currentMemberEmail, onStatus, on
     <select aria-label={`Ruolo di ${member.email}`} onChange={(event) => onRole(member.email, event.target.value as MemberRole)} value={member.role}>
       {(Object.keys(roleLabels) as MemberRole[]).map((role) => <option key={role} value={role}>{roleLabels[role]}</option>)}
     </select>
-    <button aria-label={`Elimina ${member.email}`} className="member-icon-action delete-member" onClick={() => onDelete(member)} title="Elimina admin" type="button"><Trash2 size={14} /></button>
+    <button aria-label={`Elimina ${member.email}`} className="member-icon-action delete-member" data-tooltip="Elimina admin" onClick={() => onDelete(member)} type="button"><Trash2 size={14} /></button>
   </div>;
 
   return (
@@ -47,9 +47,9 @@ function MemberActions({ member, canChangeRole, currentMemberEmail, onStatus, on
       {member.membershipStatus === "approved" && <button className="approval-button revoke-approval" onClick={() => onStatus(member.email, "pending")} type="button">Revoca</button>}
       {member.membershipStatus === "blocked"
         ? <button className="approval-button" onClick={() => onStatus(member.email, "pending")} type="button"><UserRoundCheck size={14} /> Sblocca</button>
-        : <button aria-label={`Blocca ${member.email}`} className="member-icon-action block-member" onClick={() => onStatus(member.email, "blocked")} title="Blocca" type="button"><Ban size={14} /></button>}
+        : <button aria-label={`Blocca ${member.email}`} className="member-icon-action block-member" data-tooltip="Blocca utente" onClick={() => onStatus(member.email, "blocked")} type="button"><Ban size={14} /></button>}
       {canChangeRole && <select aria-label={`Ruolo di ${member.email}`} onChange={(event) => onRole(member.email, event.target.value as MemberRole)} value={member.role}>{(Object.keys(roleLabels) as MemberRole[]).map((role) => <option key={role} value={role}>{roleLabels[role]}</option>)}</select>}
-      <button aria-label={`Elimina ${member.email}`} className="member-icon-action delete-member" onClick={() => onDelete(member)} title="Elimina" type="button"><Trash2 size={14} /></button>
+      <button aria-label={`Elimina ${member.email}`} className="member-icon-action delete-member" data-tooltip="Elimina utente" onClick={() => onDelete(member)} type="button"><Trash2 size={14} /></button>
     </div>
   );
 }
