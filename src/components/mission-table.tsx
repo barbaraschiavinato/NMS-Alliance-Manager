@@ -114,7 +114,7 @@ function MissionCard({ mission, currentMember, canManage, members, onEdit, onDel
           {mission.description && <span className="mission-description">{mission.description}</span>}
         </div>
       </div>
-      <span className={`mission-specialty mission-specialty-${mission.targetSpecialty ?? "all"}`}>{targetSpecialtyNames[mission.targetSpecialty ?? "all"]}</span>
+      <span className={`badge badge--specialty badge--specialty-${mission.targetSpecialty ?? "all"}`}>{targetSpecialtyNames[mission.targetSpecialty ?? "all"]}</span>
     </div>
     <div className="mission-card-system">
       <GlyphStrip address={mission.systemAddress ?? ""} />
@@ -125,7 +125,7 @@ function MissionCard({ mission, currentMember, canManage, members, onEdit, onDel
       <div><small>ASSEGNATARIO</small><AssigneeCell currentMember={currentMember} members={members} mission={mission} onOpenProfile={onOpenProfile} /></div>
     </div>
     <div className="mission-card-progress">
-      <span className={`priority priority-${mission.priority.toLowerCase()}`}><span />{mission.priority}</span>
+      <span className={`badge badge--priority badge--priority-${mission.priority.toLowerCase()}`}><span />{mission.priority}</span>
       <div className="progress-cell"><div className="progress-track"><span style={{ width: `${mission.progress}%` }} /></div><span>{mission.progress}%</span></div>
     </div>
     <div className="mission-card-actions">
@@ -230,11 +230,11 @@ export function MissionTable({
           <tbody>
             {missions.map((mission) => <tr key={mission.id}>
               <td><div className="mission-name-cell"><span className={`mission-icon ${mission.status === "Completata" ? "mission-icon-done" : ""}`}>{mission.status === "Completata" ? <Check size={15} /> : <Compass size={15} />}</span><div><button aria-label={`Apri la scheda del pianeta per ${mission.title}`} className="mission-title" onClick={() => onOpenPlanet(mission)} title="Apri scheda pianeta" type="button">{mission.title}</button><span className="mission-description">{mission.description}</span></div></div></td>
-              <td><span className={`mission-specialty mission-specialty-${mission.targetSpecialty ?? "all"}`}>{targetSpecialtyNames[mission.targetSpecialty ?? "all"]}</span></td>
+              <td><span className={`badge badge--specialty badge--specialty-${mission.targetSpecialty ?? "all"}`}>{targetSpecialtyNames[mission.targetSpecialty ?? "all"]}</span></td>
               <td><div className="system-cell"><GlyphStrip address={mission.systemAddress ?? ""} /><span className="system-caption">{mission.system || "Sistema"} · {galaxyLabel(mission.galaxy ?? 0)}</span></div></td>
               <td><DiscovererCell email={mission.stationOwnerEmail} image={getDiscovererImage(mission.stationOwnerEmail)} name={mission.stationOwnerName} onOpenProfile={setProfileEmail} /></td>
               <td><AssigneeCell currentMember={currentMember} members={members} mission={mission} onOpenProfile={setProfileEmail} /></td>
-              <td><span className={`priority priority-${mission.priority.toLowerCase()}`}><span />{mission.priority}</span></td>
+              <td><span className={`badge badge--priority badge--priority-${mission.priority.toLowerCase()}`}><span />{mission.priority}</span></td>
               <td><div className="progress-cell"><div className="progress-track"><span style={{ width: `${mission.progress}%` }} /></div><span>{mission.progress}%</span></div></td>
               <td><MissionRowAction canManage={canManage} currentMember={currentMember} mission={mission} onClaim={onClaim} onComplete={onComplete} onDeleteMission={onDeleteMission} onEdit={onEdit} /></td>
             </tr>)}

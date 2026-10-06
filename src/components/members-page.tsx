@@ -31,7 +31,7 @@ function MemberActions({ member, canChangeRole, currentMemberEmail, onStatus, on
 }>) {
   const canManage = canChangeRole || member.role === "user";
   if (!canManage || member.protectedAdmin || member.email.toLowerCase() === currentMemberEmail.toLowerCase()) {
-    return <span className="role-lock">Protetto</span>;
+    return <span className="badge badge--protected">Protetto</span>;
   }
 
   if (member.role === "admin") return <div className="member-page-actions">
@@ -174,7 +174,7 @@ export function MembersPage({ currentMember, alliance, missionCount }: Readonly<
                 <td className="member-code-cell">{member.nmsCode || "Da completare"}</td>
                 <td>{member.platforms.length ? member.platforms.join(", ") : "Da selezionare"}</td>
                 <td>{member.specialty ? specialtyLabels[member.specialty] : "Da scegliere"}</td>
-                <td><span className={`member-status-pill member-status-${member.membershipStatus}`}>{statusLabels[member.membershipStatus]}</span></td>
+                <td><span className={`badge badge--member-status badge--member-status-${member.membershipStatus}`}>{statusLabels[member.membershipStatus]}</span></td>
                 <td>{roleLabels[member.role]}</td>
                 <td><MemberActions canChangeRole={canChangeRole} currentMemberEmail={pageMember.email} member={member} onDelete={(target) => void deleteMember(target)} onRole={(email, role) => void patchMember(email, { role })} onStatus={(email, membershipStatus) => void patchMember(email, { membershipStatus })} /></td>
               </tr>)}
@@ -188,7 +188,7 @@ export function MembersPage({ currentMember, alliance, missionCount }: Readonly<
                 <span className="member-admin-avatar">{member.image ? <span style={{ backgroundImage: `url("${member.image}")` }} /> : (member.nmsName || member.name).slice(0, 1).toUpperCase()}</span>
                 <span><strong>{member.nmsName || "Nome NMS da completare"}</strong><small>{member.email}</small></span>
               </div>
-              <span className={`member-status-pill member-status-${member.membershipStatus}`}>{statusLabels[member.membershipStatus]}</span>
+              <span className={`badge badge--member-status badge--member-status-${member.membershipStatus}`}>{statusLabels[member.membershipStatus]}</span>
             </div>
             <dl className="member-card-details">
               <div><dt>Codice amico</dt><dd>{member.nmsCode || "Da completare"}</dd></div>

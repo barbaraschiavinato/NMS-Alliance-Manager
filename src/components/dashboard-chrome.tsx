@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { signOut } from "next-auth/react";
+import Image from "next/image";
 import Link from "next/link";
 import {
   CirclePlus,
@@ -36,7 +37,9 @@ export function AllianceSidebar({ missionCount, currentMember, settings, activeS
         {(currentMember.role === "admin" || currentMember.role === "moderator") && <Link className={`nav-item ${activeSection === "utenti" ? "active" : ""}`} href="/utenti"><UsersRound size={17} /><span>Utenti</span></Link>}
       </nav>
       <div className="sidebar-bottom">
-        <div className="profile"><span className="avatar">{displayName.slice(0, 2).toUpperCase()}</span><span><strong>{displayName}</strong><small>{roleLabel}</small></span></div>
+        <div className="profile"><span className="avatar">{currentMember.image
+          ? <Image alt="" aria-hidden="true" height={31} src={currentMember.image} unoptimized width={31} />
+          : displayName.slice(0, 2).toUpperCase()}</span><span><strong>{displayName}</strong><small>{roleLabel}</small></span></div>
       </div>
     </aside>
   );
