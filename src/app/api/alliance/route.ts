@@ -17,6 +17,7 @@ export async function PATCH(request: Request) {
   const value = input as Record<string, unknown>;
   if (typeof value.name !== "string" || !value.name.trim() || value.name.length > 80 ||
       typeof value.logoUrl !== "string" || typeof value.bannerUrl !== "string" ||
+      typeof value.heroGradientEnabled !== "boolean" ||
       (value.defaultTableView !== "list" && value.defaultTableView !== "cards")) {
     return NextResponse.json({ error: "Nome o immagini alleanza non validi." }, { status: 400 });
   }
@@ -24,6 +25,7 @@ export async function PATCH(request: Request) {
     name: value.name.trim(),
     logoUrl: value.logoUrl,
     bannerUrl: value.bannerUrl,
+    heroGradientEnabled: value.heroGradientEnabled,
     defaultTableView: value.defaultTableView,
   });
   return NextResponse.json(settings);

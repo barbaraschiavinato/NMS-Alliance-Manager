@@ -29,7 +29,7 @@ export function MissionDashboard({ currentMember }: Readonly<{ currentMember: Al
   const [notice, setNotice] = useState("");
   const [members, setMembers] = useState<AllianceMember[]>([]);
   const [stationOwners, setStationOwners] = useState<StationOwnerOption[]>([]);
-  const [alliance, setAlliance] = useState<AllianceSettings>({ name: "Nomad Syndicate", logoUrl: "", bannerUrl: "", defaultTableView: "list" });
+  const [alliance, setAlliance] = useState<AllianceSettings>({ name: "Nomad Syndicate", logoUrl: "", bannerUrl: "", heroGradientEnabled: true, defaultTableView: "list" });
   const [adminOpen, setAdminOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const searchInput = useRef<HTMLInputElement>(null);

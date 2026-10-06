@@ -35,5 +35,6 @@ export type AllianceSettings = {
   name: string;
   logoUrl: string;
   bannerUrl: string;
+  heroGradientEnabled: boolean;
   defaultTableView: "list" | "cards";
 };
