@@ -173,6 +173,7 @@ export function PlanetCard({ portal, galaxy, title: cardTitle, contextLabel, mis
           <div>
             <span className="eyebrow">SCHEDA PIANETA <span>·</span> {galaxyLabel(galaxy).toUpperCase()}</span>
             <h2 id="planet-card-title">{cardTitle}</h2>
+            {missionDescription?.trim() && <p className="planet-dialog-mission-description">{missionDescription}</p>}
           </div>
           <button aria-label="Chiudi scheda pianeta" className="icon-button" onClick={onClose} type="button"><X size={18} /></button>
         </div>
@@ -187,7 +188,6 @@ export function PlanetCard({ portal, galaxy, title: cardTitle, contextLabel, mis
                 <div>
                   <h3 id="planet-intro-title">{title}</h3>
                   {contextLabel && <p>{contextLabel}</p>}
-                  {missionDescription?.trim() && <p className="planet-card-mission-description">{missionDescription}</p>}
                   {planet.paradise === true && <span className="planet-paradise-flag">Paradisiaco</span>}
                   <span className="planet-intro-code">{portal}</span>
                 </div>

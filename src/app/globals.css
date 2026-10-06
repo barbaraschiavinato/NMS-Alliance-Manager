@@ -280,6 +280,7 @@ kbd { display: inline-flex; align-items: center; gap: 2px; padding: 2px 4px; col
 .dialog-heading { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 22px; }
 .dialog-heading .eyebrow { color: #7d8a7f; }
 .dialog-heading h2 { margin: 7px 0 0; font-size: 21px; font-weight: 700; }
+.planet-dialog-mission-description { max-width: 460px; margin: 7px 0 0; color: var(--muted); font-size: 10px; line-height: 1.5; white-space: pre-wrap; }
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 12px; }
 .field { display: grid; gap: 6px; color: #717c73; font-size: 10px; }
 .field > span { display: flex; justify-content: space-between; }
@@ -341,7 +342,6 @@ select { appearance: none; padding-right: 29px; background-image: linear-gradien
 .planet-card-image { width: 144px; height: 144px; object-fit: cover; background: transparent; }
 .planet-card-intro h3 { margin: 0; color: var(--lime); font-size: 20px; font-weight: 650; text-transform: capitalize; }
 .planet-card-intro p { margin: 8px 0; color: #68766d; font-size: 10px; }
-.planet-card-intro .planet-card-mission-description { color: var(--ink); line-height: 1.5; white-space: pre-wrap; }
 .planet-paradise-flag { display: inline-flex; padding: 4px 7px; color: #496d43; background: #e9f1e2; font-size: 8px; font-weight: 650; }
 .planet-intro-code { display: block; margin-top: 10px; color: #8b968d; font-family: "SFMono-Regular", Consolas, monospace; font-size: 8px; }
 .planet-card-section { padding-top: 12px; border-top: 1px solid var(--line); }
