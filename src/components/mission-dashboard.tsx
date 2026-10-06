@@ -270,6 +270,7 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
       />}
       {planetMission && <PlanetCard
         contextLabel={planetMission.system}
+        missionDescription={planetMission.description}
         galaxy={planetMission.galaxy}
         key={planetMission.id}
         onClose={() => setPlanetMission(null)}

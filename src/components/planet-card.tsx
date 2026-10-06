@@ -118,11 +118,12 @@ function PlanetResources({ carries }: Readonly<{ carries: unknown[] }>) {
   );
 }
 
-export function PlanetCard({ portal, galaxy, title: cardTitle, contextLabel, onClose }: Readonly<{
+export function PlanetCard({ portal, galaxy, title: cardTitle, contextLabel, missionDescription, onClose }: Readonly<{
   portal: string;
   galaxy: number;
   title: string;
   contextLabel?: string;
+  missionDescription?: string;
   onClose: () => void;
 }>) {
   const [planet, setPlanet] = useState<PlanetRecord | null>(null);
@@ -186,6 +187,7 @@ export function PlanetCard({ portal, galaxy, title: cardTitle, contextLabel, onC
                 <div>
                   <h3 id="planet-intro-title">{title}</h3>
                   {contextLabel && <p>{contextLabel}</p>}
+                  {missionDescription?.trim() && <p className="planet-card-mission-description">{missionDescription}</p>}
                   {planet.paradise === true && <span className="planet-paradise-flag">Paradisiaco</span>}
                   <span className="planet-intro-code">{portal}</span>
                 </div>
