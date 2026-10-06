@@ -30,7 +30,6 @@ export function AllianceSidebar({ missionCount, currentMember, settings, activeS
         <span className="brand-mark" style={settings.logoUrl ? { backgroundImage: `url("${settings.logoUrl}")` } : undefined}>{!settings.logoUrl && <Orbit size={21} strokeWidth={1.8} />}</span>
         <span><strong>{settings.name}</strong></span>
       </a>
-      <span className="nav-caption">GESTIONE</span>
       <nav className="side-nav" aria-label="Navigazione principale">
         <Link className={`nav-item ${activeSection === "missioni" ? "active" : ""}`} href="/"><Crosshair size={17} /><span>Missioni</span><span className="nav-count">{missionCount}</span></Link>
         <Link className={`nav-item ${activeSection === "stazioni" ? "active" : ""}`} href="/stazioni"><Orbit size={17} /><span>Stazioni</span></Link>
@@ -70,7 +69,7 @@ export function DashboardTopbar({ currentMember, settings, sectionTitle = "Missi
   else if (currentMember.role === "moderator") roleLabel = "Moderatore";
   return (
     <header className="topbar">
-      <div className="breadcrumb"><span>OPERAZIONI</span><span className="breadcrumb-slash">/</span><strong>{sectionTitle}</strong></div>
+      <div className="breadcrumb"><strong>{sectionTitle}</strong></div>
       <div className="topbar-tools">
         <span className="account-label">{currentMember.nmsName || currentMember.name} · {roleLabel}</span>
         {onProfileOpen && <button aria-label="Il mio profilo" className="square-button" onClick={onProfileOpen} title="Il mio profilo" type="button"><UserRound size={16} /></button>}
@@ -91,7 +90,6 @@ export function MissionHero({
   onCreate,
   showCreate,
   settings,
-  eyebrow = "CENTRO OPERATIVO",
   title = "Registro missioni",
   description = "Coordina la prossima frontiera, una spedizione alla volta.",
   actionLabel = "Nuova missione",
@@ -99,17 +97,15 @@ export function MissionHero({
   onCreate?: () => void;
   showCreate?: boolean;
   settings: AllianceSettings;
-  eyebrow?: string;
   title?: string;
   description?: string;
   actionLabel?: string;
 }>) {
   return (
-    <section className="mission-banner" id="riepilogo" style={settings.bannerUrl ? { backgroundImage: `linear-gradient(90deg, #294c3fe8 0%, #385c49c9 56%, #1f483b80 100%), url("${settings.bannerUrl}")` } : undefined}>
+    <section className="mission-banner" id="riepilogo" style={settings.bannerUrl ? { backgroundImage: `linear-gradient(100deg, #101719ed 0%, #171d20c7 55%, #52371886 100%), url("${settings.bannerUrl}")` } : undefined}>
       <div className="banner-grid" aria-hidden="true" />
       <div className="mission-banner-inner">
         <div className="banner-copy">
-          <span className="eyebrow"><span className="live-dot" /> {eyebrow}</span>
           <h1>{title}<span>.</span></h1>
           <p>{description}</p>
         </div>

@@ -212,9 +212,6 @@ export function MissionTable({
 
   return (
     <section className="mission-section">
-      <div className="section-heading">
-        <div><h2>Missioni</h2></div>
-      </div>
       <div className="toolbar">
         <div className="filter-tabs" role="tablist" aria-label="Filtra per stato">
           {(["Tutte", "In corso", "Attesa assegnate", "Attesa non assegnate", "Completata"] as MissionFilter[]).map((item) => <button aria-selected={filter === item} className={filter === item ? "filter-tab selected" : "filter-tab"} key={item} onClick={() => onFilterChange(item)} role="tab" type="button">{item}<span>{counts[item]}</span></button>)}

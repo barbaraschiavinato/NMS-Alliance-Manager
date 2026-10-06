@@ -132,7 +132,6 @@ export function MissionForm({
       <dialog aria-labelledby="dialog-title" aria-modal="true" className="mission-dialog" open>
         <div className="dialog-heading">
           <div>
-            <span className="eyebrow">REGISTRO OPERATIVO</span>
             <h2 id="dialog-title">{mission ? "Modifica missione" : "Nuova missione"}</h2>
           </div>
           <button aria-label="Chiudi" className="icon-button" onClick={onClose} type="button"><X size={18} /></button>

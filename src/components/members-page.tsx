@@ -137,7 +137,6 @@ export function MembersPage({ currentMember, alliance, missionCount }: Readonly<
         <DashboardTopbar currentMember={pageMember} onAdminOpen={() => setAdminOpen(true)} onProfileOpen={() => setProfileOpen(true)} sectionTitle="Utenti" settings={allianceSettings} />
         <MissionHero
           description="Approva le richieste, gestisci gli accessi e consulta i profili NMS."
-          eyebrow="GESTIONE ALLEANZA"
           settings={allianceSettings}
           showCreate={false}
           title="Utenti"

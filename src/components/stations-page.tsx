@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useMemo, useState, type SubmitEvent } from "react";
 import { CircleAlert, CirclePlus, LayoutGrid, List, Plus, Search, Trash2, X } from "lucide-react";
 import { AllianceSidebar, DashboardTopbar, MissionHero } from "@/components/dashboard-chrome";
@@ -54,6 +55,14 @@ function cachedPlanetTitle(planet: CachedPlanet | null) {
   const lines = asRecord(planet?.response.lines);
   const headline = asRecord(lines?.headline);
   return typeof headline?.word === "string" ? headline.word : "";
+}
+
+function cachedPlanetImageUrl(planet: CachedPlanet | null) {
+  const pictures = asRecord(planet?.response.pictures);
+  const disc = pictures?.disc;
+  return typeof disc === "string" && disc.startsWith("/planets/")
+    ? `https://nmsalmanac.com/api${disc}`
+    : null;
 }
 
 function CachedPlanetInfo({ planet, onOpen }: Readonly<{ planet: CachedPlanet; onOpen: () => void }>) {
@@ -236,7 +245,6 @@ export function StationsPage({ currentMember, alliance, missionCount }: Readonly
         <MissionHero
           actionLabel="Aggiungi stazione"
           description={canSeeAll ? "Consulta i portali registrati dall’alleanza e i relativi pianeti." : "Registra i portali dei sistemi che hai scoperto."}
-          eyebrow={canSeeAll ? "ARCHIVIO ALLEANZA" : "ARCHIVIO PERSONALE"}
           onCreate={openAddStation}
           settings={allianceSettings}
           showCreate
@@ -259,20 +267,32 @@ export function StationsPage({ currentMember, alliance, missionCount }: Readonly
             </div>
             {loading && <p className="station-list-empty">Caricamento…</p>}
             {!loading && visibleStations.length === 0 && <p className="station-list-empty">{search ? "Nessuna stazione trovata." : "Nessun portale salvato."}</p>}
-            {visibleStations.length > 0 && <ul className={`station-list ${viewMode === "cards" ? "station-list-cards" : ""}`}>{visibleStations.map((station) => <li key={`${station.portal}:${station.galaxy}`}>
-              <div className="station-portal-code"><GlyphStrip address={station.portal} /><code>{station.portal}</code>{canSeeAll && <span className="station-owner">{station.owner}</span>}</div>
-              <div className="station-planet-info-list">
-                {station.planet
-                  ? <CachedPlanetInfo onOpen={() => setSelectedStation({ portal: station.portal, galaxy: station.galaxy })} planet={station.planet} />
-                  : <button className="station-planet-open station-planet-unknown" onClick={() => setSelectedStation({ portal: station.portal, galaxy: station.galaxy })} type="button"><span>{galaxyLabel(station.galaxy)}</span><strong>Nessun dato Almanac · apri scheda</strong></button>}
-              </div>
-              <div className="station-actions">
-                {canCreateMissions && station.availableSpecialties.length > 0 && <button aria-label={`Crea missione da ${station.portal}`} className="member-icon-action create-station-mission" onClick={() => setMissionStation({ portal: station.portal, galaxy: station.galaxy, title: cachedPlanetTitle(station.planet), ownerEmail: station.owner })} title="Crea missione"><CirclePlus size={14} /></button>}
-                {station.hasMissions
-                  ? <span className="station-mission-lock">Missione associata</span>
-                  : station.owner.toLowerCase() === pageMember.email.toLowerCase() && <button aria-label={`Rimuovi il portale ${station.portal} in ${galaxyLabel(station.galaxy)}`} className="member-icon-action delete-member" onClick={() => void removeStation(station.portal, station.galaxy)} title="Rimuovi stazione" type="button"><Trash2 size={14} /></button>}
-              </div>
-            </li>)}</ul>}
+            {visibleStations.length > 0 && <ul className={`station-list ${viewMode === "cards" ? "station-list-cards" : ""}`}>{visibleStations.map((station) => {
+              const planetImageUrl = cachedPlanetImageUrl(station.planet);
+              return <li key={`${station.portal}:${station.galaxy}`}>
+                {viewMode === "cards" && <button className={`station-card-title${planetImageUrl ? " station-card-title-with-image" : ""}`} onClick={() => setSelectedStation({ portal: station.portal, galaxy: station.galaxy })} type="button">
+                  {planetImageUrl && <Image alt="" className="station-card-planet-image" height={112} src={planetImageUrl} unoptimized width={112} />}
+                  <span className="station-card-title-copy">
+                    <span>{galaxyLabel(station.galaxy)}</span>
+                    <strong>{cachedPlanetTitle(station.planet) || "Pianeta senza nome"}</strong>
+                  </span>
+                </button>}
+                <div className="station-portal-code"><GlyphStrip address={station.portal} /><code>{station.portal}</code>{canSeeAll && <span className="station-owner">{station.owner}</span>}</div>
+                <div className="station-planet-info-list">
+                  {station.planet
+                    ? <CachedPlanetInfo onOpen={() => setSelectedStation({ portal: station.portal, galaxy: station.galaxy })} planet={station.planet} />
+                    : viewMode === "cards"
+                      ? <p className="station-card-no-planet">Nessun dato Almanac</p>
+                      : <button className="station-planet-open station-planet-unknown" onClick={() => setSelectedStation({ portal: station.portal, galaxy: station.galaxy })} type="button"><span>{galaxyLabel(station.galaxy)}</span><strong>Nessun dato Almanac · apri scheda</strong></button>}
+                </div>
+                <div className="station-actions">
+                  {canCreateMissions && station.availableSpecialties.length > 0 && <button aria-label={`Crea missione da ${station.portal}`} className="member-icon-action create-station-mission" onClick={() => setMissionStation({ portal: station.portal, galaxy: station.galaxy, title: cachedPlanetTitle(station.planet), ownerEmail: station.owner })} title="Crea missione"><CirclePlus size={14} /></button>}
+                  {station.hasMissions
+                    ? <span className="station-mission-lock">Missione associata</span>
+                    : station.owner.toLowerCase() === pageMember.email.toLowerCase() && <button aria-label={`Rimuovi il portale ${station.portal} in ${galaxyLabel(station.galaxy)}`} className="member-icon-action delete-member" onClick={() => void removeStation(station.portal, station.galaxy)} title="Rimuovi stazione" type="button"><Trash2 size={14} /></button>}
+                </div>
+              </li>;
+            })}</ul>}
           </section>
         </main>
       </section>
