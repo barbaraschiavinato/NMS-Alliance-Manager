@@ -4,7 +4,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Check, X } from "lucide-react";
 import {
   AllianceSidebar,
-  DashboardFooter,
   DashboardTopbar,
   MissionHero,
   MissionMetrics,
@@ -30,7 +29,7 @@ export function MissionDashboard({ currentMember }: Readonly<{ currentMember: Al
   const [notice, setNotice] = useState("");
   const [members, setMembers] = useState<AllianceMember[]>([]);
   const [stationOwners, setStationOwners] = useState<StationOwnerOption[]>([]);
-  const [alliance, setAlliance] = useState<AllianceSettings>({ name: "Nomad Syndicate", logoUrl: "", bannerUrl: "" });
+  const [alliance, setAlliance] = useState<AllianceSettings>({ name: "Nomad Syndicate", logoUrl: "", bannerUrl: "", defaultTableView: "list" });
   const [adminOpen, setAdminOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const searchInput = useRef<HTMLInputElement>(null);
@@ -165,10 +164,10 @@ export function MissionDashboard({ currentMember }: Readonly<{ currentMember: Al
       <AllianceSidebar activeSection="missioni" currentMember={member} missionCount={missions.length} settings={alliance} />
       <section className="main-panel" id="missioni">
         <DashboardTopbar currentMember={member} onAdminOpen={() => setAdminOpen(true)} onProfileOpen={() => setProfileOpen(true)} settings={alliance} />
+        <MissionHero onCreate={() => openMission(null)} settings={alliance} showCreate={canManage} />
+        <MissionMetrics counts={counts} missions={availableMissions} />
         <div className="content-wrap">
           {!profileComplete && <section className="profile-required-banner"><span><strong>Completa il profilo NMS</strong><small>Inserisci nome in gioco, codice amico, piattaforme e specializzazione per prendere missioni o essere assegnato.</small></span><button className="claim-button" onClick={() => setProfileOpen(true)} type="button">Completa profilo</button></section>}
-          <MissionHero onCreate={() => openMission(null)} settings={alliance} showCreate={canManage} />
-          <MissionMetrics counts={counts} missions={availableMissions} />
           <MissionTable
             counts={counts}
             filter={filter}
@@ -176,6 +175,7 @@ export function MissionDashboard({ currentMember }: Readonly<{ currentMember: Al
             currentMember={member}
             canManage={canManage}
             members={members}
+            defaultView={alliance.defaultTableView}
             onClaim={(mission) => void claimMission(mission).catch((error: unknown) => setNotice(error instanceof Error ? error.message : "Richiesta non riuscita."))}
             onComplete={(mission) => void completeMission(mission).catch((error: unknown) => setNotice(error instanceof Error ? error.message : "Richiesta non riuscita."))}
             onEdit={(mission) => openMission(mission)}
@@ -189,7 +189,6 @@ export function MissionDashboard({ currentMember }: Readonly<{ currentMember: Al
             search={search}
             searchInput={searchInput}
           />
-          <DashboardFooter />
         </div>
       </section>
       {notice && <output className="toast" aria-live="polite"><Check size={15} />{notice}<button aria-label="Chiudi notifica" onClick={() => setNotice("")} type="button"><X size={14} /></button></output>}

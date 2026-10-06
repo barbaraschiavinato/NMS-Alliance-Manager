@@ -87,17 +87,37 @@ export function DashboardTopbar({ currentMember, settings, sectionTitle = "Missi
   );
 }
 
-export function MissionHero({ onCreate, showCreate, settings }: Readonly<{ onCreate: () => void; showCreate: boolean; settings: AllianceSettings }>) {
+export function MissionHero({
+  onCreate,
+  showCreate,
+  settings,
+  eyebrow = "CENTRO OPERATIVO",
+  title = "Registro missioni",
+  description = "Coordina la prossima frontiera, una spedizione alla volta.",
+  actionLabel = "Nuova missione",
+}: Readonly<{
+  onCreate?: () => void;
+  showCreate?: boolean;
+  settings: AllianceSettings;
+  eyebrow?: string;
+  title?: string;
+  description?: string;
+  actionLabel?: string;
+}>) {
   return (
     <section className="mission-banner" id="riepilogo" style={settings.bannerUrl ? { backgroundImage: `linear-gradient(90deg, #294c3fe8 0%, #385c49c9 56%, #1f483b80 100%), url("${settings.bannerUrl}")` } : undefined}>
       <div className="banner-grid" aria-hidden="true" />
-      <div className="banner-copy">
-        <span className="eyebrow"><span className="live-dot" /> CENTRO OPERATIVO <span className="banner-coord">45.08° · 12.61°</span></span>
-        <h1>Registro missioni<span>.</span></h1>
-        <p>Coordina la prossima frontiera, una spedizione alla volta.</p>
+      <div className="mission-banner-inner">
+        <div className="banner-copy">
+          <span className="eyebrow"><span className="live-dot" /> {eyebrow}</span>
+          <h1>{title}<span>.</span></h1>
+          <p>{description}</p>
+        </div>
+        <span aria-hidden="true" className="banner-alliance-logo" style={settings.logoUrl ? { backgroundImage: `url("${settings.logoUrl}")` } : undefined}>
+          {!settings.logoUrl && <Orbit size={38} />}
+        </span>
+        {showCreate && onCreate && <button className="banner-add" onClick={onCreate} type="button"><CirclePlus size={17} /> {actionLabel}</button>}
       </div>
-      <div className="banner-orbit" aria-hidden="true"><span className="orbit-ring ring-one" /><span className="orbit-ring ring-two" /><span className="orbit-core"><Orbit size={33} /></span><span className="orbit-pin" /></div>
-      {showCreate && <button className="banner-add" onClick={onCreate} type="button"><CirclePlus size={17} /> Nuova missione</button>}
     </section>
   );
 }
@@ -113,14 +133,12 @@ export function MissionMetrics({ missions, counts }: Readonly<{
 
   return (
     <section aria-label="Riepilogo missioni" className="metrics-row">
-      <div className="metric"><span className="metric-label">MISSIONI ATTIVE</span><strong>{counts["In corso"]}<small> / {missions.length}</small></strong><span className="metric-foot"><span className="metric-marker marker-green" />{counts["In attesa"]} in attesa</span></div>
-      <div className="metric"><span className="metric-label">COMPLETATE</span><strong>{counts.Completata}</strong><span className="metric-foot"><span className="metric-marker marker-coral" />{completedShare}% del totale</span></div>
-      <div className="metric"><span className="metric-label">PRIORITÀ ALTA / URGENTE</span><strong>{highPriorityCount}</strong><span className="metric-foot"><span className="metric-marker marker-yellow" />Richiedono attenzione</span></div>
-      <div className="metric"><span className="metric-label">DA ASSEGNARE</span><strong>{counts["Attesa non assegnate"]}</strong><span className="metric-foot"><span className="metric-marker marker-coral" />In attesa senza assegnatario</span></div>
+      <div className="metrics-inner">
+        <div className="metric"><span className="metric-label">MISSIONI ATTIVE</span><strong>{counts["In corso"]}<small> / {missions.length}</small></strong><span className="metric-foot"><span className="metric-marker marker-green" />{counts["In attesa"]} in attesa</span></div>
+        <div className="metric"><span className="metric-label">COMPLETATE</span><strong>{counts.Completata}</strong><span className="metric-foot"><span className="metric-marker marker-coral" />{completedShare}% del totale</span></div>
+        <div className="metric"><span className="metric-label">PRIORITÀ ALTA / URGENTE</span><strong>{highPriorityCount}</strong><span className="metric-foot"><span className="metric-marker marker-yellow" />Richiedono attenzione</span></div>
+        <div className="metric"><span className="metric-label">DA ASSEGNARE</span><strong>{counts["Attesa non assegnate"]}</strong><span className="metric-foot"><span className="metric-marker marker-coral" />In attesa senza assegnatario</span></div>
+      </div>
     </section>
   );
-}
-
-export function DashboardFooter() {
-  return <footer className="app-footer"><span><Orbit size={14} /> NMS ALLIANCE NETWORK</span><span>SETTORE EUCLIDE <span className="footer-separator">/</span> CANALE SICURO</span></footer>;
 }

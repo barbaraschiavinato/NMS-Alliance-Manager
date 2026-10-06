@@ -35,4 +35,5 @@ export type AllianceSettings = {
   name: string;
   logoUrl: string;
   bannerUrl: string;
+  defaultTableView: "list" | "cards";
 };

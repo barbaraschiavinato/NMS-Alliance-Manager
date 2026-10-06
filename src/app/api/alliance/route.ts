@@ -16,9 +16,15 @@ export async function PATCH(request: Request) {
   if (!input || typeof input !== "object") return NextResponse.json({ error: "Impostazioni non valide." }, { status: 400 });
   const value = input as Record<string, unknown>;
   if (typeof value.name !== "string" || !value.name.trim() || value.name.length > 80 ||
-      typeof value.logoUrl !== "string" || typeof value.bannerUrl !== "string") {
+      typeof value.logoUrl !== "string" || typeof value.bannerUrl !== "string" ||
+      (value.defaultTableView !== "list" && value.defaultTableView !== "cards")) {
     return NextResponse.json({ error: "Nome o immagini alleanza non validi." }, { status: 400 });
   }
-  const settings = await updateAllianceSettings({ name: value.name.trim(), logoUrl: value.logoUrl, bannerUrl: value.bannerUrl });
+  const settings = await updateAllianceSettings({
+    name: value.name.trim(),
+    logoUrl: value.logoUrl,
+    bannerUrl: value.bannerUrl,
+    defaultTableView: value.defaultTableView,
+  });
   return NextResponse.json(settings);
 }

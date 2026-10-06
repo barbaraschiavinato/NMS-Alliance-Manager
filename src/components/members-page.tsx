@@ -1,10 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Ban, Check, CircleAlert, Search, Trash2, UserRoundCheck } from "lucide-react";
+import { Ban, Check, CircleAlert, LayoutGrid, List, Search, Trash2, UserRoundCheck } from "lucide-react";
 import type { AllianceMember, AllianceSettings, MemberRole, MemberSpecialty, MembershipStatus } from "@/lib/member-types";
-import { AllianceSidebar, DashboardTopbar } from "@/components/dashboard-chrome";
+import { AllianceSidebar, DashboardTopbar, MissionHero } from "@/components/dashboard-chrome";
 import { AdminPanel } from "@/components/admin-panel";
 import { MemberProfilePanel } from "@/components/member-profile-panel";
 
@@ -60,6 +59,8 @@ export function MembersPage({ currentMember, alliance, missionCount }: Readonly<
   const [allianceSettings, setAllianceSettings] = useState(alliance);
   const [members, setMembers] = useState<ManagedMember[]>([]);
   const [filter, setFilter] = useState<MemberFilter>("all");
+  const [viewOverride, setViewOverride] = useState<"list" | "cards" | null>(null);
+  const viewMode = viewOverride ?? allianceSettings.defaultTableView;
   const [search, setSearch] = useState("");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -134,33 +135,38 @@ export function MembersPage({ currentMember, alliance, missionCount }: Readonly<
       <AllianceSidebar activeSection="utenti" currentMember={pageMember} missionCount={missionCount} settings={allianceSettings} />
       <section className="main-panel">
         <DashboardTopbar currentMember={pageMember} onAdminOpen={() => setAdminOpen(true)} onProfileOpen={() => setProfileOpen(true)} sectionTitle="Utenti" settings={allianceSettings} />
-        <main className="members-page">
-          <header className="members-page-header">
-            <Link aria-label="Torna alle missioni" className="members-back" href="/"><ArrowLeft size={16} /> Missioni</Link>
-            <span className="eyebrow">GESTIONE ALLEANZA</span>
-            <h1>Utenti<span>.</span></h1>
-            <p>Approva le richieste, gestisci gli accessi e consulta i profili NMS.</p>
-          </header>
-
-      <section aria-label="Stato utenti" className="member-counts">
-        <div><span>RICHIESTE IN ATTESA</span><strong>{counts.pending}</strong></div>
-        <div><span>APPROVATI</span><strong>{counts.approved}</strong></div>
-        <div><span>BLOCCATI</span><strong>{counts.blocked}</strong></div>
-        <div><span>TOTALE</span><strong>{counts.all}</strong></div>
-      </section>
-
+        <MissionHero
+          description="Approva le richieste, gestisci gli accessi e consulta i profili NMS."
+          eyebrow="GESTIONE ALLEANZA"
+          settings={allianceSettings}
+          showCreate={false}
+          title="Utenti"
+        />
+        <section aria-label="Stato utenti" className="metrics-row">
+          <div className="metrics-inner">
+            <div className="metric"><span className="metric-label">RICHIESTE IN ATTESA</span><strong>{counts.pending}</strong></div>
+            <div className="metric"><span className="metric-label">APPROVATI</span><strong>{counts.approved}</strong></div>
+            <div className="metric"><span className="metric-label">BLOCCATI</span><strong>{counts.blocked}</strong></div>
+            <div className="metric"><span className="metric-label">TOTALE</span><strong>{counts.all}</strong></div>
+          </div>
+        </section>
+        <main className="content-wrap">
       <section className="members-list-section">
         <div className="members-toolbar">
           <div className="member-filter-tabs" role="tablist" aria-label="Filtra utenti per stato">
             {(["pending", "approved", "blocked", "all"] as MemberFilter[]).map((status) => <button aria-selected={filter === status} className={filter === status ? "member-filter-tab selected" : "member-filter-tab"} key={status} onClick={() => setFilter(status)} role="tab" type="button">{status === "all" ? "Tutti" : statusLabels[status]}<span>{counts[status]}</span></button>)}
           </div>
           <label className="search-field member-search"><Search size={15} /><input aria-label="Cerca utenti" onChange={(event) => setSearch(event.target.value)} placeholder="Cerca nome, email o codice" value={search} /></label>
+          <div aria-label="Vista utenti" className="view-toggle" role="group">
+            <button aria-label="Vista lista" aria-pressed={viewMode === "list"} className={viewMode === "list" ? "selected" : ""} onClick={() => setViewOverride("list")} title="Vista lista" type="button"><List size={15} /></button>
+            <button aria-label="Vista schede" aria-pressed={viewMode === "cards"} className={viewMode === "cards" ? "selected" : ""} onClick={() => setViewOverride("cards")} title="Vista schede" type="button"><LayoutGrid size={15} /></button>
+          </div>
         </div>
 
         {error && <p className="form-error"><CircleAlert size={15} />{error}</p>}
         {notice && <p className="address-validation address-valid"><Check size={14} />{notice}</p>}
 
-        <div className="members-table-wrap">
+        {viewMode === "list" ? <div className="members-table-wrap">
           <table className="members-table">
             <thead><tr><th>MEMBRO</th><th>CODICE AMICO</th><th>PIATTAFORME</th><th>SPECIALIZZAZIONE</th><th>STATO</th><th>RUOLO</th><th>AZIONI</th></tr></thead>
             <tbody>
@@ -176,7 +182,27 @@ export function MembersPage({ currentMember, alliance, missionCount }: Readonly<
               {visibleMembers.length === 0 && <tr><td className="members-empty" colSpan={7}>{emptyMessage}</td></tr>}
             </tbody>
           </table>
-        </div>
+        </div> : <div className="member-card-grid">
+          {visibleMembers.map((member) => <article className="member-card" key={member.email}>
+            <div className="member-card-heading">
+              <div className="member-page-identity">
+                <span className="member-admin-avatar">{member.image ? <span style={{ backgroundImage: `url("${member.image}")` }} /> : (member.nmsName || member.name).slice(0, 1).toUpperCase()}</span>
+                <span><strong>{member.nmsName || "Nome NMS da completare"}</strong><small>{member.email}</small></span>
+              </div>
+              <span className={`member-status-pill member-status-${member.membershipStatus}`}>{statusLabels[member.membershipStatus]}</span>
+            </div>
+            <dl className="member-card-details">
+              <div><dt>Codice amico</dt><dd>{member.nmsCode || "Da completare"}</dd></div>
+              <div><dt>Piattaforme</dt><dd>{member.platforms.length ? member.platforms.join(", ") : "Da selezionare"}</dd></div>
+              <div><dt>Specializzazione</dt><dd>{member.specialty ? specialtyLabels[member.specialty] : "Da scegliere"}</dd></div>
+              <div><dt>Ruolo</dt><dd>{roleLabels[member.role]}</dd></div>
+            </dl>
+            <div className="member-card-actions">
+              <MemberActions canChangeRole={canChangeRole} currentMemberEmail={pageMember.email} member={member} onDelete={(target) => void deleteMember(target)} onRole={(email, role) => void patchMember(email, { role })} onStatus={(email, membershipStatus) => void patchMember(email, { membershipStatus })} />
+            </div>
+          </article>)}
+          {visibleMembers.length === 0 && <p className="member-cards-empty">{emptyMessage}</p>}
+        </div>}
         <footer className="members-list-footer">Visualizzati {visibleMembers.length} di {counts.all} utenti</footer>
       </section>
         </main>

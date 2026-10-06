@@ -1,4 +1,4 @@
-import { Check, ChevronDown, Compass, Pencil, Search, Trash2 } from "lucide-react";
+import { Check, Compass, LayoutGrid, List, Pencil, Search, Trash2 } from "lucide-react";
 import Image from "next/image";
 import type { Mission, MissionSpecialty, MissionStatus } from "@/lib/missions";
 import { GlyphStrip } from "@/components/portal-address-field";
@@ -92,6 +92,48 @@ function MemberAvatar({ image, label }: Readonly<{ image?: string; label: string
   </span>;
 }
 
+function MissionCard({ mission, currentMember, canManage, members, onEdit, onDeleteMission, onOpenPlanet, onClaim, onComplete, onOpenProfile, getDiscovererImage }: Readonly<{
+  mission: Mission;
+  currentMember: AllianceMember;
+  canManage: boolean;
+  members: AllianceMember[];
+  onEdit: (mission: Mission) => void;
+  onDeleteMission: (mission: Mission) => void;
+  onOpenPlanet: (mission: Mission) => void;
+  onClaim: (mission: Mission) => void;
+  onComplete: (mission: Mission) => void;
+  onOpenProfile: (email: string) => void;
+  getDiscovererImage: (email?: string) => string | undefined;
+}>) {
+  return <article className="mission-card">
+    <div className="mission-card-heading">
+      <div className="mission-name-cell">
+        <span className={`mission-icon ${mission.status === "Completata" ? "mission-icon-done" : ""}`}>{mission.status === "Completata" ? <Check size={15} /> : <Compass size={15} />}</span>
+        <div>
+          <button aria-label={`Apri la scheda del pianeta per ${mission.title}`} className="mission-title" onClick={() => onOpenPlanet(mission)} type="button">{mission.title}</button>
+          {mission.description && <span className="mission-description">{mission.description}</span>}
+        </div>
+      </div>
+      <span className={`mission-specialty mission-specialty-${mission.targetSpecialty ?? "all"}`}>{targetSpecialtyNames[mission.targetSpecialty ?? "all"]}</span>
+    </div>
+    <div className="mission-card-system">
+      <GlyphStrip address={mission.systemAddress ?? ""} />
+      <span>{mission.system || "Sistema"} · {galaxyLabel(mission.galaxy ?? 0)}</span>
+    </div>
+    <div className="mission-card-people">
+      <div><small>SCOPRITORE</small><DiscovererCell email={mission.stationOwnerEmail} image={getDiscovererImage(mission.stationOwnerEmail)} name={mission.stationOwnerName} onOpenProfile={onOpenProfile} /></div>
+      <div><small>ASSEGNATARIO</small><AssigneeCell currentMember={currentMember} members={members} mission={mission} onOpenProfile={onOpenProfile} /></div>
+    </div>
+    <div className="mission-card-progress">
+      <span className={`priority priority-${mission.priority.toLowerCase()}`}><span />{mission.priority}</span>
+      <div className="progress-cell"><div className="progress-track"><span style={{ width: `${mission.progress}%` }} /></div><span>{mission.progress}%</span></div>
+    </div>
+    <div className="mission-card-actions">
+      <MissionRowAction canManage={canManage} currentMember={currentMember} mission={mission} onClaim={onClaim} onComplete={onComplete} onDeleteMission={onDeleteMission} onEdit={onEdit} />
+    </div>
+  </article>;
+}
+
 export function MissionTable({
   missions,
   counts,
@@ -108,6 +150,7 @@ export function MissionTable({
   currentMember,
   canManage,
   members,
+  defaultView,
 }: Readonly<{
   missions: Mission[];
   counts: MissionCounts;
@@ -124,8 +167,11 @@ export function MissionTable({
   currentMember: AllianceMember;
   canManage: boolean;
   members: AllianceMember[];
+  defaultView: "list" | "cards";
 }>) {
   const [profileEmail, setProfileEmail] = useState<string | null>(null);
+  const [viewOverride, setViewOverride] = useState<"list" | "cards" | null>(null);
+  const viewMode = viewOverride ?? defaultView;
   const [discovererImages, setDiscovererImages] = useState<Record<string, string>>({});
   const discovererEmailKey = [...new Set(missions.flatMap((mission) => mission.stationOwnerEmail ? [mission.stationOwnerEmail] : []))].sort().join(",");
 
@@ -167,7 +213,7 @@ export function MissionTable({
   return (
     <section className="mission-section">
       <div className="section-heading">
-        <div><span className="eyebrow dark-eyebrow">TASK FORCE <span>·</span> 08</span><h2>Missioni</h2></div>
+        <div><h2>Missioni</h2></div>
       </div>
       <div className="toolbar">
         <div className="filter-tabs" role="tablist" aria-label="Filtra per stato">
@@ -175,9 +221,13 @@ export function MissionTable({
         </div>
         <div className="toolbar-actions">
           <label className="search-field"><Search size={15} /><input aria-label="Cerca per missione, sistema o responsabile" onChange={(event) => onSearchChange(event.target.value)} placeholder="Cerca missione" ref={searchInput} value={search} /><kbd>/</kbd></label>
+          <div aria-label="Vista missioni" className="view-toggle" role="group">
+            <button aria-label="Vista lista" aria-pressed={viewMode === "list"} className={viewMode === "list" ? "selected" : ""} onClick={() => setViewOverride("list")} title="Vista lista" type="button"><List size={15} /></button>
+            <button aria-label="Vista schede" aria-pressed={viewMode === "cards"} className={viewMode === "cards" ? "selected" : ""} onClick={() => setViewOverride("cards")} title="Vista schede" type="button"><LayoutGrid size={15} /></button>
+          </div>
         </div>
       </div>
-      <div className="mission-table-wrap">
+      {viewMode === "list" ? <div className="mission-table-wrap">
         <table className="mission-table">
           <thead><tr><th>MISSIONE</th><th>TIPO</th><th>SETTORE</th><th>SCOPRITORE</th><th>ASSEGNATARIO</th><th>PRIORITÀ</th><th>AVANZAMENTO</th><th aria-label="Azioni" /></tr></thead>
           <tbody>
@@ -194,8 +244,12 @@ export function MissionTable({
             {missions.length === 0 && <tr><td className="empty-state" colSpan={8}><Search size={18} />Nessuna missione corrisponde ai filtri.</td></tr>}
           </tbody>
         </table>
-        <div className="table-footer"><span><span className="footer-live" /> Mostrate <strong>{missions.length}</strong> di <strong>{counts.Tutte}</strong> missioni</span><span>AGGIORNATO ORA <ChevronDown size={13} /></span></div>
-      </div>
+        <div className="table-footer"><span><span className="footer-live" /> Mostrate <strong>{missions.length}</strong> di <strong>{counts.Tutte}</strong> missioni</span></div>
+      </div> : <div className="mission-card-grid">
+        {missions.map((mission) => <MissionCard canManage={canManage} currentMember={currentMember} getDiscovererImage={getDiscovererImage} key={mission.id} members={members} mission={mission} onClaim={onClaim} onComplete={onComplete} onDeleteMission={onDeleteMission} onEdit={onEdit} onOpenPlanet={onOpenPlanet} onOpenProfile={setProfileEmail} />)}
+        {missions.length === 0 && <p className="mission-cards-empty">Nessuna missione corrisponde ai filtri.</p>}
+      </div>}
+      <div className="table-footer"><span><span className="footer-live" /> Mostrate <strong>{missions.length}</strong> di <strong>{counts.Tutte}</strong> missioni</span></div>
       {profileEmail && <MemberCardDialog email={profileEmail} onClose={() => setProfileEmail(null)} />}
     </section>
   );

@@ -1,9 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useMemo, useState, type SubmitEvent } from "react";
-import { CircleAlert, CirclePlus, Plus, Search, Trash2, X } from "lucide-react";
-import { AllianceSidebar, DashboardFooter, DashboardTopbar } from "@/components/dashboard-chrome";
+import { CircleAlert, CirclePlus, LayoutGrid, List, Plus, Search, Trash2, X } from "lucide-react";
+import { AllianceSidebar, DashboardTopbar, MissionHero } from "@/components/dashboard-chrome";
 import { AdminPanel } from "@/components/admin-panel";
 import { MemberProfilePanel } from "@/components/member-profile-panel";
 import { GlyphStrip, SystemAddressField, type SystemAddressValidation } from "@/components/portal-address-field";
@@ -92,6 +91,7 @@ export function StationsPage({ currentMember, alliance, missionCount }: Readonly
   const [selectedStation, setSelectedStation] = useState<{ portal: string; galaxy: number } | null>(null);
   const [missionStation, setMissionStation] = useState<StationMissionSeed | null>(null);
   const [members, setMembers] = useState<AllianceMember[]>([]);
+  const [viewOverride, setViewOverride] = useState<"list" | "cards" | null>(null);
   const [portal, setPortal] = useState("");
   const [galaxy, setGalaxy] = useState(0);
   const [validation, setValidation] = useState<SystemAddressValidation>({ valid: false, lookup: null });
@@ -105,6 +105,7 @@ export function StationsPage({ currentMember, alliance, missionCount }: Readonly
   const [profileOpen, setProfileOpen] = useState(false);
   const canSeeAll = pageMember.role === "moderator" || pageMember.role === "admin";
   const canCreateMissions = canSeeAll;
+  const viewMode = viewOverride ?? allianceSettings.defaultTableView;
   const visibleStations = useMemo(() => stations.filter((station) =>
     `${station.portal} ${station.owner} ${galaxyLabel(station.galaxy)}`.toLowerCase().includes(search.toLowerCase()),
   ), [search, stations]);
@@ -121,6 +122,14 @@ export function StationsPage({ currentMember, alliance, missionCount }: Readonly
 
   async function refreshStations() {
     setStations(await fetchStations());
+  }
+
+  function openAddStation() {
+    setPortal("");
+    setGalaxy(0);
+    setValidation({ valid: false, lookup: null });
+    setError("");
+    setAddOpen(true);
   }
 
   useEffect(() => {
@@ -224,29 +233,33 @@ export function StationsPage({ currentMember, alliance, missionCount }: Readonly
       <AllianceSidebar activeSection="stazioni" currentMember={pageMember} missionCount={missionCount} settings={allianceSettings} />
       <section className="main-panel">
         <DashboardTopbar currentMember={pageMember} onAdminOpen={() => setAdminOpen(true)} onProfileOpen={() => setProfileOpen(true)} sectionTitle="Stazioni" settings={allianceSettings} />
-        <main className="members-page stations-page">
-          <header className="members-page-header">
-            <Link aria-label="Torna alle missioni" className="members-back" href="/">Missioni</Link>
-            <div className="station-page-title-row">
-              <div><span className="eyebrow">{canSeeAll ? "ARCHIVIO ALLEANZA" : "ARCHIVIO PERSONALE"}</span><h1>{canSeeAll ? "Stazioni spaziali" : "Le mie stazioni spaziali"}<span>.</span></h1></div>
-              <button className="primary-button" onClick={() => {
-                setPortal("");
-                setGalaxy(0);
-                setValidation({ valid: false, lookup: null });
-                setError("");
-                setAddOpen(true);
-              }} type="button"><Plus size={15} /> Aggiungi stazione</button>
-            </div>
-          </header>
-
+        <MissionHero
+          actionLabel="Aggiungi stazione"
+          description={canSeeAll ? "Consulta i portali registrati dall’alleanza e i relativi pianeti." : "Registra i portali dei sistemi che hai scoperto."}
+          eyebrow={canSeeAll ? "ARCHIVIO ALLEANZA" : "ARCHIVIO PERSONALE"}
+          onCreate={openAddStation}
+          settings={allianceSettings}
+          showCreate
+          title={canSeeAll ? "Stazioni spaziali" : "Le mie stazioni"}
+        />
+        <main className="content-wrap stations-page">
           {(error || notice) && <p className={error ? "form-error" : "address-validation address-valid"}>{error ? <CircleAlert size={15} /> : null}{error || notice}</p>}
 
           <section aria-label="Le mie stazioni spaziali" className="station-list-section">
-            <div className="station-list-heading"><h2>Portali salvati</h2><span>{visibleStations.length}</span></div>
-            <label className="search-field station-search"><Search size={15} /><input aria-label="Cerca stazioni per portale, proprietario o galassia" onChange={(event) => setSearch(event.target.value)} placeholder="Cerca portale, utente o galassia" value={search} /></label>
+            <div className="station-list-heading">
+              <h2>Portali salvati</h2>
+              <div className="station-list-heading-tools">
+                <span className="station-count">{visibleStations.length}</span>
+                <label className="search-field station-search"><Search size={15} /><input aria-label="Cerca stazioni per portale, proprietario o galassia" onChange={(event) => setSearch(event.target.value)} placeholder="Cerca portale, utente o galassia" value={search} /></label>
+                <div aria-label="Vista stazioni" className="view-toggle" role="group">
+                  <button aria-label="Vista lista" aria-pressed={viewMode === "list"} className={viewMode === "list" ? "selected" : ""} onClick={() => setViewOverride("list")} title="Vista lista" type="button"><List size={15} /></button>
+                  <button aria-label="Vista schede" aria-pressed={viewMode === "cards"} className={viewMode === "cards" ? "selected" : ""} onClick={() => setViewOverride("cards")} title="Vista schede" type="button"><LayoutGrid size={15} /></button>
+                </div>
+              </div>
+            </div>
             {loading && <p className="station-list-empty">Caricamento…</p>}
             {!loading && visibleStations.length === 0 && <p className="station-list-empty">{search ? "Nessuna stazione trovata." : "Nessun portale salvato."}</p>}
-            {visibleStations.length > 0 && <ul className="station-list">{visibleStations.map((station) => <li key={`${station.portal}:${station.galaxy}`}>
+            {visibleStations.length > 0 && <ul className={`station-list ${viewMode === "cards" ? "station-list-cards" : ""}`}>{visibleStations.map((station) => <li key={`${station.portal}:${station.galaxy}`}>
               <div className="station-portal-code"><GlyphStrip address={station.portal} /><code>{station.portal}</code>{canSeeAll && <span className="station-owner">{station.owner}</span>}</div>
               <div className="station-planet-info-list">
                 {station.planet
@@ -261,7 +274,6 @@ export function StationsPage({ currentMember, alliance, missionCount }: Readonly
               </div>
             </li>)}</ul>}
           </section>
-          <DashboardFooter />
         </main>
       </section>
       {addOpen && <div className="dialog-backdrop">

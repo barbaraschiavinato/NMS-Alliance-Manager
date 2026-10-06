@@ -17,7 +17,7 @@ const blobPath = "alliance-manager/access.json";
 const localPath = path.join(process.cwd(), "data", "access.json");
 const defaultData: AccessData = {
   members: [],
-  alliance: { name: "Nomad Syndicate", logoUrl: "", bannerUrl: "" },
+  alliance: { name: "Nomad Syndicate", logoUrl: "", bannerUrl: "", defaultTableView: "list" },
 };
 
 function normalizeAccessData(value: unknown): AccessData {
@@ -31,6 +31,7 @@ function normalizeAccessData(value: unknown): AccessData {
       name: typeof data.alliance?.name === "string" ? data.alliance.name : defaultData.alliance.name,
       logoUrl: typeof data.alliance?.logoUrl === "string" ? data.alliance.logoUrl : "",
       bannerUrl: typeof data.alliance?.bannerUrl === "string" ? data.alliance.bannerUrl : "",
+      defaultTableView: data.alliance?.defaultTableView === "cards" ? "cards" : "list",
     },
   };
 }

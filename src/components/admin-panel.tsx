@@ -1,14 +1,14 @@
 "use client";
 
 import { useEffect, useState, type SubmitEvent } from "react";
-import { Check, CircleAlert, ImagePlus, ShieldCheck, X } from "lucide-react";
+import { Check, CircleAlert, ImagePlus, LayoutGrid, List, ShieldCheck, X } from "lucide-react";
 import type { AllianceSettings } from "@/lib/access-store";
 
 export function AdminPanel({ onClose, onSaved }: Readonly<{
   onClose: () => void;
   onSaved: (settings: AllianceSettings) => void;
 }>) {
-  const [settings, setSettings] = useState<AllianceSettings>({ name: "", logoUrl: "", bannerUrl: "" });
+  const [settings, setSettings] = useState<AllianceSettings>({ name: "", logoUrl: "", bannerUrl: "", defaultTableView: "list" });
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -78,6 +78,13 @@ export function AdminPanel({ onClose, onSaved }: Readonly<{
               <span>Nome alleanza</span>
               <input maxLength={80} onChange={(event) => setSettings((current) => ({ ...current, name: event.target.value }))} required value={settings.name} />
             </label>
+            <div className="field admin-default-view">
+              <span>Vista predefinita delle tabelle</span>
+              <div aria-label="Vista predefinita delle tabelle" className="view-toggle admin-view-toggle" role="group">
+                <button aria-pressed={settings.defaultTableView === "list"} className={settings.defaultTableView === "list" ? "selected" : ""} onClick={() => setSettings((current) => ({ ...current, defaultTableView: "list" }))} type="button"><List size={14} /> Lista</button>
+                <button aria-pressed={settings.defaultTableView === "cards"} className={settings.defaultTableView === "cards" ? "selected" : ""} onClick={() => setSettings((current) => ({ ...current, defaultTableView: "cards" }))} type="button"><LayoutGrid size={14} /> Schede</button>
+              </div>
+            </div>
             <div className="branding-grid">
               <label className="upload-field">
                 <span>Logo</span>
