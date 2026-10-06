@@ -177,7 +177,7 @@ kbd { display: inline-flex; align-items: center; gap: 2px; padding: 2px 4px; col
 .mission-card-people .assignee-cell { min-width: 0; flex-wrap: wrap; font-size: 9px; }
 .mission-card-progress { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .mission-card-progress .progress-cell { min-width: 100px; flex: 1; justify-content: flex-end; }
-.mission-card-actions { display: flex; justify-content: flex-end; padding-top: 10px; border-top: 1px solid #e7eae4; }
+.mission-card-actions { display: flex; justify-content: flex-end; padding-top: 10px; border-top: 1px solid #354044; }
 .mission-cards-empty { grid-column: 1 / -1; padding: 22px 0; color: #748075; text-align: center; font-size: 10px; }
 .mission-table { width: 100%; min-width: 1160px; border-collapse: collapse; text-align: left; }
 .mission-table th { height: 38px; padding: 0 10px; color: #e0e5e1; border-bottom: 1px solid #3a4548; font-size: 7px; letter-spacing: .7px; white-space: nowrap; }
