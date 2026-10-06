@@ -96,11 +96,13 @@ kbd { display: inline-flex; align-items: center; gap: 2px; padding: 2px 4px; col
 .banner-grid { position: absolute; inset: 0 27% 0 42%; opacity: .12; background-image: linear-gradient(#ddbc7830 1px, transparent 1px), linear-gradient(90deg, #ddbc7830 1px, transparent 1px); background-size: 29px 29px; mask-image: linear-gradient(90deg, transparent, #000 20%, #000 78%, transparent); }
 .mission-banner-inner { width: min(1240px, 100%); min-height: inherit; position: relative; display: flex; align-items: center; margin: 0 auto; padding: 38px 40px; }
 .banner-copy { position: relative; z-index: 1; }
+.banner-title-row { display: flex; align-items: center; gap: 14px; }
+.banner-heading-copy { min-width: 0; }
 .eyebrow { display: flex; align-items: center; gap: 9px; color: #cad8ca; font-size: 8px; letter-spacing: 1px; }
 .mission-banner h1 { margin: 0 0 8px; font-size: 38px; font-weight: 700; letter-spacing: .148em; line-height: 1.08; }
 .mission-banner h1 > span { color: var(--lime); }
 .mission-banner p { margin: 0; color: #d1ded1; font-size: 13px; }
-.banner-alliance-logo { width: 148px; height: 148px; position: absolute; top: 50%; right: 185px; display: grid; place-items: center; transform: translateY(-50%); overflow: hidden; color: var(--lime); border: 1px solid #c3e49b70; border-radius: 50%; background-color: #a6c28d18; background-position: center; background-size: contain; background-repeat: no-repeat; }
+.banner-alliance-logo { width: 148px; height: 148px; display: grid; flex: 0 0 148px; place-items: center; overflow: hidden; color: var(--lime); border: 1px solid #ff840070; border-radius: 50%; background-color: #ff840018; background-position: center; background-size: contain; background-repeat: no-repeat; }
 .banner-add, .primary-button { height: 37px; position: relative; z-index: 2; display: inline-flex; align-items: center; justify-content: center; gap: 9px; padding: 0 13px; color: #213329; border: 0; background: var(--lime); cursor: pointer; font-size: 10px; font-weight: 700; }
 .banner-add, .primary-button, .claim-button, .google-login-button, .approval-button { font-family: var(--font-accent); letter-spacing: .148em; text-transform: uppercase; }
 .banner-add { margin-left: auto; align-self: flex-end; }
@@ -626,7 +628,6 @@ kbd { display: inline-flex; align-items: center; gap: 2px; padding: 2px 4px; col
   .content-wrap { padding-right: 25px; padding-left: 25px; }
   .mission-banner-inner { padding-right: 25px; padding-left: 25px; }
   .metrics-inner { padding-right: 25px; padding-left: 25px; }
-  .banner-alliance-logo { right: 140px; }
   .metric { padding-right: 13px; padding-left: 13px; }
   .filter-tabs { gap: 12px; }
   .search-field { width: 160px; }
@@ -643,7 +644,6 @@ kbd { display: inline-flex; align-items: center; gap: 2px; padding: 2px 4px; col
   .mission-banner-inner { padding-right: 19px; padding-left: 19px; }
   .metrics-inner { padding-right: 19px; padding-left: 19px; }
   .mission-card-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .banner-alliance-logo { right: 85px; }
   .metrics-inner { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .metric:nth-child(2) { border-right: 0; }
   .metric:nth-child(-n+2) { border-bottom: 1px solid #e5e8e1; }
@@ -671,9 +671,10 @@ kbd { display: inline-flex; align-items: center; gap: 2px; padding: 2px 4px; col
   .mission-banner { min-height: 194px; }
   .mission-banner-inner { min-height: 194px; align-items: flex-start; padding: 25px 12px; }
   .banner-copy { max-width: 82%; }
+  .banner-title-row { gap: 9px; }
+  .banner-alliance-logo { width: 148px; height: 148px; flex-basis: 148px; }
   .mission-banner h1 { font-size: 27px; }
   .mission-banner p { max-width: 230px; font-size: 11px; line-height: 1.5; }
-  .banner-alliance-logo { width: 110px; height: 110px; right: -24px; }
   .banner-add { height: 32px; position: absolute; right: 15px; bottom: 15px; padding: 0 9px; font-size: 9px; }
   .metrics-inner { padding-right: 12px; padding-left: 12px; }
   .metric { min-height: 86px; padding: 11px 10px; }

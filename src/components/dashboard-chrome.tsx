@@ -109,12 +109,16 @@ export function MissionHero({
       <div className="banner-grid" aria-hidden="true" />
       <div className="mission-banner-inner">
         <div className="banner-copy">
-          <h1>{title}<span>.</span></h1>
-          <p>{description}</p>
+          <div className="banner-title-row">
+            <span aria-hidden="true" className="banner-alliance-logo" style={settings.logoUrl ? { backgroundImage: `url("${settings.logoUrl}")` } : undefined}>
+              {!settings.logoUrl && <Orbit size={27} />}
+            </span>
+            <div className="banner-heading-copy">
+              <h1>{title}<span>.</span></h1>
+              <p>{description}</p>
+            </div>
+          </div>
         </div>
-        <span aria-hidden="true" className="banner-alliance-logo" style={settings.logoUrl ? { backgroundImage: `url("${settings.logoUrl}")` } : undefined}>
-          {!settings.logoUrl && <Orbit size={38} />}
-        </span>
         {showCreate && onCreate && <button className="banner-add" onClick={onCreate} type="button"><CirclePlus size={17} /> {actionLabel}</button>}
       </div>
     </section>
