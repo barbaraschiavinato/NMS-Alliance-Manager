@@ -250,10 +250,10 @@ kbd { display: inline-flex; align-items: center; gap: 2px; padding: 2px 4px; col
 .due-date.overdue { color: #bf6651; }
 .badge--priority { gap: 6px; color: #a4adae; }
 .badge--priority > span { width: 5px; height: 5px; border-radius: 50%; background: #849088; }
-.badge--priority-urgente { color: #ef8067; border-color: #70413b; background: #2b1e1d; }
-.badge--priority-urgente > span { background: #ef8067; }
-.badge--priority-alta { color: #e4b478; border-color: #655536; background: #2b261b; }
-.badge--priority-alta > span { background: #e4b478; }
+.badge--priority-urgent { color: #ef8067; border-color: #70413b; background: #2b1e1d; }
+.badge--priority-urgent > span { background: #ef8067; }
+.badge--priority-high { color: #e4b478; border-color: #655536; background: #2b261b; }
+.badge--priority-high > span { background: #e4b478; }
 .progress-cell { display: flex; align-items: center; gap: 7px; color: #78847b; font-family: "SFMono-Regular", Consolas, monospace; font-size: 8px; }
 .progress-track { width: 68px; height: 4px; overflow: hidden; background: #26312f; }
 .progress-track > span { height: 100%; display: block; background: #72d1c4; }

@@ -1,10 +1,48 @@
-export const missionStatuses = ["In corso", "In attesa", "Completata"] as const;
-export const missionPriorities = ["Urgente", "Alta", "Normale"] as const;
+export const missionStatuses = ["in_progress", "pending", "completed"] as const;
+export const missionPriorities = ["urgent", "high", "normal"] as const;
 export const missionSpecialties = ["all", "builder", "ranger", "explorer", "other"] as const;
 
 export type MissionStatus = (typeof missionStatuses)[number];
 export type MissionPriority = (typeof missionPriorities)[number];
 export type MissionSpecialty = (typeof missionSpecialties)[number];
+
+const legacyMissionStatuses: Record<string, MissionStatus> = {
+  "In corso": "in_progress",
+  "In attesa": "pending",
+  Completata: "completed",
+  "In progress": "in_progress",
+  Pending: "pending",
+  Completed: "completed",
+};
+
+const legacyMissionPriorities: Record<string, MissionPriority> = {
+  Urgente: "urgent",
+  Alta: "high",
+  Normale: "normal",
+  Urgent: "urgent",
+  High: "high",
+  Normal: "normal",
+};
+
+export function normalizeMissionStatus(value: unknown): MissionStatus | null {
+  if (typeof value !== "string") return null;
+  const currentStatus = missionStatuses.find((status) => status === value);
+  return currentStatus ?? legacyMissionStatuses[value] ?? null;
+}
+
+export function normalizeMissionPriority(value: unknown): MissionPriority | null {
+  if (typeof value !== "string") return null;
+  const currentPriority = missionPriorities.find((priority) => priority === value);
+  return currentPriority ?? legacyMissionPriorities[value] ?? null;
+}
+
+export function isMissionStatus(value: unknown): value is MissionStatus {
+  return typeof value === "string" && missionStatuses.some((status) => status === value);
+}
+
+export function isMissionPriority(value: unknown): value is MissionPriority {
+  return typeof value === "string" && missionPriorities.some((priority) => priority === value);
+}
 
 export type Mission = {
   id: string;
@@ -120,8 +158,8 @@ export function isMissionInput(value: unknown): value is MissionInput {
     (mission.assignedEmail === undefined || typeof mission.assignedEmail === "string") &&
     missionSpecialties.includes(mission.targetSpecialty as MissionSpecialty) &&
     typeof mission.dueDate === "string" &&
-    missionStatuses.includes(mission.status as MissionStatus) &&
-    missionPriorities.includes(mission.priority as MissionPriority) &&
+    isMissionStatus(mission.status) &&
+    isMissionPriority(mission.priority) &&
     typeof mission.progress === "number" &&
     Number.isInteger(mission.progress) &&
     mission.progress >= 0 &&

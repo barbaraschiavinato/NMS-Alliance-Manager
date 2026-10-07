@@ -39,7 +39,7 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
   const [missions, setMissions] = useState<Mission[]>([]);
   const [loadingMissions, setLoadingMissions] = useState(true);
   const [planetStatuses, setPlanetStatuses] = useState<PlanetSystemStatuses>({});
-  const [filter, setFilter] = useState<MissionFilter>("Tutte");
+  const [filter, setFilter] = useState<MissionFilter>("all");
   const [search, setSearch] = useState(initialSearch);
   const [dialogMission, setDialogMission] = useState<Mission | null>(null);
   const [planetMission, setPlanetMission] = useState<Mission | null>(null);
@@ -102,24 +102,24 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
   const availableMissions = canManage ? missions : missions.filter((mission) => canViewMission(mission, member));
 
   const counts = useMemo(() => {
-    const waitingMissions = availableMissions.filter((mission) => mission.status === "In attesa");
+    const waitingMissions = availableMissions.filter((mission) => mission.status === "pending");
     const isAssigned = (mission: Mission) => Boolean(mission.assignedEmail || mission.assignedTo.trim());
     return {
-      Tutte: availableMissions.length,
-      "In corso": availableMissions.filter((mission) => mission.status === "In corso").length,
-      "In attesa": waitingMissions.length,
-      "Attesa assegnate": waitingMissions.filter(isAssigned).length,
-      "Attesa non assegnate": waitingMissions.filter((mission) => !isAssigned(mission)).length,
-      Completata: availableMissions.filter((mission) => mission.status === "Completata").length,
+      all: availableMissions.length,
+      in_progress: availableMissions.filter((mission) => mission.status === "in_progress").length,
+      pending: waitingMissions.length,
+      pending_assigned: waitingMissions.filter(isAssigned).length,
+      pending_unassigned: waitingMissions.filter((mission) => !isAssigned(mission)).length,
+      completed: availableMissions.filter((mission) => mission.status === "completed").length,
     };
   }, [availableMissions]);
 
   const visibleMissions = useMemo(() => availableMissions
     .filter((mission) => {
-      if (filter === "Tutte") return true;
+      if (filter === "all") return true;
       const isAssigned = Boolean(mission.assignedEmail || mission.assignedTo.trim());
-      if (filter === "Attesa assegnate") return mission.status === "In attesa" && isAssigned;
-      if (filter === "Attesa non assegnate") return mission.status === "In attesa" && !isAssigned;
+      if (filter === "pending_assigned") return mission.status === "pending" && isAssigned;
+      if (filter === "pending_unassigned") return mission.status === "pending" && !isAssigned;
       return mission.status === filter;
     })
     .filter((mission) => {
@@ -188,7 +188,7 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
     const response = await fetch(`/api/missions/${mission.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: "Completata", progress: 100 }),
+      body: JSON.stringify({ status: "completed", progress: 100 }),
     });
     const body = await response.json();
     if (!response.ok) throw new Error(body.error ?? "Unable to complete the mission.");

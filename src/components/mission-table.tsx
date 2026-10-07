@@ -10,7 +10,7 @@ import { MemberCardDialog } from "@/components/member-card-dialog";
 import { LoadingSpinner } from "@/components/loading-spinner";
 import { useLocale } from "@/components/locale-provider";
 
-export type MissionFilter = "Tutte" | MissionStatus | "Attesa assegnate" | "Attesa non assegnate";
+export type MissionFilter = "all" | MissionStatus | "pending_assigned" | "pending_unassigned";
 type MissionCounts = Record<MissionFilter, number>;
 function asRecord(value: unknown): Record<string, unknown> | null {
   return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : null;
@@ -22,6 +22,15 @@ const targetSpecialtyNames: Record<MissionSpecialty, string> = {
   ranger: "common.ranger",
   explorer: "common.explorers",
   other: "common.other",
+};
+
+const missionFilterLabels: Record<MissionFilter, string> = {
+  all: "common.all",
+  in_progress: "missions.status_in_progress",
+  pending: "missions.status_pending",
+  pending_assigned: "missions.pending_assigned",
+  pending_unassigned: "missions.pending_unassigned",
+  completed: "missions.status_completed",
 };
 
 const missionProgressStatuses = missionSystemStatuses.filter((status) => status !== "data_error");
@@ -42,7 +51,7 @@ function MissionRowAction({ mission, currentMember, canManage, onEdit, onDeleteM
       <button aria-label={`${t("common.delete")} ${mission.title}`} className="row-action row-action-delete" data-tooltip={t("missions.delete_mission")} onClick={() => onDeleteMission(mission)} type="button"><Trash2 size={15} /></button>
     </span>;
   }
-  if (mission.assignedEmail === currentMember.email && mission.status !== "Completata") {
+  if (mission.assignedEmail === currentMember.email && mission.status !== "completed") {
     return <button className="claim-button mission-action-button" onClick={() => onComplete(mission)} type="button">{t("missions.complete_mission")}</button>;
   }
   if (!mission.assignedEmail && !mission.assignedTo.trim()) {
@@ -136,7 +145,7 @@ function MissionPlanetThumbnail({ mission }: Readonly<{ mission: Mission }>) {
     return () => controller.abort();
   }, [address, mission.galaxy, validPortalAddress]);
 
-  const completed = mission.status === "Completata";
+  const completed = mission.status === "completed";
   if (imageUrl && !imageFailed) {
     return <span aria-hidden="true" className={`mission-card-planet-thumb${completed ? " mission-card-planet-thumb-done" : ""}`}>
       <Image alt="" height={56} onError={() => setImageFailed(true)} src={imageUrl} unoptimized width={56} />
@@ -187,7 +196,7 @@ function MissionCard({ mission, systemStatuses, currentMember, canManage, member
       <div><small>{t("missions.assignee_column_heading")}</small><AssigneeCell currentMember={currentMember} members={members} mission={mission} onOpenProfile={onOpenProfile} /></div>
     </div>
     <div className="mission-card-progress">
-      <span className={`badge badge--priority badge--priority-${mission.priority.toLowerCase()}`}><span />{t(mission.priority)}</span>
+      <span className={`badge badge--priority badge--priority-${mission.priority}`}><span />{t(`common.${mission.priority}`)}</span>
       <div className="progress-cell"><div className="progress-track"><span style={{ width: `${mission.progress}%` }} /></div><span>{mission.progress}%</span></div>
     </div>
     <div className="mission-card-actions">
@@ -316,7 +325,7 @@ export function MissionTable({
     <section className="mission-section">
       <div className="toolbar">
         <div className="filter-tabs" role="tablist" aria-label={t("common.filter_by_status")}>
-          {(["Tutte", "In corso", "Attesa assegnate", "Attesa non assegnate", "Completata"] as MissionFilter[]).map((item) => <button aria-selected={filter === item} className={filter === item ? "filter-tab selected" : "filter-tab"} key={item} onClick={() => onFilterChange(item)} role="tab" type="button">{t(item)}<span>{counts[item]}</span></button>)}
+          {(["all", "in_progress", "pending_assigned", "pending_unassigned", "completed"] as MissionFilter[]).map((item) => <button aria-selected={filter === item} className={filter === item ? "filter-tab selected" : "filter-tab"} key={item} onClick={() => onFilterChange(item)} role="tab" type="button">{t(missionFilterLabels[item])}<span>{counts[item]}</span></button>)}
         </div>
         <div className="toolbar-actions">
           <label className="search-field"><Search size={15} /><input aria-label={t("planet.search_missions_planets_users_or_mission_type")} onChange={(event) => onSearchChange(event.target.value)} placeholder={t("members.search_missions_users_or_type")} ref={searchInput} value={search} /><kbd>/</kbd></label>
@@ -331,12 +340,12 @@ export function MissionTable({
           <thead><tr><th>{t("missions.mission_column_heading")}</th><th>{t("common.type_column_heading")}</th><th>{t("common.sector")}</th><th>{t("missions.discoverer_column_heading")}</th><th>{t("missions.assignee_column_heading")}</th><th>{t("missions.priority_column_heading")}</th><th>{t("missions.progress_column_heading")}</th><th aria-label={t("common.actions_label")} /></tr></thead>
           <tbody>
             {missions.map((mission) => <tr key={mission.id}>
-                  <td><div className="mission-name-cell"><span className={`mission-icon ${mission.status === "Completata" ? "mission-icon-done" : ""}`}>{mission.status === "Completata" ? <Check size={15} /> : <Compass size={15} />}</span><div><button aria-label={`${t("planet.open_planet_details_for")} ${mission.title}`} className="mission-title" onClick={() => onOpenPlanet(mission)} title={t("planet.open_planet_details")} type="button">{mission.title}</button><span className="mission-description">{mission.description}</span></div></div></td>
+                  <td><div className="mission-name-cell"><span className={`mission-icon ${mission.status === "completed" ? "mission-icon-done" : ""}`}>{mission.status === "completed" ? <Check size={15} /> : <Compass size={15} />}</span><div><button aria-label={`${t("planet.open_planet_details_for")} ${mission.title}`} className="mission-title" onClick={() => onOpenPlanet(mission)} title={t("planet.open_planet_details")} type="button">{mission.title}</button><span className="mission-description">{mission.description}</span></div></div></td>
               <td><span className={`badge badge--specialty badge--specialty-${mission.targetSpecialty ?? "all"}`}>{t(targetSpecialtyNames[mission.targetSpecialty ?? "all"])}</span></td>
               <td><div className="system-cell"><GlyphStrip address={mission.systemAddress ?? ""} /><span className="system-caption">{mission.system || t("system.system_label")} · {galaxyLabel(mission.galaxy ?? 0)}</span></div></td>
               <td><DiscovererCell email={mission.stationOwnerEmail} image={getDiscovererImage(mission.stationOwnerEmail)} name={mission.stationOwnerName} onOpenProfile={setProfileEmail} /></td>
               <td><AssigneeCell currentMember={currentMember} members={members} mission={mission} onOpenProfile={setProfileEmail} /></td>
-              <td><span className={`badge badge--priority badge--priority-${mission.priority.toLowerCase()}`}><span />{t(mission.priority)}</span></td>
+              <td><span className={`badge badge--priority badge--priority-${mission.priority}`}><span />{t(`common.${mission.priority}`)}</span></td>
               <td><div className="progress-cell"><div className="progress-track"><span style={{ width: `${mission.progress}%` }} /></div><span>{mission.progress}%</span></div></td>
               <td><MissionRowAction canManage={canManage} currentMember={currentMember} mission={mission} onClaim={onClaim} onComplete={onComplete} onDeleteMission={onDeleteMission} onEdit={onEdit} /></td>
             </tr>)}
@@ -349,7 +358,7 @@ export function MissionTable({
         {loading && <div className="mission-cards-loading"><LoadingSpinner /></div>}
         {!loading && missions.length === 0 && <p className="mission-cards-empty">{t("missions.no_missions_match_the_filters")}</p>}
       </div>}
-      <div className="table-footer"><span><span className="footer-live" />{t("missions.showing_visible_of_total_missions", { visible: missions.length, total: counts.Tutte })}</span></div>
+      <div className="table-footer"><span><span className="footer-live" />{t("missions.showing_visible_of_total_missions", { visible: missions.length, total: counts.all })}</span></div>
       {profileEmail && <MemberCardDialog email={profileEmail} onClose={() => setProfileEmail(null)} />}
     </section>
   );

@@ -2,18 +2,30 @@ import { get, put } from "@vercel/blob";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { getBlobAuthOptions } from "@/lib/blob-config";
-import type { Mission } from "@/lib/missions";
+import {
+  isMissionPriority,
+  isMissionStatus,
+  normalizeMissionPriority,
+  normalizeMissionStatus,
+  type Mission,
+} from "@/lib/missions";
 import { migrateLegacyPlanetSystemStatuses } from "@/lib/planet-system-status-store";
 import { initialMissions } from "@/lib/seed";
 
 const blobPath = "alliance-manager/missions.json";
 const localPath = path.join(process.cwd(), "data", "missions.json");
 
-function migrateMissions(value: unknown): Mission[] {
-  if (!Array.isArray(value)) return initialMissions;
+function migrateMissions(value: unknown): { missions: Mission[]; hasLegacyValues: boolean } {
+  if (!Array.isArray(value)) return { missions: initialMissions, hasLegacyValues: false };
 
-  return value.map((entry) => {
+  let hasLegacyValues = false;
+  const missions = value.map((entry) => {
     const mission = entry as Partial<Mission>;
+    const status = normalizeMissionStatus(mission.status);
+    if (!status) throw new Error("Invalid mission status in stored mission data.");
+    const priority = normalizeMissionPriority(mission.priority);
+    if (!priority) throw new Error("Invalid mission priority in stored mission data.");
+    if (!isMissionStatus(mission.status) || !isMissionPriority(mission.priority)) hasLegacyValues = true;
     const missionData = Object.fromEntries(
       Object.entries(entry as Record<string, unknown>).filter(([key]) => key !== "systemStatus"),
     );
@@ -28,16 +40,21 @@ function migrateMissions(value: unknown): Mission[] {
       system: typeof mission.system === "string" ? mission.system : "",
       systemAddress: missingAddress ? matchingSeed?.systemAddress ?? "" : mission.systemAddress,
       galaxy,
+      status,
+      priority,
       targetSpecialty: mission.targetSpecialty === "builder" || mission.targetSpecialty === "ranger" || mission.targetSpecialty === "explorer" || mission.targetSpecialty === "other" || mission.targetSpecialty === "all"
         ? mission.targetSpecialty
         : "all",
     } as Mission;
   });
+  return { missions, hasLegacyValues };
 }
 
 async function readAndMigrateMissions(value: unknown): Promise<Mission[]> {
   await migrateLegacyPlanetSystemStatuses(value);
-  return migrateMissions(value);
+  const migrated = migrateMissions(value);
+  if (migrated.hasLegacyValues) await writeMissions(migrated.missions);
+  return migrated.missions;
 }
 
 export async function readMissions(): Promise<Mission[]> {

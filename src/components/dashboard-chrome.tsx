@@ -144,17 +144,17 @@ export function MissionMetrics({ missions, counts }: Readonly<{
 }>) {
   const { t } = useLocale();
   const highPriorityCount = missions.filter((mission) =>
-    mission.status !== "Completata" && (mission.priority === "Urgente" || mission.priority === "Alta"),
+    mission.status !== "completed" && (mission.priority === "urgent" || mission.priority === "high"),
   ).length;
-  const completedShare = missions.length > 0 ? Math.round((counts.Completata / missions.length) * 100) : 0;
+  const completedShare = missions.length > 0 ? Math.round((counts.completed / missions.length) * 100) : 0;
 
   return (
     <section aria-label={t("admin.mission_overview")} className="metrics-row">
       <div className="metrics-inner">
-        <div className="metric"><span className="metric-label">{t("missions.active_missions_metric")}</span><strong>{counts["In corso"]}<small> / {missions.length}</small></strong><span className="metric-foot"><span className="metric-marker marker-green" />{counts["In attesa"]} {t("common.pending_status_label")}</span></div>
-        <div className="metric"><span className="metric-label">{t("common.completed_missions_metric")}</span><strong>{counts.Completata}</strong><span className="metric-foot"><span className="metric-marker marker-coral" />{completedShare}% {t("common.of_total")}</span></div>
+        <div className="metric"><span className="metric-label">{t("missions.active_missions_metric")}</span><strong>{counts.in_progress}<small> / {missions.length}</small></strong><span className="metric-foot"><span className="metric-marker marker-green" />{counts.pending} {t("common.pending_status_label")}</span></div>
+        <div className="metric"><span className="metric-label">{t("common.completed_missions_metric")}</span><strong>{counts.completed}</strong><span className="metric-foot"><span className="metric-marker marker-coral" />{completedShare}% {t("common.of_total")}</span></div>
         <div className="metric"><span className="metric-label">{t("missions.high_urgent_priority")}</span><strong>{highPriorityCount}</strong><span className="metric-foot"><span className="metric-marker marker-yellow" />{t("missions.need_attention")}</span></div>
-        <div className="metric"><span className="metric-label">{t("missions.unassigned_metric")}</span><strong>{counts["Attesa non assegnate"]}</strong><span className="metric-foot"><span className="metric-marker marker-coral" />{t("missions.pending_without_an_assignee")}</span></div>
+        <div className="metric"><span className="metric-label">{t("missions.unassigned_metric")}</span><strong>{counts.pending_unassigned}</strong><span className="metric-foot"><span className="metric-marker marker-coral" />{t("missions.pending_without_an_assignee")}</span></div>
       </div>
     </section>
   );

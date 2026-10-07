@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
-import { isMissionInput, type MissionStatus } from "@/lib/missions";
+import { isMissionInput, isMissionStatus, type MissionStatus } from "@/lib/missions";
 import { readMissions, writeMissions } from "@/lib/store";
 import { getCurrentMember, hasRole } from "@/lib/authorization";
-import { missionStatuses } from "@/lib/missions";
 import { isValidNmsFriendCode } from "@/lib/member-types";
 import { readStationPortals } from "@/lib/stations-store";
 
@@ -99,7 +98,7 @@ export async function DELETE(_request: Request, context: RouteContext) {
 function isProgressUpdate(value: unknown): value is { status: MissionStatus; progress: number } {
   if (!value || typeof value !== "object") return false;
   const update = value as Record<string, unknown>;
-  return missionStatuses.includes(update.status as MissionStatus) &&
+  return isMissionStatus(update.status) &&
     typeof update.progress === "number" && Number.isInteger(update.progress) &&
     update.progress >= 0 && update.progress <= 100 &&
     Object.keys(update).every((key) => key === "status" || key === "progress");

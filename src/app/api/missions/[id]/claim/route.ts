@@ -29,7 +29,7 @@ export async function POST(_request: Request, context: RouteContext) {
       ...mission,
       assignedTo: member.nmsName,
       assignedEmail: member.email,
-      status: "In corso",
+      status: "in_progress",
     };
     missions[index] = claimed;
     await writeMissions(missions);

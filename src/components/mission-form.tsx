@@ -32,8 +32,8 @@ const emptyMission: MissionInput = {
   assignedTo: "",
   targetSpecialty: "all",
   dueDate: new Date().toISOString().slice(0, 10),
-  status: "In attesa",
-  priority: "Normale",
+  status: "pending",
+  priority: "normal",
   progress: 0,
 };
 
@@ -293,13 +293,13 @@ export function MissionForm({
             <label className="field">
               <span>{t("missions.priority_field_label")}</span>
               <select onChange={(event) => update("priority", event.target.value as MissionPriority)} value={form.priority}>
-                {missionPriorities.map((priority) => <option key={priority} value={priority}>{t(priority)}</option>)}
+                {missionPriorities.map((priority) => <option key={priority} value={priority}>{t(`common.${priority}`)}</option>)}
               </select>
             </label>
             <label className="field">
               <span>{t("common.status_field_label")}</span>
               <select onChange={(event) => update("status", event.target.value as MissionStatus)} value={form.status}>
-                {missionStatuses.map((status) => <option key={status} value={status}>{t(status)}</option>)}
+                {missionStatuses.map((status) => <option key={status} value={status}>{t(`missions.status_${status}`)}</option>)}
               </select>
             </label>
             <label className="field mission-progress-field">
