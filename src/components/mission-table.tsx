@@ -1,4 +1,4 @@
-import { Check, Compass, FileText, Info, LayoutGrid, List, Pencil, Search, Trash2, X } from "lucide-react";
+import { Check, Compass, FileText, Info, LayoutGrid, List, Orbit, Pencil, Search, Trash2, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import type { Mission, MissionSpecialty, MissionStatus } from "@/lib/missions";
@@ -75,7 +75,7 @@ function MissionStationLink({ mission, canManage }: Readonly<{ mission: Mission;
     data-tooltip={label}
     href={`/stations?${params.toString()}`}
     title={label}
-  ><Compass size={14} /></Link>;
+  ><Orbit size={14} /></Link>;
 }
 
 function AssigneeCell({ mission, members, currentMember, onOpenProfile }: Readonly<{
