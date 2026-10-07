@@ -16,6 +16,15 @@ function asRecord(value: unknown): Record<string, unknown> | null {
   return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : null;
 }
 
+function isMissionAssignee(mission: Mission, member: AllianceMember): boolean {
+  const assignedEmail = mission.assignedEmail?.trim().toLowerCase();
+  if (assignedEmail) return assignedEmail === member.email.trim().toLowerCase();
+
+  const assignedName = mission.assignedTo.trim().toLowerCase();
+  return Boolean(assignedName) && [member.nmsName, member.name, member.email]
+    .some((name) => name?.trim().toLowerCase() === assignedName);
+}
+
 const targetSpecialtyNames: Record<MissionSpecialty, string> = {
   all: "common.all",
   builder: "common.builders",
@@ -296,7 +305,7 @@ function MissionCard({ mission, systemStatuses, currentMember, canManage, member
   const hasDataError = statuses.includes("data_error");
   const canUpdateSystemStatus = mission.assignedEmail?.toLowerCase() === currentMember.email.toLowerCase();
   const canUpdateProgress = !canManage && canUpdateSystemStatus;
-  const canViewNotes = canManage || canUpdateSystemStatus;
+  const canViewNotes = canManage || isMissionAssignee(mission, currentMember);
   return <article className="mission-card">
     <div className="mission-card-heading">
       <div className="mission-name-cell">
@@ -452,7 +461,7 @@ export function MissionTable({
       ?? (currentMember.email.toLowerCase() === email.toLowerCase() ? currentMember.image : undefined);
   }
   const canViewMissionNotes = (mission: Mission) =>
-    canManage || mission.assignedEmail?.toLowerCase() === currentMember.email.toLowerCase();
+    canManage || isMissionAssignee(mission, currentMember);
 
   return (
     <section className="mission-section">
