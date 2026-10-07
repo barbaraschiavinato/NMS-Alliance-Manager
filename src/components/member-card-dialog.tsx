@@ -132,7 +132,7 @@ export function MemberCardDialog({ memberId, messageContext, onClose }: Readonly
             <div><dt>{t("profile.platforms_label")}</dt><dd>{profile.platforms.length ? profile.platforms.join(", ") : t("profile.no_platforms_specified")}</dd></div>
             {profile.nmsCode && <div><dt>{t("profile.nms_friend_code_label")}</dt><dd>{profile.nmsCode}</dd></div>}
             {profile.role && <div><dt>{t("members.role_label")}</dt><dd>{t(roleLabels[profile.role])}</dd></div>}
-            {profile.email && <div><dt>{t("common.email")}</dt><dd>{profile.email}</dd></div>}
+            {profile.email && !profile.offline && <div><dt>{t("common.email")}</dt><dd>{profile.email}</dd></div>}
           </dl>
           {!profile.offline && <button aria-label={t("profile.leave_a_message")} className="primary-button member-message-open" onClick={() => {
             setMessageSent(false);

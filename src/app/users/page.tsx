@@ -27,7 +27,10 @@ export default async function UsersPage() {
   if (member.role !== "admin" && member.role !== "moderator") redirect("/");
 
   const [missions, stations] = await Promise.all([readMissions(), readAllStationPortals()]);
+  const missionOwnerIds = new Set(missions.flatMap((mission) => [mission.assignedMemberId, mission.createdByMemberId, mission.stationOwnerMemberId].filter(Boolean) as string[]));
+  const stationOwnerIds = new Set(stations.map((station) => station.ownerId));
   return <MembersPage
+    memberActivity={{ missionOwnerIds: [...missionOwnerIds], stationOwnerIds: [...stationOwnerIds] }}
     alliance={accessData.alliance}
     currentMember={member}
     missionCount={missions.length}

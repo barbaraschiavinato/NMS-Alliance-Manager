@@ -27,7 +27,7 @@ export async function GET(request: Request) {
       platforms: profile.platforms,
       specialty: profile.specialty,
       offline: profile.offline === true,
-      ...(hasRole(member, "moderator") ? { email: profile.email, nmsCode: profile.nmsCode, role: profile.role } : {}),
+      ...(hasRole(member, "moderator") ? { ...(profile.offline ? {} : { email: profile.email }), nmsCode: profile.nmsCode, role: profile.role } : {}),
     });
   }
   if (!hasRole(member, "moderator")) return NextResponse.json({ error: "Permesso moderator richiesto." }, { status: 403 });

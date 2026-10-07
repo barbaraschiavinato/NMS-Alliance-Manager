@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Check, CircleAlert, Pencil, Search, Trash2 } from "lucide-react";
+import Link from "next/link";
+import { Check, CircleAlert, Crosshair, Orbit, Pencil, Search, Trash2 } from "lucide-react";
 import { formatNmsFriendCode } from "@/lib/member-types";
 import type { AllianceMember, AllianceSettings, MemberSpecialty } from "@/lib/member-types";
 import { AllianceSidebar, DashboardTopbar, MissionHero } from "@/components/dashboard-chrome";
@@ -13,7 +14,8 @@ import { useNavigationSearchState } from "@/components/navigation-search-reset";
 
 const specialtyLabels: Record<MemberSpecialty, string> = { builder: "common.builder", ranger: "common.ranger", explorer: "common.explorer" };
 
-export function OfflinePlayersPage({ currentMember, alliance, missionCount, sidebarStationCount, sidebarUserCount }: Readonly<{
+export function OfflinePlayersPage({ memberActivity, currentMember, alliance, missionCount, sidebarStationCount, sidebarUserCount }: Readonly<{
+  memberActivity: { missionOwnerIds: string[]; stationOwnerIds: string[] };
   currentMember: AllianceMember;
   alliance: AllianceSettings;
   missionCount: number;
@@ -118,6 +120,8 @@ export function OfflinePlayersPage({ currentMember, alliance, missionCount, side
                     <td>{player.platforms.join(", ")}</td>
                     <td>{player.specialty ? t(specialtyLabels[player.specialty]) : ""}</td>
                     <td><div className="member-page-actions">
+                      {memberActivity.missionOwnerIds.includes(player.publicId) && <Link aria-label={t("members.find_member_s_missions", { member: player.nmsName })} className="member-icon-action" data-tooltip={t("members.user_missions")} href={`/?search=${encodeURIComponent(player.nmsName)}`}><Crosshair size={14} /></Link>}
+                      {memberActivity.stationOwnerIds.includes(player.publicId) && <Link aria-label={t("stations.find_member_s_stations", { member: player.nmsName })} className="member-icon-action" data-tooltip={t("stations.user_stations")} href={`/stations?search=${encodeURIComponent(player.nmsName)}`}><Orbit size={14} /></Link>}
                       <select aria-label={t("members.link_to_account")} defaultValue="" onChange={(event) => {
                         const target = targets.find((candidate) => candidate.publicId === event.target.value);
                         event.target.value = "";

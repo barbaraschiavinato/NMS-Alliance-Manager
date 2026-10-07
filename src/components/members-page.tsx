@@ -63,7 +63,8 @@ function MemberActions({ member, canChangeRole, currentMemberEmail, onStatus, on
   );
 }
 
-export function MembersPage({ currentMember, alliance, missionCount, sidebarStationCount, sidebarUserCount }: Readonly<{
+export function MembersPage({ memberActivity, currentMember, alliance, missionCount, sidebarStationCount, sidebarUserCount }: Readonly<{
+  memberActivity: { missionOwnerIds: string[]; stationOwnerIds: string[] };
   currentMember: AllianceMember;
   alliance: AllianceSettings;
   missionCount: number;
@@ -130,7 +131,7 @@ export function MembersPage({ currentMember, alliance, missionCount, sidebarStat
   }
 
   async function deleteMember(member: AllianceMember) {
-    if (!window.confirm(t("auth.remove_member_from_the_alliance_signing_in_again_will_require_a_new_approval", { member: member.nmsName || member.email }))) return;
+    if (!window.confirm(t("auth.remove_member_from_the_alliance_signing_in_again_will_require_a_new_approval", { member: member.nmsName || member.name }))) return;
     setError("");
     setNotice("");
     try {
@@ -220,8 +221,8 @@ export function MembersPage({ currentMember, alliance, missionCount, sidebarStat
             </dl>
             <div className="member-card-actions">
               <div className="member-page-actions">
-                <Link aria-label={t("members.find_member_s_missions", { member: member.nmsName || member.email })} className="member-icon-action" data-tooltip={t("members.user_missions")} href={`/?search=${encodeURIComponent(member.email)}`}><Crosshair size={14} /></Link>
-                <Link aria-label={t("stations.find_member_s_stations", { member: member.nmsName || member.email })} className="member-icon-action" data-tooltip={t("stations.user_stations")} href={`/stations?search=${encodeURIComponent(member.email)}`}><Orbit size={14} /></Link>
+                {member.nmsName && memberActivity.missionOwnerIds.includes(member.publicId) && <Link aria-label={t("members.find_member_s_missions", { member: member.nmsName || member.name })} className="member-icon-action" data-tooltip={t("members.user_missions")} href={`/?search=${encodeURIComponent(member.nmsName)}`}><Crosshair size={14} /></Link>}
+                {member.nmsName && memberActivity.stationOwnerIds.includes(member.publicId) && <Link aria-label={t("stations.find_member_s_stations", { member: member.nmsName || member.name })} className="member-icon-action" data-tooltip={t("stations.user_stations")} href={`/stations?search=${encodeURIComponent(member.nmsName)}`}><Orbit size={14} /></Link>}
               </div>
               <MemberActions canChangeRole={canChangeRole} currentMemberEmail={pageMember.email} member={member} onDelete={(target) => void deleteMember(target)} onRole={(email, role) => void patchMember(email, { role })} onStatus={(email, membershipStatus) => void patchMember(email, { membershipStatus })} />
             </div>
