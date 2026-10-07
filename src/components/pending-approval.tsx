@@ -21,17 +21,17 @@ export function PendingApproval({ member }: Readonly<{ member: AllianceMember }>
         <span className="login-mark"><Orbit size={28} /></span>
         <span className="eyebrow login-eyebrow">NMS ALLIANCE · NETWORK</span>
         {member.membershipStatus === "blocked" ? <>
-          <h1>{t("Access blocked")}<span>.</span></h1>
-          <p>{t("A moderator or administrator has blocked your access to this alliance. Contact them to request a review.")}</p>
-          <div className="pending-status blocked-status"><CircleAlert size={16} /> {t("Account blocked")}</div>
+          <h1>{t("auth.access_blocked")}<span>.</span></h1>
+          <p>{t("admin.a_moderator_or_administrator_has_blocked_your_access_to_this_alliance_contact_them_to_request_a_review")}</p>
+          <div className="pending-status blocked-status"><CircleAlert size={16} /> {t("auth.account_blocked")}</div>
         </> : <>
-          <h1>{t("Request pending")}<span>.</span></h1>
-          <p>{t("Mission access will be available after a moderator or administrator approves your account.")}</p>
-          <div className="pending-status"><CircleAlert size={16} /> {t("Approval pending")}</div>
-          <button className="google-login-button" onClick={() => setProfileOpen(true)} type="button"><UserRound size={17} /> {t(complete ? "Edit NMS profile" : "Complete NMS profile")}</button>
-          <small>{profile.nmsName || member.name} · {t(complete ? "NMS profile complete" : "Name, friend code, platform, and specialty required")}</small>
+          <h1>{t("auth.request_pending")}<span>.</span></h1>
+          <p>{t("auth.mission_access_will_be_available_after_a_moderator_or_administrator_approves_your_account")}</p>
+          <div className="pending-status"><CircleAlert size={16} /> {t("auth.approval_pending")}</div>
+          <button className="google-login-button" onClick={() => setProfileOpen(true)} type="button"><UserRound size={17} /> {t(complete ? "profile.edit_nms_profile" : "profile.complete_nms_profile")}</button>
+          <small>{profile.nmsName || member.name} · {t(complete ? "profile.nms_profile_complete" : "profile.name_friend_code_platform_and_specialty_required")}</small>
         </>}
-        <button className="pending-signout" onClick={() => signOut({ callbackUrl: "/" })} type="button"><LogOut size={15} /> {t("Sign out")}</button>
+        <button className="pending-signout" onClick={() => signOut({ callbackUrl: "/" })} type="button"><LogOut size={15} /> {t("navigation.sign_out")}</button>
       </section>
       {profileOpen && member.membershipStatus === "pending" && <MemberProfilePanel member={profile} onClose={() => setProfileOpen(false)} onSaved={(updated) => setProfile((current) => ({ ...current, ...updated }))} />}
     </main>

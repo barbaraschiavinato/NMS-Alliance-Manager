@@ -33,15 +33,22 @@ const localeEntries = Object.fromEntries(
   ]),
 ) as Record<Locale, LocaleCatalog>;
 
-const englishKeys = new Set(Object.keys(localeEntries.en).concat(Object.keys(localeEntries.it)));
+const translationIds = new Set(Object.keys(localeEntries.en).concat(Object.keys(localeEntries.it)));
 const legacyAliases = new Map<string, string>([
-  ...Object.entries(localeEntries.it).map(([english, italian]) => [italian, english] as const),
+  ...Object.entries(localeEntries.en).map(([id, english]) => [english, id] as const),
+  ...Object.entries(localeEntries.it).map(([id, italian]) => [italian, id] as const),
   ...Object.entries(italianAliases),
+  ["station_claimed", "system.station_claimed"],
+  ["mapped", "system.mapped"],
+  ["planets_classified", "system.planets_classified"],
+  ["renamed", "system.renamed"],
+  ["data_uploaded", "system.data_uploaded"],
+  ["data_error", "system.data_error"],
 ]);
 
 export function translate(locale: Locale, message: string, values?: Readonly<Record<string, string | number>>) {
-  const canonicalKey = englishKeys.has(message) ? message : legacyAliases.get(message) ?? message;
-  let translated = localeEntries[locale][canonicalKey] ?? canonicalKey;
+  const canonicalKey = translationIds.has(message) ? message : legacyAliases.get(message) ?? message;
+  let translated = localeEntries[locale][canonicalKey] ?? message;
   const planetIndex = message.match(/^Planet index (\d+): allowed range is 0–6\.$/)
     ?? message.match(/^Indice pianeta (\d+): ammessi da 0 a 6\.$/);
   const coordinate = message.match(/^([XYZ]) coordinate ([\dA-F]+): unused value\.$/)

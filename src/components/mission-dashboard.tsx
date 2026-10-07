@@ -230,7 +230,7 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
         <MissionHero onCreate={() => openMission(null)} settings={alliance} showCreate={canManage} />
         <MissionMetrics counts={counts} missions={availableMissions} />
         <div className="content-wrap">
-          {!profileComplete && <section className="profile-required-banner"><span><strong>{t("Complete your NMS profile")}</strong><small>{t("Enter your in-game name, friend code, platforms, and specialty to claim or be assigned missions.")}</small></span><button className="claim-button" onClick={() => setProfileOpen(true)} type="button">{t("Complete profile")}</button></section>}
+          {!profileComplete && <section className="profile-required-banner"><span><strong>{t("profile.complete_your_nms_profile")}</strong><small>{t("profile.enter_your_in_game_name_friend_code_platforms_and_specialty_to_claim_or_be_assigned_missions")}</small></span><button className="claim-button" onClick={() => setProfileOpen(true)} type="button">{t("profile.complete_profile")}</button></section>}
           <MissionTable
             counts={counts}
             filter={filter}
@@ -240,13 +240,13 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
             members={members}
             defaultView={alliance.defaultTableView}
             planetStatuses={planetStatuses}
-            onClaim={(mission) => void claimMission(mission).catch((error: unknown) => setNotice(error instanceof Error ? error.message : t("Request failed.")))}
-            onComplete={(mission) => void completeMission(mission).catch((error: unknown) => setNotice(error instanceof Error ? error.message : t("Request failed.")))}
-            onToggleSystemStatus={(mission, status, checked) => void togglePlanetSystemStatus(mission, status, checked).catch((error: unknown) => setNotice(error instanceof Error ? error.message : t("Request failed.")))}
+            onClaim={(mission) => void claimMission(mission).catch((error: unknown) => setNotice(error instanceof Error ? error.message : t("errors.request_failed")))}
+            onComplete={(mission) => void completeMission(mission).catch((error: unknown) => setNotice(error instanceof Error ? error.message : t("errors.request_failed")))}
+            onToggleSystemStatus={(mission, status, checked) => void togglePlanetSystemStatus(mission, status, checked).catch((error: unknown) => setNotice(error instanceof Error ? error.message : t("errors.request_failed")))}
             onEdit={(mission) => openMission(mission)}
             onDeleteMission={(mission) => {
-              if (!window.confirm(t("Delete \"{title}\"?", { title: mission.title }))) return;
-              void deleteMission(mission.id).catch((error: unknown) => setNotice(error instanceof Error ? error.message : t("Deletion failed.")));
+              if (!window.confirm(t("common.delete_title", { title: mission.title }))) return;
+              void deleteMission(mission.id).catch((error: unknown) => setNotice(error instanceof Error ? error.message : t("errors.deletion_failed")));
             }}
             onOpenPlanet={setPlanetMission}
             onFilterChange={setFilter}
@@ -257,7 +257,7 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
           />
         </div>
       </section>
-      {notice && <output className="toast" aria-live="polite"><Check size={15} />{t(notice)}<button aria-label={t("Close notification")} onClick={() => setNotice("")} type="button"><X size={14} /></button></output>}
+      {notice && <output className="toast" aria-live="polite"><Check size={15} />{t(notice)}<button aria-label={t("common.close_notification")} onClick={() => setNotice("")} type="button"><X size={14} /></button></output>}
       {dialogOpen && <MissionForm
         members={members}
         mission={dialogMission}

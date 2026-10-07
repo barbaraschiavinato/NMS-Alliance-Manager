@@ -22,11 +22,11 @@ export function GoogleLogin({ allianceName, allianceLogoUrl, missingConfiguratio
           {!hasAllianceLogo && <Orbit size={28} />}
         </span>
         <span className="eyebrow login-eyebrow">{displayAllianceName}</span>
-        <h1>{t("Sign in to operations")}<span>.</span></h1>
-        <p>{t("Sign in with Google to view and coordinate alliance missions.")}</p>
-        {ready ? <button className="google-login-button" onClick={() => signIn("google")} type="button"><GoogleMark /> {t("Continue with Google")}</button> : <div className="auth-setup-note"><CircleSetupIcon /> {t("Sign-in needs to be configured for this project")}</div>}
+        <h1>{t("auth.sign_in_to_operations")}<span>.</span></h1>
+        <p>{t("auth.sign_in_with_google_to_view_and_coordinate_alliance_missions")}</p>
+        {ready ? <button className="google-login-button" onClick={() => signIn("google")} type="button"><GoogleMark /> {t("auth.continue_with_google")}</button> : <div className="auth-setup-note"><CircleSetupIcon /> {t("common.sign_in_needs_to_be_configured_for_this_project")}</div>}
         {!ready && <ul className="auth-config-list">{missingConfiguration.map((key) => <li key={key}>{key}</li>)}</ul>}
-        <small>{t("Verified accounts · Secure access")}</small>
+        <small>{t("auth.verified_accounts_secure_access")}</small>
       </div>
     </main>
   );

@@ -13,9 +13,9 @@ import { useLocale } from "@/components/locale-provider";
 type MemberFilter = "all" | MembershipStatus;
 type ManagedMember = AllianceMember & { protectedAdmin: boolean };
 
-const roleLabels: Record<MemberRole, string> = { user: "Member", moderator: "Moderator", admin: "Administrator" };
-const statusLabels: Record<MembershipStatus, string> = { pending: "Pending", approved: "Approved", blocked: "Blocked" };
-const specialtyLabels: Record<MemberSpecialty, string> = { builder: "Builder", ranger: "Ranger", explorer: "Explorer" };
+const roleLabels: Record<MemberRole, string> = { user: "members.member_role_label", moderator: "common.moderator", admin: "admin.administrator" };
+const statusLabels: Record<MembershipStatus, string> = { pending: "common.pending_status_label", approved: "auth.approved_status_label", blocked: "common.blocked_status_label" };
+const specialtyLabels: Record<MemberSpecialty, string> = { builder: "common.builder", ranger: "common.ranger", explorer: "common.explorer" };
 
 function updateNotice(update: { membershipStatus: MembershipStatus } | { role: MemberRole }) {
   if ("role" in update) {
@@ -41,21 +41,21 @@ function MemberActions({ member, canChangeRole, currentMemberEmail, onStatus, on
   if (member.protectedAdmin || isCurrentMember || !canManage) return null;
 
   if (member.role === "admin") return <div className="member-page-actions">
-    <select aria-label={t("Role for {email}", { email: member.email })} onChange={(event) => onRole(member.email, event.target.value as MemberRole)} value={member.role}>
+    <select aria-label={t("members.role_for_email", { email: member.email })} onChange={(event) => onRole(member.email, event.target.value as MemberRole)} value={member.role}>
       {(Object.keys(roleLabels) as MemberRole[]).map((role) => <option key={role} value={role}>{t(roleLabels[role])}</option>)}
     </select>
-    <button aria-label={t("Delete {email}", { email: member.email })} className="member-icon-action delete-member" data-tooltip={t("Delete administrator")} onClick={() => onDelete(member)} type="button"><Trash2 size={14} /></button>
+    <button aria-label={t("common.delete_email", { email: member.email })} className="member-icon-action delete-member" data-tooltip={t("admin.delete_administrator")} onClick={() => onDelete(member)} type="button"><Trash2 size={14} /></button>
   </div>;
 
   return (
     <div className="member-page-actions">
-      {canChangeRole && <select aria-label={t("Role for {email}", { email: member.email })} onChange={(event) => onRole(member.email, event.target.value as MemberRole)} value={member.role}>{(Object.keys(roleLabels) as MemberRole[]).map((role) => <option key={role} value={role}>{t(roleLabels[role])}</option>)}</select>}
-      {member.membershipStatus === "pending" && <button aria-label={t("Approve {email}", { email: member.email })} className="member-icon-action approval-button" data-tooltip={t("Approve user")} onClick={() => onStatus(member.email, "approved")} type="button"><Check size={14} /></button>}
-      {member.membershipStatus === "approved" && <button aria-label={t("Revoke approval for {email}", { email: member.email })} className="member-icon-action approval-button revoke-approval" data-tooltip={t("Revoke approval")} onClick={() => onStatus(member.email, "pending")} type="button"><CircleX size={14} /></button>}
+      {canChangeRole && <select aria-label={t("members.role_for_email", { email: member.email })} onChange={(event) => onRole(member.email, event.target.value as MemberRole)} value={member.role}>{(Object.keys(roleLabels) as MemberRole[]).map((role) => <option key={role} value={role}>{t(roleLabels[role])}</option>)}</select>}
+      {member.membershipStatus === "pending" && <button aria-label={t("common.approve_email", { email: member.email })} className="member-icon-action approval-button" data-tooltip={t("members.approve_user")} onClick={() => onStatus(member.email, "approved")} type="button"><Check size={14} /></button>}
+      {member.membershipStatus === "approved" && <button aria-label={t("auth.revoke_approval_for_email", { email: member.email })} className="member-icon-action approval-button revoke-approval" data-tooltip={t("auth.revoke_approval")} onClick={() => onStatus(member.email, "pending")} type="button"><CircleX size={14} /></button>}
       {member.membershipStatus === "blocked"
-        ? <button aria-label={t("Unblock {email}", { email: member.email })} className="member-icon-action approval-button" data-tooltip={t("Unblock user")} onClick={() => onStatus(member.email, "pending")} type="button"><UserRoundCheck size={14} /></button>
-        : <button aria-label={t("Block {email}", { email: member.email })} className="member-icon-action block-member" data-tooltip={t("Block user")} onClick={() => onStatus(member.email, "blocked")} type="button"><Ban size={14} /></button>}
-      <button aria-label={t("Delete {email}", { email: member.email })} className="member-icon-action delete-member" data-tooltip={t("Delete user")} onClick={() => onDelete(member)} type="button"><Trash2 size={14} /></button>
+        ? <button aria-label={t("common.unblock_email", { email: member.email })} className="member-icon-action approval-button" data-tooltip={t("members.unblock_user")} onClick={() => onStatus(member.email, "pending")} type="button"><UserRoundCheck size={14} /></button>
+        : <button aria-label={t("common.block_email", { email: member.email })} className="member-icon-action block-member" data-tooltip={t("members.block_user")} onClick={() => onStatus(member.email, "blocked")} type="button"><Ban size={14} /></button>}
+      <button aria-label={t("common.delete_email", { email: member.email })} className="member-icon-action delete-member" data-tooltip={t("members.delete_user")} onClick={() => onDelete(member)} type="button"><Trash2 size={14} /></button>
     </div>
   );
 }
@@ -89,7 +89,7 @@ export function MembersPage({ currentMember, alliance, missionCount, sidebarStat
         if (!response.ok) throw new Error(body.error ?? "Unable to load the user list.");
         setMembers(body as ManagedMember[]);
       })
-      .catch((error_: unknown) => setError(error_ instanceof Error ? error_.message : t("Unable to load the user list.")))
+      .catch((error_: unknown) => setError(error_ instanceof Error ? error_.message : t("errors.unable_to_load_the_user_list")))
       .finally(() => setLoadingMembers(false));
   }, [t]);
 
@@ -104,9 +104,9 @@ export function MembersPage({ currentMember, alliance, missionCount, sidebarStat
     .filter((member) => filter === "all" || member.membershipStatus === filter)
     .filter((member) => `${member.name} ${member.nmsName} ${member.email} ${member.nmsCode} ${member.specialty ? t(specialtyLabels[member.specialty]) : ""}`.toLowerCase().includes(search.toLowerCase()))
     .sort((a, b) => a.name.localeCompare(b.name)), [filter, members, search, t]);
-  let emptyMessage = t("No users match this filter.");
-  if (counts.all === 0) emptyMessage = t("No registered users. Members will appear after their first Google sign-in.");
-  else if (filter === "pending") emptyMessage = t("There are no requests awaiting approval.");
+  let emptyMessage = t("members.no_users_match_this_filter");
+  if (counts.all === 0) emptyMessage = t("auth.no_registered_users_members_will_appear_after_their_first_google_sign_in");
+  else if (filter === "pending") emptyMessage = t("auth.there_are_no_requests_awaiting_approval");
 
   async function patchMember(email: string, update: { membershipStatus: MembershipStatus } | { role: MemberRole }) {
     setError("");
@@ -122,12 +122,12 @@ export function MembersPage({ currentMember, alliance, missionCount, sidebarStat
       setMembers((current) => current.map((member) => member.email === email ? { ...member, ...update } : member));
       setNotice(updateNotice(update));
     } catch (error_: unknown) {
-      setError(error_ instanceof Error ? error_.message : t("Update failed."));
+      setError(error_ instanceof Error ? error_.message : t("errors.update_failed"));
     }
   }
 
   async function deleteMember(member: AllianceMember) {
-    if (!window.confirm(t("Remove {member} from the alliance? Signing in again will require a new approval.", { member: member.nmsName || member.email }))) return;
+    if (!window.confirm(t("auth.remove_member_from_the_alliance_signing_in_again_will_require_a_new_approval", { member: member.nmsName || member.email }))) return;
     setError("");
     setNotice("");
     try {
@@ -141,7 +141,7 @@ export function MembersPage({ currentMember, alliance, missionCount, sidebarStat
       setMembers((current) => current.filter((item) => item.email !== member.email));
       setNotice("User removed from the alliance.");
     } catch (error_: unknown) {
-      setError(error_ instanceof Error ? error_.message : t("Deletion failed."));
+      setError(error_ instanceof Error ? error_.message : t("errors.deletion_failed"));
     }
   }
 
@@ -156,24 +156,24 @@ export function MembersPage({ currentMember, alliance, missionCount, sidebarStat
           showCreate={false}
           title="Users"
         />
-        <section aria-label={t("User status")} className="metrics-row">
+        <section aria-label={t("members.user_status")} className="metrics-row">
           <div className="metrics-inner">
-            <div className="metric"><span className="metric-label">{t("PENDING REQUESTS")}</span><strong>{counts.pending}</strong></div>
-            <div className="metric"><span className="metric-label">{t("APPROVED")}</span><strong>{counts.approved}</strong></div>
-            <div className="metric"><span className="metric-label">{t("BLOCKED")}</span><strong>{counts.blocked}</strong></div>
-            <div className="metric"><span className="metric-label">{t("TOTAL")}</span><strong>{counts.all}</strong></div>
+            <div className="metric"><span className="metric-label">{t("common.pending_requests")}</span><strong>{counts.pending}</strong></div>
+            <div className="metric"><span className="metric-label">{t("auth.approved_members_metric")}</span><strong>{counts.approved}</strong></div>
+            <div className="metric"><span className="metric-label">{t("common.blocked_members_metric")}</span><strong>{counts.blocked}</strong></div>
+            <div className="metric"><span className="metric-label">{t("common.total")}</span><strong>{counts.all}</strong></div>
           </div>
         </section>
         <main className="content-wrap">
       <section className="members-list-section">
         <div className="members-toolbar">
-          <div className="member-filter-tabs" role="tablist" aria-label={t("Filter users by status")}>
-            {(["pending", "approved", "blocked", "all"] as MemberFilter[]).map((status) => <button aria-selected={filter === status} className={filter === status ? "member-filter-tab selected" : "member-filter-tab"} key={status} onClick={() => setFilter(status)} role="tab" type="button">{t(status === "all" ? "All" : statusLabels[status])}<span>{counts[status]}</span></button>)}
+          <div className="member-filter-tabs" role="tablist" aria-label={t("members.filter_users_by_status")}>
+            {(["pending", "approved", "blocked", "all"] as MemberFilter[]).map((status) => <button aria-selected={filter === status} className={filter === status ? "member-filter-tab selected" : "member-filter-tab"} key={status} onClick={() => setFilter(status)} role="tab" type="button">{t(status === "all" ? "common.all" : statusLabels[status])}<span>{counts[status]}</span></button>)}
           </div>
-          <label className="search-field member-search"><Search size={15} /><input aria-label={t("Search users")} onChange={(event) => setSearch(event.target.value)} placeholder={t("Search name, email, or code")} value={search} /></label>
-          <div aria-label={t("User view")} className="view-toggle" role="group">
-            <button aria-label={t("List view")} aria-pressed={viewMode === "list"} className={viewMode === "list" ? "selected" : ""} onClick={() => setViewOverride("list")} title={t("List view")} type="button"><List size={15} /></button>
-            <button aria-label={t("Card view")} aria-pressed={viewMode === "cards"} className={viewMode === "cards" ? "selected" : ""} onClick={() => setViewOverride("cards")} title={t("Card view")} type="button"><LayoutGrid size={15} /></button>
+          <label className="search-field member-search"><Search size={15} /><input aria-label={t("members.search_users")} onChange={(event) => setSearch(event.target.value)} placeholder={t("common.search_name_email_or_code")} value={search} /></label>
+          <div aria-label={t("members.user_view")} className="view-toggle" role="group">
+            <button aria-label={t("navigation.list_view")} aria-pressed={viewMode === "list"} className={viewMode === "list" ? "selected" : ""} onClick={() => setViewOverride("list")} title={t("navigation.list_view")} type="button"><List size={15} /></button>
+            <button aria-label={t("navigation.card_view")} aria-pressed={viewMode === "cards"} className={viewMode === "cards" ? "selected" : ""} onClick={() => setViewOverride("cards")} title={t("navigation.card_view")} type="button"><LayoutGrid size={15} /></button>
           </div>
         </div>
 
@@ -182,15 +182,15 @@ export function MembersPage({ currentMember, alliance, missionCount, sidebarStat
 
         {loadingMembers ? <LoadingSpinner /> : viewMode === "list" ? <div className="members-table-wrap">
           <table className="members-table">
-            <thead><tr><th>{t("MEMBER")}</th><th>{t("FRIEND CODE")}</th><th>{t("PLATFORMS")}</th><th>{t("SPECIALTY")}</th><th>{t("STATUS")}</th><th>{t("ROLE")}</th><th>{t("ACTIONS")}</th></tr></thead>
+            <thead><tr><th>{t("members.member_column_heading")}</th><th>{t("profile.friend_code_column_heading")}</th><th>{t("profile.platforms_column_heading")}</th><th>{t("profile.specialty_column_heading")}</th><th>{t("common.status_column_heading")}</th><th>{t("members.role_column_heading")}</th><th>{t("common.actions_column_heading")}</th></tr></thead>
             <tbody>
               {visibleMembers.map((member) => <tr key={member.email}>
-                <td><div className="member-page-identity"><span className="member-admin-avatar">{member.image ? <span style={{ backgroundImage: `url("${member.image}")` }} /> : (member.nmsName || member.name).slice(0, 1).toUpperCase()}</span><span><strong>{member.nmsName || t("NMS name required")}</strong><small>{member.email}</small></span></div></td>
-                <td className="member-code-cell">{member.nmsCode || t("Incomplete")}</td>
-                <td>{member.platforms.length ? member.platforms.join(", ") : t("Not selected")}</td>
-                <td>{member.specialty ? t(specialtyLabels[member.specialty]) : t("Not selected")}</td>
+                <td><div className="member-page-identity"><span className="member-admin-avatar">{member.image ? <span style={{ backgroundImage: `url("${member.image}")` }} /> : (member.nmsName || member.name).slice(0, 1).toUpperCase()}</span><span><strong>{member.nmsName || t("common.nms_name_incomplete_label")}</strong><small>{member.email}</small></span></div></td>
+                <td className="member-code-cell">{member.nmsCode || t("common.incomplete")}</td>
+                <td>{member.platforms.length ? member.platforms.join(", ") : t("common.not_selected")}</td>
+                <td>{member.specialty ? t(specialtyLabels[member.specialty]) : t("common.not_selected")}</td>
                 <td>{member.protectedAdmin
-                  ? <span className="badge badge--protected">{t("Protected")}</span>
+                  ? <span className="badge badge--protected">{t("common.protected")}</span>
                   : <span className={`badge badge--member-status badge--member-status-${member.membershipStatus}`}>{t(statusLabels[member.membershipStatus])}</span>}</td>
                 <td>{t(roleLabels[member.role])}</td>
                 <td><MemberActions canChangeRole={canChangeRole} currentMemberEmail={pageMember.email} member={member} onDelete={(target) => void deleteMember(target)} onRole={(email, role) => void patchMember(email, { role })} onStatus={(email, membershipStatus) => void patchMember(email, { membershipStatus })} /></td>
@@ -203,29 +203,29 @@ export function MembersPage({ currentMember, alliance, missionCount, sidebarStat
             <div className="member-card-heading">
               <div className="member-page-identity">
                 <span className="member-admin-avatar">{member.image ? <span style={{ backgroundImage: `url("${member.image}")` }} /> : (member.nmsName || member.name).slice(0, 1).toUpperCase()}</span>
-                <span><strong>{member.nmsName || t("NMS name required")}</strong><small>{member.email}</small></span>
+                <span><strong>{member.nmsName || t("common.nms_name_incomplete_label")}</strong><small>{member.email}</small></span>
               </div>
               {member.protectedAdmin
-                ? <span className="badge badge--protected">{t("Protected")}</span>
+                ? <span className="badge badge--protected">{t("common.protected")}</span>
                 : <span className={`badge badge--member-status badge--member-status-${member.membershipStatus}`}>{t(statusLabels[member.membershipStatus])}</span>}
             </div>
             <dl className="member-card-details">
-              <div><dt>{t("Friend code")}</dt><dd>{member.nmsCode || t("Incomplete")}</dd></div>
-              <div><dt>{t("Platforms")}</dt><dd>{member.platforms.length ? member.platforms.join(", ") : t("Not selected")}</dd></div>
-              <div><dt>{t("Specialty")}</dt><dd>{member.specialty ? t(specialtyLabels[member.specialty]) : t("Not selected")}</dd></div>
-              <div><dt>{t("Role")}</dt><dd>{t(roleLabels[member.role])}</dd></div>
+              <div><dt>{t("profile.friend_code_label")}</dt><dd>{member.nmsCode || t("common.incomplete")}</dd></div>
+              <div><dt>{t("profile.platforms_label")}</dt><dd>{member.platforms.length ? member.platforms.join(", ") : t("common.not_selected")}</dd></div>
+              <div><dt>{t("profile.specialty_label")}</dt><dd>{member.specialty ? t(specialtyLabels[member.specialty]) : t("common.not_selected")}</dd></div>
+              <div><dt>{t("members.role_label")}</dt><dd>{t(roleLabels[member.role])}</dd></div>
             </dl>
             <div className="member-card-actions">
               <div className="member-page-actions">
-                <Link aria-label={t("Find {member}'s missions", { member: member.nmsName || member.email })} className="member-icon-action" data-tooltip={t("User missions")} href={`/?search=${encodeURIComponent(member.email)}`}><Crosshair size={14} /></Link>
-                <Link aria-label={t("Find {member}'s stations", { member: member.nmsName || member.email })} className="member-icon-action" data-tooltip={t("User stations")} href={`/stations?search=${encodeURIComponent(member.email)}`}><Orbit size={14} /></Link>
+                <Link aria-label={t("members.find_member_s_missions", { member: member.nmsName || member.email })} className="member-icon-action" data-tooltip={t("members.user_missions")} href={`/?search=${encodeURIComponent(member.email)}`}><Crosshair size={14} /></Link>
+                <Link aria-label={t("stations.find_member_s_stations", { member: member.nmsName || member.email })} className="member-icon-action" data-tooltip={t("stations.user_stations")} href={`/stations?search=${encodeURIComponent(member.email)}`}><Orbit size={14} /></Link>
               </div>
               <MemberActions canChangeRole={canChangeRole} currentMemberEmail={pageMember.email} member={member} onDelete={(target) => void deleteMember(target)} onRole={(email, role) => void patchMember(email, { role })} onStatus={(email, membershipStatus) => void patchMember(email, { membershipStatus })} />
             </div>
           </article>)}
           {visibleMembers.length === 0 && <p className="member-cards-empty">{emptyMessage}</p>}
         </div>}
-        <footer className="members-list-footer">{loadingMembers ? t("Loading users") : t("Showing {visible} of {total} users", { visible: visibleMembers.length, total: counts.all })}</footer>
+        <footer className="members-list-footer">{loadingMembers ? t("members.loading_users") : t("members.showing_visible_of_total_users", { visible: visibleMembers.length, total: counts.all })}</footer>
       </section>
         </main>
       </section>

@@ -6,7 +6,7 @@ import { useLocale } from "@/components/locale-provider";
 export function LoadingSpinner() {
   const { t } = useLocale();
   return (
-    <div aria-label={t("Loading")} aria-live="polite" className="loading-indicator" role="status">
+    <div aria-label={t("common.loading")} aria-live="polite" className="loading-indicator" role="status">
       <Orbit aria-hidden="true" className="loading-spinner" size={36} />
     </div>
   );
