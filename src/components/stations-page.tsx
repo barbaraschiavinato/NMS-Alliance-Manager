@@ -212,7 +212,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
   const canSeeAll = pageMember.role === "moderator" || pageMember.role === "admin";
   const canCreateMissions = canSeeAll;
   const [showAllStations, setShowAllStations] = useState(true);
-  const viewMode = viewOverride ?? allianceSettings.defaultTableView;
+  const viewMode = pageMember.simpleView ? "cards" : viewOverride ?? allianceSettings.defaultTableView;
   const searchedStations = useMemo(() => stations.filter((station) =>
     (showAllStations || station.ownerId === pageMember.publicId) &&
     (!initialStation || (
@@ -504,7 +504,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
           <section aria-label={t("stations.my_space_stations")} className="station-list-section">
             <div className="station-list-heading">
               <div aria-label={t("stations.filter_stations_by_mission_status")} className="member-filter-tabs station-filter-tabs" role="tablist">
-                {(["all", "pending", "in_progress", "completed", ...(canSeeAll ? ["notes" as const] : [])] as StationFilter[]).map((status) => <button
+                {(["all", "pending", "in_progress", "completed", ...(canSeeAll ? ["notes" as const] : [])] as StationFilter[]).filter((status) => status === "all" || status === stationFilter || stationCounts[status] > 0).map((status) => <button
                   aria-selected={stationFilter === status}
                   className={`member-filter-tab${stationFilter === status ? " selected" : ""}`}
                   key={status}
@@ -515,11 +515,11 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
               </div>
               <div className="station-list-heading-tools">
                 {canSeeAll && <button aria-label={t(showAllStations ? "stations.showing_all" : "stations.showing_mine")} aria-pressed={showAllStations} className={showAllStations ? "member-icon-action scope-toggle selected" : "member-icon-action scope-toggle"} data-tooltip={t(showAllStations ? "stations.showing_all" : "stations.showing_mine")} onClick={() => setShowAllStations((current) => !current)} type="button">{showAllStations ? <Eye size={15} /> : <EyeOff size={15} />}</button>}
-                <label className="search-field station-search"><Search size={15} /><input aria-label={t("stations.search_stations_by_portal_owner_or_galaxy_or_notes")} onChange={(event) => setSearch(event.target.value)} placeholder={t("stations.search_portal_username_galaxy_or_notes")} value={search} /></label>
-                <div aria-label={t("stations.station_view")} className="view-toggle" role="group">
+                {!pageMember.simpleView && <label className="search-field station-search"><Search size={15} /><input aria-label={t("stations.search_stations_by_portal_owner_or_galaxy_or_notes")} onChange={(event) => setSearch(event.target.value)} placeholder={t("stations.search_portal_username_galaxy_or_notes")} value={search} /></label>}
+                {!pageMember.simpleView && <div aria-label={t("stations.station_view")} className="view-toggle" role="group">
                   <button aria-label={t("navigation.list_view")} aria-pressed={viewMode === "list"} className={viewMode === "list" ? "selected" : ""} onClick={() => setViewOverride("list")} title={t("navigation.list_view")} type="button"><List size={15} /></button>
                   <button aria-label={t("navigation.card_view")} aria-pressed={viewMode === "cards"} className={viewMode === "cards" ? "selected" : ""} onClick={() => setViewOverride("cards")} title={t("navigation.card_view")} type="button"><LayoutGrid size={15} /></button>
-                </div>
+                </div>}
               </div>
             </div>
             {loading && <div className="station-list-empty station-list-loading"><LoadingSpinner /></div>}

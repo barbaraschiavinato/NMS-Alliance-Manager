@@ -11,6 +11,7 @@ export async function GET() {
     nmsCode: member.nmsCode,
     platforms: member.platforms,
     specialty: member.specialty,
+    simpleView: member.simpleView === true,
     role: member.role,
   });
 }
@@ -30,6 +31,7 @@ export async function PATCH(request: Request) {
     nmsCode: updated.nmsCode,
     platforms: updated.platforms,
     specialty: updated.specialty,
+    simpleView: updated.simpleView === true,
     role: updated.role,
   });
 }

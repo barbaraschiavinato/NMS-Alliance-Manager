@@ -29,6 +29,7 @@ export function MemberProfilePanel({ member, onClose, onSaved, createOffline = f
   const [nmsCode, setNmsCode] = useState(member.nmsCode);
   const [platforms, setPlatforms] = useState<NmsPlatform[]>(member.platforms);
   const [specialty, setSpecialty] = useState<MemberSpecialty | "">(member.specialty);
+  const [simpleView, setSimpleView] = useState(member.simpleView === true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const offlineMode = createOffline || editOffline;
@@ -49,7 +50,7 @@ export function MemberProfilePanel({ member, onClose, onSaved, createOffline = f
       const response = await fetch(offlineMode ? "/api/admin/members" : "/api/profile", {
         method: offlineMode ? "POST" : "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nmsName, nmsCode, platforms, specialty, ...(editOffline ? { action: "update", offlineId: member.publicId } : {}) }),
+        body: JSON.stringify({ nmsName, nmsCode, platforms, specialty, ...(offlineMode ? {} : { simpleView }), ...(editOffline ? { action: "update", offlineId: member.publicId } : {}) }),
       });
       const body = await response.json();
       if (!response.ok) throw new Error(body.error ?? "Unable to save the profile.");
@@ -115,6 +116,10 @@ export function MemberProfilePanel({ member, onClose, onSaved, createOffline = f
               })}
             </div>
           </fieldset>
+          {!offlineMode && <label className="message-acknowledgement">
+            <input checked={simpleView} onChange={(event) => setSimpleView(event.target.checked)} type="checkbox" />
+            <span>{t("profile.simple_view")}</span>
+          </label>}
           {error && <p className="form-error"><CircleAlert size={15} />{t(error)}</p>}
           {saved && <p className="address-validation address-valid"><Check size={14} />{t("profile.profile_saved")}</p>}
           <div className="dialog-actions">

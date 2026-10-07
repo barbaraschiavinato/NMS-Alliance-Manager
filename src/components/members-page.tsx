@@ -79,7 +79,7 @@ export function MembersPage({ memberActivity, currentMember, alliance, missionCo
   const [loadingMembers, setLoadingMembers] = useState(true);
   const [filter, setFilter] = useState<MemberFilter>("all");
   const [viewOverride, setViewOverride] = useState<"list" | "cards" | null>(null);
-  const viewMode = viewOverride ?? allianceSettings.defaultTableView;
+  const viewMode = pageMember.simpleView ? "cards" : viewOverride ?? allianceSettings.defaultTableView;
   const [search, setSearch] = useNavigationSearchState("");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -161,25 +161,25 @@ export function MembersPage({ memberActivity, currentMember, alliance, missionCo
           showCreate={false}
           title="Users"
         />
-        <section aria-label={t("members.user_status")} className="metrics-row">
+        {!pageMember.simpleView && <section aria-label={t("members.user_status")} className="metrics-row">
           <div className="metrics-inner">
             <div className="metric"><span className="metric-label">{t("common.pending_requests")}</span><strong>{counts.pending}</strong></div>
             <div className="metric"><span className="metric-label">{t("auth.approved_members_metric")}</span><strong>{counts.approved}</strong></div>
             <div className="metric"><span className="metric-label">{t("common.blocked_members_metric")}</span><strong>{counts.blocked}</strong></div>
             <div className="metric"><span className="metric-label">{t("common.total")}</span><strong>{counts.all}</strong></div>
           </div>
-        </section>
+        </section>}
         <main className="content-wrap">
       <section className="members-list-section">
         <div className="members-toolbar">
           <div className="member-filter-tabs" role="tablist" aria-label={t("members.filter_users_by_status")}>
-            {(["pending", "approved", "blocked", "all"] as MemberFilter[]).map((status) => <button aria-selected={filter === status} className={filter === status ? "member-filter-tab selected" : "member-filter-tab"} key={status} onClick={() => setFilter(status)} role="tab" type="button">{t(status === "all" ? "common.all" : statusLabels[status])}<span>{counts[status]}</span></button>)}
+            {(["pending", "approved", "blocked", "all"] as MemberFilter[]).filter((status) => status === "all" || status === filter || counts[status] > 0).map((status) => <button aria-selected={filter === status} className={filter === status ? "member-filter-tab selected" : "member-filter-tab"} key={status} onClick={() => setFilter(status)} role="tab" type="button">{t(status === "all" ? "common.all" : statusLabels[status])}<span>{counts[status]}</span></button>)}
           </div>
           <label className="search-field member-search"><Search size={15} /><input aria-label={t("members.search_users")} onChange={(event) => setSearch(event.target.value)} placeholder={t("common.search_name_email_or_code")} value={search} /></label>
-          <div aria-label={t("members.user_view")} className="view-toggle" role="group">
+          {!pageMember.simpleView && <div aria-label={t("members.user_view")} className="view-toggle" role="group">
             <button aria-label={t("navigation.list_view")} aria-pressed={viewMode === "list"} className={viewMode === "list" ? "selected" : ""} onClick={() => setViewOverride("list")} title={t("navigation.list_view")} type="button"><List size={15} /></button>
             <button aria-label={t("navigation.card_view")} aria-pressed={viewMode === "cards"} className={viewMode === "cards" ? "selected" : ""} onClick={() => setViewOverride("cards")} title={t("navigation.card_view")} type="button"><LayoutGrid size={15} /></button>
-          </div>
+          </div>}
         </div>
 
         {error && <p className="form-error"><CircleAlert size={15} />{t(error)}</p>}
@@ -230,12 +230,12 @@ export function MembersPage({ memberActivity, currentMember, alliance, missionCo
           </article>)}
           {visibleMembers.length === 0 && <p className="member-cards-empty">{emptyMessage}</p>}
         </div>}
-        <footer className="members-list-footer">{loadingMembers ? t("members.loading_users") : t("members.showing_visible_of_total_users", { visible: visibleMembers.length, total: counts.all })}</footer>
+        {!pageMember.simpleView && <footer className="members-list-footer">{loadingMembers ? t("members.loading_users") : t("members.showing_visible_of_total_users", { visible: visibleMembers.length, total: counts.all })}</footer>}
       </section>
         </main>
       </section>
       {adminOpen && pageMember.role === "admin" && <AdminPanel onClose={() => setAdminOpen(false)} onSaved={setAllianceSettings} />}
-      {profileOpen && <MemberProfilePanel member={pageMember} onClose={() => setProfileOpen(false)} onSaved={(profile) => setPageMember((current) => ({ ...current, nmsName: profile.nmsName, nmsCode: profile.nmsCode, platforms: profile.platforms, specialty: profile.specialty }))} />}
+      {profileOpen && <MemberProfilePanel member={pageMember} onClose={() => setProfileOpen(false)} onSaved={(profile) => setPageMember((current) => ({ ...current, nmsName: profile.nmsName, nmsCode: profile.nmsCode, platforms: profile.platforms, specialty: profile.specialty, simpleView: profile.simpleView }))} />}
     </div>
   );
 }

@@ -97,11 +97,11 @@ kbd { display: inline-flex; align-items: center; gap: 2px; padding: 2px 4px; col
 .top-avatar > span { width: 100%; height: 100%; display: block; background-position: center; background-size: cover; }
 .account-label { max-width: 190px; overflow: hidden; color: var(--muted); font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
 .content-wrap { width: min(1240px, 100%); margin: 0 auto; padding: 27px 40px 20px; }
-.mission-banner { width: 100%; min-height: 244px; position: relative; overflow: hidden; color: #f4f2eb; border-bottom: 2px solid #ff8400; background: #141a1d; background-position: center; background-size: cover; }
+.mission-banner { width: 100%; min-height: 170px; position: relative; overflow: hidden; color: #f4f2eb; border-bottom: 2px solid #ff8400; background: #141a1d; background-position: center; background-size: cover; }
 .mission-banner-gradient-full::after { position: absolute; inset: 0; background: linear-gradient(100deg, #101719ed 0%, #171d20c7 55%, #52371886 100%); content: ""; pointer-events: none; }
 .mission-banner-gradient-left::after { position: absolute; inset: 0; background: linear-gradient(90deg, #101719ed 0%, #171d20c7 48%, transparent 72%); content: ""; pointer-events: none; }
 .banner-grid { position: absolute; inset: 0 27% 0 42%; opacity: .12; background-image: linear-gradient(#ddbc7830 1px, transparent 1px), linear-gradient(90deg, #ddbc7830 1px, transparent 1px); background-size: 29px 29px; mask-image: linear-gradient(90deg, transparent, #000 20%, #000 78%, transparent); }
-.mission-banner-inner { width: min(1240px, 100%); min-height: inherit; position: relative; display: flex; align-items: center; margin: 0 auto; padding: 38px 40px; }
+.mission-banner-inner { width: min(1240px, 100%); min-height: inherit; position: relative; display: flex; align-items: center; margin: 0 auto; padding: 24px 40px; }
 .banner-copy { position: relative; z-index: 1; }
 .banner-title-row { display: flex; align-items: center; gap: 14px; }
 .banner-heading-copy { min-width: 0; }
@@ -109,7 +109,7 @@ kbd { display: inline-flex; align-items: center; gap: 2px; padding: 2px 4px; col
 .mission-banner h1 { margin: 0 0 8px; font-size: 38px; font-weight: 700; letter-spacing: .148em; line-height: 1.08; }
 .mission-banner h1 > span { color: var(--lime); }
 .mission-banner p { margin: 0; color: #d1ded1; font-size: 13px; }
-.banner-alliance-logo { width: 148px; height: 148px; display: grid; flex: 0 0 148px; place-items: center; overflow: hidden; color: var(--lime); background-position: center; background-size: contain; background-repeat: no-repeat; }
+.banner-alliance-logo { width: 96px; height: 96px; display: grid; flex: 0 0 96px; place-items: center; overflow: hidden; color: var(--lime); background-position: center; background-size: contain; background-repeat: no-repeat; }
 .banner-add, .primary-button { height: 37px; position: relative; z-index: 2; display: inline-flex; align-items: center; justify-content: center; gap: 9px; padding: 0 13px; color: #213329; border: 0; background: var(--lime); cursor: pointer; font-size: 10px; font-weight: 700; }
 .banner-add, .primary-button, .claim-button, .google-login-button, .approval-button { font-family: var(--font-accent); letter-spacing: .148em; text-transform: uppercase; }
 .banner-add { height: 50px; margin-left: auto; align-self: flex-end; padding: 9px 16px; color: #fff; border: 2px solid #ff8400; background: transparent; font-size: 16px; font-weight: 400; letter-spacing: 2px; line-height: 14px; }
@@ -829,11 +829,11 @@ select { appearance: none; padding-right: 29px; background-image: linear-gradien
   .shortcut kbd { display: none; }
   .content-wrap { padding: 13px 12px 17px; }
   .mission-card-grid { grid-template-columns: 1fr; }
-  .mission-banner { min-height: 194px; }
-  .mission-banner-inner { min-height: 194px; align-items: flex-start; padding: 25px 12px; }
+  .mission-banner { min-height: 150px; }
+  .mission-banner-inner { min-height: 150px; align-items: center; padding: 18px 12px; }
   .banner-copy { max-width: 82%; }
   .banner-title-row { gap: 9px; }
-  .banner-alliance-logo { width: 148px; height: 148px; flex-basis: 148px; }
+  .banner-alliance-logo { width: 80px; height: 80px; flex-basis: 80px; }
   .mission-banner h1 { font-size: 27px; }
   .mission-banner p { max-width: 230px; font-size: 11px; line-height: 1.5; }
   .banner-add { position: absolute; right: 15px; bottom: 15px; }
@@ -920,3 +920,94 @@ select { appearance: none; padding-right: 29px; background-image: linear-gradien
 .scope-toggle[data-tooltip] { position: relative; }
 .scope-toggle[data-tooltip]::after { position: absolute; z-index: 30; top: calc(100% + 7px); left: 0; padding: 6px 8px; color: #f1eee7; border: 1px solid #394548; border-radius: 3px; background: #111719; box-shadow: 0 4px 14px #0008; content: attr(data-tooltip); font-size: 9px; font-weight: 500; line-height: 1.2; opacity: 0; pointer-events: none; text-transform: none; transform: translateY(-3px); transition: opacity .12s, transform .12s; white-space: nowrap; }
 .scope-toggle[data-tooltip]:hover::after, .scope-toggle[data-tooltip]:focus-visible::after { opacity: 1; transform: translateY(0); }
+.sidebar-compact { width: 67px; flex-basis: 67px; align-items: center; padding-right: 8px; padding-left: 8px; }
+.sidebar-compact .brand { padding: 0; }
+.sidebar-compact .brand > span:last-child, .sidebar-compact .nav-item > span, .sidebar-compact .sidebar-bottom { display: none; }
+.sidebar-compact .side-nav { width: 100%; margin-top: 48px; }
+.sidebar-compact .nav-item { justify-content: center; padding: 0; }
+
+.sidebar-compact ~ .main-panel .mission-card .mission-title { font-size: 17px; }
+.sidebar-compact ~ .main-panel .mission-card-system { font-size: 12px; }
+.sidebar-compact ~ .main-panel .mission-card-people > div > small { font-size: 10px; }
+.sidebar-compact ~ .main-panel .mission-card-people .assignee-cell { font-size: 12px; }
+.sidebar-compact ~ .main-panel .station-card-title-copy > span { font-size: 11px; }
+.sidebar-compact ~ .main-panel .station-card-title-copy > strong { font-size: 17px; }
+.sidebar-compact ~ .main-panel .station-card-no-planet { font-size: 12px; }
+.sidebar-compact ~ .main-panel .mission-card-system-text { display: none; }
+.sidebar-compact ~ .main-panel .mission-card-system .glyph-strip { min-height: 30px; gap: 4px; }
+.sidebar-compact ~ .main-panel .mission-card-system .glyph-slot { width: 28px; height: 30px; flex-basis: 28px; }
+.sidebar-compact ~ .main-panel .mission-card-system .glyph-strip img { width: 28px; height: 28px; }
+.sidebar-compact ~ .main-panel .mission-system-progress { gap: 4px; }
+.sidebar-compact ~ .main-panel .mission-system-progress-item { width: 30px; height: 34px; flex-basis: 30px; }
+.sidebar-compact ~ .main-panel .mission-system-progress-square { width: 18px; height: 18px; border-radius: 2px; }
+body:has(.sidebar-compact) .planet-dialog { width: 100%; height: calc(100vh - 44px); max-height: none; padding: 32px; }
+body:has(.sidebar-compact) .planet-dialog .dialog-heading h2 { font-size: 26px; }
+body:has(.sidebar-compact) .planet-card-address code { font-size: 14px; }
+body:has(.sidebar-compact) .planet-card-image { width: 200px; height: 200px; }
+body:has(.sidebar-compact) .planet-card-intro { grid-template-columns: 200px minmax(0, 1fr); }
+body:has(.sidebar-compact) .planet-card-intro h3 { font-size: 30px; }
+body:has(.sidebar-compact) .planet-card-intro p, body:has(.sidebar-compact) .planet-card-summary, body:has(.sidebar-compact) .planet-dialog-mission-description { font-size: 15px; }
+body:has(.sidebar-compact) .planet-card-section h4, body:has(.sidebar-compact) .planet-resources-section h4 { font-size: 12px; }
+body:has(.sidebar-compact) .planet-fact-row { min-height: 40px; grid-template-columns: 180px minmax(0, 1fr); }
+body:has(.sidebar-compact) .planet-fact-row dt, body:has(.sidebar-compact) .planet-sky-row { font-size: 14px; }
+body:has(.sidebar-compact) .planet-fact-row dd, body:has(.sidebar-compact) .planet-sky-color { font-size: 15px; }
+body:has(.sidebar-compact) .planet-system-status li { min-height: 42px; font-size: 14px; }
+body:has(.sidebar-compact) .planet-system-status li > small { font-size: 11px; }
+body:has(.sidebar-compact) .planet-resource-group h5 { font-size: 14px; }
+body:has(.sidebar-compact) .planet-resource-group h5 > span:last-child { font-size: 12px; }
+body:has(.sidebar-compact) .planet-resource-group li { font-size: 13px; }
+body:has(.sidebar-compact) .planet-card-attribution, body:has(.sidebar-compact) .planet-card-message { font-size: 13px; }
+.sidebar-compact ~ .main-panel .mission-action-button { min-height: 44px; padding: 0 18px; font-size: 15px; }
+body:has(.sidebar-compact) .member-card-dialog { width: min(760px, 100%); padding: 32px; }
+body:has(.sidebar-compact) .member-card-dialog .dialog-heading h2 { font-size: 26px; }
+body:has(.sidebar-compact) .member-card-dialog .eyebrow { font-size: 13px; }
+body:has(.sidebar-compact) .member-card-dialog .member-card-details > div { padding: 14px 2px; font-size: 16px; }
+body:has(.sidebar-compact) .member-card-dialog .profile-identity { font-size: 17px; }
+body:has(.sidebar-compact) .member-card-dialog .member-message-subject, body:has(.sidebar-compact) .member-card-dialog .message-acknowledgement, body:has(.sidebar-compact) .member-card-dialog .field span { font-size: 15px; }
+body:has(.sidebar-compact) .member-card-dialog textarea, body:has(.sidebar-compact) .member-card-dialog input { font-size: 16px; }
+body:has(.sidebar-compact) .member-card-dialog .primary-button, body:has(.sidebar-compact) .member-card-dialog .quiet-button { min-height: 44px; font-size: 15px; }
+.sidebar-compact ~ .main-panel .filter-tab, .sidebar-compact ~ .main-panel .member-filter-tab { font-size: 14px; }
+.sidebar-compact ~ .main-panel .filter-tab > span, .sidebar-compact ~ .main-panel .member-filter-tab > span { font-size: 11px; }
+.sidebar-compact ~ .main-panel .station-card-planet-image { width: 84px; height: 84px; flex-basis: 84px; }
+.sidebar-compact ~ .main-panel .station-portal-code > code { display: none; }
+.sidebar-compact ~ .main-panel .station-portal-code .glyph-strip { min-height: 30px; gap: 4px; }
+.sidebar-compact ~ .main-panel .station-portal-code .glyph-slot { width: 28px; height: 30px; flex-basis: 28px; }
+.sidebar-compact ~ .main-panel .station-portal-code .glyph-strip img { width: 28px; height: 28px; }
+.sidebar-compact ~ .main-panel .station-planet-info dt { font-size: 11px; }
+.sidebar-compact ~ .main-panel .station-planet-info dd { font-size: 14px; }
+.sidebar-compact ~ .main-panel .station-planet-info { grid-template-columns: minmax(0, 1fr); padding: 8px 0; }
+.sidebar-compact ~ .main-panel .station-system-status > strong { font-size: 11px; }
+.sidebar-compact ~ .main-panel .station-owner-link { font-size: 14px; }
+.sidebar-compact ~ .main-panel .station-owner-card > small { font-size: 10px; }
+.sidebar-compact ~ .main-panel .station-mission-lock { display: none; }
+.sidebar-compact ~ .main-panel .station-actions .member-icon-action { width: 40px; height: 40px; }
+.sidebar-compact ~ .main-panel .station-actions .member-icon-action svg { width: 20px; height: 20px; }
+body:has(.sidebar-compact) .station-notes-dialog { width: min(760px, 100%); padding: 32px; }
+body:has(.sidebar-compact) .station-notes-dialog .dialog-heading h2 { font-size: 26px; }
+body:has(.sidebar-compact) .station-notes-content { font-size: 17px; }
+body:has(.sidebar-compact) .station-dialog { width: min(760px, 100%); padding: 32px; }
+body:has(.sidebar-compact) .station-dialog .dialog-heading h2 { font-size: 26px; }
+body:has(.sidebar-compact) .station-dialog .eyebrow { font-size: 13px; }
+body:has(.sidebar-compact) .station-dialog .field > span, body:has(.sidebar-compact) .station-dialog .field label, body:has(.sidebar-compact) .station-dialog .address-validation, body:has(.sidebar-compact) .station-dialog .form-error { font-size: 15px; }
+body:has(.sidebar-compact) .station-dialog input, body:has(.sidebar-compact) .station-dialog select, body:has(.sidebar-compact) .station-dialog textarea { min-height: 44px; font-size: 16px; }
+body:has(.sidebar-compact) .station-dialog textarea { min-height: 110px; }
+body:has(.sidebar-compact) .station-dialog .glyph-keypad { grid-template-columns: repeat(8, 48px); gap: 6px; }
+body:has(.sidebar-compact) .station-dialog .glyph-keypad button { width: 48px; height: 48px; }
+body:has(.sidebar-compact) .station-dialog .glyph-keypad img { width: 32px; height: 32px; }
+body:has(.sidebar-compact) .station-dialog .glyph-strip-large img { width: 30px; height: 30px; }
+body:has(.sidebar-compact) .station-dialog .glyph-strip-large .glyph-slot { width: 34px; height: 36px; flex-basis: 34px; }
+body:has(.sidebar-compact) .station-dialog .primary-button, body:has(.sidebar-compact) .station-dialog .quiet-button { min-height: 44px; font-size: 15px; }
+body:has(.sidebar-compact) .mission-notes-dialog { width: min(760px, 100%); padding: 32px; }
+body:has(.sidebar-compact) .mission-notes-dialog .dialog-heading h2 { font-size: 26px; }
+body:has(.sidebar-compact) .mission-notes-dialog .eyebrow { font-size: 13px; }
+body:has(.sidebar-compact) .mission-notes-content, body:has(.sidebar-compact) .planet-notes-list li { font-size: 17px; }
+.sidebar-compact ~ .main-panel .message-card { padding: 20px; }
+.sidebar-compact ~ .main-panel .message-card-heading { font-size: 12px; }
+.sidebar-compact ~ .main-panel .message-card-heading h2 { font-size: 18px; }
+.sidebar-compact ~ .main-panel .message-participants, .sidebar-compact ~ .main-panel .message-reference { font-size: 14px; }
+.sidebar-compact ~ .main-panel .message-body { font-size: 17px; }
+.sidebar-compact ~ .main-panel .messages-empty { font-size: 16px; }
+.sidebar-compact ~ .main-panel .message-reply-form .field > span, .sidebar-compact ~ .main-panel .message-reply-form .field textarea { font-size: 16px; }
+.sidebar-compact ~ .main-panel .message-thread-toggle { font-size: 14px; }
+.sidebar-compact ~ .main-panel .message-card .member-icon-action { min-width: 40px; min-height: 40px; }
+.sidebar-compact ~ .main-panel .message-card .member-icon-action svg { width: 20px; height: 20px; }

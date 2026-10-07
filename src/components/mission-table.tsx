@@ -333,7 +333,7 @@ function MissionCard({ mission, systemStatuses, currentMember, canManage, member
     </div>
     <div className="mission-card-system">
       <GlyphStrip address={mission.systemAddress ?? ""} />
-      <span>{mission.system || t("system.system_label")} · {galaxyLabel(mission.galaxy ?? 0)}</span>
+      <span className="mission-card-system-text">{mission.system || t("system.system_label")} · {galaxyLabel(mission.galaxy ?? 0)}</span>
     </div>
     <div className="mission-card-people">
       <div><small>{t("missions.discoverer_column_heading")}</small><DiscovererCell memberId={mission.stationOwnerMemberId} galaxy={mission.galaxy} image={getDiscovererImage(mission.stationOwnerMemberId)} name={mission.stationOwnerName} onOpenProfile={onOpenProfile} portal={mission.systemAddress} /></div>
@@ -406,7 +406,8 @@ export function MissionTable({
   const [missionNoteView, setMissionNoteView] = useState<Mission | null>(null);
   const [planetNoteView, setPlanetNoteView] = useState<PlanetNotes | null>(null);
   const [viewOverride, setViewOverride] = useState<"list" | "cards" | null>(null);
-  const viewMode = viewOverride ?? defaultView;
+  const simpleView = currentMember.simpleView === true;
+  const viewMode = simpleView ? "cards" : viewOverride ?? defaultView;
   const [discovererImages, setDiscovererImages] = useState<Record<string, string>>({});
   const discovererIdKey = [...new Set(missions.flatMap((mission) => mission.stationOwnerMemberId ? [mission.stationOwnerMemberId] : []))].sort().join(",");
 
@@ -451,15 +452,15 @@ export function MissionTable({
     <section className="mission-section">
       <div className="toolbar">
         <div className="filter-tabs" role="tablist" aria-label={t("common.filter_by_status")}>
-          {(["all", "in_progress", "pending_assigned", "pending_unassigned", "completed"] as MissionFilter[]).map((item) => <button aria-selected={filter === item} className={filter === item ? "filter-tab selected" : "filter-tab"} key={item} onClick={() => onFilterChange(item)} role="tab" type="button">{t(missionFilterLabels[item])}<span>{counts[item]}</span></button>)}
+          {(["all", "in_progress", "pending_assigned", "pending_unassigned", "completed"] as MissionFilter[]).filter((item) => item === "all" || item === filter || counts[item] > 0).map((item) => <button aria-selected={filter === item} className={filter === item ? "filter-tab selected" : "filter-tab"} key={item} onClick={() => onFilterChange(item)} role="tab" type="button">{t(missionFilterLabels[item])}<span>{counts[item]}</span></button>)}
         </div>
         <div className="toolbar-actions">
           {onScopeChange && <button aria-label={t(showAll ? "missions.showing_all" : "missions.showing_mine")} aria-pressed={showAll} className={showAll ? "member-icon-action scope-toggle selected" : "member-icon-action scope-toggle"} data-tooltip={t(showAll ? "missions.showing_all" : "missions.showing_mine")} onClick={() => onScopeChange(!showAll)} type="button">{showAll ? <Eye size={15} /> : <EyeOff size={15} />}</button>}
-          <label className="search-field"><Search size={15} /><input aria-label={t("planet.search_missions_planets_users_or_mission_type")} onChange={(event) => onSearchChange(event.target.value)} placeholder={t("members.search_missions_users_or_type")} ref={searchInput} value={search} /><kbd>/</kbd></label>
-          <div aria-label={t("missions.mission_view")} className="view-toggle" role="group">
+          {!simpleView && <label className="search-field"><Search size={15} /><input aria-label={t("planet.search_missions_planets_users_or_mission_type")} onChange={(event) => onSearchChange(event.target.value)} placeholder={t("members.search_missions_users_or_type")} ref={searchInput} value={search} /><kbd>/</kbd></label>}
+          {!simpleView && <div aria-label={t("missions.mission_view")} className="view-toggle" role="group">
             <button aria-label={t("navigation.list_view")} aria-pressed={viewMode === "list"} className={viewMode === "list" ? "selected" : ""} onClick={() => setViewOverride("list")} title={t("navigation.list_view")} type="button"><List size={15} /></button>
             <button aria-label={t("navigation.card_view")} aria-pressed={viewMode === "cards"} className={viewMode === "cards" ? "selected" : ""} onClick={() => setViewOverride("cards")} title={t("navigation.card_view")} type="button"><LayoutGrid size={15} /></button>
-          </div>
+          </div>}
         </div>
       </div>
       {viewMode === "list" ? <div className="mission-table-wrap">
@@ -490,7 +491,7 @@ export function MissionTable({
         {loading && <div className="mission-cards-loading"><LoadingSpinner /></div>}
         {!loading && missions.length === 0 && <p className="mission-cards-empty">{t("missions.no_missions_match_the_filters")}</p>}
       </div>}
-      <div className="table-footer"><span><span className="footer-live" />{t("missions.showing_visible_of_total_missions", { visible: missions.length, total: counts.all })}</span></div>
+      {!simpleView && <div className="table-footer"><span><span className="footer-live" />{t("missions.showing_visible_of_total_missions", { visible: missions.length, total: counts.all })}</span></div>}
       {profileTarget && <MemberCardDialog memberId={profileTarget.memberId} messageContext={profileTarget.messageContext} onClose={() => setProfileTarget(null)} />}
       {missionNoteView && canViewMissionNotes(missionNoteView) && <div className="dialog-backdrop">
         <dialog aria-labelledby="mission-notes-title" aria-modal="true" className="mission-dialog mission-notes-dialog" open>

@@ -297,7 +297,7 @@ export function MessagesPage({ currentMember, alliance, missionCount, stationCou
       <MissionHero description={t("messages.page_description")} settings={settings} title="messages.messages" />
       <main className="content-wrap messages-page">
         <div aria-label={t("messages.messages")} className="member-filter-tabs" role="tablist">
-          {(["received", "sent", ...(isAdmin ? ["all" as const] : [])] as MessageTab[]).map((key) => <button aria-selected={tab === key} className={tab === key ? "member-filter-tab selected" : "member-filter-tab"} key={key} onClick={() => {
+          {(["received", "sent", ...(isAdmin ? ["all" as const] : [])] as MessageTab[]).filter((key) => key === tab || key === "received" || (key === "sent" ? sentMessages.length : messages.length) > 0).map((key) => <button aria-selected={tab === key} className={tab === key ? "member-filter-tab selected" : "member-filter-tab"} key={key} onClick={() => {
             setTab(key);
             void markRead(receivedMessages.map((entry) => entry.id));
             setExpandedMessageIds(new Set());

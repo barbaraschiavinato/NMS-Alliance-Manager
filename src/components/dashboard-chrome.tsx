@@ -57,7 +57,7 @@ export function AllianceSidebar({ missionCount, stationCount, userCount, offline
   if (currentMember.role === "admin") roleLabel = t("admin.administrator");
   else if (currentMember.role === "moderator") roleLabel = t("common.moderator");
   return (
-    <aside className="sidebar">
+    <aside className={currentMember.simpleView ? "sidebar sidebar-compact" : "sidebar"}>
       <Link className="brand" href="/">
         <span className="brand-mark" style={settings.logoUrl ? { backgroundImage: `url("${settings.logoUrl}")` } : undefined}>{!settings.logoUrl && <Orbit size={21} strokeWidth={1.8} />}</span>
         <span><strong>{settings.name}</strong></span>

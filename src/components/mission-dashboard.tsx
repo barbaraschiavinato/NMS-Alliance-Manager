@@ -251,7 +251,7 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
       <section className="main-panel" id="missioni">
         <DashboardTopbar currentMember={member} onAdminOpen={() => setAdminOpen(true)} onProfileOpen={() => setProfileOpen(true)} settings={alliance} />
         <MissionHero onCreate={() => openMission(null)} settings={alliance} showCreate={canManage} />
-        <MissionMetrics counts={counts} missions={availableMissions} />
+        {!member.simpleView && <MissionMetrics counts={counts} missions={availableMissions} />}
         <div className="content-wrap">
           {!profileComplete && <section className="profile-required-banner"><span><strong>{t("profile.complete_your_nms_profile")}</strong><small>{t("profile.enter_your_in_game_name_friend_code_platforms_and_specialty_to_claim_or_be_assigned_missions")}</small></span><button className="claim-button" onClick={() => setProfileOpen(true)} type="button">{t("profile.complete_profile")}</button></section>}
           <MissionTable

@@ -40,6 +40,7 @@ export type AllianceMember = {
   approvedAt: string;
   lastLogin: string;
   offline?: boolean;
+  simpleView?: boolean;
 };
 
 export type AllianceSettings = {

@@ -402,6 +402,7 @@ export const translations: TranslationCatalog = {
     "profile.specialty_label": "Specialty",
     "profile.no_specialty_specified": "No specialty specified",
     "profile.no_platforms_specified": "No platforms specified",
+    "profile.simple_view": "Simple view",
     "profile.message_mission_only_notice": "I confirm this message is only about the mission or the planet. I will use Telegram or Discord for any other communication.",
     "profile.friend_code_label": "Friend code",
     "profile.platforms_label": "Platforms",

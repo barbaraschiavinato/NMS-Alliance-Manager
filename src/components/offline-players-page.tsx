@@ -143,7 +143,7 @@ export function OfflinePlayersPage({ memberActivity, currentMember, alliance, mi
         </main>
       </section>
       {adminOpen && pageMember.role === "admin" && <AdminPanel onClose={() => setAdminOpen(false)} onSaved={setAllianceSettings} />}
-      {profileOpen && <MemberProfilePanel member={pageMember} onClose={() => setProfileOpen(false)} onSaved={(profile) => setPageMember((current) => ({ ...current, nmsName: profile.nmsName, nmsCode: profile.nmsCode, platforms: profile.platforms, specialty: profile.specialty }))} />}
+      {profileOpen && <MemberProfilePanel member={pageMember} onClose={() => setProfileOpen(false)} onSaved={(profile) => setPageMember((current) => ({ ...current, nmsName: profile.nmsName, nmsCode: profile.nmsCode, platforms: profile.platforms, specialty: profile.specialty, simpleView: profile.simpleView }))} />}
       {editing && <MemberProfilePanel editOffline key={editing.publicId} member={editing} onClose={() => setEditing(null)} onSaved={(updated) => { setAll((current) => current.map((item) => item.publicId === updated.publicId ? updated : item)); setNotice("members.offline_player_updated"); }} />}
       {addOpen && <MemberProfilePanel createOffline member={{ ...pageMember, nmsName: "", nmsCode: "", platforms: [], specialty: "" }} onClose={() => setAddOpen(false)} onSaved={(created) => { setAll((current) => [...current, created]); setNotice("members.offline_player_created"); }} />}
     </div>

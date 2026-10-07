@@ -69,6 +69,7 @@ function normalizeMember(value: unknown): AllianceMember | null {
     approvedAt: typeof member.approvedAt === "string" ? member.approvedAt : "",
     lastLogin: typeof member.lastLogin === "string" ? member.lastLogin : "",
     ...(member.offline === true ? { offline: true } : {}),
+    ...(member.simpleView === true ? { simpleView: true } : {}),
   };
 }
 
@@ -243,6 +244,7 @@ export type MemberProfileInput = {
   nmsCode: string;
   platforms: NmsPlatform[];
   specialty: MemberSpecialty;
+  simpleView?: boolean;
 };
 
 export function isMemberProfileInput(value: unknown): value is MemberProfileInput {
@@ -253,7 +255,8 @@ export function isMemberProfileInput(value: unknown): value is MemberProfileInpu
     typeof profile.nmsCode === "string" && isValidNmsFriendCode(profile.nmsCode) &&
     Array.isArray(profile.platforms) &&
     profile.platforms.every((platform) => nmsPlatforms.includes(platform as NmsPlatform)) &&
-    memberSpecialties.includes(profile.specialty as MemberSpecialty);
+    memberSpecialties.includes(profile.specialty as MemberSpecialty) &&
+    (profile.simpleView === undefined || typeof profile.simpleView === "boolean");
 }
 
 export async function updateMemberProfile(email: string, profile: MemberProfileInput) {
@@ -267,6 +270,10 @@ export async function updateMemberProfile(email: string, profile: MemberProfileI
   member.nmsCode = normalizeNmsFriendCode(profile.nmsCode);
   member.platforms = [...new Set(profile.platforms)];
   member.specialty = profile.specialty;
+  if (profile.simpleView !== undefined) {
+    if (profile.simpleView) member.simpleView = true;
+    else delete member.simpleView;
+  }
   await writeAccessData(data);
   return member;
 }
