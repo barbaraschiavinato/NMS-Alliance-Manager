@@ -12,8 +12,8 @@ import { useLocale } from "@/components/locale-provider";
 
 type MessageEntry = Readonly<{
   id: string;
-  senderEmail: string;
-  recipientEmail: string;
+  senderMemberId?: string;
+  recipientMemberId?: string;
   senderName: string;
   recipientName: string;
   body: string;
@@ -172,8 +172,9 @@ export function MessagesPage({ currentMember, alliance, missionCount, stationCou
 
   function renderMessage(node: MessageNode): ReactNode {
     const { message } = node;
-    const sentByCurrentMember = message.senderEmail.toLowerCase() === member.email.toLowerCase();
-    const canReply = sentByCurrentMember || message.recipientEmail.toLowerCase() === member.email.toLowerCase();
+    const sentByCurrentMember = message.senderMemberId === member.publicId;
+    const receivedByCurrentMember = message.recipientMemberId === member.publicId;
+    const canReply = sentByCurrentMember || receivedByCurrentMember;
     const isCollapsed = collapsedMessageIds.has(message.id);
     const isReply = Boolean(message.replyToId);
     return <li className="message-tree-node" key={message.id}>
@@ -199,7 +200,7 @@ export function MessagesPage({ currentMember, alliance, missionCount, stationCou
             </div>
             <p className="message-participants">
               {t("messages.from")} <strong className={sentByCurrentMember ? "current-member" : undefined}>{message.senderName}</strong>
-              {" · "}{t("messages.to")} <strong className={!sentByCurrentMember && canReply ? "current-member" : undefined}>{message.recipientName}</strong>
+              {" · "}{t("messages.to")}               <strong className={receivedByCurrentMember ? "current-member" : undefined}>{message.recipientName}</strong>
             </p>
           </div>
           <div className="message-card-tools">

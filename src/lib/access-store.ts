@@ -16,6 +16,7 @@ export type AccessData = {
 
 const blobPath = "alliance-manager/access.json";
 const localPath = path.join(process.cwd(), "data", "access.json");
+const publicIdPattern = /^[\da-f]{8}-[\da-f]{4}-4[\da-f]{3}-[89ab][\da-f]{3}-[\da-f]{12}$/i;
 const defaultData: AccessData = {
   members: [],
   alliance: { name: "", logoUrl: "", bannerUrl: "", discordUrl: "", telegramUrl: "", heroGradientMode: "full", defaultTableView: "list" },
@@ -52,6 +53,7 @@ function normalizeMember(value: unknown): AllianceMember | null {
     ? member.platforms.filter((platform): platform is NmsPlatform => nmsPlatforms.includes(platform as NmsPlatform))
     : [];
   return {
+    publicId: typeof member.publicId === "string" && publicIdPattern.test(member.publicId) ? member.publicId : randomUUID(),
     email: member.email,
     name: member.name,
     image: member.image,
@@ -69,16 +71,30 @@ function normalizeMember(value: unknown): AllianceMember | null {
   };
 }
 
+function needsPublicIdMigration(value: unknown): boolean {
+  if (!value || typeof value !== "object" || !("members" in value) || !Array.isArray(value.members)) return false;
+  return value.members.some((member) =>
+    !member || typeof member !== "object" || !("publicId" in member) ||
+    typeof member.publicId !== "string" || !publicIdPattern.test(member.publicId),
+  );
+}
+
 export async function readAccessData(): Promise<AccessData> {
   const blobAuthOptions = getBlobAuthOptions();
   if (blobAuthOptions) {
     const blob = await get(blobPath, { access: "private", useCache: false, ...blobAuthOptions });
     if (!blob || blob.statusCode === 304) return defaultData;
-    return normalizeAccessData(JSON.parse(await new Response(blob.stream).text()));
+    const raw = JSON.parse(await new Response(blob.stream).text());
+    const data = normalizeAccessData(raw);
+    if (needsPublicIdMigration(raw)) await writeAccessData(data);
+    return data;
   }
 
   try {
-    return normalizeAccessData(JSON.parse(await readFile(localPath, "utf8")));
+    const raw = JSON.parse(await readFile(localPath, "utf8"));
+    const data = normalizeAccessData(raw);
+    if (needsPublicIdMigration(raw)) await writeAccessData(data);
+    return data;
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === "ENOENT") return defaultData;
     throw error;
@@ -119,6 +135,7 @@ export async function registerMember(identity: Pick<AllianceMember, "email" | "n
     return { member: existingMember, alliance: data.alliance };
   }
   const member: AllianceMember = {
+    publicId: existingMember?.publicId ?? randomUUID(),
     email,
     name: identity.name || email,
     image: identity.image,

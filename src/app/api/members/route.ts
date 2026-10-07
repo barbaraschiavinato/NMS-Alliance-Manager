@@ -1,35 +1,37 @@
 import { NextResponse } from "next/server";
 import { getCurrentMember, hasRole } from "@/lib/authorization";
 import { readAccessData } from "@/lib/access-store";
-import { isValidNmsFriendCode } from "@/lib/member-types";
+import { isEmailAddress, isValidNmsFriendCode } from "@/lib/member-types";
 
 export async function GET(request: Request) {
   const member = await getCurrentMember();
   if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
   const data = await readAccessData();
   const searchParams = new URL(request.url).searchParams;
-  const requestedEmails = searchParams.get("emails");
-  if (requestedEmails) {
-    const emails = new Set(requestedEmails.split(",").map((email) => email.trim().toLowerCase()).filter(Boolean));
+  const requestedIds = searchParams.get("ids");
+  if (requestedIds) {
+    const ids = new Set(requestedIds.split(",").map((id) => id.trim()).filter(Boolean));
     return NextResponse.json(data.members
-      .filter((profile) => profile.membershipStatus === "approved" && emails.has(profile.email))
-      .map(({ email, image }) => ({ email, image })));
+      .filter((profile) => profile.membershipStatus === "approved" && ids.has(profile.publicId))
+      .map(({ publicId, image }) => ({ publicId, image })));
   }
-  const email = searchParams.get("email")?.trim().toLowerCase();
-  if (email) {
-    const profile = data.members.find((candidate) => candidate.email === email && candidate.membershipStatus === "approved");
+  const publicId = searchParams.get("id")?.trim();
+  if (publicId) {
+    const profile = data.members.find((candidate) => candidate.publicId === publicId && candidate.membershipStatus === "approved");
     if (!profile) return NextResponse.json({ error: "Profilo membro non trovato." }, { status: 404 });
     return NextResponse.json({
-      name: profile.name,
+      publicId: profile.publicId,
+      name: isEmailAddress(profile.name) ? "" : profile.name,
       image: profile.image,
-      nmsName: profile.nmsName,
+      nmsName: isEmailAddress(profile.nmsName) ? "" : profile.nmsName,
       platforms: profile.platforms,
       specialty: profile.specialty,
       ...(hasRole(member, "moderator") ? { email: profile.email, nmsCode: profile.nmsCode, role: profile.role } : {}),
     });
   }
   if (!hasRole(member, "moderator")) return NextResponse.json({ error: "Permesso moderator richiesto." }, { status: 403 });
-  return NextResponse.json(data.members.filter((item) => item.membershipStatus === "approved" && item.nmsName && isValidNmsFriendCode(item.nmsCode) && item.platforms.length > 0 && item.specialty).map(({ email, name, image, nmsName, nmsCode, platforms, specialty, role }) => ({
+  return NextResponse.json(data.members.filter((item) => item.membershipStatus === "approved" && item.nmsName && isValidNmsFriendCode(item.nmsCode) && item.platforms.length > 0 && item.specialty).map(({ publicId, email, name, image, nmsName, nmsCode, platforms, specialty, role }) => ({
+    publicId,
     email,
     name,
     image,

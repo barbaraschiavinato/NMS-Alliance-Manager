@@ -21,9 +21,11 @@ type CachedPlanet = Readonly<{ galaxy: number; response: Record<string, unknown>
 type StationEntry = Readonly<{
   portal: string;
   galaxy: number;
-  owner: string;
+  ownerId: string;
+  owner?: string;
   ownerName?: string;
   ownerImage?: string;
+  createdByMemberId?: string;
   createdByEmail?: string;
   name?: string;
   note?: string;
@@ -31,7 +33,7 @@ type StationEntry = Readonly<{
   hasMissions: boolean;
   availableSpecialties: MissionSpecialty[];
 }>;
-type StationMissionSeed = Readonly<{ portal: string; galaxy: number; title: string; ownerEmail: string }>;
+type StationMissionSeed = Readonly<{ portal: string; galaxy: number; title: string; ownerMemberId: string }>;
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : null;
@@ -48,7 +50,7 @@ function parseStations(value: unknown): StationEntry[] {
   if (!Array.isArray(value)) return [];
   return value.flatMap((item) => {
     const station = asRecord(item);
-    if (typeof station?.portal !== "string" || typeof station.galaxy !== "number" || typeof station.owner !== "string") return [];
+    if (typeof station?.portal !== "string" || typeof station.galaxy !== "number" || typeof station.ownerId !== "string") return [];
     const response = asRecord(station.planet);
     const planet = response
       ? { galaxy: station.galaxy, response }
@@ -61,9 +63,11 @@ function parseStations(value: unknown): StationEntry[] {
     return [{
       portal: station.portal,
       galaxy: station.galaxy,
-      owner: station.owner,
+      ownerId: station.ownerId,
+      ...(typeof station.owner === "string" ? { owner: station.owner } : {}),
       ...(typeof station.ownerName === "string" ? { ownerName: station.ownerName } : {}),
       ...(typeof station.ownerImage === "string" ? { ownerImage: station.ownerImage } : {}),
+      ...(typeof station.createdByMemberId === "string" ? { createdByMemberId: station.createdByMemberId } : {}),
       ...(typeof station.createdByEmail === "string" ? { createdByEmail: station.createdByEmail } : {}),
       ...(typeof station.name === "string" ? { name: station.name } : {}),
       ...(typeof station.note === "string" ? { note: station.note } : {}),
@@ -77,13 +81,12 @@ function parseStations(value: unknown): StationEntry[] {
 function stationOwnerName(station: StationEntry) {
   const profileName = station.ownerName?.trim();
   if (profileName && !profileName.includes("@")) return profileName;
-  const username = station.owner.split("@", 1)[0].replace(/[._-]+/g, " ").trim();
-  return username || station.owner;
+  return "Former member";
 }
 
 function StationOwnerCell({ station, onOpenProfile, ownerLabel }: Readonly<{
   station: StationEntry;
-  onOpenProfile: (email: string) => void;
+  onOpenProfile: (memberId: string) => void;
   ownerLabel: string;
 }>) {
   const [imageFailed, setImageFailed] = useState(false);
@@ -92,7 +95,7 @@ function StationOwnerCell({ station, onOpenProfile, ownerLabel }: Readonly<{
 
   return <div className="station-owner-card">
     <small>{ownerLabel}</small>
-    <button className="assignee-cell mission-member-link station-owner-link" onClick={() => onOpenProfile(station.owner)} type="button">
+    <button className="assignee-cell mission-member-link station-owner-link" onClick={() => onOpenProfile(station.ownerId)} type="button">
       <span aria-hidden="true" className={`assignee-avatar ${station.ownerImage && !imageFailed ? "assignee-avatar-image" : ""}`}>
         {station.ownerImage && !imageFailed
           ? <Image alt="" height={21} onError={() => setImageFailed(true)} src={station.ownerImage} unoptimized width={21} />
@@ -160,7 +163,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
   const [allianceSettings, setAllianceSettings] = useState(alliance);
   const [stations, setStations] = useState<StationEntry[]>([]);
   const [selectedStation, setSelectedStation] = useState<{ portal: string; galaxy: number } | null>(null);
-  const [profileTarget, setProfileTarget] = useState<{ email: string; messageContext: MemberMessageContext } | null>(null);
+  const [profileTarget, setProfileTarget] = useState<{ memberId: string; messageContext: MemberMessageContext } | null>(null);
   const [stationNoteView, setStationNoteView] = useState<{ portal: string; note: string } | null>(null);
   const [missionStation, setMissionStation] = useState<StationMissionSeed | null>(null);
   const [members, setMembers] = useState<AllianceMember[]>([]);
@@ -186,7 +189,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
   const canCreateMissions = canSeeAll;
   const viewMode = viewOverride ?? allianceSettings.defaultTableView;
   const visibleStations = useMemo(() => stations.filter((station) =>
-    `${station.name ?? cachedPlanetType(station.planet)} ${station.note ?? ""} ${station.portal} ${station.owner} ${galaxyLabel(station.galaxy)}`.toLowerCase().includes(search.toLowerCase()),
+    `${station.name ?? cachedPlanetType(station.planet)} ${station.note ?? ""} ${station.portal} ${station.ownerName ?? ""} ${galaxyLabel(station.galaxy)}`.toLowerCase().includes(search.toLowerCase()),
   ), [search, stations]);
 
   async function fetchStations() {
@@ -221,7 +224,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
     setEditingStation(station);
     setPortal(station.portal);
     setGalaxy(station.galaxy);
-    setStationOwnerEmail(station.owner);
+    setStationOwnerEmail(station.owner ?? pageMember.email);
     setStationName(station.name ?? cachedPlanetTitle(station.planet) ?? "");
     setStationNote(station.note ?? "");
     setPlanetType(cachedPlanetType(station.planet));
@@ -277,11 +280,11 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
     if (stations.some((station) =>
       station.portal === canonicalPortal &&
       station.galaxy === galaxy &&
-      station.owner.toLowerCase() === requestedOwner &&
+      (canSeeAll ? station.owner?.toLowerCase() === requestedOwner : station.ownerId === pageMember.publicId) &&
       !(editingStation &&
         station.portal === editingStation.portal &&
         station.galaxy === editingStation.galaxy &&
-        station.owner.toLowerCase() === editingStation.owner.toLowerCase()),
+        station.ownerId === editingStation.ownerId),
     )) {
       setError(t("stations.this_portal_is_already_in_the_selected_owner_s_list"));
       return;
@@ -298,14 +301,21 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
           ? {
             currentPortal: editingStation.portal,
             currentGalaxy: editingStation.galaxy,
-            currentOwner: editingStation.owner,
+            currentOwnerId: editingStation.ownerId,
+            ...(canSeeAll && editingStation.owner ? { currentOwner: editingStation.owner } : {}),
             portal: canonicalPortal,
             galaxy,
-            owner: requestedOwner,
+            ...(canSeeAll ? { owner: requestedOwner } : { ownerId: pageMember.publicId }),
             name: stationName,
             note: stationNote,
           }
-          : { portal: canonicalPortal, galaxy, owner: requestedOwner, name: stationName, note: stationNote }),
+          : {
+            portal: canonicalPortal,
+            galaxy,
+            ...(canSeeAll ? { owner: requestedOwner } : { ownerId: pageMember.publicId }),
+            name: stationName,
+            note: stationNote,
+          }),
       });
       const body: unknown = await response.json();
       if (!response.ok || !body || typeof body !== "object" || !("stations" in body) || !Array.isArray(body.stations)) {
@@ -332,11 +342,11 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
     }
   }
 
-  async function removeStation(stationPortal: string, stationGalaxy: number, owner: string) {
+  async function removeStation(stationPortal: string, stationGalaxy: number, ownerId: string, ownerName: string) {
     if (!window.confirm(t("stations.remove_portal_portal_in_galaxy_from_owner_s_archive", {
       portal: stationPortal,
       galaxy: galaxyLabel(stationGalaxy),
-      owner,
+      owner: ownerName,
     }))) return;
     setError("");
     setNotice("");
@@ -344,7 +354,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
       const response = await fetch("/api/stations", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ portal: stationPortal, galaxy: stationGalaxy, owner }),
+        body: JSON.stringify({ portal: stationPortal, galaxy: stationGalaxy, ownerId }),
       });
       const body: unknown = await response.json();
       if (!response.ok || !body || typeof body !== "object" || !("stations" in body) || !Array.isArray(body.stations)) {
@@ -414,8 +424,8 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
               const planetImageUrl = cachedPlanetImageUrl(station.planet);
               const stationDisplayName = station.name || cachedPlanetType(station.planet) || cachedPlanetTitle(station.planet) || t("planet.unnamed_planet");
               const canEditStation = canSeeAll ||
-                (station.createdByEmail ?? station.owner).toLowerCase() === pageMember.email.toLowerCase();
-              return <li key={`${station.portal}:${station.galaxy}:${station.owner}`}>
+                (station.createdByMemberId ?? station.ownerId) === pageMember.publicId;
+              return <li key={`${station.portal}:${station.galaxy}:${station.ownerId}`}>
                 {viewMode === "cards" && <button className={`station-card-title${planetImageUrl ? " station-card-title-with-image" : ""}`} onClick={() => setSelectedStation({ portal: station.portal, galaxy: station.galaxy })} type="button">
                   {planetImageUrl && <Image alt="" className="station-card-planet-image" height={112} src={planetImageUrl} unoptimized width={112} />}
                   <span className="station-card-title-copy">
@@ -423,8 +433,8 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
                     <strong>{stationDisplayName}</strong>
                   </span>
                 </button>}
-                <div className="station-portal-code"><strong className="station-name">{stationDisplayName}</strong><GlyphStrip address={station.portal} /><code>{station.portal}</code>{canSeeAll && <StationOwnerCell onOpenProfile={(email) => setProfileTarget({
-                    email,
+                <div className="station-portal-code"><strong className="station-name">{stationDisplayName}</strong><GlyphStrip address={station.portal} /><code>{station.portal}</code>{canSeeAll && <StationOwnerCell onOpenProfile={(memberId) => setProfileTarget({
+                    memberId,
                     messageContext: {
                       type: "planet",
                       portal: station.portal,
@@ -440,12 +450,12 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
                       : <button className="station-planet-open station-planet-unknown" onClick={() => setSelectedStation({ portal: station.portal, galaxy: station.galaxy })} type="button"><span>{galaxyLabel(station.galaxy)}</span><strong>{t("planet.no_almanac_data_open_details")}</strong></button>}
                 </div>
                 <div className="station-actions">
-                  {canCreateMissions && station.availableSpecialties.length > 0 && <button aria-label={t("stations.create_mission_from_portal", { portal: station.portal })} className="member-icon-action create-station-mission" data-tooltip={t("stations.create_mission_from_station")} onClick={() => setMissionStation({ portal: station.portal, galaxy: station.galaxy, title: cachedPlanetTitle(station.planet), ownerEmail: station.owner })} type="button"><CirclePlus size={14} /></button>}
+                  {canCreateMissions && station.availableSpecialties.length > 0 && <button aria-label={t("stations.create_mission_from_portal", { portal: station.portal })} className="member-icon-action create-station-mission" data-tooltip={t("stations.create_mission_from_station")} onClick={() => setMissionStation({ portal: station.portal, galaxy: station.galaxy, title: cachedPlanetTitle(station.planet), ownerMemberId: station.ownerId })} type="button"><CirclePlus size={14} /></button>}
                   {station.hasMissions
                     ? canSeeAll
                       ? <Link aria-label={t("planet.open_missions_for_planet_portal", { portal: station.portal })} className="member-icon-action station-missions-link" data-tooltip={t("missions.open_associated_missions")} href={`/?search=${encodeURIComponent(station.portal)}`}><Crosshair size={14} /></Link>
                       : <span className="station-mission-lock">{t("missions.associated_mission")}</span>
-                    : (canSeeAll || station.owner.toLowerCase() === pageMember.email.toLowerCase()) && <button aria-label={t("stations.remove_portal_portal_in_galaxy_from_owner_s_archive", { portal: station.portal, galaxy: galaxyLabel(station.galaxy), owner: station.owner })} className="member-icon-action delete-member" data-tooltip={t("stations.delete_station")} onClick={() => void removeStation(station.portal, station.galaxy, station.owner)} type="button"><Trash2 size={14} /></button>}
+                    : (canSeeAll || station.ownerId === pageMember.publicId) && <button aria-label={t("stations.remove_portal_portal_in_galaxy_from_owner_s_archive", { portal: station.portal, galaxy: galaxyLabel(station.galaxy), owner: stationOwnerName(station) })} className="member-icon-action delete-member" data-tooltip={t("stations.delete_station")} onClick={() => void removeStation(station.portal, station.galaxy, station.ownerId, stationOwnerName(station))} type="button"><Trash2 size={14} /></button>}
                   {canEditStation && <button aria-label={t("stations.edit_station_portal", { portal: station.portal })} className="member-icon-action" data-tooltip={t("stations.edit_station")} onClick={() => openEditStation(station)} type="button"><Pencil size={14} /></button>}
                   {station.note && <button aria-label={t("stations.view_notes_for_station", { station: stationDisplayName })} className="member-icon-action station-notes-action" data-tooltip={t("stations.view_station_notes")} onClick={() => setStationNoteView({ portal: station.portal, note: station.note ?? "" })} type="button"><FileText size={14} /></button>}
                 </div>
@@ -504,7 +514,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
                 {galaxyNames.map((name, index) => <option key={index} value={index}>{name}</option>)}
               </select>
             </label>}
-            {canSeeAll && !editingStation?.hasMissions && <label className="field">
+            {canSeeAll && <label className="field">
               <span>{t("stations.station_owner")}</span>
               <select onChange={(event) => setStationOwnerEmail(event.target.value)} required value={stationOwnerEmail}>
                 {[pageMember, ...members.filter((candidate) => candidate.email.toLowerCase() !== pageMember.email.toLowerCase())]
@@ -531,7 +541,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
         portal={selectedStation.portal}
         title={t("stations.space_station")}
       />}
-      {profileTarget && <MemberCardDialog email={profileTarget.email} messageContext={profileTarget.messageContext} onClose={() => setProfileTarget(null)} />}
+      {profileTarget && <MemberCardDialog memberId={profileTarget.memberId} messageContext={profileTarget.messageContext} onClose={() => setProfileTarget(null)} />}
       {stationNoteView && <div className="dialog-backdrop">
         <dialog aria-labelledby="station-notes-title" aria-modal="true" className="mission-dialog station-notes-dialog" open>
           <div className="dialog-heading">
@@ -549,15 +559,20 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
           title: missionStation.title,
           systemAddress: missionStation.portal,
           galaxy: missionStation.galaxy,
-          stationOwnerEmail: missionStation.ownerEmail,
+          stationOwnerMemberId: missionStation.ownerMemberId,
           targetSpecialty: stations.find((station) => station.portal === missionStation.portal && station.galaxy === missionStation.galaxy)?.availableSpecialties[0] ?? "builder",
         }}
         members={members}
         mission={null}
         onClose={() => setMissionStation(null)}
         onDelete={async () => undefined}
-        onSave={(input) => createMissionFromStation({ ...input, stationOwnerEmail: missionStation.ownerEmail })}
-        stationOwners={stations}
+        onSave={(input) => createMissionFromStation({ ...input, stationOwnerMemberId: missionStation.ownerMemberId })}
+        stationOwners={stations.map((station) => ({
+          portal: station.portal,
+          galaxy: station.galaxy,
+          ownerId: station.ownerId,
+          ownerName: stationOwnerName(station),
+        }))}
       />}
     </div>
   );

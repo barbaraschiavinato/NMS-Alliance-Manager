@@ -19,7 +19,7 @@ import { useLocale } from "@/components/locale-provider";
 
 const specialtyNames: Record<MemberSpecialty, string> = { builder: "common.builder", ranger: "common.ranger", explorer: "common.explorer" };
 const targetNames: Record<MissionSpecialty, string> = { all: "common.all", builder: "common.builders", ranger: "common.ranger", explorer: "common.explorers", other: "common.other" };
-export type StationOwnerOption = Readonly<{ portal: string; galaxy: number; owner: string }>;
+export type StationOwnerOption = Readonly<{ portal: string; galaxy: number; ownerId: string; ownerName: string }>;
 
 const emptyMission: MissionInput = {
   title: "",
@@ -228,7 +228,7 @@ export function MissionForm({
           </label>
           <SystemAddressField address={form.systemAddress} galaxy={form.galaxy} onChange={(value) => {
             update("systemAddress", value);
-            update("stationOwnerEmail", undefined);
+            update("stationOwnerMemberId", undefined);
             update("stationOwnerName", undefined);
             resetAlmanacSystemData();
             setAddressValidation({ valid: false, lookup: null });
@@ -245,7 +245,7 @@ export function MissionForm({
               <span>{t("stations.galaxy")} <b>{galaxyLabel(form.galaxy)}</b></span>
               <select aria-label={t("stations.galaxy")} onChange={(event) => {
                 update("galaxy", Number(event.target.value));
-                update("stationOwnerEmail", undefined);
+                update("stationOwnerMemberId", undefined);
                 update("stationOwnerName", undefined);
                 resetAlmanacSystemData();
                 setAddressValidation((current) => ({ ...current, lookup: null }));
@@ -262,15 +262,12 @@ export function MissionForm({
             <label className="field">
               <span>{t("missions.system_discoverer")}</span>
               <select onChange={(event) => {
-                update("stationOwnerEmail", event.target.value || undefined);
+                update("stationOwnerMemberId", event.target.value || undefined);
                 update("stationOwnerName", undefined);
-              }} value={form.stationOwnerEmail ?? ""}>
+              }} value={form.stationOwnerMemberId ?? ""}>
                 <option value="">{t("common.not_specified")}</option>
-                {form.stationOwnerEmail && !matchingStationOwners.some((station) => station.owner === form.stationOwnerEmail) && <option value={form.stationOwnerEmail}>{form.stationOwnerName || form.stationOwnerEmail}</option>}
-                {matchingStationOwners.map((station) => {
-                  const owner = members.find((candidate) => candidate.email === station.owner);
-                  return <option key={station.owner} value={station.owner}>{owner?.nmsName || owner?.name || station.owner}</option>;
-                })}
+                {form.stationOwnerMemberId && !matchingStationOwners.some((station) => station.ownerId === form.stationOwnerMemberId) && <option value={form.stationOwnerMemberId}>{form.stationOwnerName || t("common.not_specified")}</option>}
+                {matchingStationOwners.map((station) => <option key={station.ownerId} value={station.ownerId}>{station.ownerName}</option>)}
               </select>
             </label>
             <label className="field">

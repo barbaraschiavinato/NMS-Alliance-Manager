@@ -6,6 +6,7 @@ import { decodePortalAddress } from "@/lib/missions";
 import { deletePrivateMessageBranch, readPrivateMessages, savePrivateMessage } from "@/lib/private-messages-store";
 import { readStationPortals } from "@/lib/stations-store";
 import { readMissions } from "@/lib/store";
+import { isEmailAddress } from "@/lib/member-types";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -15,7 +16,7 @@ export async function GET(request: Request) {
   if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
 
   const params = new URL(request.url).searchParams;
-  if (params.has("recipientEmail")) return getPlanetSubject(params);
+  if (params.has("recipientId")) return getPlanetSubject(params);
 
   try {
     const [messages, accessData] = await Promise.all([readPrivateMessages(), readAccessData()]);
@@ -25,17 +26,20 @@ export async function GET(request: Request) {
       message.senderEmail.toLowerCase() === member.email.toLowerCase() ||
       message.recipientEmail.toLowerCase() === member.email.toLowerCase(),
     );
-    const memberNames = new Map(accessData.members.map((profile) => [
-      profile.email.toLowerCase(),
-      profile.nmsName || profile.name || profile.email,
-    ]));
+    const membersByEmail = new Map(accessData.members.map((profile) => [profile.email.toLowerCase(), profile]));
     const responseMessages = visibleMessages
       .toSorted((left, right) => right.createdAt.localeCompare(left.createdAt))
-      .map((message) => ({
-        ...message,
-        senderName: memberNames.get(message.senderEmail.toLowerCase()) ?? message.senderEmail,
-        recipientName: memberNames.get(message.recipientEmail.toLowerCase()) ?? message.recipientEmail,
-      }));
+      .map(({ senderEmail, recipientEmail, ...message }) => {
+        const sender = membersByEmail.get(senderEmail.toLowerCase());
+        const recipient = membersByEmail.get(recipientEmail.toLowerCase());
+        return {
+          ...message,
+          senderMemberId: sender?.publicId,
+          recipientMemberId: recipient?.publicId,
+          senderName: [sender?.nmsName, sender?.name].find((name) => name && !isEmailAddress(name)) || "Former member",
+          recipientName: [recipient?.nmsName, recipient?.name].find((name) => name && !isEmailAddress(name)) || "Former member",
+        };
+      });
     return NextResponse.json(responseMessages, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     console.error("Unable to read private messages", error);
@@ -55,13 +59,13 @@ async function resolvePlanetSubject(recipientEmail: string, portal: string, gala
 }
 
 async function getPlanetSubject(params: URLSearchParams) {
-  const recipientEmail = (params.get("recipientEmail") ?? "").trim().toLowerCase();
+  const recipientId = (params.get("recipientId") ?? "").trim();
   const portal = (params.get("portal") ?? "").toUpperCase();
   const galaxyValue = params.get("galaxy") ?? "";
   const galaxy = Number(galaxyValue);
   const decoded = decodePortalAddress(portal);
   if (
-    !recipientEmail ||
+    !recipientId ||
     !decoded ||
     decoded.errors.length > 0 ||
     !/^\d+$/.test(galaxyValue) ||
@@ -74,7 +78,7 @@ async function getPlanetSubject(params: URLSearchParams) {
 
   try {
     const recipient = (await readAccessData()).members.find((candidate) =>
-      candidate.email.toLowerCase() === recipientEmail && candidate.membershipStatus === "approved",
+      candidate.publicId === recipientId && candidate.membershipStatus === "approved",
     );
     if (!recipient) return NextResponse.json({ error: "profile.message_recipient_not_found" }, { status: 404 });
 
@@ -167,12 +171,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true }, { status: 201 });
     }
 
-    const recipientEmail = typeof payload.recipientEmail === "string" ? payload.recipientEmail.trim().toLowerCase() : "";
-    if (!recipientEmail) {
+    const recipientId = typeof payload.recipientId === "string" ? payload.recipientId.trim() : "";
+    if (!recipientId) {
       return NextResponse.json({ error: "profile.message_recipient_not_found" }, { status: 400 });
     }
     const recipient = (await readAccessData()).members.find((candidate) =>
-      candidate.email.toLowerCase() === recipientEmail && candidate.membershipStatus === "approved",
+      candidate.publicId === recipientId && candidate.membershipStatus === "approved",
     );
     if (!recipient) {
       return NextResponse.json({ error: "profile.message_recipient_not_found" }, { status: 404 });

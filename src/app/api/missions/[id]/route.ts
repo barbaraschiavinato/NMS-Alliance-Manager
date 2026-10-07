@@ -4,6 +4,8 @@ import { readMissions, writeMissions } from "@/lib/store";
 import { getCurrentMember, hasRole } from "@/lib/authorization";
 import { isValidNmsFriendCode } from "@/lib/member-types";
 import { readStationPortals } from "@/lib/stations-store";
+import { readAccessData } from "@/lib/access-store";
+import { serializeMission } from "@/lib/mission-view";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -23,7 +25,6 @@ export async function PATCH(request: Request, context: RouteContext) {
       const assignedEmail = input.assignedEmail?.trim().toLowerCase();
       let assignedTo = input.assignedTo;
       if (assignedEmail) {
-        const { readAccessData } = await import("@/lib/access-store");
         const access = await readAccessData();
         const assignee = access.members.find((candidate) =>
           candidate.email === assignedEmail && candidate.membershipStatus === "approved" && candidate.nmsName && isValidNmsFriendCode(candidate.nmsCode) && candidate.platforms.length > 0 && candidate.specialty,
@@ -31,17 +32,17 @@ export async function PATCH(request: Request, context: RouteContext) {
         if (!assignee) return NextResponse.json({ error: "Membro assegnatario non trovato." }, { status: 400 });
         assignedTo = assignee.nmsName || assignee.name;
       }
-      const stationOwner = input.stationOwnerEmail
-        ? await findStationOwner(input.stationOwnerEmail, input.systemAddress, input.galaxy)
+      const stationOwner = input.stationOwnerMemberId
+        ? await findStationOwner(input.stationOwnerMemberId, input.systemAddress, input.galaxy)
         : null;
-      if (input.stationOwnerEmail && !stationOwner) {
+      if (input.stationOwnerMemberId && !stationOwner) {
         return NextResponse.json({ error: "Lo scopritore selezionato non risulta proprietario della stazione." }, { status: 400 });
       }
       updated = {
         ...input,
         createdByEmail: missions[index].createdByEmail,
         createdByName: missions[index].createdByName,
-        stationOwnerEmail: stationOwner?.email,
+        stationOwnerMemberId: stationOwner?.publicId,
         stationOwnerName: stationOwner?.name,
         assignedTo,
         assignedEmail,
@@ -56,22 +57,23 @@ export async function PATCH(request: Request, context: RouteContext) {
     }
     missions[index] = updated;
     await writeMissions(missions);
-    return NextResponse.json(updated);
+    const accessData = await readAccessData();
+    return NextResponse.json(serializeMission(updated, accessData.members, hasRole(member, "moderator")));
   } catch (error) {
     console.error("Unable to update mission", error);
     return NextResponse.json({ error: "Impossibile aggiornare la missione." }, { status: 503 });
   }
 }
 
-async function findStationOwner(email: string, portal: string, galaxy: number) {
-  const normalizedEmail = email.trim().toLowerCase();
-  const stations = await readStationPortals(normalizedEmail);
-  if (!stations.some((station) => station.portal === portal.toUpperCase() && station.galaxy === galaxy)) return null;
-
-  const { readAccessData } = await import("@/lib/access-store");
+async function findStationOwner(publicId: string, portal: string, galaxy: number) {
   const access = await readAccessData();
-  const owner = access.members.find((candidate) => candidate.email === normalizedEmail && candidate.membershipStatus === "approved");
-  return { email: normalizedEmail, name: owner?.nmsName || owner?.name || normalizedEmail };
+  const owner = access.members.find((candidate) =>
+    candidate.publicId === publicId && candidate.membershipStatus === "approved",
+  );
+  if (!owner) return null;
+  const stations = await readStationPortals(owner.email);
+  if (!stations.some((station) => station.portal === portal.toUpperCase() && station.galaxy === galaxy)) return null;
+  return { publicId: owner.publicId, name: owner.nmsName || owner.name };
 }
 
 export async function DELETE(_request: Request, context: RouteContext) {

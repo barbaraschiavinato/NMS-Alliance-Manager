@@ -16,7 +16,12 @@ export function isValidNmsFriendCode(value: string) {
   return /^[A-Z0-9]{13}$/.test(normalizeNmsFriendCode(value));
 }
 
+export function isEmailAddress(value: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+}
+
 export type AllianceMember = {
+  publicId: string;
   email: string;
   name: string;
   image: string;

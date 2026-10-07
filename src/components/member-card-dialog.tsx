@@ -7,6 +7,7 @@ import { useLocale } from "@/components/locale-provider";
 import type { SubmitEvent } from "react";
 
 type MemberCard = {
+  publicId: string;
   name: string;
   image: string;
   nmsName: string;
@@ -33,8 +34,8 @@ const roleLabels: Record<MemberRole, string> = {
   admin: "admin.administrator",
 };
 
-export function MemberCardDialog({ email, messageContext, onClose }: Readonly<{
-  email: string;
+export function MemberCardDialog({ memberId, messageContext, onClose }: Readonly<{
+  memberId: string;
   messageContext: MemberMessageContext;
   onClose: () => void;
 }>) {
@@ -51,7 +52,7 @@ export function MemberCardDialog({ email, messageContext, onClose }: Readonly<{
 
   useEffect(() => {
     const controller = new AbortController();
-    fetch(`/api/members?email=${encodeURIComponent(email)}`, { cache: "no-store", signal: controller.signal })
+    fetch(`/api/members?id=${encodeURIComponent(memberId)}`, { cache: "no-store", signal: controller.signal })
       .then(async (response) => {
         const body = await response.json();
         if (!response.ok) throw new Error(body.error ?? "Unable to load the profile.");
@@ -64,13 +65,13 @@ export function MemberCardDialog({ email, messageContext, onClose }: Readonly<{
         if (!controller.signal.aborted) setLoading(false);
       });
     return () => controller.abort();
-  }, [email, t]);
+  }, [memberId, t]);
 
   useEffect(() => {
     if (messageContext.type !== "planet") return;
     const controller = new AbortController();
     const params = new URLSearchParams({
-      recipientEmail: email,
+      recipientId: memberId,
       portal: messageContext.portal,
       galaxy: String(messageContext.galaxy),
     });
@@ -85,7 +86,7 @@ export function MemberCardDialog({ email, messageContext, onClose }: Readonly<{
         if (!controller.signal.aborted) console.error("Unable to load message planet subject", error_);
       });
     return () => controller.abort();
-  }, [email, messageContext]);
+  }, [memberId, messageContext]);
 
   async function sendMessage(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -95,7 +96,7 @@ export function MemberCardDialog({ email, messageContext, onClose }: Readonly<{
       const response = await fetch("/api/messages", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ recipientEmail: email, message, context: messageContext }),
+        body: JSON.stringify({ recipientId: memberId, message, context: messageContext }),
       });
       const body: unknown = await response.json();
       if (!response.ok) {

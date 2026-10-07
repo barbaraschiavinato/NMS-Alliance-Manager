@@ -10,25 +10,32 @@ import {
   type Mission,
 } from "@/lib/missions";
 import { migrateLegacyPlanetSystemStatuses } from "@/lib/planet-system-status-store";
+import { readAccessData } from "@/lib/access-store";
 import { initialMissions } from "@/lib/seed";
 
 const blobPath = "alliance-manager/missions.json";
 const localPath = path.join(process.cwd(), "data", "missions.json");
 
-function migrateMissions(value: unknown): { missions: Mission[]; hasLegacyValues: boolean } {
+function migrateMissions(value: unknown, members: Awaited<ReturnType<typeof readAccessData>>["members"]): { missions: Mission[]; hasLegacyValues: boolean } {
   if (!Array.isArray(value)) return { missions: initialMissions, hasLegacyValues: false };
 
   let hasLegacyValues = false;
   const missions = value.map((entry) => {
     const mission = entry as Partial<Mission>;
+    const rawMission = entry as Record<string, unknown>;
+    const legacyOwnerEmail = rawMission.stationOwnerEmail;
     const status = normalizeMissionStatus(mission.status);
     if (!status) throw new Error("Invalid mission status in stored mission data.");
     const priority = normalizeMissionPriority(mission.priority);
     if (!priority) throw new Error("Invalid mission priority in stored mission data.");
     if (!isMissionStatus(mission.status) || !isMissionPriority(mission.priority)) hasLegacyValues = true;
+    if (typeof legacyOwnerEmail === "string") hasLegacyValues = true;
     const missionData = Object.fromEntries(
-      Object.entries(entry as Record<string, unknown>).filter(([key]) => key !== "systemStatus"),
+      Object.entries(rawMission).filter(([key]) => key !== "systemStatus" && key !== "stationOwnerEmail"),
     );
+    const legacyOwner = typeof legacyOwnerEmail === "string"
+      ? members.find((candidate) => candidate.email.toLowerCase() === legacyOwnerEmail.toLowerCase())
+      : undefined;
     const matchingSeed = initialMissions.find((seed) =>
       seed.id === mission.id && seed.title === mission.title && seed.system === mission.system,
     );
@@ -37,6 +44,7 @@ function migrateMissions(value: unknown): { missions: Mission[]; hasLegacyValues
     if (missingAddress && matchingSeed) galaxy = matchingSeed.galaxy;
     return {
       ...missionData,
+      ...(legacyOwner ? { stationOwnerMemberId: legacyOwner.publicId } : {}),
       system: typeof mission.system === "string" ? mission.system : "",
       systemAddress: missingAddress ? matchingSeed?.systemAddress ?? "" : mission.systemAddress,
       galaxy,
@@ -52,7 +60,8 @@ function migrateMissions(value: unknown): { missions: Mission[]; hasLegacyValues
 
 async function readAndMigrateMissions(value: unknown): Promise<Mission[]> {
   await migrateLegacyPlanetSystemStatuses(value);
-  const migrated = migrateMissions(value);
+  const accessData = await readAccessData();
+  const migrated = migrateMissions(value, accessData.members);
   if (migrated.hasLegacyValues) await writeMissions(migrated.missions);
   return migrated.missions;
 }

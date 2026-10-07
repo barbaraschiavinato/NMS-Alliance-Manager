@@ -251,7 +251,7 @@ export const translations: TranslationCatalog = {
     "stations.error_cannot_edit_another_member_s_station": "Non puoi modificare una stazione appartenente a un altro membro.",
     "stations.error_invalid_station_data": "Dati della stazione non validi.",
     "stations.error_station_associated_with_mission_cannot_be_edited": "Questa stazione è associata a una missione e non può essere modificata.",
-    "stations.error_station_associated_with_mission_title_only": "Quando è associata a una missione, puoi modificare solo il nome e le note della stazione.",
+    "stations.error_station_associated_with_mission_title_only": "Quando è associata a una missione, non puoi modificare il portale o la galassia.",
     "stations.error_station_missing_or_portal_already_saved": "Stazione non trovata o portale già presente.",
     "stations.error_unable_to_update_station": "Impossibile aggiornare la stazione spaziale.",
     "stations.create_mission_from_station": "Crea missione da stazione",

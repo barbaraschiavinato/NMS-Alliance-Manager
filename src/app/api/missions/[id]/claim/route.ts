@@ -3,6 +3,8 @@ import { getCurrentMember } from "@/lib/authorization";
 import { readMissions, writeMissions } from "@/lib/store";
 import { isValidNmsFriendCode } from "@/lib/member-types";
 import type { Mission } from "@/lib/missions";
+import { readAccessData } from "@/lib/access-store";
+import { serializeMission } from "@/lib/mission-view";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -33,7 +35,8 @@ export async function POST(_request: Request, context: RouteContext) {
     };
     missions[index] = claimed;
     await writeMissions(missions);
-    return NextResponse.json(claimed);
+    const accessData = await readAccessData();
+    return NextResponse.json(serializeMission(claimed, accessData.members, false));
   } catch (error) {
     console.error("Unable to claim mission", error);
     return NextResponse.json({ error: "Impossibile prendere la missione." }, { status: 503 });

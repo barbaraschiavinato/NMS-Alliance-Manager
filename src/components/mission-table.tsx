@@ -17,6 +17,7 @@ function asRecord(value: unknown): Record<string, unknown> | null {
 }
 
 function isMissionAssignee(mission: Mission, member: AllianceMember): boolean {
+  if (mission.assignedMemberId) return mission.assignedMemberId === member.publicId;
   const assignedEmail = mission.assignedEmail?.trim().toLowerCase();
   if (assignedEmail) return assignedEmail === member.email.trim().toLowerCase();
 
@@ -60,7 +61,7 @@ function MissionRowAction({ mission, currentMember, canManage, onEdit, onDeleteM
       <button aria-label={`${t("common.delete")} ${mission.title}`} className="row-action row-action-delete" data-tooltip={t("missions.delete_mission")} onClick={() => onDeleteMission(mission)} type="button"><Trash2 size={15} /></button>
     </span>;
   }
-  if (mission.assignedEmail === currentMember.email && mission.status !== "completed") {
+  if ((mission.assignedMemberId === currentMember.publicId || mission.assignedEmail === currentMember.email) && mission.status !== "completed") {
     return <button className="claim-button mission-action-button" onClick={() => onComplete(mission)} type="button">{t("missions.complete_mission")}</button>;
   }
   if (!mission.assignedEmail && !mission.assignedTo.trim()) {
@@ -73,43 +74,45 @@ function AssigneeCell({ mission, members, currentMember, onOpenProfile }: Readon
   mission: Mission;
   members: AllianceMember[];
   currentMember: AllianceMember;
-  onOpenProfile: (email: string, context: MemberMessageContext) => void;
+  onOpenProfile: (memberId: string, context: MemberMessageContext) => void;
 }>) {
   const { t } = useLocale();
   const assignedMember = members.find((member) => member.email === mission.assignedEmail)
+    ?? members.find((member) => member.publicId === mission.assignedMemberId)
+    ?? (mission.assignedMemberId === currentMember.publicId ? currentMember : undefined)
     ?? (mission.assignedEmail === currentMember.email ? currentMember : undefined)
     ?? ([currentMember.nmsName, currentMember.name].includes(mission.assignedTo) ? currentMember : undefined)
     ?? members.find((member) => member.nmsName === mission.assignedTo || member.name === mission.assignedTo);
   const image = assignedMember?.image;
   const name = mission.assignedTo || t("missions.not_assigned");
-  const email = mission.assignedEmail || assignedMember?.email;
+  const memberId = mission.assignedMemberId || assignedMember?.publicId;
 
   const content = <>
     <MemberAvatar image={image} key={image || "fallback"} label={mission.assignedTo || "—"} />
     {name}
   </>;
-  return email
-    ? <button className="assignee-cell mission-member-link" onClick={() => onOpenProfile(email, { type: "mission", missionCode: mission.id, subjectLabel: mission.title })} type="button">{content}</button>
+  return memberId
+    ? <button className="assignee-cell mission-member-link" onClick={() => onOpenProfile(memberId, { type: "mission", missionCode: mission.id, subjectLabel: mission.title })} type="button">{content}</button>
     : <span className="assignee-cell">{content}</span>;
 }
 
-function DiscovererCell({ email, name, image, portal, galaxy, onOpenProfile }: Readonly<{
-  email?: string;
+function DiscovererCell({ memberId, name, image, portal, galaxy, onOpenProfile }: Readonly<{
+  memberId?: string;
   name?: string;
   image?: string;
   portal: string;
   galaxy: number;
-  onOpenProfile: (email: string, context: MemberMessageContext) => void;
+  onOpenProfile: (memberId: string, context: MemberMessageContext) => void;
 }>) {
   const { t } = useLocale();
-  const label = name || email || t("common.not_specified");
+  const label = name || t("common.not_specified");
   const content = <>
     <MemberAvatar image={image} key={image || "fallback"} label={label} />
     {label}
   </>;
 
-  return email
-    ? <button className="assignee-cell mission-member-link" onClick={() => onOpenProfile(email, { type: "planet", portal, galaxy, subjectLabel: "" })} type="button">{content}</button>
+  return memberId
+    ? <button className="assignee-cell mission-member-link" onClick={() => onOpenProfile(memberId, { type: "planet", portal, galaxy, subjectLabel: "" })} type="button">{content}</button>
     : <span className="assignee-cell">{content}</span>;
 }
 
@@ -299,13 +302,14 @@ function MissionCard({ mission, systemStatuses, currentMember, canManage, member
   onUpdateProgress: (mission: Mission, progress: number) => Promise<void>;
   onViewNotes: (mission: Mission) => void;
   onViewPlanetNotes: (notes: PlanetNotes) => void;
-  onOpenProfile: (email: string, context: MemberMessageContext) => void;
-  getDiscovererImage: (email?: string) => string | undefined;
+  onOpenProfile: (memberId: string, context: MemberMessageContext) => void;
+  getDiscovererImage: (memberId?: string) => string | undefined;
 }>) {
   const { t } = useLocale();
   const statuses = systemStatuses[planetSystemStatusKey(mission.systemAddress, mission.galaxy)] ?? [];
   const hasDataError = statuses.includes("data_error");
-  const canUpdateSystemStatus = mission.assignedEmail?.toLowerCase() === currentMember.email.toLowerCase();
+  const canUpdateSystemStatus = mission.assignedMemberId === currentMember.publicId ||
+    mission.assignedEmail?.toLowerCase() === currentMember.email.toLowerCase();
   const canUpdateProgress = !canManage && canUpdateSystemStatus;
   const canViewNotes = canManage || isMissionAssignee(mission, currentMember);
   return <article className="mission-card">
@@ -327,7 +331,7 @@ function MissionCard({ mission, systemStatuses, currentMember, canManage, member
       <span>{mission.system || t("system.system_label")} · {galaxyLabel(mission.galaxy ?? 0)}</span>
     </div>
     <div className="mission-card-people">
-      <div><small>{t("missions.discoverer_column_heading")}</small><DiscovererCell email={mission.stationOwnerEmail} galaxy={mission.galaxy} image={getDiscovererImage(mission.stationOwnerEmail)} name={mission.stationOwnerName} onOpenProfile={onOpenProfile} portal={mission.systemAddress} /></div>
+      <div><small>{t("missions.discoverer_column_heading")}</small><DiscovererCell memberId={mission.stationOwnerMemberId} galaxy={mission.galaxy} image={getDiscovererImage(mission.stationOwnerMemberId)} name={mission.stationOwnerName} onOpenProfile={onOpenProfile} portal={mission.systemAddress} /></div>
       <div><small>{t("missions.assignee_column_heading")}</small><AssigneeCell currentMember={currentMember} members={members} mission={mission} onOpenProfile={onOpenProfile} /></div>
     </div>
     <div className="mission-card-progress">
@@ -420,23 +424,23 @@ export function MissionTable({
   loading?: boolean;
 }>) {
   const { t } = useLocale();
-  const [profileTarget, setProfileTarget] = useState<{ email: string; messageContext: MemberMessageContext } | null>(null);
+  const [profileTarget, setProfileTarget] = useState<{ memberId: string; messageContext: MemberMessageContext } | null>(null);
   const [missionNoteView, setMissionNoteView] = useState<Mission | null>(null);
   const [planetNoteView, setPlanetNoteView] = useState<PlanetNotes | null>(null);
   const [viewOverride, setViewOverride] = useState<"list" | "cards" | null>(null);
   const viewMode = viewOverride ?? defaultView;
   const [discovererImages, setDiscovererImages] = useState<Record<string, string>>({});
-  const discovererEmailKey = [...new Set(missions.flatMap((mission) => mission.stationOwnerEmail ? [mission.stationOwnerEmail] : []))].sort().join(",");
+  const discovererIdKey = [...new Set(missions.flatMap((mission) => mission.stationOwnerMemberId ? [mission.stationOwnerMemberId] : []))].sort().join(",");
 
   useEffect(() => {
-    const emails = discovererEmailKey ? discovererEmailKey.split(",") : [];
-    const approvedMembers = new Map(members.map((member) => [member.email.toLowerCase(), member.image]));
-    if (currentMember.image) approvedMembers.set(currentMember.email.toLowerCase(), currentMember.image);
-    const missingEmails = emails.filter((email) => !approvedMembers.get(email.toLowerCase()));
-    if (missingEmails.length === 0) return;
+    const memberIds = discovererIdKey ? discovererIdKey.split(",") : [];
+    const approvedMembers = new Map(members.map((member) => [member.publicId, member.image]));
+    if (currentMember.image) approvedMembers.set(currentMember.publicId, currentMember.image);
+    const missingIds = memberIds.filter((memberId) => !approvedMembers.get(memberId));
+    if (missingIds.length === 0) return;
 
     const controller = new AbortController();
-    fetch(`/api/members?emails=${encodeURIComponent(missingEmails.join(","))}`, { cache: "no-store", signal: controller.signal })
+    fetch(`/api/members?ids=${encodeURIComponent(missingIds.join(","))}`, { cache: "no-store", signal: controller.signal })
       .then(async (response) => {
         if (!response.ok) return [];
         const body: unknown = await response.json();
@@ -444,8 +448,8 @@ export function MissionTable({
         return body.flatMap((profile): [string, string][] => {
           if (!profile || typeof profile !== "object") return [];
           const entry = profile as Record<string, unknown>;
-          return typeof entry.email === "string" && typeof entry.image === "string" && entry.image
-            ? [[entry.email.toLowerCase(), entry.image]]
+          return typeof entry.publicId === "string" && typeof entry.image === "string" && entry.image
+            ? [[entry.publicId, entry.image]]
             : [];
         });
       })
@@ -454,13 +458,13 @@ export function MissionTable({
       })
       .catch(() => undefined);
     return () => controller.abort();
-  }, [currentMember.email, currentMember.image, discovererEmailKey, members]);
+  }, [currentMember.publicId, currentMember.image, discovererIdKey, members]);
 
-  function getDiscovererImage(email?: string) {
-    if (!email) return undefined;
-    return discovererImages[email.toLowerCase()]
-      ?? members.find((member) => member.email.toLowerCase() === email.toLowerCase())?.image
-      ?? (currentMember.email.toLowerCase() === email.toLowerCase() ? currentMember.image : undefined);
+  function getDiscovererImage(memberId?: string) {
+    if (!memberId) return undefined;
+    return discovererImages[memberId]
+      ?? members.find((member) => member.publicId === memberId)?.image
+      ?? (currentMember.publicId === memberId ? currentMember.image : undefined);
   }
   const canViewMissionNotes = (mission: Mission) =>
     canManage || isMissionAssignee(mission, currentMember);
@@ -487,10 +491,10 @@ export function MissionTable({
                   <td><div className="mission-name-cell"><span className={`mission-icon ${mission.status === "completed" ? "mission-icon-done" : ""}`}>{mission.status === "completed" ? <Check size={15} /> : <Compass size={15} />}</span><div><div className="mission-title-with-info"><button aria-label={`${t("planet.open_planet_details_for")} ${mission.title}`} className="mission-title" onClick={() => onOpenPlanet(mission)} title={t("planet.open_planet_details")} type="button">{mission.title}</button><PlanetNotesButton mission={mission} onView={setPlanetNoteView} /></div><span className="mission-description">{mission.description}</span></div>{canViewMissionNotes(mission) && <MissionNotesButton mission={mission} onView={setMissionNoteView} />}</div></td>
               <td><span className={`badge badge--specialty badge--specialty-${mission.targetSpecialty ?? "all"}`}>{t(targetSpecialtyNames[mission.targetSpecialty ?? "all"])}</span></td>
               <td><div className="system-cell"><GlyphStrip address={mission.systemAddress ?? ""} /><span className="system-caption">{mission.system || t("system.system_label")} · {galaxyLabel(mission.galaxy ?? 0)}</span></div></td>
-              <td><DiscovererCell email={mission.stationOwnerEmail} galaxy={mission.galaxy} image={getDiscovererImage(mission.stationOwnerEmail)} name={mission.stationOwnerName} onOpenProfile={(email, messageContext) => setProfileTarget({ email, messageContext })} portal={mission.systemAddress} /></td>
-              <td><AssigneeCell currentMember={currentMember} members={members} mission={mission} onOpenProfile={(email, messageContext) => setProfileTarget({ email, messageContext })} /></td>
+              <td><DiscovererCell memberId={mission.stationOwnerMemberId} galaxy={mission.galaxy} image={getDiscovererImage(mission.stationOwnerMemberId)} name={mission.stationOwnerName} onOpenProfile={(memberId, messageContext) => setProfileTarget({ memberId, messageContext })} portal={mission.systemAddress} /></td>
+              <td><AssigneeCell currentMember={currentMember} members={members} mission={mission} onOpenProfile={(memberId, messageContext) => setProfileTarget({ memberId, messageContext })} /></td>
               <td><span className={`badge badge--priority badge--priority-${mission.priority}`}><span />{t(`common.${mission.priority}`)}</span></td>
-              <td><MissionProgress editable={!canManage && mission.assignedEmail?.toLowerCase() === currentMember.email.toLowerCase()} mission={mission} onChange={onUpdateProgress} /></td>
+              <td><MissionProgress editable={!canManage && (mission.assignedMemberId === currentMember.publicId || mission.assignedEmail?.toLowerCase() === currentMember.email.toLowerCase())} mission={mission} onChange={onUpdateProgress} /></td>
               <td><MissionRowAction canManage={canManage} currentMember={currentMember} mission={mission} onClaim={onClaim} onComplete={onComplete} onDeleteMission={onDeleteMission} onEdit={onEdit} /></td>
             </tr>)}
             {loading && <tr><td className="empty-state mission-table-loading" colSpan={8}><LoadingSpinner /></td></tr>}
@@ -498,12 +502,12 @@ export function MissionTable({
           </tbody>
         </table>
       </div> : <div className="mission-card-grid">
-        {missions.map((mission) => <MissionCard canManage={canManage} currentMember={currentMember} getDiscovererImage={getDiscovererImage} key={mission.id} members={members} mission={mission} onClaim={onClaim} onComplete={onComplete} onDeleteMission={onDeleteMission} onEdit={onEdit} onOpenPlanet={onOpenPlanet} onOpenProfile={(email, messageContext) => setProfileTarget({ email, messageContext })} onToggleSystemStatus={onToggleSystemStatus} onUpdateProgress={onUpdateProgress} onViewNotes={setMissionNoteView} onViewPlanetNotes={setPlanetNoteView} systemStatuses={planetStatuses} />)}
+        {missions.map((mission) => <MissionCard canManage={canManage} currentMember={currentMember} getDiscovererImage={getDiscovererImage} key={mission.id} members={members} mission={mission} onClaim={onClaim} onComplete={onComplete} onDeleteMission={onDeleteMission} onEdit={onEdit} onOpenPlanet={onOpenPlanet} onOpenProfile={(memberId, messageContext) => setProfileTarget({ memberId, messageContext })} onToggleSystemStatus={onToggleSystemStatus} onUpdateProgress={onUpdateProgress} onViewNotes={setMissionNoteView} onViewPlanetNotes={setPlanetNoteView} systemStatuses={planetStatuses} />)}
         {loading && <div className="mission-cards-loading"><LoadingSpinner /></div>}
         {!loading && missions.length === 0 && <p className="mission-cards-empty">{t("missions.no_missions_match_the_filters")}</p>}
       </div>}
       <div className="table-footer"><span><span className="footer-live" />{t("missions.showing_visible_of_total_missions", { visible: missions.length, total: counts.all })}</span></div>
-      {profileTarget && <MemberCardDialog email={profileTarget.email} messageContext={profileTarget.messageContext} onClose={() => setProfileTarget(null)} />}
+      {profileTarget && <MemberCardDialog memberId={profileTarget.memberId} messageContext={profileTarget.messageContext} onClose={() => setProfileTarget(null)} />}
       {missionNoteView && canViewMissionNotes(missionNoteView) && <div className="dialog-backdrop">
         <dialog aria-labelledby="mission-notes-title" aria-modal="true" className="mission-dialog mission-notes-dialog" open>
           <div className="dialog-heading">

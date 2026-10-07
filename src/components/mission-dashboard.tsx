@@ -89,8 +89,11 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
           const options = body.stations.flatMap((value): StationOwnerOption[] => {
             if (!value || typeof value !== "object") return [];
             const station = value as Record<string, unknown>;
-            return typeof station.portal === "string" && typeof station.galaxy === "number" && typeof station.owner === "string"
-              ? [{ portal: station.portal, galaxy: station.galaxy, owner: station.owner }]
+            return typeof station.portal === "string" &&
+              typeof station.galaxy === "number" &&
+              typeof station.ownerId === "string" &&
+              typeof station.ownerName === "string"
+              ? [{ portal: station.portal, galaxy: station.galaxy, ownerId: station.ownerId, ownerName: station.ownerName }]
               : [];
           });
           setStationOwners(options);
@@ -103,7 +106,7 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
 
   const counts = useMemo(() => {
     const waitingMissions = availableMissions.filter((mission) => mission.status === "pending");
-    const isAssigned = (mission: Mission) => Boolean(mission.assignedEmail || mission.assignedTo.trim());
+    const isAssigned = (mission: Mission) => Boolean(mission.assignedMemberId || mission.assignedEmail || mission.assignedTo.trim());
     return {
       all: availableMissions.length,
       in_progress: availableMissions.filter((mission) => mission.status === "in_progress").length,
@@ -117,7 +120,7 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
   const visibleMissions = useMemo(() => availableMissions
     .filter((mission) => {
       if (filter === "all") return true;
-      const isAssigned = Boolean(mission.assignedEmail || mission.assignedTo.trim());
+      const isAssigned = Boolean(mission.assignedMemberId || mission.assignedEmail || mission.assignedTo.trim());
       if (filter === "pending_assigned") return mission.status === "pending" && isAssigned;
       if (filter === "pending_unassigned") return mission.status === "pending" && !isAssigned;
       return mission.status === filter;
@@ -134,7 +137,6 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
         mission.assignedTo,
         mission.assignedEmail,
         mission.stationOwnerName,
-        mission.stationOwnerEmail,
         mission.createdByName,
         mission.createdByEmail,
         missionTypeLabels[mission.targetSpecialty],

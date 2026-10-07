@@ -251,7 +251,7 @@ export const translations: TranslationCatalog = {
     "stations.error_cannot_edit_another_member_s_station": "You cannot edit a station belonging to another member.",
     "stations.error_invalid_station_data": "Invalid station data.",
     "stations.error_station_associated_with_mission_cannot_be_edited": "This station is associated with a mission and cannot be edited.",
-    "stations.error_station_associated_with_mission_title_only": "Only the station name and notes can be changed while it is associated with a mission.",
+    "stations.error_station_associated_with_mission_title_only": "The portal and galaxy cannot be changed while the station is associated with a mission.",
     "stations.error_station_missing_or_portal_already_saved": "Station not found or portal already saved.",
     "stations.error_unable_to_update_station": "Unable to update the space station.",
     "stations.create_mission_from_station": "Create mission from station",

@@ -2,8 +2,10 @@ import { NextResponse } from "next/server";
 import { canViewMission, isMissionInput, type Mission } from "@/lib/missions";
 import { readMissions, writeMissions } from "@/lib/store";
 import { getCurrentMember, hasRole } from "@/lib/authorization";
+import { readAccessData } from "@/lib/access-store";
 import { readStationPortals } from "@/lib/stations-store";
 import { isValidNmsFriendCode } from "@/lib/member-types";
+import { serializeMission } from "@/lib/mission-view";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -12,8 +14,10 @@ export async function GET() {
   try {
     const member = await getCurrentMember();
     if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
-    const missions = await readMissions();
-    return NextResponse.json(hasRole(member, "moderator") ? missions : missions.filter((mission) => canViewMission(mission, member)));
+    const [missions, accessData] = await Promise.all([readMissions(), readAccessData()]);
+    const canSeeEmails = hasRole(member, "moderator");
+    const visibleMissions = canSeeEmails ? missions : missions.filter((mission) => canViewMission(mission, member));
+    return NextResponse.json(visibleMissions.map((mission) => serializeMission(mission, accessData.members, canSeeEmails)));
   } catch (error) {
     console.error("Unable to read missions", error);
     return NextResponse.json({ error: "Impossibile leggere le missioni." }, { status: 503 });
@@ -39,10 +43,10 @@ export async function POST(request: Request) {
     if (input.assignedEmail && !assignedMember) {
       return NextResponse.json({ error: "Seleziona un membro registrato per l'assegnazione." }, { status: 400 });
     }
-    const stationOwner = typeof input.stationOwnerEmail === "string"
-      ? await findStationOwner(input.stationOwnerEmail, input.systemAddress, input.galaxy)
+    const stationOwner = typeof input.stationOwnerMemberId === "string"
+      ? await findStationOwner(input.stationOwnerMemberId, input.systemAddress, input.galaxy)
       : null;
-    if (input.stationOwnerEmail && !stationOwner) {
+    if (input.stationOwnerMemberId && !stationOwner) {
       return NextResponse.json({ error: "La stazione indicata non appartiene all’utente selezionato." }, { status: 400 });
     }
     const targetSpecialties = input.targetSpecialty === "all"
@@ -56,7 +60,7 @@ export async function POST(request: Request) {
         targetSpecialty,
         createdByEmail: member.email,
         createdByName: member.nmsName || member.name,
-        stationOwnerEmail: stationOwner?.email,
+        stationOwnerMemberId: stationOwner?.publicId,
         stationOwnerName: stationOwner?.name,
         assignedTo: assignee?.nmsName || assignee?.name || "",
         assignedEmail: assignee?.email,
@@ -65,22 +69,23 @@ export async function POST(request: Request) {
       };
     });
     await writeMissions([...createdMissions, ...missions]);
-    return NextResponse.json(createdMissions, { status: 201 });
+    const accessData = await readAccessData();
+    return NextResponse.json(createdMissions.map((mission) => serializeMission(mission, accessData.members, true)), { status: 201 });
   } catch (error) {
     console.error("Unable to save mission", error);
     return NextResponse.json({ error: "Impossibile salvare la missione." }, { status: 503 });
   }
 }
 
-async function findStationOwner(email: string, portal: string, galaxy: number) {
-  const normalizedEmail = email.trim().toLowerCase();
-  const stations = await readStationPortals(normalizedEmail);
-  if (!stations.some((station) => station.portal === portal.toUpperCase() && station.galaxy === galaxy)) return null;
-
-  const { readAccessData } = await import("@/lib/access-store");
+async function findStationOwner(publicId: string, portal: string, galaxy: number) {
   const access = await readAccessData();
-  const owner = access.members.find((candidate) => candidate.email === normalizedEmail && candidate.membershipStatus === "approved");
-  return { email: normalizedEmail, name: owner?.nmsName || owner?.name || normalizedEmail };
+  const owner = access.members.find((candidate) =>
+    candidate.publicId === publicId && candidate.membershipStatus === "approved",
+  );
+  if (!owner) return null;
+  const stations = await readStationPortals(owner.email);
+  if (!stations.some((station) => station.portal === portal.toUpperCase() && station.galaxy === galaxy)) return null;
+  return { publicId: owner.publicId, name: owner.nmsName || owner.name };
 }
 
 async function findAssignableMember(email: string) {

@@ -3,6 +3,7 @@ import { getCurrentMember, hasRole } from "@/lib/authorization";
 import { readAccessData, type AllianceMember } from "@/lib/access-store";
 import { readAlmanacResponse, readAlmanacResponses, writeAlmanacResponse } from "@/lib/almanac-store";
 import { decodePortalAddress, missionSpecialties, type MissionSpecialty } from "@/lib/missions";
+import { isEmailAddress } from "@/lib/member-types";
 import { addStationPortal, readAllStationPortals, readStationPortals, removeStationPortal, updateStationPortal } from "@/lib/stations-store";
 import { readMissions } from "@/lib/store";
 
@@ -31,13 +32,10 @@ export async function POST(request: Request) {
   const galaxy = payload.galaxy;
   const name = typeof payload.name === "string" ? payload.name.trim() : "";
   const note = typeof payload.note === "string" ? payload.note.trim() : "";
-  const requestedOwner = typeof payload.owner === "string" ? payload.owner.trim().toLowerCase() : member.email.toLowerCase();
+  const requestedOwnerId = typeof payload.ownerId === "string" ? payload.ownerId.trim() : "";
   const decoded = decodePortalAddress(portal);
   if (!decoded || decoded.errors.length > 0 || typeof galaxy !== "number" || !Number.isInteger(galaxy) || galaxy < 0 || galaxy > 255) {
     return NextResponse.json({ error: "stations.error_invalid_portal_and_galaxy" }, { status: 400 });
-  }
-  if (!requestedOwner) {
-    return NextResponse.json({ error: "stations.select_the_station_owner" }, { status: 400 });
   }
   if (name.length > 80) {
     return NextResponse.json({ error: "stations.error_station_name_too_long" }, { status: 400 });
@@ -45,21 +43,30 @@ export async function POST(request: Request) {
   if (note.length > 1000) {
     return NextResponse.json({ error: "stations.error_station_note_too_long" }, { status: 400 });
   }
-  if (!hasRole(member, "moderator") && requestedOwner !== member.email.toLowerCase()) {
-    return NextResponse.json({ error: "stations.error_cannot_create_stations_for_another_member" }, { status: 403 });
-  }
-
   try {
-    const ownerMember = (await readAccessData()).members.find((candidate) =>
-      candidate.email.toLowerCase() === requestedOwner && candidate.membershipStatus === "approved",
+    const accessData = await readAccessData();
+    const isModerator = hasRole(member, "moderator");
+    const requestedOwnerEmail = isModerator && typeof payload.owner === "string"
+      ? payload.owner.trim().toLowerCase()
+      : requestedOwnerId
+        ? accessData.members.find((candidate) => candidate.publicId === requestedOwnerId)?.email.toLowerCase()
+        : member.email.toLowerCase();
+    if (!requestedOwnerEmail) {
+      return NextResponse.json({ error: "stations.select_the_station_owner" }, { status: 400 });
+    }
+    const ownerMember = accessData.members.find((candidate) =>
+      candidate.email.toLowerCase() === requestedOwnerEmail && candidate.membershipStatus === "approved",
     );
     if (!ownerMember) {
       return NextResponse.json({ error: "stations.error_owner_must_be_approved" }, { status: 400 });
     }
-    if ((await readStationPortals(requestedOwner)).some((station) => station.portal === portal && station.galaxy === galaxy)) {
+    if (!isModerator && ownerMember.publicId !== member.publicId) {
+      return NextResponse.json({ error: "stations.error_cannot_create_stations_for_another_member" }, { status: 403 });
+    }
+    if ((await readStationPortals(ownerMember.email)).some((station) => station.portal === portal && station.galaxy === galaxy)) {
       return NextResponse.json({ error: "stations.this_portal_is_already_in_the_selected_owner_s_list" }, { status: 409 });
     }
-    await addStationPortal(requestedOwner, portal, galaxy, name, member.email, note);
+    await addStationPortal(ownerMember.email, portal, galaxy, name, member.email, note);
     await cacheStationPlanet(portal, galaxy);
     return NextResponse.json({ stations: await readStations(member) }, { status: 201 });
   } catch (error) {
@@ -77,26 +84,37 @@ export async function DELETE(request: Request) {
     ? payload.portal.toUpperCase()
     : "";
   const galaxy = payload.galaxy;
-  const owner = typeof payload.owner === "string" ? payload.owner.trim().toLowerCase() : member.email.toLowerCase();
+  const ownerId = typeof payload.ownerId === "string" ? payload.ownerId.trim() : "";
   const decoded = decodePortalAddress(portal);
   if (!decoded || decoded.errors.length > 0 || typeof galaxy !== "number" || !Number.isInteger(galaxy) || galaxy < 0 || galaxy > 255) {
     return NextResponse.json({ error: "stations.error_invalid_portal_or_galaxy" }, { status: 400 });
   }
-  if (!owner) return NextResponse.json({ error: "stations.error_invalid_station_owner" }, { status: 400 });
-  if (!hasRole(member, "moderator") && owner !== member.email.toLowerCase()) {
-    return NextResponse.json({ error: "stations.error_cannot_remove_another_member_s_station" }, { status: 403 });
-  }
 
   try {
+    const accessData = await readAccessData();
+    const isModerator = hasRole(member, "moderator");
+    const ownerEmail = isModerator && typeof payload.owner === "string"
+      ? payload.owner.trim().toLowerCase()
+      : ownerId
+        ? accessData.members.find((candidate) => candidate.publicId === ownerId)?.email.toLowerCase()
+        : member.email.toLowerCase();
+    if (!ownerEmail) return NextResponse.json({ error: "stations.error_invalid_station_owner" }, { status: 400 });
+    const ownerMember = accessData.members.find((candidate) =>
+      candidate.email.toLowerCase() === ownerEmail && candidate.membershipStatus === "approved",
+    );
+    if (!ownerMember) return NextResponse.json({ error: "stations.error_invalid_station_owner" }, { status: 400 });
+    if (!isModerator && ownerMember.publicId !== member.publicId) {
+      return NextResponse.json({ error: "stations.error_cannot_remove_another_member_s_station" }, { status: 403 });
+    }
     const missions = await readMissions();
     if (missions.some((mission) => mission.systemAddress.toUpperCase() === portal && mission.galaxy === galaxy)) {
       return NextResponse.json({ error: "stations.error_station_associated_with_mission_cannot_be_removed" }, { status: 409 });
     }
-    const ownedStations = await readStationPortals(owner);
+    const ownedStations = await readStationPortals(ownerMember.email);
     if (!ownedStations.some((station) => station.portal === portal && station.galaxy === galaxy)) {
       return NextResponse.json({ error: "stations.error_station_not_found_in_owner_archive" }, { status: 404 });
     }
-    await removeStationPortal(owner, portal, galaxy);
+    await removeStationPortal(ownerMember.email, portal, galaxy);
     return NextResponse.json({ stations: await readStations(member) });
   } catch (error) {
     console.error("Unable to remove station portal", error);
@@ -112,10 +130,10 @@ export async function PATCH(request: Request) {
   const payload = body && typeof body === "object" && !Array.isArray(body) ? body as Record<string, unknown> : {};
   const currentPortal = typeof payload.currentPortal === "string" ? payload.currentPortal.toUpperCase() : "";
   const currentGalaxy = payload.currentGalaxy;
-  const currentOwner = typeof payload.currentOwner === "string" ? payload.currentOwner.trim().toLowerCase() : "";
+  const currentOwnerId = typeof payload.currentOwnerId === "string" ? payload.currentOwnerId.trim() : "";
   const portal = typeof payload.portal === "string" ? payload.portal.toUpperCase() : "";
   const galaxy = payload.galaxy;
-  const owner = typeof payload.owner === "string" ? payload.owner.trim().toLowerCase() : "";
+  const ownerId = typeof payload.ownerId === "string" ? payload.ownerId.trim() : "";
   const name = typeof payload.name === "string" ? payload.name.trim() : "";
   const note = typeof payload.note === "string" ? payload.note.trim() : "";
 
@@ -123,20 +141,33 @@ export async function PATCH(request: Request) {
     !decodePortalAddress(currentPortal) ||
     decodePortalAddress(currentPortal)?.errors.length !== 0 ||
     typeof currentGalaxy !== "number" || !Number.isInteger(currentGalaxy) || currentGalaxy < 0 || currentGalaxy > 255 ||
-    !currentOwner ||
+    (!currentOwnerId && typeof payload.currentOwner !== "string") ||
     !decodePortalAddress(portal) ||
     decodePortalAddress(portal)?.errors.length !== 0 ||
     typeof galaxy !== "number" || !Number.isInteger(galaxy) || galaxy < 0 || galaxy > 255 ||
-    !owner ||
+    (!ownerId && typeof payload.owner !== "string") ||
     name.length > 80 ||
     note.length > 1000 ||
-    Object.keys(payload).some((key) => !["currentPortal", "currentGalaxy", "currentOwner", "portal", "galaxy", "owner", "name", "note"].includes(key))
+    Object.keys(payload).some((key) => !["currentPortal", "currentGalaxy", "currentOwnerId", "currentOwner", "portal", "galaxy", "ownerId", "owner", "name", "note"].includes(key))
   ) {
     return NextResponse.json({ error: "stations.error_invalid_station_data" }, { status: 400 });
   }
   const isModerator = hasRole(member, "moderator");
 
   try {
+    const access = await readAccessData();
+    const resolveOwnerEmail = (publicId: string, legacyEmail: unknown) => {
+      if (isModerator && typeof legacyEmail === "string") return legacyEmail.trim().toLowerCase();
+      return access.members.find((candidate) => candidate.publicId === publicId)?.email.toLowerCase() ?? "";
+    };
+    const currentOwner = resolveOwnerEmail(currentOwnerId, payload.currentOwner);
+    const owner = resolveOwnerEmail(ownerId, payload.owner);
+    if (!currentOwner || !owner) {
+      return NextResponse.json({ error: "stations.error_invalid_station_owner" }, { status: 400 });
+    }
+    if (!isModerator && (currentOwner !== member.email.toLowerCase() || owner !== member.email.toLowerCase())) {
+      return NextResponse.json({ error: "stations.error_cannot_edit_another_member_s_station" }, { status: 403 });
+    }
     const [missions, currentStations, destinationStations] = await Promise.all([
       readMissions(),
       readStationPortals(currentOwner),
@@ -157,17 +188,14 @@ export async function PATCH(request: Request) {
     );
     if (
       hasAssociatedMission &&
-      (portal !== currentPortal || galaxy !== currentGalaxy || owner !== currentOwner)
+      (portal !== currentPortal || galaxy !== currentGalaxy || (!isModerator && owner !== currentOwner))
     ) {
       return NextResponse.json({ error: "stations.error_station_associated_with_mission_title_only" }, { status: 409 });
     }
-    if (!hasAssociatedMission) {
-      const access = await readAccessData();
-      if (!access.members.some((candidate) =>
-        candidate.email.toLowerCase() === owner && candidate.membershipStatus === "approved",
-      )) {
-        return NextResponse.json({ error: "stations.error_owner_must_be_approved" }, { status: 400 });
-      }
+    if (!access.members.some((candidate) =>
+      candidate.email.toLowerCase() === owner && candidate.membershipStatus === "approved",
+    )) {
+      return NextResponse.json({ error: "stations.error_owner_must_be_approved" }, { status: 400 });
     }
     if (destinationStations.some((station) =>
       station.portal === portal &&
@@ -198,6 +226,7 @@ async function readStations(member: AllianceMember) {
     readMissions(),
     readAccessData(),
   ]);
+  const isModerator = hasRole(member, "moderator");
   return stations.map((station) => {
     const owner = accessData.members.find((candidate) =>
       candidate.email.toLowerCase() === station.owner.toLowerCase() && candidate.membershipStatus === "approved",
@@ -219,9 +248,16 @@ async function readStations(member: AllianceMember) {
       ? [...missionSpecialties]
       : missionSpecialties.filter((specialty) => specialty !== "all" && !completedSpecialties.has(specialty));
 
+    const { owner: ownerEmail, createdByEmail, ...stationData } = station;
     return {
-      ...station,
-      ownerName: owner?.nmsName || owner?.name || station.owner,
+      ...stationData,
+      ownerId: owner?.publicId,
+      ...(isModerator ? { owner: ownerEmail, ...(createdByEmail ? { createdByEmail } : {}) } : {}),
+      ownerName: [owner?.nmsName, owner?.name].find((value) => value && !isEmailAddress(value)) || "Former member",
+      ...(owner?.publicId ? { ownerMemberId: owner.publicId } : {}),
+      ...(createdByEmail ? {
+        createdByMemberId: accessData.members.find((candidate) => candidate.email.toLowerCase() === createdByEmail.toLowerCase())?.publicId,
+      } : {}),
       ...(owner?.image ? { ownerImage: owner.image } : {}),
       planet: almanacByPortal[station.portal]?.find((entry) => entry.galaxy === station.galaxy)?.response ?? null,
       hasMissions: matchingMissions.length > 0,

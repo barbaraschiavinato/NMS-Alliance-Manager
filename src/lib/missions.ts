@@ -56,10 +56,12 @@ export type Mission = {
   systemLabelFromAlmanac?: boolean;
   createdByEmail?: string;
   createdByName?: string;
-  stationOwnerEmail?: string;
+  createdByMemberId?: string;
   stationOwnerName?: string;
+  stationOwnerMemberId?: string;
   assignedTo: string;
   assignedEmail?: string;
+  assignedMemberId?: string;
   targetSpecialty: MissionSpecialty;
   dueDate: string;
   status: MissionStatus;
@@ -70,6 +72,7 @@ export type Mission = {
 export type MissionInput = Omit<Mission, "id">;
 
 export type MissionViewer = Readonly<{
+  publicId?: string;
   email: string;
   name: string;
   nmsName?: string;
@@ -77,6 +80,9 @@ export type MissionViewer = Readonly<{
 }>;
 
 export function canViewMission(mission: Mission, viewer: MissionViewer): boolean {
+  const assignedMemberId = mission.assignedMemberId?.trim() ?? "";
+  if (assignedMemberId && viewer.publicId) return assignedMemberId === viewer.publicId;
+
   const assignedEmail = mission.assignedEmail?.trim().toLowerCase() ?? "";
   const assignedName = mission.assignedTo.trim().toLowerCase();
   const viewerEmail = viewer.email.trim().toLowerCase();
@@ -154,8 +160,8 @@ export function isMissionInput(value: unknown): value is MissionInput {
     (mission.systemLabelFromAlmanac === undefined || typeof mission.systemLabelFromAlmanac === "boolean") &&
     (mission.createdByEmail === undefined || (typeof mission.createdByEmail === "string" && mission.createdByEmail.length <= 254)) &&
     (mission.createdByName === undefined || (typeof mission.createdByName === "string" && mission.createdByName.length <= 80)) &&
-    (mission.stationOwnerEmail === undefined || (typeof mission.stationOwnerEmail === "string" && mission.stationOwnerEmail.length <= 254)) &&
     (mission.stationOwnerName === undefined || (typeof mission.stationOwnerName === "string" && mission.stationOwnerName.length <= 80)) &&
+    (mission.stationOwnerMemberId === undefined || typeof mission.stationOwnerMemberId === "string") &&
     typeof mission.assignedTo === "string" &&
     (mission.assignedEmail === undefined || typeof mission.assignedEmail === "string") &&
     missionSpecialties.includes(mission.targetSpecialty as MissionSpecialty) &&
