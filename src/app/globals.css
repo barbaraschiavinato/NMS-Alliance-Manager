@@ -587,7 +587,7 @@ select { appearance: none; padding-right: 29px; background-image: linear-gradien
 .member-page-actions [data-tooltip]:focus-visible::after { opacity: 1; transform: translateY(0); }
 .station-mission-lock { max-width: 92px; color: #889289; font-size: 7px; line-height: 1.3; text-align: right; }
 .station-list-empty { margin: 0; padding: 22px 0; color: #78847b; border-top: 1px solid #dfe4dc; border-bottom: 1px solid #e5e9e2; font-size: 10px; }
-.station-list-section > p.station-list-empty { border-top: 0; }
+.station-list-section > p.station-list-empty { border-top: 0; border-bottom: 0; }
 .station-list-empty-no-saved { padding-bottom: 0; }
 .members-list-section { width: min(1180px, 100%); margin: 0 auto; }
 .members-toolbar { min-height: 54px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(190px, 290px) 61px; align-items: center; gap: 12px; border-bottom: 1px solid #dfe4dc; }

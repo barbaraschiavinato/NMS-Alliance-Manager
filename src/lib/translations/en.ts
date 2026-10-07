@@ -279,6 +279,7 @@ export const translations: TranslationCatalog = {
     "stations.filter_all": "All",
     "stations.filter_in_mission": "In mission",
     "stations.filter_mission_completed": "Mission completed",
+    "stations.filter_with_notes": "With notes",
     "stations.saved_portals": "Saved portals",
     "stations.loading_stations": "Loading stations",
     "stations.add_station": "Add station",
