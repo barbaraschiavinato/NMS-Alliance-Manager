@@ -516,7 +516,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
               </div>
             </div>
             {loading && <div className="station-list-empty station-list-loading"><LoadingSpinner /></div>}
-            {!loading && visibleStations.length === 0 && <p className="station-list-empty">{t(search ? "stations.no_stations_found" : "stations.no_saved_portals")}</p>}
+            {!loading && visibleStations.length === 0 && <p className={`station-list-empty${stations.length === 0 ? " station-list-empty-no-saved" : ""}`}>{t(stations.length === 0 ? "stations.no_saved_portals" : "stations.no_stations_found")}</p>}
             {visibleStations.length > 0 && <ul className={`station-list ${viewMode === "cards" ? "station-list-cards" : ""}`}>{visibleStations.map((station) => {
               const planetImageUrl = cachedPlanetImageUrl(station.planet);
               const stationDisplayName = station.name || cachedPlanetType(station.planet) || cachedPlanetTitle(station.planet) || t("planet.unnamed_planet");
