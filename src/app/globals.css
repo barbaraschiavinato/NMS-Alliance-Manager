@@ -903,3 +903,5 @@ select { appearance: none; padding-right: 29px; background-image: linear-gradien
 }
 .members-toolbar.offline-toolbar { grid-template-columns: minmax(0, 1fr) minmax(190px, 290px); }
 .offline-table th:last-child, .offline-table td:last-child { padding-right: 2px; text-align: right; }
+.member-icon-action.member-link-action { color: var(--green); border-color: #315b55; background: #192a29; }
+.member-icon-action.member-link-action:hover { color: var(--green); border-color: var(--green); background: #203835; }

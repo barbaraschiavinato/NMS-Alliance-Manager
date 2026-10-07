@@ -121,8 +121,8 @@ export function OfflinePlayersPage({ memberActivity, currentMember, alliance, mi
                     <td>{player.platforms.join(", ")}</td>
                     <td>{player.specialty ? t(specialtyLabels[player.specialty]) : ""}</td>
                     <td><div className="member-page-actions">
-                      {memberActivity.missionOwnerIds.includes(player.publicId) && <Link aria-label={t("members.find_member_s_missions", { member: player.nmsName })} className="member-icon-action" data-tooltip={t("members.user_missions")} href={`/?search=${encodeURIComponent(player.nmsName)}`}><Crosshair size={14} /></Link>}
-                      {memberActivity.stationOwnerIds.includes(player.publicId) && <Link aria-label={t("stations.find_member_s_stations", { member: player.nmsName })} className="member-icon-action" data-tooltip={t("stations.user_stations")} href={`/stations?search=${encodeURIComponent(player.nmsName)}`}><Orbit size={14} /></Link>}
+                      {memberActivity.missionOwnerIds.includes(player.publicId) && <Link aria-label={t("members.find_member_s_missions", { member: player.nmsName })} className="member-icon-action member-link-action" data-tooltip={t("members.user_missions")} href={`/?search=${encodeURIComponent(player.nmsName)}`}><Crosshair size={14} /></Link>}
+                      {memberActivity.stationOwnerIds.includes(player.publicId) && <Link aria-label={t("stations.find_member_s_stations", { member: player.nmsName })} className="member-icon-action member-link-action" data-tooltip={t("stations.user_stations")} href={`/stations?search=${encodeURIComponent(player.nmsName)}`}><Orbit size={14} /></Link>}
                       <select aria-label={t("members.link_to_account")} defaultValue="" onChange={(event) => {
                         const target = targets.find((candidate) => candidate.publicId === event.target.value);
                         event.target.value = "";
