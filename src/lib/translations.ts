@@ -7,6 +7,7 @@ export type TranslationNamespace =
   | "common"
   | "navigation"
   | "missions"
+  | "messages"
   | "stations"
   | "members"
   | "profile"

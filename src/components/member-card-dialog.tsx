@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CircleAlert, X } from "lucide-react";
+import { CircleAlert, MessageSquareText, Send, X } from "lucide-react";
 import type { MemberRole, MemberSpecialty, NmsPlatform } from "@/lib/member-types";
 import { useLocale } from "@/components/locale-provider";
+import type { SubmitEvent } from "react";
 
 type MemberCard = {
   name: string;
@@ -15,6 +16,10 @@ type MemberCard = {
   nmsCode?: string;
   role?: MemberRole;
 };
+
+export type MemberMessageContext =
+  | Readonly<{ type: "planet"; portal: string; galaxy: number; subjectLabel: string }>
+  | Readonly<{ type: "mission"; missionCode: string; subjectLabel: string }>;
 
 const specialtyLabels: Record<MemberSpecialty, string> = {
   builder: "common.builder",
@@ -28,11 +33,21 @@ const roleLabels: Record<MemberRole, string> = {
   admin: "admin.administrator",
 };
 
-export function MemberCardDialog({ email, onClose }: Readonly<{ email: string; onClose: () => void }>) {
+export function MemberCardDialog({ email, messageContext, onClose }: Readonly<{
+  email: string;
+  messageContext: MemberMessageContext;
+  onClose: () => void;
+}>) {
   const { t } = useLocale();
   const [profile, setProfile] = useState<MemberCard | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [composing, setComposing] = useState(false);
+  const [message, setMessage] = useState("");
+  const [messageError, setMessageError] = useState("");
+  const [messageSent, setMessageSent] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [subjectLabel, setSubjectLabel] = useState(messageContext.subjectLabel);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -51,16 +66,61 @@ export function MemberCardDialog({ email, onClose }: Readonly<{ email: string; o
     return () => controller.abort();
   }, [email, t]);
 
+  useEffect(() => {
+    if (messageContext.type !== "planet") return;
+    const controller = new AbortController();
+    const params = new URLSearchParams({
+      recipientEmail: email,
+      portal: messageContext.portal,
+      galaxy: String(messageContext.galaxy),
+    });
+    fetch(`/api/messages?${params}`, { cache: "no-store", signal: controller.signal })
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Unable to load the planet subject.");
+        const body: unknown = await response.json();
+        if (!body || typeof body !== "object" || !("subject" in body) || typeof body.subject !== "string") return;
+        setSubjectLabel(body.subject);
+      })
+      .catch((error_: unknown) => {
+        if (!controller.signal.aborted) console.error("Unable to load message planet subject", error_);
+      });
+    return () => controller.abort();
+  }, [email, messageContext]);
+
+  async function sendMessage(event: SubmitEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setSending(true);
+    setMessageError("");
+    try {
+      const response = await fetch("/api/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ recipientEmail: email, message, context: messageContext }),
+      });
+      const body: unknown = await response.json();
+      if (!response.ok) {
+        const errorKey = body && typeof body === "object" && "error" in body ? body.error : null;
+        throw new Error(typeof errorKey === "string" ? errorKey : "profile.message_unable_to_save");
+      }
+      setMessage("");
+      setMessageSent(true);
+    } catch (error_: unknown) {
+      setMessageError(error_ instanceof Error ? error_.message : "profile.message_unable_to_save");
+    } finally {
+      setSending(false);
+    }
+  }
+
   return (
     <div className="dialog-backdrop">
       <dialog aria-labelledby="member-card-title" aria-modal="true" className="mission-dialog member-card-dialog" open>
         <div className="dialog-heading">
-          <div><span className="eyebrow">{t("profile.member_profile")}</span><h2 id="member-card-title">{t("profile.nms_profile")}</h2></div>
+          <div><span className="eyebrow">{t(composing ? "profile.leave_a_message" : "profile.member_profile")}</span><h2 id="member-card-title">{t(composing ? "profile.write_message" : "profile.nms_profile")}</h2></div>
           <button aria-label={t("common.close")} className="icon-button" onClick={onClose} type="button"><X size={18} /></button>
         </div>
         {loading && <p>{t("profile.loading_profile")}</p>}
         {error && <p className="form-error"><CircleAlert size={15} />{t(error)}</p>}
-        {profile && <>
+        {profile && !composing && <>
           <div className="profile-identity">
             <span className="profile-google-avatar">{profile.image ? <span style={{ backgroundImage: `url("${profile.image}")` }} /> : (profile.nmsName || profile.name).slice(0, 1).toUpperCase()}</span>
             <span><strong>{profile.nmsName || profile.name}</strong><small>{profile.nmsName ? profile.name : t("admin.alliance_member")}</small></span>
@@ -72,7 +132,36 @@ export function MemberCardDialog({ email, onClose }: Readonly<{ email: string; o
             {profile.role && <div><dt>{t("members.role_label")}</dt><dd>{t(roleLabels[profile.role])}</dd></div>}
             {profile.email && <div><dt>{t("common.email")}</dt><dd>{profile.email}</dd></div>}
           </dl>
+          <button aria-label={t("profile.leave_a_message")} className="primary-button member-message-open" onClick={() => {
+            setMessageSent(false);
+            setMessageError("");
+            setComposing(true);
+          }} type="button"><MessageSquareText size={15} />{t("profile.leave_a_message")}</button>
         </>}
+        {profile && composing && (messageSent
+          ? <div className="member-message-success">
+            <p className="address-validation address-valid">{t("profile.message_sent")}</p>
+            <button className="quiet-button" onClick={() => {
+              setComposing(false);
+              setMessageSent(false);
+            }} type="button">{t("profile.back_to_profile")}</button>
+          </div>
+          : <form className="member-message-form" onSubmit={(event) => void sendMessage(event)}>
+            <p>{t("profile.message_recipient", { recipient: profile.nmsName || profile.name })}</p>
+            <p className="member-message-subject"><strong>{t("profile.message_subject")}</strong>{subjectLabel}</p>
+            <label className="field">
+              <span>{t("profile.message_text")}</span>
+              <textarea autoFocus maxLength={2000} onChange={(event) => setMessage(event.target.value)} required rows={5} value={message} />
+            </label>
+            {messageError && <p className="form-error"><CircleAlert size={15} />{t(messageError)}</p>}
+            <div className="dialog-actions">
+              <button className="quiet-button" onClick={() => {
+                setComposing(false);
+                setMessageError("");
+              }} type="button">{t("common.cancel")}</button>
+              <button className="primary-button" disabled={sending || !message.trim()} type="submit">{sending ? t("common.saving") : t("profile.send_message")}<Send size={14} /></button>
+            </div>
+          </form>)}
       </dialog>
     </div>
   );

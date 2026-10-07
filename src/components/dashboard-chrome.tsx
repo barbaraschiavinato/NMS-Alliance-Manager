@@ -5,6 +5,7 @@ import Link from "next/link";
 import {
   CirclePlus,
   Crosshair,
+  Mail,
   MessageCircle,
   Orbit,
   Send,
@@ -25,7 +26,7 @@ export function AllianceSidebar({ missionCount, stationCount, userCount, current
   userCount?: number;
   currentMember: AllianceMember;
   settings: AllianceSettings;
-  activeSection: "missioni" | "utenti" | "stazioni";
+  activeSection: "missioni" | "utenti" | "stazioni" | "messaggi";
 }>) {
   const { t } = useLocale();
   const displayName = currentMember.nmsName || currentMember.name;
@@ -42,6 +43,7 @@ export function AllianceSidebar({ missionCount, stationCount, userCount, current
         <Link className={`nav-item ${activeSection === "missioni" ? "active" : ""}`} href="/"><Crosshair size={17} /><span>{t("missions.section_title")}</span><span className="nav-count">{missionCount}</span></Link>
         <Link className={`nav-item ${activeSection === "stazioni" ? "active" : ""}`} href="/stations"><Orbit size={17} /><span>{t("stations.stations")}</span><span className="nav-count">{stationCount}</span></Link>
         {(currentMember.role === "admin" || currentMember.role === "moderator") && <Link className={`nav-item ${activeSection === "utenti" ? "active" : ""}`} href="/users"><UsersRound size={17} /><span>{t("members.users")}</span><span className="nav-count">{userCount ?? 0}</span></Link>}
+        <Link className={`nav-item ${activeSection === "messaggi" ? "active" : ""}`} href="/messages"><Mail size={17} /><span>{t("messages.messages")}</span><span className="nav-beta">BETA</span></Link>
       </nav>
       <div className="sidebar-bottom">
         <div className="profile"><span className="avatar">{currentMember.image

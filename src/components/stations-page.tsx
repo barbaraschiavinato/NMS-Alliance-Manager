@@ -11,6 +11,7 @@ import { GlyphStrip, SystemAddressField, type SystemAddressValidation } from "@/
 import { MissionForm } from "@/components/mission-form";
 import { PlanetCard } from "@/components/planet-card";
 import { LoadingSpinner } from "@/components/loading-spinner";
+import { MemberCardDialog, type MemberMessageContext } from "@/components/member-card-dialog";
 import type { AllianceMember, AllianceSettings } from "@/lib/access-store";
 import { galaxyNames, galaxyLabel } from "@/lib/galaxies";
 import { decodePortalAddress, missionSpecialties, type Mission, type MissionInput, type MissionSpecialty } from "@/lib/missions";
@@ -21,6 +22,8 @@ type StationEntry = Readonly<{
   portal: string;
   galaxy: number;
   owner: string;
+  ownerName?: string;
+  ownerImage?: string;
   createdByEmail?: string;
   name?: string;
   note?: string;
@@ -59,6 +62,8 @@ function parseStations(value: unknown): StationEntry[] {
       portal: station.portal,
       galaxy: station.galaxy,
       owner: station.owner,
+      ...(typeof station.ownerName === "string" ? { ownerName: station.ownerName } : {}),
+      ...(typeof station.ownerImage === "string" ? { ownerImage: station.ownerImage } : {}),
       ...(typeof station.createdByEmail === "string" ? { createdByEmail: station.createdByEmail } : {}),
       ...(typeof station.name === "string" ? { name: station.name } : {}),
       ...(typeof station.note === "string" ? { note: station.note } : {}),
@@ -67,6 +72,28 @@ function parseStations(value: unknown): StationEntry[] {
       availableSpecialties,
     }];
   });
+}
+
+function StationOwnerCell({ station, onOpenProfile, ownerLabel }: Readonly<{
+  station: StationEntry;
+  onOpenProfile: (email: string) => void;
+  ownerLabel: string;
+}>) {
+  const [imageFailed, setImageFailed] = useState(false);
+  const name = station.ownerName || station.owner;
+  const initials = name.slice(0, 2).toUpperCase() || "—";
+
+  return <div className="station-owner-card">
+    <small>{ownerLabel}</small>
+    <button className="assignee-cell mission-member-link station-owner-link" onClick={() => onOpenProfile(station.owner)} type="button">
+      <span aria-hidden="true" className={`assignee-avatar ${station.ownerImage && !imageFailed ? "assignee-avatar-image" : ""}`}>
+        {station.ownerImage && !imageFailed
+          ? <Image alt="" height={21} onError={() => setImageFailed(true)} src={station.ownerImage} unoptimized width={21} />
+          : initials}
+      </span>
+      {name}
+    </button>
+  </div>;
 }
 
 function planetWord(band: Record<string, unknown> | null, key: string) {
@@ -126,6 +153,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
   const [allianceSettings, setAllianceSettings] = useState(alliance);
   const [stations, setStations] = useState<StationEntry[]>([]);
   const [selectedStation, setSelectedStation] = useState<{ portal: string; galaxy: number } | null>(null);
+  const [profileTarget, setProfileTarget] = useState<{ email: string; messageContext: MemberMessageContext } | null>(null);
   const [stationNoteView, setStationNoteView] = useState<{ portal: string; note: string } | null>(null);
   const [missionStation, setMissionStation] = useState<StationMissionSeed | null>(null);
   const [members, setMembers] = useState<AllianceMember[]>([]);
@@ -388,7 +416,17 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
                     <strong>{stationDisplayName}</strong>
                   </span>
                 </button>}
-                <div className="station-portal-code"><strong className="station-name">{stationDisplayName}</strong><GlyphStrip address={station.portal} /><code>{station.portal}</code>{station.note && <p className="station-note">{station.note}</p>}{canSeeAll && <span className="station-owner">{station.owner}</span>}</div>
+                <div className="station-portal-code"><strong className="station-name">{stationDisplayName}</strong><GlyphStrip address={station.portal} /><code>{station.portal}</code>{canSeeAll && (viewMode === "cards"
+                  ? <StationOwnerCell onOpenProfile={(email) => setProfileTarget({
+                    email,
+                    messageContext: {
+                      type: "planet",
+                      portal: station.portal,
+                      galaxy: station.galaxy,
+                      subjectLabel: station.name || cachedPlanetTitle(station.planet) || cachedPlanetType(station.planet),
+                    },
+                  })} ownerLabel={t("stations.station_owner")} station={station} />
+                  : <span className="station-owner">{station.owner}</span>)}</div>
                 <div className="station-planet-info-list">
                   {station.planet
                     ? <CachedPlanetInfo onOpen={() => setSelectedStation({ portal: station.portal, galaxy: station.galaxy })} planet={station.planet} />
@@ -488,6 +526,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
         portal={selectedStation.portal}
         title={t("stations.space_station")}
       />}
+      {profileTarget && <MemberCardDialog email={profileTarget.email} messageContext={profileTarget.messageContext} onClose={() => setProfileTarget(null)} />}
       {stationNoteView && <div className="dialog-backdrop">
         <dialog aria-labelledby="station-notes-title" aria-modal="true" className="mission-dialog station-notes-dialog" open>
           <div className="dialog-heading">

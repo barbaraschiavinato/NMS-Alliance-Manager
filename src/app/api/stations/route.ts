@@ -193,11 +193,15 @@ async function readStations(member: AllianceMember) {
   const stations = hasRole(member, "moderator")
     ? await readAllStationPortals()
     : (await readStationPortals(member.email)).map((station) => ({ ...station, owner: member.email }));
-  const [almanacByPortal, missions] = await Promise.all([
+  const [almanacByPortal, missions, accessData] = await Promise.all([
     readAlmanacResponses(stations.map((station) => station.portal)),
     readMissions(),
+    readAccessData(),
   ]);
   return stations.map((station) => {
+    const owner = accessData.members.find((candidate) =>
+      candidate.email.toLowerCase() === station.owner.toLowerCase() && candidate.membershipStatus === "approved",
+    );
     const matchingMissions = missions.filter((mission) =>
       mission.systemAddress.toUpperCase() === station.portal && mission.galaxy === station.galaxy,
     );
@@ -217,6 +221,8 @@ async function readStations(member: AllianceMember) {
 
     return {
       ...station,
+      ownerName: owner?.nmsName || owner?.name || station.owner,
+      ...(owner?.image ? { ownerImage: owner.image } : {}),
       planet: almanacByPortal[station.portal]?.find((entry) => entry.galaxy === station.galaxy)?.response ?? null,
       hasMissions: matchingMissions.length > 0,
       availableSpecialties,

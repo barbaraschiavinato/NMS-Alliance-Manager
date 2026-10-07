@@ -6,7 +6,7 @@ import type { AllianceMember } from "@/lib/access-store";
 import { galaxyLabel } from "@/lib/galaxies";
 import { missionSystemStatuses, planetSystemStatusKey, type MissionSystemStatus, type PlanetSystemStatuses } from "@/lib/planet-system-status";
 import { useEffect, useRef, useState } from "react";
-import { MemberCardDialog } from "@/components/member-card-dialog";
+import { MemberCardDialog, type MemberMessageContext } from "@/components/member-card-dialog";
 import { LoadingSpinner } from "@/components/loading-spinner";
 import { useLocale } from "@/components/locale-provider";
 
@@ -73,7 +73,7 @@ function AssigneeCell({ mission, members, currentMember, onOpenProfile }: Readon
   mission: Mission;
   members: AllianceMember[];
   currentMember: AllianceMember;
-  onOpenProfile: (email: string) => void;
+  onOpenProfile: (email: string, context: MemberMessageContext) => void;
 }>) {
   const { t } = useLocale();
   const assignedMember = members.find((member) => member.email === mission.assignedEmail)
@@ -89,15 +89,17 @@ function AssigneeCell({ mission, members, currentMember, onOpenProfile }: Readon
     {name}
   </>;
   return email
-    ? <button className="assignee-cell mission-member-link" onClick={() => onOpenProfile(email)} type="button">{content}</button>
+    ? <button className="assignee-cell mission-member-link" onClick={() => onOpenProfile(email, { type: "mission", missionCode: mission.id, subjectLabel: mission.title })} type="button">{content}</button>
     : <span className="assignee-cell">{content}</span>;
 }
 
-function DiscovererCell({ email, name, image, onOpenProfile }: Readonly<{
+function DiscovererCell({ email, name, image, portal, galaxy, onOpenProfile }: Readonly<{
   email?: string;
   name?: string;
   image?: string;
-  onOpenProfile: (email: string) => void;
+  portal: string;
+  galaxy: number;
+  onOpenProfile: (email: string, context: MemberMessageContext) => void;
 }>) {
   const { t } = useLocale();
   const label = name || email || t("common.not_specified");
@@ -107,7 +109,7 @@ function DiscovererCell({ email, name, image, onOpenProfile }: Readonly<{
   </>;
 
   return email
-    ? <button className="assignee-cell mission-member-link" onClick={() => onOpenProfile(email)} type="button">{content}</button>
+    ? <button className="assignee-cell mission-member-link" onClick={() => onOpenProfile(email, { type: "planet", portal, galaxy, subjectLabel: "" })} type="button">{content}</button>
     : <span className="assignee-cell">{content}</span>;
 }
 
@@ -297,7 +299,7 @@ function MissionCard({ mission, systemStatuses, currentMember, canManage, member
   onUpdateProgress: (mission: Mission, progress: number) => Promise<void>;
   onViewNotes: (mission: Mission) => void;
   onViewPlanetNotes: (notes: PlanetNotes) => void;
-  onOpenProfile: (email: string) => void;
+  onOpenProfile: (email: string, context: MemberMessageContext) => void;
   getDiscovererImage: (email?: string) => string | undefined;
 }>) {
   const { t } = useLocale();
@@ -325,7 +327,7 @@ function MissionCard({ mission, systemStatuses, currentMember, canManage, member
       <span>{mission.system || t("system.system_label")} · {galaxyLabel(mission.galaxy ?? 0)}</span>
     </div>
     <div className="mission-card-people">
-      <div><small>{t("missions.discoverer_column_heading")}</small><DiscovererCell email={mission.stationOwnerEmail} image={getDiscovererImage(mission.stationOwnerEmail)} name={mission.stationOwnerName} onOpenProfile={onOpenProfile} /></div>
+      <div><small>{t("missions.discoverer_column_heading")}</small><DiscovererCell email={mission.stationOwnerEmail} galaxy={mission.galaxy} image={getDiscovererImage(mission.stationOwnerEmail)} name={mission.stationOwnerName} onOpenProfile={onOpenProfile} portal={mission.systemAddress} /></div>
       <div><small>{t("missions.assignee_column_heading")}</small><AssigneeCell currentMember={currentMember} members={members} mission={mission} onOpenProfile={onOpenProfile} /></div>
     </div>
     <div className="mission-card-progress">
@@ -418,7 +420,7 @@ export function MissionTable({
   loading?: boolean;
 }>) {
   const { t } = useLocale();
-  const [profileEmail, setProfileEmail] = useState<string | null>(null);
+  const [profileTarget, setProfileTarget] = useState<{ email: string; messageContext: MemberMessageContext } | null>(null);
   const [missionNoteView, setMissionNoteView] = useState<Mission | null>(null);
   const [planetNoteView, setPlanetNoteView] = useState<PlanetNotes | null>(null);
   const [viewOverride, setViewOverride] = useState<"list" | "cards" | null>(null);
@@ -485,8 +487,8 @@ export function MissionTable({
                   <td><div className="mission-name-cell"><span className={`mission-icon ${mission.status === "completed" ? "mission-icon-done" : ""}`}>{mission.status === "completed" ? <Check size={15} /> : <Compass size={15} />}</span><div><div className="mission-title-with-info"><button aria-label={`${t("planet.open_planet_details_for")} ${mission.title}`} className="mission-title" onClick={() => onOpenPlanet(mission)} title={t("planet.open_planet_details")} type="button">{mission.title}</button><PlanetNotesButton mission={mission} onView={setPlanetNoteView} /></div><span className="mission-description">{mission.description}</span></div>{canViewMissionNotes(mission) && <MissionNotesButton mission={mission} onView={setMissionNoteView} />}</div></td>
               <td><span className={`badge badge--specialty badge--specialty-${mission.targetSpecialty ?? "all"}`}>{t(targetSpecialtyNames[mission.targetSpecialty ?? "all"])}</span></td>
               <td><div className="system-cell"><GlyphStrip address={mission.systemAddress ?? ""} /><span className="system-caption">{mission.system || t("system.system_label")} · {galaxyLabel(mission.galaxy ?? 0)}</span></div></td>
-              <td><DiscovererCell email={mission.stationOwnerEmail} image={getDiscovererImage(mission.stationOwnerEmail)} name={mission.stationOwnerName} onOpenProfile={setProfileEmail} /></td>
-              <td><AssigneeCell currentMember={currentMember} members={members} mission={mission} onOpenProfile={setProfileEmail} /></td>
+              <td><DiscovererCell email={mission.stationOwnerEmail} galaxy={mission.galaxy} image={getDiscovererImage(mission.stationOwnerEmail)} name={mission.stationOwnerName} onOpenProfile={(email, messageContext) => setProfileTarget({ email, messageContext })} portal={mission.systemAddress} /></td>
+              <td><AssigneeCell currentMember={currentMember} members={members} mission={mission} onOpenProfile={(email, messageContext) => setProfileTarget({ email, messageContext })} /></td>
               <td><span className={`badge badge--priority badge--priority-${mission.priority}`}><span />{t(`common.${mission.priority}`)}</span></td>
               <td><MissionProgress editable={!canManage && mission.assignedEmail?.toLowerCase() === currentMember.email.toLowerCase()} mission={mission} onChange={onUpdateProgress} /></td>
               <td><MissionRowAction canManage={canManage} currentMember={currentMember} mission={mission} onClaim={onClaim} onComplete={onComplete} onDeleteMission={onDeleteMission} onEdit={onEdit} /></td>
@@ -496,12 +498,12 @@ export function MissionTable({
           </tbody>
         </table>
       </div> : <div className="mission-card-grid">
-        {missions.map((mission) => <MissionCard canManage={canManage} currentMember={currentMember} getDiscovererImage={getDiscovererImage} key={mission.id} members={members} mission={mission} onClaim={onClaim} onComplete={onComplete} onDeleteMission={onDeleteMission} onEdit={onEdit} onOpenPlanet={onOpenPlanet} onOpenProfile={setProfileEmail} onToggleSystemStatus={onToggleSystemStatus} onUpdateProgress={onUpdateProgress} onViewNotes={setMissionNoteView} onViewPlanetNotes={setPlanetNoteView} systemStatuses={planetStatuses} />)}
+        {missions.map((mission) => <MissionCard canManage={canManage} currentMember={currentMember} getDiscovererImage={getDiscovererImage} key={mission.id} members={members} mission={mission} onClaim={onClaim} onComplete={onComplete} onDeleteMission={onDeleteMission} onEdit={onEdit} onOpenPlanet={onOpenPlanet} onOpenProfile={(email, messageContext) => setProfileTarget({ email, messageContext })} onToggleSystemStatus={onToggleSystemStatus} onUpdateProgress={onUpdateProgress} onViewNotes={setMissionNoteView} onViewPlanetNotes={setPlanetNoteView} systemStatuses={planetStatuses} />)}
         {loading && <div className="mission-cards-loading"><LoadingSpinner /></div>}
         {!loading && missions.length === 0 && <p className="mission-cards-empty">{t("missions.no_missions_match_the_filters")}</p>}
       </div>}
       <div className="table-footer"><span><span className="footer-live" />{t("missions.showing_visible_of_total_missions", { visible: missions.length, total: counts.all })}</span></div>
-      {profileEmail && <MemberCardDialog email={profileEmail} onClose={() => setProfileEmail(null)} />}
+      {profileTarget && <MemberCardDialog email={profileTarget.email} messageContext={profileTarget.messageContext} onClose={() => setProfileTarget(null)} />}
       {missionNoteView && canViewMissionNotes(missionNoteView) && <div className="dialog-backdrop">
         <dialog aria-labelledby="mission-notes-title" aria-modal="true" className="mission-dialog mission-notes-dialog" open>
           <div className="dialog-heading">
