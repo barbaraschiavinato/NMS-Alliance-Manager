@@ -1011,3 +1011,10 @@ body:has(.sidebar-compact) .mission-notes-content, body:has(.sidebar-compact) .p
 .sidebar-compact ~ .main-panel .message-thread-toggle { font-size: 14px; }
 .sidebar-compact ~ .main-panel .message-card .member-icon-action { min-width: 40px; min-height: 40px; }
 .sidebar-compact ~ .main-panel .message-card .member-icon-action svg { width: 20px; height: 20px; }
+.sidebar-compact ~ .main-panel .mission-notes-button { width: 44px; height: 44px; flex-basis: 44px; }
+.sidebar-compact ~ .main-panel .mission-notes-button svg { width: 20px; height: 20px; }
+.sidebar-compact ~ .main-panel .planet-notes-button { width: 30px; height: 30px; flex-basis: 30px; }
+.sidebar-compact ~ .main-panel .planet-notes-button svg { width: 24px; height: 24px; }
+.sidebar-compact ~ .main-panel .mission-card-action-buttons { gap: 8px; }
+.sidebar-compact ~ .main-panel .mission-card-action-buttons .mission-station-link { width: 44px; height: 44px; }
+.sidebar-compact ~ .main-panel .mission-card-action-buttons .mission-station-link svg { width: 20px; height: 20px; }
