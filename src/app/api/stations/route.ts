@@ -241,6 +241,7 @@ async function readStations(member: AllianceMember) {
       ...station,
       ownerId: owner?.publicId,
       ownerName: [owner?.nmsName, owner?.name].find((value) => value && !isEmailAddress(value)) || "Former member",
+      ownerNmsName: owner?.nmsName ?? "",
       ...(owner?.publicId ? { ownerMemberId: owner.publicId } : {}),
       ...(owner?.image ? { ownerImage: owner.image } : {}),
       planet: almanacByPortal[station.portal]?.find((entry) => entry.galaxy === station.galaxy)?.response ?? null,

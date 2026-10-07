@@ -25,6 +25,7 @@ type StationEntry = Readonly<{
   galaxy: number;
   ownerId: string;
   ownerName?: string;
+  ownerNmsName?: string;
   ownerImage?: string;
   createdByMemberId?: string;
   name?: string;
@@ -65,6 +66,7 @@ function parseStations(value: unknown): StationEntry[] {
       galaxy: station.galaxy,
       ownerId: station.ownerId,
       ...(typeof station.ownerName === "string" ? { ownerName: station.ownerName } : {}),
+      ...(typeof station.ownerNmsName === "string" ? { ownerNmsName: station.ownerNmsName } : {}),
       ...(typeof station.ownerImage === "string" ? { ownerImage: station.ownerImage } : {}),
       ...(typeof station.createdByMemberId === "string" ? { createdByMemberId: station.createdByMemberId } : {}),
       ...(typeof station.name === "string" ? { name: station.name } : {}),
@@ -207,7 +209,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
       station.galaxy === initialStation.galaxy &&
       station.ownerId === initialStation.ownerId
     )) &&
-    `${station.name ?? cachedPlanetType(station.planet)} ${station.note ?? ""} ${station.portal} ${station.ownerName ?? ""} ${galaxyLabel(station.galaxy)}`.toLowerCase().includes(search.toLowerCase()),
+    `${station.name ?? cachedPlanetType(station.planet)} ${station.note ?? ""} ${station.portal} ${station.ownerNmsName ?? ""} ${station.ownerName ?? ""} ${galaxyLabel(station.galaxy)}`.toLowerCase().includes(search.toLowerCase()),
   ), [initialStation, search, stations]);
 
   async function fetchStations() {
@@ -481,7 +483,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
               <h2>{t("stations.saved_portals")}</h2>
               <div className="station-list-heading-tools">
                 <span className="station-count">{visibleStations.length}</span>
-                <label className="search-field station-search"><Search size={15} /><input aria-label={t("stations.search_stations_by_portal_owner_or_galaxy")} onChange={(event) => setSearch(event.target.value)} placeholder={t("stations.search_portal_user_or_galaxy")} value={search} /></label>
+                <label className="search-field station-search"><Search size={15} /><input aria-label={t("stations.search_stations_by_portal_owner_or_galaxy")} onChange={(event) => setSearch(event.target.value)} placeholder={t("stations.search_portal_username_or_galaxy")} value={search} /></label>
                 <div aria-label={t("stations.station_view")} className="view-toggle" role="group">
                   <button aria-label={t("navigation.list_view")} aria-pressed={viewMode === "list"} className={viewMode === "list" ? "selected" : ""} onClick={() => setViewOverride("list")} title={t("navigation.list_view")} type="button"><List size={15} /></button>
                   <button aria-label={t("navigation.card_view")} aria-pressed={viewMode === "cards"} className={viewMode === "cards" ? "selected" : ""} onClick={() => setViewOverride("cards")} title={t("navigation.card_view")} type="button"><LayoutGrid size={15} /></button>
