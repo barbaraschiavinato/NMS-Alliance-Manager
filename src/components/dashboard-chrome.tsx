@@ -22,10 +22,11 @@ import { useLocale } from "@/components/locale-provider";
 import { LanguageSelector } from "@/components/language-selector";
 import { useRequestSearchReset } from "@/components/navigation-search-reset";
 
-export function AllianceSidebar({ missionCount, stationCount, userCount, currentMember, settings, activeSection }: Readonly<{
+export function AllianceSidebar({ missionCount, stationCount, userCount, offlineCount, currentMember, settings, activeSection }: Readonly<{
   missionCount: number;
   stationCount: number;
   userCount?: number;
+  offlineCount?: number;
   currentMember: AllianceMember;
   settings: AllianceSettings;
   activeSection: "missioni" | "utenti" | "offline" | "stazioni" | "messaggi";
@@ -46,7 +47,7 @@ export function AllianceSidebar({ missionCount, stationCount, userCount, current
         <Link className={`nav-item ${activeSection === "missioni" ? "active" : ""}`} href="/" onClick={resetSearch}><Crosshair size={17} /><span>{t("missions.section_title")}</span><span className="nav-count">{missionCount}</span></Link>
         <Link className={`nav-item ${activeSection === "stazioni" ? "active" : ""}`} href="/stations" onClick={resetSearch}><Orbit size={17} /><span>{t("stations.stations")}</span><span className="nav-count">{stationCount}</span></Link>
         {(currentMember.role === "admin" || currentMember.role === "moderator") && <Link className={`nav-item ${activeSection === "utenti" ? "active" : ""}`} href="/users" onClick={resetSearch}><UsersRound size={17} /><span>{t("members.users")}</span><span className="nav-count">{userCount ?? 0}</span></Link>}
-        {(currentMember.role === "admin" || currentMember.role === "moderator") && <Link className={`nav-item ${activeSection === "offline" ? "active" : ""}`} href="/offline-players" onClick={resetSearch}><UserRoundX size={17} /><span>{t("members.offline_players")}</span></Link>}
+        {(currentMember.role === "admin" || currentMember.role === "moderator") && <Link className={`nav-item ${activeSection === "offline" ? "active" : ""}`} href="/offline-players" onClick={resetSearch}><UserRoundX size={17} /><span>{t("members.offline_players")}</span><span className="nav-count">{offlineCount ?? 0}</span></Link>}
         <Link className={`nav-item ${activeSection === "messaggi" ? "active" : ""}`} href="/messages" onClick={resetSearch}><Mail size={17} /><span>{t("messages.messages")}</span><span className="nav-beta">BETA</span></Link>
       </nav>
       <div className="sidebar-bottom">

@@ -168,13 +168,14 @@ function CachedPlanetInfo({ planet, onOpen }: Readonly<{ planet: CachedPlanet; o
   );
 }
 
-export function StationsPage({ currentMember, alliance, missionCount, initialSearch = "", initialStation = null, sidebarStationCount, sidebarUserCount }: Readonly<{
+export function StationsPage({ currentMember, alliance, missionCount, initialSearch = "", initialStation = null, sidebarOfflineCount, sidebarStationCount, sidebarUserCount }: Readonly<{
   currentMember: AllianceMember;
   alliance: AllianceSettings;
   missionCount: number;
   initialSearch?: string;
   initialStation?: Readonly<{ portal: string; galaxy: number; ownerId: string }> | null;
   sidebarStationCount: number;
+  sidebarOfflineCount?: number;
   sidebarUserCount?: number;
 }>) {
   const { t } = useLocale();
@@ -484,7 +485,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
 
   return (
     <div className="app-shell">
-      <AllianceSidebar activeSection="stazioni" currentMember={pageMember} missionCount={missionCount} settings={allianceSettings} stationCount={loading ? sidebarStationCount : stations.length} userCount={sidebarUserCount} />
+      <AllianceSidebar activeSection="stazioni" currentMember={pageMember} missionCount={missionCount} settings={allianceSettings} stationCount={loading ? sidebarStationCount : stations.length} offlineCount={sidebarOfflineCount} userCount={sidebarUserCount} />
       <section className="main-panel">
         <DashboardTopbar currentMember={pageMember} onAdminOpen={() => setAdminOpen(true)} onProfileOpen={() => setProfileOpen(true)} sectionTitle={t("stations.stations")} settings={allianceSettings} />
         <MissionHero

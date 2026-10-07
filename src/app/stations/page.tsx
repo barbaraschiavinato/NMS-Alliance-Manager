@@ -52,6 +52,7 @@ export default async function StationsRoute({ searchParams }: Readonly<{
     initialStation={initialStation}
     missionCount={missions.length}
     sidebarStationCount={stations.length}
-    sidebarUserCount={member.role === "admin" || member.role === "moderator" ? accessData.members.length : undefined}
+    sidebarOfflineCount={member.role === "admin" || member.role === "moderator" ? accessData.members.filter((item) => item.offline).length : undefined}
+    sidebarUserCount={member.role === "admin" || member.role === "moderator" ? accessData.members.filter((item) => !item.offline).length : undefined}
   />;
 }

@@ -57,12 +57,13 @@ async function fetchMessages(signal?: AbortSignal): Promise<MessageEntry[]> {
   return body as MessageEntry[];
 }
 
-export function MessagesPage({ currentMember, alliance, missionCount, stationCount, userCount }: Readonly<{
+export function MessagesPage({ currentMember, alliance, missionCount, stationCount, userCount, offlineCount }: Readonly<{
   currentMember: AllianceMember;
   alliance: AllianceSettings;
   missionCount: number;
   stationCount: number;
   userCount?: number;
+  offlineCount?: number;
 }>) {
   const { t, locale } = useLocale();
   const [member, setMember] = useState(currentMember);
@@ -254,7 +255,7 @@ export function MessagesPage({ currentMember, alliance, missionCount, stationCou
   }
 
   return <div className="app-shell">
-    <AllianceSidebar activeSection="messaggi" currentMember={member} missionCount={missionCount} settings={settings} stationCount={stationCount} userCount={userCount} />
+    <AllianceSidebar activeSection="messaggi" currentMember={member} missionCount={missionCount} settings={settings} stationCount={stationCount} offlineCount={offlineCount} userCount={userCount} />
     <section className="main-panel">
       <DashboardTopbar currentMember={member} onAdminOpen={() => setAdminOpen(true)} onProfileOpen={() => setProfileOpen(true)} sectionTitle="messages.messages" settings={settings} />
       <MissionHero description={t("messages.page_description")} settings={settings} title="messages.messages" />

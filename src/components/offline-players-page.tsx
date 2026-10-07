@@ -14,12 +14,13 @@ import { useNavigationSearchState } from "@/components/navigation-search-reset";
 
 const specialtyLabels: Record<MemberSpecialty, string> = { builder: "common.builder", ranger: "common.ranger", explorer: "common.explorer" };
 
-export function OfflinePlayersPage({ memberActivity, currentMember, alliance, missionCount, sidebarStationCount, sidebarUserCount }: Readonly<{
+export function OfflinePlayersPage({ memberActivity, currentMember, alliance, missionCount, sidebarOfflineCount, sidebarStationCount, sidebarUserCount }: Readonly<{
   memberActivity: { missionOwnerIds: string[]; stationOwnerIds: string[] };
   currentMember: AllianceMember;
   alliance: AllianceSettings;
   missionCount: number;
   sidebarStationCount: number;
+  sidebarOfflineCount: number;
   sidebarUserCount: number;
 }>) {
   const { t } = useLocale();
@@ -98,7 +99,7 @@ export function OfflinePlayersPage({ memberActivity, currentMember, alliance, mi
 
   return (
     <div className="app-shell">
-      <AllianceSidebar activeSection="offline" currentMember={pageMember} missionCount={missionCount} settings={allianceSettings} stationCount={sidebarStationCount} userCount={sidebarUserCount} />
+      <AllianceSidebar activeSection="offline" currentMember={pageMember} missionCount={missionCount} settings={allianceSettings} stationCount={sidebarStationCount} offlineCount={loading ? sidebarOfflineCount : all.filter((member) => member.offline).length} userCount={sidebarUserCount} />
       <section className="main-panel">
         <DashboardTopbar currentMember={pageMember} onAdminOpen={() => setAdminOpen(true)} onProfileOpen={() => setProfileOpen(true)} sectionTitle={t("members.offline_players")} settings={allianceSettings} />
         <MissionHero description={t("members.offline_players_description")} actionLabel="members.add_offline_player" onCreate={() => setAddOpen(true)} settings={allianceSettings} showCreate title={t("members.offline_players")} />

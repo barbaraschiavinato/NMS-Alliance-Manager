@@ -36,6 +36,7 @@ export default async function MessagesRoute() {
     currentMember={member}
     missionCount={missions.length}
     stationCount={stations.length}
-    userCount={isModerator ? accessData.members.length : undefined}
+    offlineCount={isModerator ? accessData.members.filter((item) => item.offline).length : undefined}
+    userCount={isModerator ? accessData.members.filter((item) => !item.offline).length : undefined}
   />;
 }

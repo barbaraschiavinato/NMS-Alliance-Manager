@@ -35,6 +35,7 @@ export default async function OfflinePlayersRoute() {
     currentMember={member}
     missionCount={missions.length}
     sidebarStationCount={stations.length}
+    sidebarOfflineCount={accessData.members.filter((item) => item.offline).length}
     sidebarUserCount={accessData.members.filter((item) => !item.offline).length}
   />;
 }

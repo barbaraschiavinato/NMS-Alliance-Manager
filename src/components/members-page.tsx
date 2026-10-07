@@ -63,12 +63,13 @@ function MemberActions({ member, canChangeRole, currentMemberEmail, onStatus, on
   );
 }
 
-export function MembersPage({ memberActivity, currentMember, alliance, missionCount, sidebarStationCount, sidebarUserCount }: Readonly<{
+export function MembersPage({ memberActivity, currentMember, alliance, missionCount, sidebarOfflineCount, sidebarStationCount, sidebarUserCount }: Readonly<{
   memberActivity: { missionOwnerIds: string[]; stationOwnerIds: string[] };
   currentMember: AllianceMember;
   alliance: AllianceSettings;
   missionCount: number;
   sidebarStationCount: number;
+  sidebarOfflineCount: number;
   sidebarUserCount: number;
 }>) {
   const { t } = useLocale();
@@ -151,7 +152,7 @@ export function MembersPage({ memberActivity, currentMember, alliance, missionCo
 
   return (
     <div className="app-shell">
-      <AllianceSidebar activeSection="utenti" currentMember={pageMember} missionCount={missionCount} settings={allianceSettings} stationCount={sidebarStationCount} userCount={loadingMembers ? sidebarUserCount : members.length} />
+      <AllianceSidebar activeSection="utenti" currentMember={pageMember} missionCount={missionCount} settings={allianceSettings} stationCount={sidebarStationCount} offlineCount={sidebarOfflineCount} userCount={loadingMembers ? sidebarUserCount : members.length} />
       <section className="main-panel">
         <DashboardTopbar currentMember={pageMember} onAdminOpen={() => setAdminOpen(true)} onProfileOpen={() => setProfileOpen(true)} sectionTitle="Users" settings={allianceSettings} />
         <MissionHero
