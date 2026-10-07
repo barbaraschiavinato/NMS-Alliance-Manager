@@ -250,6 +250,11 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
   }
 
   async function removeStation(stationPortal: string, stationGalaxy: number, owner: string) {
+    if (!window.confirm(t("stations.remove_portal_portal_in_galaxy_from_owner_s_archive", {
+      portal: stationPortal,
+      galaxy: galaxyLabel(stationGalaxy),
+      owner,
+    }))) return;
     setError("");
     setNotice("");
     try {
