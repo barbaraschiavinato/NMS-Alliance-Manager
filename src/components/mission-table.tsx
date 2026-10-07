@@ -71,7 +71,7 @@ function MissionStationLink({ mission, canManage }: Readonly<{ mission: Mission;
   const label = t("missions.open_linked_station");
   return <Link
     aria-label={label}
-    className="member-icon-action mission-station-link"
+    className="member-icon-action mission-station-link member-station-filter"
     data-tooltip={label}
     href={`/stations?${params.toString()}`}
     title={label}

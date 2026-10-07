@@ -905,3 +905,5 @@ select { appearance: none; padding-right: 29px; background-image: linear-gradien
 .offline-table th:last-child, .offline-table td:last-child { padding-right: 2px; text-align: right; }
 .member-icon-action.member-link-action { color: var(--green); border-color: #315b55; background: #192a29; }
 .member-icon-action.member-link-action:hover { color: var(--green); border-color: var(--green); background: #203835; }
+.member-icon-action.member-station-filter { color: #6cb4ff; border-color: #2f4c6b; background: #16222e; }
+.member-icon-action.member-station-filter:hover { color: #6cb4ff; border-color: #6cb4ff; background: #1c2d3f; }
