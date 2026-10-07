@@ -103,9 +103,6 @@ export async function DELETE(request: Request) {
 export async function PATCH(request: Request) {
   const member = await getCurrentMember();
   if (!member) return NextResponse.json({ error: "stations.error_access_required" }, { status: 401 });
-  if (!hasRole(member, "moderator")) {
-    return NextResponse.json({ error: "stations.error_moderator_permission_required" }, { status: 403 });
-  }
 
   const body: unknown = await request.json().catch(() => null);
   const payload = body && typeof body === "object" && !Array.isArray(body) ? body as Record<string, unknown> : {};
@@ -130,6 +127,10 @@ export async function PATCH(request: Request) {
     Object.keys(payload).some((key) => !["currentPortal", "currentGalaxy", "currentOwner", "portal", "galaxy", "owner", "name"].includes(key))
   ) {
     return NextResponse.json({ error: "stations.error_invalid_station_data" }, { status: 400 });
+  }
+  const isModerator = hasRole(member, "moderator");
+  if (!isModerator && (currentOwner !== member.email.toLowerCase() || owner !== member.email.toLowerCase())) {
+    return NextResponse.json({ error: "stations.error_cannot_edit_another_member_s_station" }, { status: 403 });
   }
 
   try {

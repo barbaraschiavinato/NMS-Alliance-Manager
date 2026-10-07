@@ -390,7 +390,8 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
                     ? canSeeAll
                       ? <Link aria-label={t("planet.open_missions_for_planet_portal", { portal: station.portal })} className="member-icon-action station-missions-link" data-tooltip={t("missions.open_associated_missions")} href={`/?search=${encodeURIComponent(station.portal)}`}><Crosshair size={14} /></Link>
                       : <span className="station-mission-lock">{t("missions.associated_mission")}</span>
-                    : <>{canSeeAll && <button aria-label={t("stations.edit_station_portal", { portal: station.portal })} className="member-icon-action" data-tooltip={t("stations.edit_station")} onClick={() => openEditStation(station)} type="button"><Pencil size={14} /></button>}{(canSeeAll || station.owner.toLowerCase() === pageMember.email.toLowerCase()) && <button aria-label={t("stations.remove_portal_portal_in_galaxy_from_owner_s_archive", { portal: station.portal, galaxy: galaxyLabel(station.galaxy), owner: station.owner })} className="member-icon-action delete-member" data-tooltip={t("stations.delete_station")} onClick={() => void removeStation(station.portal, station.galaxy, station.owner)} type="button"><Trash2 size={14} /></button>}</>}
+                    : <>{(canSeeAll || station.owner.toLowerCase() === pageMember.email.toLowerCase()) && <button aria-label={t("stations.edit_station_portal", { portal: station.portal })} className="member-icon-action" data-tooltip={t("stations.edit_station")} onClick={() => openEditStation(station)} type="button"><Pencil size={14} /></button>}
+                      {(canSeeAll || station.owner.toLowerCase() === pageMember.email.toLowerCase()) && <button aria-label={t("stations.remove_portal_portal_in_galaxy_from_owner_s_archive", { portal: station.portal, galaxy: galaxyLabel(station.galaxy), owner: station.owner })} className="member-icon-action delete-member" data-tooltip={t("stations.delete_station")} onClick={() => void removeStation(station.portal, station.galaxy, station.owner)} type="button"><Trash2 size={14} /></button>}</>}
                 </div>
               </li>;
             })}</ul>}
@@ -400,7 +401,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
       {addOpen && <div className="dialog-backdrop">
         <dialog aria-labelledby="station-dialog-title" aria-modal="true" className="mission-dialog station-dialog" open>
           <div className="dialog-heading">
-            <div><span className="eyebrow">{t(canSeeAll ? "stations.station_archive" : "common.personal_archive")}</span><h2 id="station-dialog-title">{t(editingStation ? "stations.edit_station" : "stations.add_station")}</h2></div>
+            <div><h2 id="station-dialog-title">{t(editingStation ? "stations.edit_station" : "stations.add_station")}</h2></div>
               <button aria-label={t("common.close")} className="icon-button" onClick={closeStationDialog} type="button"><X size={18} /></button>
           </div>
           <form className="station-add-form" onSubmit={addStation}>
