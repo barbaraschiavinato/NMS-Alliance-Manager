@@ -146,11 +146,12 @@ function CachedPlanetInfo({ planet, onOpen }: Readonly<{ planet: CachedPlanet; o
   );
 }
 
-export function StationsPage({ currentMember, alliance, missionCount, initialSearch = "", sidebarStationCount, sidebarUserCount }: Readonly<{
+export function StationsPage({ currentMember, alliance, missionCount, initialSearch = "", initialStation = null, sidebarStationCount, sidebarUserCount }: Readonly<{
   currentMember: AllianceMember;
   alliance: AllianceSettings;
   missionCount: number;
   initialSearch?: string;
+  initialStation?: Readonly<{ portal: string; galaxy: number; ownerId: string }> | null;
   sidebarStationCount: number;
   sidebarUserCount?: number;
 }>) {
@@ -185,8 +186,13 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
   const canCreateMissions = canSeeAll;
   const viewMode = viewOverride ?? allianceSettings.defaultTableView;
   const visibleStations = useMemo(() => stations.filter((station) =>
+    (!initialStation || (
+      station.portal === initialStation.portal &&
+      station.galaxy === initialStation.galaxy &&
+      station.ownerId === initialStation.ownerId
+    )) &&
     `${station.name ?? cachedPlanetType(station.planet)} ${station.note ?? ""} ${station.portal} ${station.ownerName ?? ""} ${galaxyLabel(station.galaxy)}`.toLowerCase().includes(search.toLowerCase()),
-  ), [search, stations]);
+  ), [initialStation, search, stations]);
 
   async function fetchStations() {
     const response = await fetch("/api/stations", { cache: "no-store" });

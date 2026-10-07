@@ -10,7 +10,12 @@ import { readAllStationPortals, readStationPortals } from "@/lib/stations-store"
 export const dynamic = "force-dynamic";
 
 export default async function StationsRoute({ searchParams }: Readonly<{
-  searchParams: Promise<{ search?: string | string[] }>;
+  searchParams: Promise<{
+    search?: string | string[];
+    portal?: string | string[];
+    galaxy?: string | string[];
+    ownerId?: string | string[];
+  }>;
 }>) {
   const accessData = await readAccessData();
   const allianceName = accessData.alliance.name;
@@ -34,10 +39,17 @@ export default async function StationsRoute({ searchParams }: Readonly<{
   ]);
   const params = await searchParams;
   const initialSearch = typeof params.search === "string" ? params.search.slice(0, 254) : "";
+  const portal = typeof params.portal === "string" ? params.portal.toUpperCase() : "";
+  const galaxy = typeof params.galaxy === "string" && /^\d+$/.test(params.galaxy) ? Number(params.galaxy) : -1;
+  const ownerId = typeof params.ownerId === "string" ? params.ownerId : "";
+  const initialStation = /^[0-9A-F]{12}$/.test(portal) && Number.isInteger(galaxy) && galaxy >= 0 && galaxy <= 255 && ownerId
+    ? { portal, galaxy, ownerId }
+    : null;
   return <StationsPage
     alliance={accessData.alliance}
     currentMember={member}
     initialSearch={initialSearch}
+    initialStation={initialStation}
     missionCount={missions.length}
     sidebarStationCount={stations.length}
     sidebarUserCount={member.role === "admin" || member.role === "moderator" ? accessData.members.length : undefined}

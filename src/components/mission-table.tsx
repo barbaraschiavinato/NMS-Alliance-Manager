@@ -1,5 +1,6 @@
 import { Check, Compass, FileText, Info, LayoutGrid, List, Pencil, Search, Trash2, X } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import type { Mission, MissionSpecialty, MissionStatus } from "@/lib/missions";
 import { GlyphStrip } from "@/components/portal-address-field";
 import type { AllianceMember } from "@/lib/access-store";
@@ -62,6 +63,59 @@ function MissionRowAction({ mission, currentMember, canManage, onEdit, onDeleteM
     return <button className="claim-button mission-action-button" onClick={() => onClaim(mission)} type="button">{t("missions.claim")}</button>;
   }
   return <span className="no-row-action">—</span>;
+}
+
+function MissionStationLink({ mission, canManage }: Readonly<{ mission: Mission; canManage: boolean }>) {
+  const { t } = useLocale();
+  if (!canManage) return null;
+  const params = new URLSearchParams({ search: mission.systemAddress });
+  const label = t("missions.open_linked_station");
+  return <Link
+    aria-label={label}
+    className="member-icon-action mission-station-link"
+    data-tooltip={label}
+    href={`/stations?${params.toString()}`}
+    title={label}
+  ><Compass size={14} /></Link>;
+}
+
+function MissionSystemProgress({ mission, statuses, editable, onToggle }: Readonly<{
+  mission: Mission;
+  statuses: MissionSystemStatus[];
+  editable: boolean;
+  onToggle: (mission: Mission, status: MissionSystemStatus, checked: boolean) => void;
+}>) {
+  const { t } = useLocale();
+  const hasDataError = statuses.includes("data_error");
+  return <span
+    aria-label={hasDataError
+      ? t("errors.system_progress_data_error")
+      : t("missions.system_progress_current_of_total_complete", {
+        current: missionProgressStatuses.filter((status) => statuses.includes(status)).length,
+        total: missionProgressStatuses.length,
+      })}
+    className="mission-system-progress"
+    role="group"
+  >
+    {missionProgressStatuses.map((status) => {
+      const tooltip = t(hasDataError ? "system.data_error" : status);
+      return <label aria-label={tooltip} className={`mission-system-progress-item${editable ? " mission-system-progress-item-editable" : ""}`} key={status} title={tooltip}>
+        {editable && <input
+          aria-label={tooltip}
+          checked={statuses.includes(status)}
+          onChange={(event) => onToggle(mission, status, event.target.checked)}
+          type="checkbox"
+        />}
+        <span
+          aria-hidden="true"
+          className={hasDataError
+            ? "mission-system-progress-square mission-system-progress-square-error"
+            : `mission-system-progress-square${statuses.includes(status) ? " mission-system-progress-square-done" : ""}`}
+        />
+        <span aria-hidden="true" className="mission-system-progress-tooltip">{tooltip}</span>
+      </label>;
+    })}
+  </span>;
 }
 
 function AssigneeCell({ mission, members, currentMember, onOpenProfile }: Readonly<{
@@ -181,8 +235,11 @@ function readPlanetNotes(mission: Mission): Promise<string[]> {
     }
     const note = asRecord(body)?.note;
     return typeof note === "string" && note.trim() ? [note.trim()] : [];
+  }).then((notes) => {
+    if (planetNotesRequests.get(key) === request) planetNotesRequests.delete(key);
+    return notes;
   }).catch((error: unknown) => {
-    planetNotesRequests.delete(key);
+    if (planetNotesRequests.get(key) === request) planetNotesRequests.delete(key);
     throw error;
   });
   planetNotesRequests.set(key, request);
@@ -297,7 +354,6 @@ function MissionCard({ mission, systemStatuses, currentMember, canManage, member
 }>) {
   const { t } = useLocale();
   const statuses = systemStatuses[planetSystemStatusKey(mission.systemAddress, mission.galaxy)] ?? [];
-  const hasDataError = statuses.includes("data_error");
   const canUpdateSystemStatus = mission.assignedMemberId === currentMember.publicId;
   const canUpdateProgress = !canManage && canUpdateSystemStatus;
   const canViewNotes = canManage || isMissionAssignee(mission, currentMember);
@@ -328,40 +384,9 @@ function MissionCard({ mission, systemStatuses, currentMember, canManage, member
       <MissionProgress editable={canUpdateProgress} mission={mission} onChange={onUpdateProgress} />
     </div>
     <div className="mission-card-actions">
-      <span
-        aria-label={hasDataError
-          ? t("errors.system_progress_data_error")
-          : t("missions.system_progress_current_of_total_complete", {
-            current: missionProgressStatuses.filter((status) => statuses.includes(status)).length,
-            total: missionProgressStatuses.length,
-          })}
-        className="mission-system-progress"
-        role="group"
-      >
-        {missionProgressStatuses.map((status) => {
-          const tooltip = t(hasDataError ? "system.data_error" : status);
-          return (
-            <label aria-label={tooltip} className={`mission-system-progress-item${canUpdateSystemStatus ? " mission-system-progress-item-editable" : ""}`} key={status} title={tooltip}>
-              {canUpdateSystemStatus && (
-                <input
-                  aria-label={tooltip}
-                  checked={statuses.includes(status)}
-                  onChange={(event) => onToggleSystemStatus(mission, status, event.target.checked)}
-                  type="checkbox"
-                />
-              )}
-              <span
-                aria-hidden="true"
-                className={hasDataError
-                  ? "mission-system-progress-square mission-system-progress-square-error"
-                  : `mission-system-progress-square${statuses.includes(status) ? " mission-system-progress-square-done" : ""}`}
-              />
-              <span aria-hidden="true" className="mission-system-progress-tooltip">{tooltip}</span>
-            </label>
-          );
-        })}
-      </span>
+      <MissionSystemProgress editable={canUpdateSystemStatus} mission={mission} onToggle={onToggleSystemStatus} statuses={statuses} />
       <div className="mission-card-action-buttons">
+        <MissionStationLink canManage={canManage} mission={mission} />
         <MissionRowAction canManage={canManage} currentMember={currentMember} mission={mission} onClaim={onClaim} onComplete={onComplete} onDeleteMission={onDeleteMission} onEdit={onEdit} />
         {canViewNotes && <MissionNotesButton mission={mission} onView={onViewNotes} />}
       </div>
@@ -474,20 +499,26 @@ export function MissionTable({
       </div>
       {viewMode === "list" ? <div className="mission-table-wrap">
         <table className="mission-table">
-          <thead><tr><th>{t("missions.mission_column_heading")}</th><th>{t("common.type_column_heading")}</th><th>{t("common.sector")}</th><th>{t("missions.discoverer_column_heading")}</th><th>{t("missions.assignee_column_heading")}</th><th>{t("missions.priority_column_heading")}</th><th>{t("missions.progress_column_heading")}</th><th aria-label={t("common.actions_label")} /></tr></thead>
+          <thead><tr><th>{t("missions.mission_column_heading")}</th><th>{t("common.type_column_heading")}</th><th>{t("common.sector")}</th><th>{t("missions.discoverer_column_heading")}</th><th>{t("missions.assignee_column_heading")}</th><th>{t("missions.priority_column_heading")}</th><th>{t("missions.progress_column_heading")}</th><th>{t("missions.five_part_progress")}</th><th aria-label={t("common.actions_label")} /></tr></thead>
           <tbody>
             {missions.map((mission) => <tr key={mission.id}>
-                  <td><div className="mission-name-cell"><span className={`mission-icon ${mission.status === "completed" ? "mission-icon-done" : ""}`}>{mission.status === "completed" ? <Check size={15} /> : <Compass size={15} />}</span><div><div className="mission-title-with-info"><button aria-label={`${t("planet.open_planet_details_for")} ${mission.title}`} className="mission-title" onClick={() => onOpenPlanet(mission)} title={t("planet.open_planet_details")} type="button">{mission.title}</button><PlanetNotesButton mission={mission} onView={setPlanetNoteView} /></div><span className="mission-description">{mission.description}</span></div>{canViewMissionNotes(mission) && <MissionNotesButton mission={mission} onView={setMissionNoteView} />}</div></td>
+                  <td><div className="mission-name-cell"><span className={`mission-icon ${mission.status === "completed" ? "mission-icon-done" : ""}`}>{mission.status === "completed" ? <Check size={15} /> : <Compass size={15} />}</span><div><div className="mission-title-with-info"><button aria-label={`${t("planet.open_planet_details_for")} ${mission.title}`} className="mission-title" onClick={() => onOpenPlanet(mission)} title={t("planet.open_planet_details")} type="button">{mission.title}</button><PlanetNotesButton mission={mission} onView={setPlanetNoteView} /></div><span className="mission-description">{mission.description}</span></div></div></td>
               <td><span className={`badge badge--specialty badge--specialty-${mission.targetSpecialty ?? "all"}`}>{t(targetSpecialtyNames[mission.targetSpecialty ?? "all"])}</span></td>
               <td><div className="system-cell"><GlyphStrip address={mission.systemAddress ?? ""} /><span className="system-caption">{mission.system || t("system.system_label")} · {galaxyLabel(mission.galaxy ?? 0)}</span></div></td>
               <td><DiscovererCell memberId={mission.stationOwnerMemberId} galaxy={mission.galaxy} image={getDiscovererImage(mission.stationOwnerMemberId)} name={mission.stationOwnerName} onOpenProfile={(memberId, messageContext) => setProfileTarget({ memberId, messageContext })} portal={mission.systemAddress} /></td>
               <td><AssigneeCell currentMember={currentMember} members={members} mission={mission} onOpenProfile={(memberId, messageContext) => setProfileTarget({ memberId, messageContext })} /></td>
               <td><span className={`badge badge--priority badge--priority-${mission.priority}`}><span />{t(`common.${mission.priority}`)}</span></td>
               <td><MissionProgress editable={!canManage && mission.assignedMemberId === currentMember.publicId} mission={mission} onChange={onUpdateProgress} /></td>
-              <td><MissionRowAction canManage={canManage} currentMember={currentMember} mission={mission} onClaim={onClaim} onComplete={onComplete} onDeleteMission={onDeleteMission} onEdit={onEdit} /></td>
+              <td><MissionSystemProgress
+                editable={mission.assignedMemberId === currentMember.publicId}
+                mission={mission}
+                onToggle={onToggleSystemStatus}
+                statuses={planetStatuses[planetSystemStatusKey(mission.systemAddress, mission.galaxy)] ?? []}
+              /></td>
+              <td><span className="mission-row-actions"><MissionStationLink canManage={canManage} mission={mission} /><MissionRowAction canManage={canManage} currentMember={currentMember} mission={mission} onClaim={onClaim} onComplete={onComplete} onDeleteMission={onDeleteMission} onEdit={onEdit} />{canViewMissionNotes(mission) && <MissionNotesButton mission={mission} onView={setMissionNoteView} />}</span></td>
             </tr>)}
-            {loading && <tr><td className="empty-state mission-table-loading" colSpan={8}><LoadingSpinner /></td></tr>}
-            {!loading && missions.length === 0 && <tr><td className="empty-state" colSpan={8}><Search size={18} />{t("missions.no_missions_match_the_filters")}</td></tr>}
+            {loading && <tr><td className="empty-state mission-table-loading" colSpan={9}><LoadingSpinner /></td></tr>}
+            {!loading && missions.length === 0 && <tr><td className="empty-state" colSpan={9}><Search size={18} />{t("missions.no_missions_match_the_filters")}</td></tr>}
           </tbody>
         </table>
       </div> : <div className="mission-card-grid">

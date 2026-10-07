@@ -2,8 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentMember, hasRole } from "@/lib/authorization";
 import { canViewMission } from "@/lib/missions";
 import { readMissions } from "@/lib/store";
-import { readStationPortals } from "@/lib/stations-store";
-import { readAccessData } from "@/lib/access-store";
+import { readAllStationPortals } from "@/lib/stations-store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -21,18 +20,16 @@ export async function GET(_request: Request, context: RouteContext) {
     if (!hasRole(member, "moderator") && !canViewMission(mission, member)) {
       return NextResponse.json({ error: "Non hai accesso a questa missione." }, { status: 403 });
     }
-    if (!mission.stationOwnerMemberId) {
-      return NextResponse.json({ note: null }, { headers: { "Cache-Control": "no-store" } });
-    }
-
-    const owner = (await readAccessData()).members.find((candidate) =>
-      candidate.publicId === mission.stationOwnerMemberId && candidate.membershipStatus === "approved",
+    const portal = mission.systemAddress.toUpperCase();
+    const stations = (await readAllStationPortals()).filter((candidate) =>
+      candidate.portal === portal && candidate.galaxy === mission.galaxy,
     );
-    if (!owner) return NextResponse.json({ note: null }, { headers: { "Cache-Control": "no-store" } });
-    const stations = await readStationPortals(owner.publicId);
-    const station = stations.find((candidate) =>
-      candidate.portal === mission.systemAddress.toUpperCase() && candidate.galaxy === mission.galaxy,
+    const stationWithMissionOwner = stations.find((candidate) =>
+      candidate.ownerId === mission.stationOwnerMemberId && candidate.note?.trim(),
     );
+    const stationsWithNotes = stations.filter((candidate) => candidate.note?.trim());
+    const station = stationWithMissionOwner ??
+      (stationsWithNotes.length === 1 ? stationsWithNotes[0] : undefined);
     return NextResponse.json({ note: station?.note ?? null }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     console.error("Unable to read mission station note", error);

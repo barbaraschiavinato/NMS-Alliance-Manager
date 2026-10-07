@@ -184,6 +184,7 @@ export const translations: TranslationCatalog = {
     "missions.system_progress_current_of_total_complete": "System progress: {current} of {total} complete",
     "missions.mission_for": "Mission for",
     "missions.system_discoverer": "System discoverer",
+    "missions.open_linked_station": "Open linked station",
     "missions.mission_view": "Mission view",
     "missions.mission_assigned_to_you": "Mission assigned to you.",
     "missions.this_mission_is_already_assigned": "This mission is already assigned.",

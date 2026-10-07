@@ -5,7 +5,7 @@ import { readAlmanacResponse, readAlmanacResponses, writeAlmanacResponse } from 
 import { decodePortalAddress, missionSpecialties, type MissionSpecialty } from "@/lib/missions";
 import { isEmailAddress } from "@/lib/member-types";
 import { addStationPortal, readAllStationPortals, readStationPortals, removeStationPortal, updateStationPortal } from "@/lib/stations-store";
-import { readMissions } from "@/lib/store";
+import { readMissions, writeMissions } from "@/lib/store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -189,6 +189,15 @@ export async function PATCH(request: Request) {
     const updated = await updateStationPortal(currentOwner.publicId, currentPortal, currentGalaxy, owner.publicId, portal, galaxy, name, note);
     if (!updated) {
       return NextResponse.json({ error: "stations.error_station_missing_or_portal_already_saved" }, { status: 409 });
+    }
+    if (currentOwner.publicId !== owner.publicId) {
+      await writeMissions(missions.map((mission) =>
+        mission.stationOwnerMemberId === currentOwner.publicId &&
+        mission.systemAddress.toUpperCase() === currentPortal &&
+        mission.galaxy === currentGalaxy
+          ? { ...mission, stationOwnerMemberId: owner.publicId }
+          : mission,
+      ));
     }
     await cacheStationPlanet(portal, galaxy);
     return NextResponse.json({ stations: await readStations(member) });
