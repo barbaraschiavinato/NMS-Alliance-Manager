@@ -138,7 +138,6 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
         mission.system,
         mission.assignedTo,
         mission.stationOwnerName,
-        mission.createdByName,
         missionTypeLabels[mission.targetSpecialty],
       ].filter(Boolean).join(" ").toLowerCase();
       const textMatches = searchableText.includes(searchText);
