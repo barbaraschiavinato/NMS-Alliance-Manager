@@ -57,34 +57,34 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
   useEffect(() => {
     fetch("/api/missions", { cache: "no-store" })
       .then(async (response) => {
-        if (!response.ok) throw new Error("Archivio missioni non disponibile.");
+        if (!response.ok) throw new Error("Unable to load missions.");
         setMissions(await response.json() as Mission[]);
       })
-      .catch((error: unknown) => setNotice(error instanceof Error ? error.message : "Archivio missioni non disponibile."))
+      .catch((error: unknown) => setNotice(error instanceof Error ? error.message : "Unable to load missions."))
       .finally(() => setLoadingMissions(false));
     fetch("/api/planet-status", { cache: "no-store" })
       .then(async (response) => {
         const body: unknown = await response.json();
-        if (!response.ok) throw new Error("Impossibile caricare gli stati dei pianeti.");
+        if (!response.ok) throw new Error("Unable to read planet status.");
         if (!body || typeof body !== "object" || !("planets" in body) || !body.planets || typeof body.planets !== "object") {
-          throw new Error("Elenco stati pianeta non valido.");
+          throw new Error("Invalid planet status data.");
         }
         setPlanetStatuses(body.planets as PlanetSystemStatuses);
       })
-      .catch((error: unknown) => setNotice(error instanceof Error ? error.message : "Impossibile caricare gli stati dei pianeti."));
+      .catch((error: unknown) => setNotice(error instanceof Error ? error.message : "Unable to read planet status."));
     if (canManage) {
       fetch("/api/members", { cache: "no-store" })
         .then(async (response) => {
-          if (!response.ok) throw new Error("Impossibile caricare i membri.");
+          if (!response.ok) throw new Error("Unable to load members.");
           setMembers(await response.json() as AllianceMember[]);
         })
         .catch(() => setMembers([]));
       fetch("/api/stations", { cache: "no-store" })
         .then(async (response) => {
-          if (!response.ok) throw new Error("Impossibile caricare i proprietari delle stazioni.");
+          if (!response.ok) throw new Error("Unable to load station owners.");
           const body: unknown = await response.json();
           if (!body || typeof body !== "object" || !("stations" in body) || !Array.isArray(body.stations)) {
-            throw new Error("Elenco stazioni non valido.");
+            throw new Error("Unable to load station owners.");
           }
           const options = body.stations.flatMap((value): StationOwnerOption[] => {
             if (!value || typeof value !== "object") return [];
@@ -152,36 +152,36 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
       body: JSON.stringify(input),
     });
     const body = await response.json();
-    if (!response.ok) throw new Error(body.error ?? "Salvataggio non riuscito.");
+    if (!response.ok) throw new Error(body.error ?? "Unable to save the mission.");
     if (editing) {
       const saved = body as Mission;
       setMissions((current) => current.map((mission) => mission.id === saved.id ? saved : mission));
-      setNotice("Missione aggiornata.");
+      setNotice("Mission updated.");
       return;
     }
 
     const created = body as Mission[];
     setMissions((current) => [...created, ...current]);
     setNotice(created.length === 3
-      ? "Create 3 missioni: una per Costruttori, Ranger ed Esploratori."
-      : "Missione aggiunta al registro.");
+      ? "Created 3 missions: one each for Builders, Rangers, and Explorers."
+      : "Mission added to the log.");
   }
 
   async function deleteMission(id: string) {
     const response = await fetch(`/api/missions/${id}`, { method: "DELETE" });
     const body = await response.json();
-    if (!response.ok) throw new Error(body.error ?? "Eliminazione non riuscita.");
+    if (!response.ok) throw new Error(body.error ?? "Deletion failed.");
     setMissions((current) => current.filter((mission) => mission.id !== id));
-    setNotice("Missione eliminata.");
+    setNotice("Mission deleted.");
   }
 
   async function claimMission(mission: Mission) {
     const response = await fetch(`/api/missions/${mission.id}/claim`, { method: "POST" });
     const body = await response.json();
-    if (!response.ok) throw new Error(body.error ?? "Impossibile prendere la missione.");
+    if (!response.ok) throw new Error(body.error ?? "Unable to claim the mission.");
     const claimed = body as Mission;
     setMissions((current) => current.map((item) => item.id === claimed.id ? claimed : item));
-    setNotice("Missione assegnata a te.");
+    setNotice("Mission claimed.");
   }
 
   async function completeMission(mission: Mission) {
@@ -191,9 +191,9 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
       body: JSON.stringify({ status: "Completata", progress: 100 }),
     });
     const body = await response.json();
-    if (!response.ok) throw new Error(body.error ?? "Impossibile completare la missione.");
+    if (!response.ok) throw new Error(body.error ?? "Unable to complete the mission.");
     setMissions((current) => current.map((item) => item.id === mission.id ? body as Mission : item));
-    setNotice("Missione completata.");
+    setNotice("Mission completed.");
   }
 
   async function togglePlanetSystemStatus(mission: Mission, status: MissionSystemStatus, checked: boolean) {
@@ -210,10 +210,10 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
     const body: unknown = await response.json();
     if (!response.ok) {
       const message = body && typeof body === "object" && "error" in body ? body.error : null;
-      throw new Error(typeof message === "string" ? message : "Impossibile aggiornare lo stato del pianeta.");
+      throw new Error(typeof message === "string" ? message : "Unable to update planet status.");
     }
     const savedStatuses = body && typeof body === "object" && "systemStatuses" in body ? body.systemStatuses : null;
-    if (!Array.isArray(savedStatuses)) throw new Error("Risposta dello stato pianeta non valida.");
+    if (!Array.isArray(savedStatuses)) throw new Error("Invalid planet status response.");
     setPlanetStatuses((current) => ({ ...current, [key]: savedStatuses }));
   }
 
@@ -230,7 +230,7 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
         <MissionHero onCreate={() => openMission(null)} settings={alliance} showCreate={canManage} />
         <MissionMetrics counts={counts} missions={availableMissions} />
         <div className="content-wrap">
-          {!profileComplete && <section className="profile-required-banner"><span><strong>{t("Completa il profilo NMS")}</strong><small>{t("Inserisci nome in gioco, codice amico, piattaforme e specializzazione per prendere missioni o essere assegnato.")}</small></span><button className="claim-button" onClick={() => setProfileOpen(true)} type="button">{t("Completa profilo")}</button></section>}
+          {!profileComplete && <section className="profile-required-banner"><span><strong>{t("Complete your NMS profile")}</strong><small>{t("Enter your in-game name, friend code, platforms, and specialty to claim or be assigned missions.")}</small></span><button className="claim-button" onClick={() => setProfileOpen(true)} type="button">{t("Complete profile")}</button></section>}
           <MissionTable
             counts={counts}
             filter={filter}
@@ -240,13 +240,13 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
             members={members}
             defaultView={alliance.defaultTableView}
             planetStatuses={planetStatuses}
-            onClaim={(mission) => void claimMission(mission).catch((error: unknown) => setNotice(error instanceof Error ? error.message : "Richiesta non riuscita."))}
-            onComplete={(mission) => void completeMission(mission).catch((error: unknown) => setNotice(error instanceof Error ? error.message : "Richiesta non riuscita."))}
-            onToggleSystemStatus={(mission, status, checked) => void togglePlanetSystemStatus(mission, status, checked).catch((error: unknown) => setNotice(error instanceof Error ? error.message : "Richiesta non riuscita."))}
+            onClaim={(mission) => void claimMission(mission).catch((error: unknown) => setNotice(error instanceof Error ? error.message : t("Request failed.")))}
+            onComplete={(mission) => void completeMission(mission).catch((error: unknown) => setNotice(error instanceof Error ? error.message : t("Request failed.")))}
+            onToggleSystemStatus={(mission, status, checked) => void togglePlanetSystemStatus(mission, status, checked).catch((error: unknown) => setNotice(error instanceof Error ? error.message : t("Request failed.")))}
             onEdit={(mission) => openMission(mission)}
             onDeleteMission={(mission) => {
-              if (!window.confirm(t("Eliminare \"{title}\"?", { title: mission.title }))) return;
-              void deleteMission(mission.id).catch((error: unknown) => setNotice(error instanceof Error ? error.message : "Eliminazione non riuscita."));
+              if (!window.confirm(t("Delete \"{title}\"?", { title: mission.title }))) return;
+              void deleteMission(mission.id).catch((error: unknown) => setNotice(error instanceof Error ? error.message : t("Deletion failed.")));
             }}
             onOpenPlanet={setPlanetMission}
             onFilterChange={setFilter}
@@ -257,7 +257,7 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
           />
         </div>
       </section>
-      {notice && <output className="toast" aria-live="polite"><Check size={15} />{t(notice)}<button aria-label={t("Chiudi notifica")} onClick={() => setNotice("")} type="button"><X size={14} /></button></output>}
+      {notice && <output className="toast" aria-live="polite"><Check size={15} />{t(notice)}<button aria-label={t("Close notification")} onClick={() => setNotice("")} type="button"><X size={14} /></button></output>}
       {dialogOpen && <MissionForm
         members={members}
         mission={dialogMission}

@@ -8,22 +8,22 @@ import { useLocale } from "@/components/locale-provider";
 type PlanetRecord = Record<string, unknown>;
 
 const systemAttributes = [
-  ["Stella", "star"],
-  ["Economia", "economy"],
-  ["Conflitto", "conflict"],
-  ["Razza", "race"],
+  ["Star", "star"],
+  ["Economy", "economy"],
+  ["Conflict", "conflict"],
+  ["Race", "race"],
 ] as const;
 
 const planetConditions = [
-  ["Tipo", "type"],
-  ["Dimensione", "size"],
-  ["Caratteristiche", "features"],
+  ["Type", "type"],
+  ["Size", "size"],
+  ["Features", "features"],
   ["Fauna", "fauna"],
   ["Flora", "flora"],
-  ["Minerali", "minerals"],
-  ["Meteo", "weather"],
-  ["Acqua", "water"],
-  ["Sentinelle", "sentinels"],
+  ["Minerals", "minerals"],
+  ["Weather", "weather"],
+  ["Water", "water"],
+  ["Sentinels", "sentinels"],
 ] as const;
 
 function asRecord(value: unknown): PlanetRecord | null {
@@ -73,8 +73,8 @@ function PlanetFacts({ band, fields }: Readonly<{
 function PlanetSky({ sky }: Readonly<{ sky: PlanetRecord | null }>) {
   const { t } = useLocale();
   const colors = sky ? [
-    { label: t("Giorno"), color: sky.day },
-    { label: t("Notte"), color: sky.night },
+    { label: t("Day"), color: sky.day },
+    { label: t("Night"), color: sky.night },
   ].filter((item): item is { label: string; color: string } =>
     typeof item.color === "string" && /^#[0-9A-F]{6}$/i.test(item.color),
   ) : [];
@@ -82,7 +82,7 @@ function PlanetSky({ sky }: Readonly<{ sky: PlanetRecord | null }>) {
 
   return (
     <div className="planet-sky-row">
-      <span>Cielo</span>
+      <span>{t("Sky")}</span>
       <div>{colors.map(({ label, color }) => <span aria-label={`${label} ${color}`} className="planet-sky-color" key={label} title={`${label} ${color}`}><i style={{ backgroundColor: color }} />{label}</span>)}</div>
     </div>
   );
@@ -97,21 +97,21 @@ function PlanetResources({ carries }: Readonly<{ carries: unknown[] }>) {
       : [];
   });
   const groups = [
-    { name: "Minerali", kinds: ["mineral"] },
-    { name: "Piante", kinds: ["plant", "consumable"] },
-    { name: "Preziosi", kinds: ["tradeable"] },
-    { name: "Ritrovamenti", kinds: ["component"] },
+    { name: "Minerals", kinds: ["mineral"] },
+    { name: "Plants", kinds: ["plant", "consumable"] },
+    { name: "Valuables", kinds: ["tradeable"] },
+    { name: "Finds", kinds: ["component"] },
   ].map((group) => ({
     ...group,
     items: resources.filter((resource) => group.kinds.includes(resource.kind)).map((resource) => resource.name),
   })).filter((group) => group.items.length > 0);
   const otherResources = resources.filter((resource) => !groups.some((group) => group.kinds.includes(resource.kind)));
-  if (otherResources.length > 0) groups.push({ name: "Altre risorse", kinds: [], items: otherResources.map((resource) => resource.name) });
+  if (otherResources.length > 0) groups.push({ name: "Other resources", kinds: [], items: otherResources.map((resource) => resource.name) });
   if (groups.length === 0) return null;
 
   return (
     <section aria-labelledby="planet-resources-title" className="planet-card-section planet-resources-section">
-      <h4 id="planet-resources-title">{t("Risorse")}</h4>
+      <h4 id="planet-resources-title">{t("Resources")}</h4>
       <div className="planet-resource-groups">
         {groups.map((group) => <div className="planet-resource-group" key={group.name}>
           <h5><span>{t(group.name)}</span><span>{group.items.length}</span></h5>
@@ -143,14 +143,14 @@ export function PlanetCard({ portal, galaxy, title: cardTitle, contextLabel, mis
         const body: unknown = await response.json();
         if (!response.ok) {
           const message = asRecord(body)?.error;
-          throw new Error(typeof message === "string" ? message : "Scheda del pianeta non disponibile.");
+          throw new Error(typeof message === "string" ? message : "Planet details are unavailable.");
         }
         const result = asRecord(asRecord(body)?.planet);
-        if (!result) throw new Error("Risposta del pianeta non valida.");
+        if (!result) throw new Error("Invalid planet response.");
         setPlanet(result);
       })
       .catch((error_: unknown) => {
-        if (!controller.signal.aborted) setError(error_ instanceof Error ? error_.message : "Scheda del pianeta non disponibile.");
+        if (!controller.signal.aborted) setError(error_ instanceof Error ? error_.message : "Planet details are unavailable.");
       })
       .finally(() => {
         if (!controller.signal.aborted) setLoading(false);
@@ -161,7 +161,7 @@ export function PlanetCard({ portal, galaxy, title: cardTitle, contextLabel, mis
   const lines = asRecord(planet?.lines);
   const band = asRecord(lines?.band);
   const headline = asRecord(lines?.headline);
-  const title = typeof headline?.word === "string" ? headline.word : t("Pianeta");
+  const title = typeof headline?.word === "string" ? headline.word : t("Planet");
   const sentence = typeof lines?.sentence === "string" ? lines.sentence : "";
   const sky = asRecord(planet?.sky);
   const pictures = asRecord(planet?.pictures);
@@ -176,15 +176,15 @@ export function PlanetCard({ portal, galaxy, title: cardTitle, contextLabel, mis
       <dialog aria-labelledby="planet-card-title" aria-modal="true" className="mission-dialog planet-dialog" open>
         <div className="dialog-heading">
           <div>
-            <span className="eyebrow">{t("SCHEDA PIANETA")} <span>·</span> {galaxyLabel(galaxy).toUpperCase()}</span>
+            <span className="eyebrow">{t("PLANET DETAILS")} <span>·</span> {galaxyLabel(galaxy).toUpperCase()}</span>
             <h2 id="planet-card-title">{cardTitle}</h2>
             {missionDescription?.trim() && <p className="planet-dialog-mission-description">{missionDescription}</p>}
           </div>
-          <button aria-label={t("Chiudi scheda pianeta")} className="icon-button" onClick={onClose} type="button"><X size={18} /></button>
+          <button aria-label={t("Close planet details")} className="icon-button" onClick={onClose} type="button"><X size={18} /></button>
         </div>
         <div className="planet-card-body">
           <div className="planet-card-address"><GlyphStrip address={portal} large /><code>{portal}</code></div>
-          {loading && <p aria-live="polite" className="planet-card-message">{t("Caricamento scheda archiviata…")}</p>}
+          {loading && <p aria-live="polite" className="planet-card-message">{t("Loading archived details…")}</p>}
           {!loading && error && <p className="planet-card-message planet-card-error">{t(error)}</p>}
           {planet && (
             <>
@@ -193,25 +193,25 @@ export function PlanetCard({ portal, galaxy, title: cardTitle, contextLabel, mis
                 <div>
                   <h3 id="planet-intro-title">{title}</h3>
                   {contextLabel && <p>{contextLabel}</p>}
-                  {planet.paradise === true && <span className="planet-paradise-flag">{t("Paradisiaco")}</span>}
+                  {planet.paradise === true && <span className="planet-paradise-flag">{t("Paradise")}</span>}
                   <span className="planet-intro-code">{portal}</span>
                 </div>
               </section>
               <section aria-labelledby="planet-conditions-title" className="planet-card-section">
-                <h4 id="planet-conditions-title">{t("Condizioni")}</h4>
+                <h4 id="planet-conditions-title">{t("Conditions")}</h4>
                 <PlanetFacts band={band} fields={planetConditions} />
                 <PlanetSky sky={sky} />
                 {sentence && <p className="planet-card-summary">{sentence}</p>}
               </section>
               <section aria-labelledby="planet-system-title" className="planet-card-section">
-                <h4 id="planet-system-title">{t("Sistema")}</h4>
+                <h4 id="planet-system-title">{t("System")}</h4>
                 <PlanetFacts band={band} fields={systemAttributes} />
               </section>
               <PlanetResources carries={carries} />
-              <div className="planet-card-attribution">{t("Dati:")} <a href="https://nmsalmanac.com" rel="noreferrer" target="_blank">NMS Almanac</a></div>
+              <div className="planet-card-attribution">{t("Data:")} <a href="https://nmsalmanac.com" rel="noreferrer" target="_blank">NMS Almanac</a></div>
             </>
           )}
-          {!loading && !error && !planet && <p className="planet-card-message">{t("Nessuna scheda Almanac archiviata per questa missione.")}</p>}
+          {!loading && !error && !planet && <p className="planet-card-message">{t("No Almanac details are archived for this mission.")}</p>}
         </div>
       </dialog>
     </div>

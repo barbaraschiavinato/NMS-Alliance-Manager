@@ -42,11 +42,18 @@ const legacyAliases = new Map<string, string>([
 export function translate(locale: Locale, message: string, values?: Readonly<Record<string, string | number>>) {
   const canonicalKey = englishKeys.has(message) ? message : legacyAliases.get(message) ?? message;
   let translated = localeEntries[locale][canonicalKey] ?? canonicalKey;
-  if (locale === "en" && translated === canonicalKey) {
-    const planetIndex = message.match(/^Indice pianeta (\d+): ammessi da 0 a 6\.$/);
-    const coordinate = message.match(/^Coordinata ([XYZ]) ([\dA-F]+): valore non utilizzato\.$/);
-    if (planetIndex) translated = `Planet index ${planetIndex[1]}: allowed range is 0–6.`;
-    else if (coordinate) translated = `${coordinate[1]} coordinate ${coordinate[2]}: unused value.`;
+  const planetIndex = message.match(/^Planet index (\d+): allowed range is 0–6\.$/)
+    ?? message.match(/^Indice pianeta (\d+): ammessi da 0 a 6\.$/);
+  const coordinate = message.match(/^([XYZ]) coordinate ([\dA-F]+): unused value\.$/)
+    ?? message.match(/^Coordinata ([XYZ]) ([\dA-F]+): valore non utilizzato\.$/);
+  if (planetIndex) {
+    translated = locale === "it"
+      ? `Indice pianeta ${planetIndex[1]}: ammessi da 0 a 6.`
+      : `Planet index ${planetIndex[1]}: allowed range is 0–6.`;
+  } else if (coordinate) {
+    translated = locale === "it"
+      ? `Coordinata ${coordinate[1]} ${coordinate[2]}: valore non utilizzato.`
+      : `${coordinate[1]} coordinate ${coordinate[2]}: unused value.`;
   }
   return values
     ? translated.replace(/\{(\w+)\}/g, (placeholder, key: string) => String(values[key] ?? placeholder))

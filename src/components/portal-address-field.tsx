@@ -23,7 +23,7 @@ const glyphAsset = (glyph: string) => `/glyphs/glyph-mask-${glyph}.png`;
 export function GlyphStrip({ address, large = false }: Readonly<{ address: string; large?: boolean }>) {
   const { t } = useLocale();
   return (
-    <span aria-label={t("Glifi inseriti: {count} su 12", { count: address.length })} className={`glyph-strip ${large ? "glyph-strip-large" : ""}`}>
+    <span aria-label={t("Glyphs entered: {count} of 12", { count: address.length })} className={`glyph-strip ${large ? "glyph-strip-large" : ""}`}>
       {Array.from({ length: 12 }, (_, index) => {
         const glyph = address[index];
         return (
@@ -50,17 +50,17 @@ function PortalBreakdown({ address, decoded, lookup }: Readonly<{
     { label: "X", start: 9, width: 3, signedBits: 12 as const },
   ];
   const errorPrefixes: Record<string, string> = {
-    PLANET: "Indice pianeta ",
-    SYSTEM: "Indice sistema ",
-    Y: "Coordinata Y ",
-    Z: "Coordinata Z ",
-    X: "Coordinata X ",
+    PLANET: "Planet index ",
+    SYSTEM: "System index ",
+    Y: "Y coordinate ",
+    Z: "Z coordinate ",
+    X: "X coordinate ",
   };
   const almanacError = lookup?.address === address &&
     (lookup.status === "not-found" || lookup.status === "unavailable");
 
   return (
-    <div aria-label={t("Avanzamento dei cinque parametri")} className="portal-decode" role="group">
+    <div aria-label={t("Five-part progress")} className="portal-decode" role="group">
       {parts.map((part) => {
         const raw = address.slice(part.start, part.start + part.width);
         const progress = (raw.length / part.width) * 100;
@@ -88,7 +88,7 @@ function PortalValidation({ address, decoded, lookup }: Readonly<{
 }>) {
   const { t } = useLocale();
   let statusClass = "address-incomplete";
-  let statusText = t("Inserisci un indirizzo portale completo da 12 glifi");
+  let statusText = t("Enter a complete 12-glyph portal address");
   let statusIcon = <CircleAlert size={13} />;
 
   if (decoded && decoded.errors.length > 0) {
@@ -96,27 +96,27 @@ function PortalValidation({ address, decoded, lookup }: Readonly<{
     statusText = decoded.errors.map((message) => t(message)).join(" ");
   } else if (decoded?.kind === "portal") {
     statusClass = "address-valid";
-    statusText = t("Portale valido · indirizzo decodificato");
+    statusText = t("Valid portal · address decoded");
     statusIcon = <Check size={13} />;
   } else if (address.length > 0) {
-    statusText = t("Codice incompleto · {count} di 12 glifi", { count: address.length });
+    statusText = t("Incomplete code · {count} of 12 glyphs", { count: address.length });
   }
 
   const currentLookup = lookup?.address === address ? lookup : null;
   let lookupLink = false;
   if (currentLookup?.status === "checking") {
-    statusText += ` · ${t("Controllo NMS Almanac…")}`;
+    statusText += ` · ${t("Checking NMS Almanac…")}`;
   } else if (currentLookup?.status === "found") {
-    statusText += ` · ${t("Pianeta trovato su")}`;
+    statusText += ` · ${t("Planet found on")}`;
     lookupLink = true;
   } else if (currentLookup?.status === "not-found") {
     statusClass = "address-invalid";
     statusIcon = <CircleAlert size={13} />;
-    statusText += ` · ${t("Nessun pianeta registrato da NMS Almanac; potrebbe esistere nel gioco.")}`;
+    statusText += ` · ${t("No planet registered with NMS Almanac; it may still exist in the game.")}`;
   } else if (currentLookup?.status === "unavailable") {
     statusClass = "address-invalid";
     statusIcon = <CircleAlert size={13} />;
-    statusText += ` · ${t("Errore NMS Almanac: servizio non raggiungibile o limite richieste raggiunto.")}`;
+    statusText += ` · ${t("NMS Almanac error: service unavailable or request limit reached.")}`;
   }
 
   return (
@@ -195,29 +195,29 @@ export function SystemAddressField({ address, galaxy, onChange, onStateChange, o
   return (
     <div className="portal-field full-field">
       <div className="portal-field-heading">
-        <span>{t("CODICE SISTEMA / PORTALE")} <b>{address.length}/12</b></span>
-        <span>{t("GLIFI NMS · INDIRIZZO ESADECIMALE")}</span>
+        <span>{t("SYSTEM / PORTAL CODE")} <b>{address.length}/12</b></span>
+        <span>{t("NMS GLYPHS · HEX ADDRESS")}</span>
       </div>
       <GlyphStrip address={address} large />
       <div className="address-input-row">
         <input
-          aria-label={t("Indirizzo portale di 12 glifi")}
+          aria-label={t("12-glyph portal address")}
           aria-describedby="portal-address-validation"
           aria-invalid={!valid}
           autoComplete="off"
           maxLength={12}
           onChange={(event) => onChange(event.target.value.toUpperCase().replace(/[^0-9A-F]/g, "").slice(0, 12))}
           pattern="[0-9A-Fa-f]{12}"
-          placeholder={t("12 glifi portale")}
+          placeholder={t("12 portal glyphs")}
           required
           spellCheck={false}
           value={address}
         />
-        <button aria-label={t("Rimuovi ultimo glifo")} className="square-button" disabled={!address} onClick={() => onChange(address.slice(0, -1))} title={t("Rimuovi ultimo glifo")} type="button"><ArrowLeft size={16} /></button>
-        <button aria-label={t("Cancella indirizzo")} className="square-button" disabled={!address} onClick={() => onChange("")} title={t("Cancella indirizzo")} type="button"><X size={16} /></button>
+        <button aria-label={t("Remove last glyph")} className="square-button" disabled={!address} onClick={() => onChange(address.slice(0, -1))} title={t("Remove last glyph")} type="button"><ArrowLeft size={16} /></button>
+        <button aria-label={t("Clear address")} className="square-button" disabled={!address} onClick={() => onChange("")} title={t("Clear address")} type="button"><X size={16} /></button>
       </div>
-      <div aria-label={t("Tastiera glifi portale")} className="glyph-keypad">
-        {glyphCharacters.map((glyph) => <button aria-label={t("Inserisci glifo {glyph}", { glyph })} disabled={address.length >= 12} key={glyph} onClick={() => appendGlyph(glyph)} title={t("Glifo {glyph}", { glyph })} type="button"><Image alt="" height={24} loading="eager" src={glyphAsset(glyph)} unoptimized width={24} /></button>)}
+      <div aria-label={t("Portal glyph keypad")} className="glyph-keypad">
+        {glyphCharacters.map((glyph) => <button aria-label={t("Enter glyph {glyph}", { glyph })} disabled={address.length >= 12} key={glyph} onClick={() => appendGlyph(glyph)} title={t("Glyph {glyph}", { glyph })} type="button"><Image alt="" height={24} loading="eager" src={glyphAsset(glyph)} unoptimized width={24} /></button>)}
       </div>
       <PortalValidation address={address} decoded={decoded} lookup={visibleLookup} />
     </div>

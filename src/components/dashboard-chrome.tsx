@@ -29,34 +29,34 @@ export function AllianceSidebar({ missionCount, stationCount, userCount, current
 }>) {
   const { t } = useLocale();
   const displayName = currentMember.nmsName || currentMember.name;
-  let roleLabel = t("Utente");
-  if (currentMember.role === "admin") roleLabel = t("Amministratore");
-  else if (currentMember.role === "moderator") roleLabel = t("Moderatore");
+  let roleLabel = t("Member");
+  if (currentMember.role === "admin") roleLabel = t("Administrator");
+  else if (currentMember.role === "moderator") roleLabel = t("Moderator");
   return (
     <aside className="sidebar">
       <Link className="brand" href="/">
         <span className="brand-mark" style={settings.logoUrl ? { backgroundImage: `url("${settings.logoUrl}")` } : undefined}>{!settings.logoUrl && <Orbit size={21} strokeWidth={1.8} />}</span>
         <span><strong>{settings.name}</strong></span>
       </Link>
-      <nav className="side-nav" aria-label={t("Navigazione principale")}>
-        <Link className={`nav-item ${activeSection === "missioni" ? "active" : ""}`} href="/"><Crosshair size={17} /><span>{t("Missioni")}</span><span className="nav-count">{missionCount}</span></Link>
-        <Link className={`nav-item ${activeSection === "stazioni" ? "active" : ""}`} href="/stations"><Orbit size={17} /><span>{t("Stazioni")}</span><span className="nav-count">{stationCount}</span></Link>
-        {(currentMember.role === "admin" || currentMember.role === "moderator") && <Link className={`nav-item ${activeSection === "utenti" ? "active" : ""}`} href="/users"><UsersRound size={17} /><span>{t("Utenti")}</span><span className="nav-count">{userCount ?? 0}</span></Link>}
+      <nav className="side-nav" aria-label={t("Main navigation")}>
+        <Link className={`nav-item ${activeSection === "missioni" ? "active" : ""}`} href="/"><Crosshair size={17} /><span>{t("Missions")}</span><span className="nav-count">{missionCount}</span></Link>
+        <Link className={`nav-item ${activeSection === "stazioni" ? "active" : ""}`} href="/stations"><Orbit size={17} /><span>{t("Stations")}</span><span className="nav-count">{stationCount}</span></Link>
+        {(currentMember.role === "admin" || currentMember.role === "moderator") && <Link className={`nav-item ${activeSection === "utenti" ? "active" : ""}`} href="/users"><UsersRound size={17} /><span>{t("Users")}</span><span className="nav-count">{userCount ?? 0}</span></Link>}
       </nav>
       <div className="sidebar-bottom">
         <div className="profile"><span className="avatar">{currentMember.image
           ? <Image alt="" aria-hidden="true" height={31} src={currentMember.image} unoptimized width={31} />
           : displayName.slice(0, 2).toUpperCase()}</span><span><strong>{displayName}</strong><small>{roleLabel}</small></span></div>
         {(settings.discordUrl || settings.telegramUrl) && <div className="community-links">
-          {settings.discordUrl && <Link aria-label={t("Apri il server Discord dell’alleanza")} href={settings.discordUrl} rel="noreferrer" target="_blank"><MessageCircle size={15} /><span>Discord</span></Link>}
-          {settings.telegramUrl && <Link aria-label={t("Apri il gruppo Telegram dell’alleanza")} href={settings.telegramUrl} rel="noreferrer" target="_blank"><Send size={15} /><span>Telegram</span></Link>}
+          {settings.discordUrl && <Link aria-label={t("Open the alliance Discord server")} href={settings.discordUrl} rel="noreferrer" target="_blank"><MessageCircle size={15} /><span>Discord</span></Link>}
+          {settings.telegramUrl && <Link aria-label={t("Open the alliance Telegram group")} href={settings.telegramUrl} rel="noreferrer" target="_blank"><Send size={15} /><span>Telegram</span></Link>}
         </div>}
       </div>
     </aside>
   );
 }
 
-export function DashboardTopbar({ currentMember, settings, sectionTitle = "Missioni", onAdminOpen, onProfileOpen }: Readonly<{
+export function DashboardTopbar({ currentMember, settings, sectionTitle = "Missions", onAdminOpen, onProfileOpen }: Readonly<{
   currentMember: AllianceMember;
   settings: AllianceSettings;
   sectionTitle?: string;
@@ -79,19 +79,18 @@ export function DashboardTopbar({ currentMember, settings, sectionTitle = "Missi
     icon.removeAttribute("sizes");
   }, [settings.logoUrl, settings.name]);
 
-  let roleLabel = t("Utente");
-  if (currentMember.role === "admin") roleLabel = t("Amministratore");
-  else if (currentMember.role === "moderator") roleLabel = t("Moderatore");
-  else roleLabel = t(roleLabel);
+  let roleLabel = t("Member");
+  if (currentMember.role === "admin") roleLabel = t("Administrator");
+  else if (currentMember.role === "moderator") roleLabel = t("Moderator");
   return (
     <header className="topbar">
       <div className="breadcrumb"><strong>{t(sectionTitle)}</strong></div>
       <div className="topbar-tools">
         <LanguageSelector />
         <span className="account-label">{currentMember.nmsName || currentMember.name} · {roleLabel}</span>
-        {onProfileOpen && <button aria-label={t("Il mio profilo")} className="square-button" onClick={onProfileOpen} title={t("Il mio profilo")} type="button"><UserRound size={16} /></button>}
-        {currentMember.role === "admin" && onAdminOpen && <button aria-label={t("Gestione alleanza")} className="square-button" onClick={onAdminOpen} title={t("Gestione alleanza")} type="button"><Settings2 size={16} /></button>}
-        <button aria-label={t("Esci")} className="square-button" onClick={() => signOut({ callbackUrl: "/" })} title={t("Esci")} type="button"><LogOut size={16} /></button>
+        {onProfileOpen && <button aria-label={t("My profile")} className="square-button" onClick={onProfileOpen} title={t("My profile")} type="button"><UserRound size={16} /></button>}
+        {currentMember.role === "admin" && onAdminOpen && <button aria-label={t("Alliance settings")} className="square-button" onClick={onAdminOpen} title={t("Alliance settings")} type="button"><Settings2 size={16} /></button>}
+        <button aria-label={t("Sign out")} className="square-button" onClick={() => signOut({ callbackUrl: "/" })} title={t("Sign out")} type="button"><LogOut size={16} /></button>
         <span className="top-avatar">
           {currentMember.image
             ? <span style={{ backgroundImage: `url("${currentMember.image}")` }} />
@@ -106,9 +105,9 @@ export function MissionHero({
   onCreate,
   showCreate,
   settings,
-  title = "Registro missioni",
-  description = "Coordina la prossima frontiera, una spedizione alla volta.",
-  actionLabel = "Nuova missione",
+  title = "Mission log",
+  description = "Coordinate the next frontier, one expedition at a time.",
+  actionLabel = "New mission",
 }: Readonly<{
   onCreate?: () => void;
   showCreate?: boolean;
@@ -150,12 +149,12 @@ export function MissionMetrics({ missions, counts }: Readonly<{
   const completedShare = missions.length > 0 ? Math.round((counts.Completata / missions.length) * 100) : 0;
 
   return (
-    <section aria-label={t("Riepilogo missioni")} className="metrics-row">
+    <section aria-label={t("Mission overview")} className="metrics-row">
       <div className="metrics-inner">
-        <div className="metric"><span className="metric-label">{t("MISSIONI ATTIVE")}</span><strong>{counts["In corso"]}<small> / {missions.length}</small></strong><span className="metric-foot"><span className="metric-marker marker-green" />{counts["In attesa"]} {t("in attesa")}</span></div>
-        <div className="metric"><span className="metric-label">{t("COMPLETATE")}</span><strong>{counts.Completata}</strong><span className="metric-foot"><span className="metric-marker marker-coral" />{completedShare}% {t("del totale")}</span></div>
-        <div className="metric"><span className="metric-label">{t("PRIORITÀ ALTA / URGENTE")}</span><strong>{highPriorityCount}</strong><span className="metric-foot"><span className="metric-marker marker-yellow" />{t("Richiedono attenzione")}</span></div>
-        <div className="metric"><span className="metric-label">{t("DA ASSEGNARE")}</span><strong>{counts["Attesa non assegnate"]}</strong><span className="metric-foot"><span className="metric-marker marker-coral" />{t("In attesa senza assegnatario")}</span></div>
+        <div className="metric"><span className="metric-label">{t("ACTIVE MISSIONS")}</span><strong>{counts["In corso"]}<small> / {missions.length}</small></strong><span className="metric-foot"><span className="metric-marker marker-green" />{counts["In attesa"]} {t("Pending")}</span></div>
+        <div className="metric"><span className="metric-label">{t("COMPLETED")}</span><strong>{counts.Completata}</strong><span className="metric-foot"><span className="metric-marker marker-coral" />{completedShare}% {t("of total")}</span></div>
+        <div className="metric"><span className="metric-label">{t("HIGH / URGENT PRIORITY")}</span><strong>{highPriorityCount}</strong><span className="metric-foot"><span className="metric-marker marker-yellow" />{t("Need attention")}</span></div>
+        <div className="metric"><span className="metric-label">{t("UNASSIGNED")}</span><strong>{counts["Attesa non assegnate"]}</strong><span className="metric-foot"><span className="metric-marker marker-coral" />{t("Pending without an assignee")}</span></div>
       </div>
     </section>
   );

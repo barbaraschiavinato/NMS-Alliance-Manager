@@ -22,11 +22,11 @@ export function GoogleLogin({ allianceName, allianceLogoUrl, missingConfiguratio
           {!hasAllianceLogo && <Orbit size={28} />}
         </span>
         <span className="eyebrow login-eyebrow">{displayAllianceName}</span>
-        <h1>{t("Accedi alle operazioni")}<span>.</span></h1>
-        <p>{t("Entra con Google per visualizzare e coordinare le missioni dell’alleanza.")}</p>
-        {ready ? <button className="google-login-button" onClick={() => signIn("google")} type="button"><GoogleMark /> {t("Continua con Google")}</button> : <div className="auth-setup-note"><CircleSetupIcon /> {t("Accesso da configurare nel progetto")}</div>}
+        <h1>{t("Sign in to operations")}<span>.</span></h1>
+        <p>{t("Sign in with Google to view and coordinate alliance missions.")}</p>
+        {ready ? <button className="google-login-button" onClick={() => signIn("google")} type="button"><GoogleMark /> {t("Continue with Google")}</button> : <div className="auth-setup-note"><CircleSetupIcon /> {t("Sign-in needs to be configured for this project")}</div>}
         {!ready && <ul className="auth-config-list">{missingConfiguration.map((key) => <li key={key}>{key}</li>)}</ul>}
-        <small>{t("Account verificati · Accesso protetto")}</small>
+        <small>{t("Verified accounts · Secure access")}</small>
       </div>
     </main>
   );

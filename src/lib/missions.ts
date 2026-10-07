@@ -78,11 +78,11 @@ export function decodePortalAddress(address: string): PortalAddressDecode | null
   const rawX = Number.parseInt(normalized.slice(9, 12), 16);
   const errors: string[] = [];
 
-  if (planet > 6) errors.push(`Indice pianeta ${planet}: ammessi da 0 a 6.`);
-  if (systemIndex > 0xffe) errors.push("Indice sistema FFF riservato.");
-  if (rawY === 0 || rawY === 0x80) errors.push(`Coordinata Y ${rawY.toString(16).toUpperCase().padStart(2, "0")}: valore non utilizzato.`);
-  if (rawZ === 0 || rawZ === 0x800) errors.push(`Coordinata Z ${rawZ.toString(16).toUpperCase().padStart(3, "0")}: valore non utilizzato.`);
-  if (rawX === 0 || rawX === 0x800) errors.push(`Coordinata X ${rawX.toString(16).toUpperCase().padStart(3, "0")}: valore non utilizzato.`);
+  if (planet > 6) errors.push(`Planet index ${planet}: allowed range is 0–6.`);
+  if (systemIndex > 0xffe) errors.push("System index FFF is reserved.");
+  if (rawY === 0 || rawY === 0x80) errors.push(`Y coordinate ${rawY.toString(16).toUpperCase().padStart(2, "0")}: unused value.`);
+  if (rawZ === 0 || rawZ === 0x800) errors.push(`Z coordinate ${rawZ.toString(16).toUpperCase().padStart(3, "0")}: unused value.`);
+  if (rawX === 0 || rawX === 0x800) errors.push(`X coordinate ${rawX.toString(16).toUpperCase().padStart(3, "0")}: unused value.`);
 
   return {
     kind: "portal",

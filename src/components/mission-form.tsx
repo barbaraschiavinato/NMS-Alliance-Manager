@@ -80,9 +80,9 @@ export function MissionForm({
   const matchingStationOwners = stationOwners.filter((station) =>
     station.portal === form.systemAddress.toUpperCase() && station.galaxy === form.galaxy,
   );
-  let submitLabel = t("Crea missione");
-  if (saving) submitLabel = t("Salvataggio…");
-  else if (mission) submitLabel = t("Salva modifiche");
+  let submitLabel = t("Create mission");
+  if (saving) submitLabel = t("Saving…");
+  else if (mission) submitLabel = t("Save changes");
   const update = <K extends keyof MissionInput>(key: K, value: MissionInput[K]) =>
     setForm((current) => ({ ...current, [key]: value }));
   const currentPlanetKey = /^[0-9a-f]{12}$/i.test(form.systemAddress) &&
@@ -103,18 +103,18 @@ export function MissionForm({
         const body: unknown = await response.json();
         if (!response.ok) {
           const message = body && typeof body === "object" && "error" in body ? body.error : null;
-          throw new Error(typeof message === "string" ? message : "Impossibile leggere lo stato del pianeta.");
+          throw new Error(typeof message === "string" ? message : "Unable to read planet status.");
         }
         const statuses = body && typeof body === "object" && "systemStatuses" in body ? body.systemStatuses : null;
         if (!Array.isArray(statuses) || !statuses.every(isMissionSystemStatus)) {
-          throw new Error("Risposta dello stato pianeta non valida.");
+          throw new Error("Invalid planet status response.");
         }
         setSystemStatuses(statuses);
         setLoadedStatusErrorKey("");
       })
       .catch((error_: unknown) => {
         if (!controller.signal.aborted) {
-          setSystemStatusesError(error_ instanceof Error ? error_.message : "Impossibile leggere lo stato del pianeta.");
+          setSystemStatusesError(error_ instanceof Error ? error_.message : "Unable to read planet status.");
           setLoadedStatusErrorKey(planetSystemStatusKey(address, galaxy));
         }
       })
@@ -139,17 +139,17 @@ export function MissionForm({
       const body: unknown = await response.json();
       if (!response.ok) {
         const message = body && typeof body === "object" && "error" in body ? body.error : null;
-        throw new Error(typeof message === "string" ? message : "Impossibile salvare lo stato del pianeta.");
+        throw new Error(typeof message === "string" ? message : "Unable to save planet status.");
       }
       const statuses = body && typeof body === "object" && "systemStatuses" in body ? body.systemStatuses : null;
       if (!Array.isArray(statuses) || !statuses.every(isMissionSystemStatus)) {
-        throw new Error("Risposta dello stato pianeta non valida.");
+        throw new Error("Invalid planet status response.");
       }
       setSystemStatuses(statuses);
       setSystemStatusesError("");
       onSystemStatusesSaved?.(form.systemAddress, form.galaxy, statuses);
     } catch (error_: unknown) {
-      setSystemStatusesError(error_ instanceof Error ? error_.message : "Impossibile salvare lo stato del pianeta.");
+      setSystemStatusesError(error_ instanceof Error ? error_.message : "Unable to save planet status.");
     } finally {
       setSystemStatusesSaving(false);
     }
@@ -175,11 +175,11 @@ export function MissionForm({
   async function submit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!addressComplete) {
-      setError(t("Inserisci un codice sistema o portale valido prima di salvare."));
+      setError(t("Enter a valid system or portal code before saving."));
       return;
     }
     if (systemLookup?.status === "checking") {
-      setError(t("Attendi il completamento del controllo dell’archivio."));
+      setError(t("Wait for the archive check to finish."));
       return;
     }
     setSaving(true);
@@ -188,20 +188,20 @@ export function MissionForm({
       await onSave(form);
       onClose();
     } catch (error_) {
-      setError(error_ instanceof Error ? error_.message : "Salvataggio non riuscito.");
+      setError(error_ instanceof Error ? error_.message : t("Save failed."));
     } finally {
       setSaving(false);
     }
   }
 
   async function remove() {
-    if (!mission || !window.confirm(t("Eliminare \"{title}\"?", { title: mission.title }))) return;
+    if (!mission || !window.confirm(t("Delete \"{title}\"?", { title: mission.title }))) return;
     setSaving(true);
     try {
       await onDelete(mission.id);
       onClose();
     } catch (error_) {
-      setError(error_ instanceof Error ? error_.message : "Eliminazione non riuscita.");
+      setError(error_ instanceof Error ? error_.message : t("Deletion failed."));
     } finally {
       setSaving(false);
     }
@@ -212,18 +212,18 @@ export function MissionForm({
       <dialog aria-labelledby="dialog-title" aria-modal="true" className="mission-dialog" open>
         <div className="dialog-heading">
           <div>
-            <h2 id="dialog-title">{t(mission ? "Modifica missione" : "Nuova missione")}</h2>
+            <h2 id="dialog-title">{t(mission ? "Edit mission" : "New mission")}</h2>
           </div>
-          <button aria-label={t("Chiudi")} className="icon-button" onClick={onClose} type="button"><X size={18} /></button>
+          <button aria-label={t("Close")} className="icon-button" onClick={onClose} type="button"><X size={18} /></button>
         </div>
         <form onSubmit={submit}>
           <label className="field full-field">
-            <span>{t("Nome missione")}</span>
-            <input autoFocus maxLength={120} onChange={(event) => update("title", event.target.value)} placeholder={t("Es. Mappare il settore")} required value={form.title} />
+            <span>{t("Mission name")}</span>
+            <input autoFocus maxLength={120} onChange={(event) => update("title", event.target.value)} placeholder={t("E.g. Map the sector")} required value={form.title} />
           </label>
           <label className="field full-field">
-            <span>{t("Obiettivo")}</span>
-            <textarea onChange={(event) => update("description", event.target.value)} placeholder={t("Dettagli e criteri di completamento")} rows={3} value={form.description} />
+            <span>{t("Objective")}</span>
+            <textarea onChange={(event) => update("description", event.target.value)} placeholder={t("Details and completion criteria")} rows={3} value={form.description} />
           </label>
           <SystemAddressField address={form.systemAddress} galaxy={form.galaxy} onChange={(value) => {
             update("systemAddress", value);
@@ -234,15 +234,15 @@ export function MissionForm({
           }} onLookupResolved={handleSystemLookup} onStateChange={setAddressValidation} />
           <div className="form-grid">
             <label className="field">
-              <span>{t("Nome sistema / settore")} <small>{t("facoltativo")}</small></span>
+              <span>{t("System/sector name")} <small>{t("optional")}</small></span>
               <input onChange={(event) => {
                 update("system", event.target.value);
                 update("systemLabelFromAlmanac", false);
-              }} placeholder={t("Etichetta per riconoscerlo")} value={form.system} />
+              }} placeholder={t("A label to identify it")} value={form.system} />
             </label>
             <label className="field">
-              <span>{t("Galassia")} <b>{galaxyLabel(form.galaxy)}</b></span>
-              <select aria-label={t("Galassia")} onChange={(event) => {
+              <span>{t("Galaxy")} <b>{galaxyLabel(form.galaxy)}</b></span>
+              <select aria-label={t("Galaxy")} onChange={(event) => {
                 update("galaxy", Number(event.target.value));
                 update("stationOwnerEmail", undefined);
                 update("stationOwnerName", undefined);
@@ -253,18 +253,18 @@ export function MissionForm({
               </select>
             </label>
             <label className="field">
-              <span>{t("Missione per")}</span>
+              <span>{t("Mission for")}</span>
               <select onChange={(event) => update("targetSpecialty", event.target.value as MissionSpecialty)} value={form.targetSpecialty}>
                 {(availableSpecialties ?? missionSpecialties).map((specialty) => <option disabled={Boolean(mission) && specialty === "all"} key={specialty} value={specialty}>{t(targetNames[specialty])}</option>)}
               </select>
             </label>
             <label className="field">
-              <span>{t("Scopritore del sistema")}</span>
+              <span>{t("System discoverer")}</span>
               <select onChange={(event) => {
                 update("stationOwnerEmail", event.target.value || undefined);
                 update("stationOwnerName", undefined);
               }} value={form.stationOwnerEmail ?? ""}>
-                <option value="">{t("Non indicato")}</option>
+                <option value="">{t("Not specified")}</option>
                 {form.stationOwnerEmail && !matchingStationOwners.some((station) => station.owner === form.stationOwnerEmail) && <option value={form.stationOwnerEmail}>{form.stationOwnerName || form.stationOwnerEmail}</option>}
                 {matchingStationOwners.map((station) => {
                   const owner = members.find((candidate) => candidate.email === station.owner);
@@ -273,7 +273,7 @@ export function MissionForm({
               </select>
             </label>
             <label className="field">
-                <span>{t("Assegna a")}</span>
+                <span>{t("Assign to")}</span>
                 <select onChange={(event) => {
                   const selectedEmail = event.target.value;
                   if (selectedEmail === "__legacy") {
@@ -285,31 +285,31 @@ export function MissionForm({
                   update("assignedEmail", assignedEmail || undefined);
                   update("assignedTo", assignedMember?.nmsName || assignedMember?.name || "");
                 }} value={form.assignedEmail ?? (form.assignedTo ? "__legacy" : "")}>
-                  <option value="">{t("Non assegnata")}</option>
-                  {form.assignedTo && !form.assignedEmail && <option value="__legacy">{form.assignedTo} · {t("assegnazione esistente")}</option>}
-                  {members.map((candidate) => <option key={candidate.email} value={candidate.email}>{candidate.nmsName || candidate.name} · {candidate.specialty ? t(specialtyNames[candidate.specialty]) : t("Specializzazione da completare")} · {candidate.nmsCode} · {candidate.platforms.join(", ")}</option>)}
+                  <option value="">{t("Not assigned")}</option>
+                  {form.assignedTo && !form.assignedEmail && <option value="__legacy">{form.assignedTo} · {t("existing assignment")}</option>}
+                  {members.map((candidate) => <option key={candidate.email} value={candidate.email}>{candidate.nmsName || candidate.name} · {candidate.specialty ? t(specialtyNames[candidate.specialty]) : t("Specialty incomplete")} · {candidate.nmsCode} · {candidate.platforms.join(", ")}</option>)}
                 </select>
             </label>
             <label className="field">
-              <span>{t("Priorità")}</span>
+              <span>{t("Priority")}</span>
               <select onChange={(event) => update("priority", event.target.value as MissionPriority)} value={form.priority}>
                 {missionPriorities.map((priority) => <option key={priority} value={priority}>{t(priority)}</option>)}
               </select>
             </label>
             <label className="field">
-              <span>{t("Stato")}</span>
+              <span>{t("Status")}</span>
               <select onChange={(event) => update("status", event.target.value as MissionStatus)} value={form.status}>
                 {missionStatuses.map((status) => <option key={status} value={status}>{t(status)}</option>)}
               </select>
             </label>
             <label className="field mission-progress-field">
-              <span>{t("Avanzamento")} <b>{form.progress}%</b></span>
+              <span>{t("Progress")} <b>{form.progress}%</b></span>
               <input max={100} min={0} onChange={(event) => update("progress", Number(event.target.value))} type="range" value={form.progress} />
             </label>
             <fieldset className="system-status-fieldset">
-              <legend>{t("Stato sistema · condiviso per pianeta")}</legend>
-              {!currentPlanetKey && <p className="field-hint">{t("Inserisci un indirizzo portale valido per gestire lo stato del pianeta.")}</p>}
-              {systemStatusesLoading && <p className="field-hint">{t("Caricamento stato pianeta")}</p>}
+              <legend>{t("System status · shared by planet")}</legend>
+              {!currentPlanetKey && <p className="field-hint">{t("Enter a valid portal address to manage planet status.")}</p>}
+              {systemStatusesLoading && <p className="field-hint">{t("Loading planet status…")}</p>}
               {systemStatusesError && <p className="form-error"><CircleAlert size={14} />{t(systemStatusesError)}</p>}
               {currentPlanetKey && !systemStatusesLoading && loadedStatusErrorKey !== currentPlanetKey && (
                 <div className="system-status-options">
@@ -330,9 +330,9 @@ export function MissionForm({
           </div>
           {error && <p className="form-error"><CircleAlert size={15} />{t(error)}</p>}
           <div className="dialog-actions">
-            {mission && <button className="delete-button" disabled={saving} onClick={remove} type="button"><Trash2 size={15} /> {t("Elimina")}</button>}
+            {mission && <button className="delete-button" disabled={saving} onClick={remove} type="button"><Trash2 size={15} /> {t("Delete")}</button>}
             <span className="action-spacer" />
-            <button className="quiet-button" onClick={onClose} type="button">{t("Annulla")}</button>
+            <button className="quiet-button" onClick={onClose} type="button">{t("Cancel")}</button>
             <button className="primary-button" disabled={saving || !addressComplete || systemLookup?.status === "checking"} type="submit">{submitLabel}<ArrowUpRight size={15} /></button>
           </div>
         </form>

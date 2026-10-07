@@ -24,7 +24,7 @@ const targetSpecialtyNames: Record<MissionSpecialty, string> = {
   other: "Altro",
 };
 
-const missionProgressStatuses = missionSystemStatuses.filter((status) => status !== "Errore dati");
+const missionProgressStatuses = missionSystemStatuses.filter((status) => status !== "Data error");
 
 function MissionRowAction({ mission, currentMember, canManage, onEdit, onDeleteMission, onClaim, onComplete }: Readonly<{
   mission: Mission;
@@ -38,15 +38,15 @@ function MissionRowAction({ mission, currentMember, canManage, onEdit, onDeleteM
   const { t } = useLocale();
   if (canManage) {
     return <span className="mission-row-actions">
-      <button aria-label={`${t("Modifica")} ${mission.title}`} className="row-action" data-tooltip={t("Modifica missione")} onClick={() => onEdit(mission)} type="button"><Pencil size={15} /></button>
-      <button aria-label={`${t("Elimina")} ${mission.title}`} className="row-action row-action-delete" data-tooltip={t("Elimina missione")} onClick={() => onDeleteMission(mission)} type="button"><Trash2 size={15} /></button>
+      <button aria-label={`${t("Edit")} ${mission.title}`} className="row-action" data-tooltip={t("Edit mission")} onClick={() => onEdit(mission)} type="button"><Pencil size={15} /></button>
+      <button aria-label={`${t("Delete")} ${mission.title}`} className="row-action row-action-delete" data-tooltip={t("Delete mission")} onClick={() => onDeleteMission(mission)} type="button"><Trash2 size={15} /></button>
     </span>;
   }
   if (mission.assignedEmail === currentMember.email && mission.status !== "Completata") {
-    return <button className="claim-button mission-action-button" onClick={() => onComplete(mission)} type="button">{t("Completa missione")}</button>;
+    return <button className="claim-button mission-action-button" onClick={() => onComplete(mission)} type="button">{t("Complete mission")}</button>;
   }
   if (!mission.assignedEmail && !mission.assignedTo.trim()) {
-    return <button className="claim-button mission-action-button" onClick={() => onClaim(mission)} type="button">{t("Prendi")}</button>;
+    return <button className="claim-button mission-action-button" onClick={() => onClaim(mission)} type="button">{t("Claim")}</button>;
   }
   return <span className="no-row-action">—</span>;
 }
@@ -63,7 +63,7 @@ function AssigneeCell({ mission, members, currentMember, onOpenProfile }: Readon
     ?? ([currentMember.nmsName, currentMember.name].includes(mission.assignedTo) ? currentMember : undefined)
     ?? members.find((member) => member.nmsName === mission.assignedTo || member.name === mission.assignedTo);
   const image = assignedMember?.image;
-  const name = mission.assignedTo || t("Da assegnare");
+  const name = mission.assignedTo || t("Not assigned");
   const email = mission.assignedEmail || assignedMember?.email;
 
   const content = <>
@@ -82,7 +82,7 @@ function DiscovererCell({ email, name, image, onOpenProfile }: Readonly<{
   onOpenProfile: (email: string) => void;
 }>) {
   const { t } = useLocale();
-  const label = name || email || t("Non indicato");
+  const label = name || email || t("Not specified");
   const content = <>
     <MemberAvatar image={image} key={image || "fallback"} label={label} />
     {label}
@@ -119,7 +119,7 @@ function MissionPlanetThumbnail({ mission }: Readonly<{ mission: Mission }>) {
       .then(async (response) => {
         const body: unknown = await response.json();
         if (!response.ok) {
-          if (response.status !== 404) throw new Error("Impossibile caricare l’immagine del pianeta.");
+          if (response.status !== 404) throw new Error("Unable to load planet image.");
           return;
         }
         const planet = asRecord(asRecord(body)?.planet);
@@ -165,14 +165,14 @@ function MissionCard({ mission, systemStatuses, currentMember, canManage, member
 }>) {
   const { t } = useLocale();
   const statuses = systemStatuses[planetSystemStatusKey(mission.systemAddress, mission.galaxy)] ?? [];
-  const hasDataError = statuses.includes("Errore dati");
+  const hasDataError = statuses.includes("Data error");
   const canUpdateSystemStatus = mission.assignedEmail?.toLowerCase() === currentMember.email.toLowerCase();
   return <article className="mission-card">
     <div className="mission-card-heading">
       <div className="mission-name-cell">
         <MissionPlanetThumbnail mission={mission} />
         <div>
-          <button aria-label={`${t("Apri la scheda del pianeta per")} ${mission.title}`} className="mission-title" onClick={() => onOpenPlanet(mission)} type="button">{mission.title}</button>
+          <button aria-label={`${t("Open planet details for")} ${mission.title}`} className="mission-title" onClick={() => onOpenPlanet(mission)} type="button">{mission.title}</button>
           {mission.description && <span className="mission-description">{mission.description}</span>}
         </div>
       </div>
@@ -180,11 +180,11 @@ function MissionCard({ mission, systemStatuses, currentMember, canManage, member
     </div>
     <div className="mission-card-system">
       <GlyphStrip address={mission.systemAddress ?? ""} />
-      <span>{mission.system || t("Sistema")} · {galaxyLabel(mission.galaxy ?? 0)}</span>
+      <span>{mission.system || t("System")} · {galaxyLabel(mission.galaxy ?? 0)}</span>
     </div>
     <div className="mission-card-people">
-      <div><small>{t("SCOPRITORE")}</small><DiscovererCell email={mission.stationOwnerEmail} image={getDiscovererImage(mission.stationOwnerEmail)} name={mission.stationOwnerName} onOpenProfile={onOpenProfile} /></div>
-      <div><small>{t("ASSEGNATARIO")}</small><AssigneeCell currentMember={currentMember} members={members} mission={mission} onOpenProfile={onOpenProfile} /></div>
+      <div><small>{t("DISCOVERER")}</small><DiscovererCell email={mission.stationOwnerEmail} image={getDiscovererImage(mission.stationOwnerEmail)} name={mission.stationOwnerName} onOpenProfile={onOpenProfile} /></div>
+      <div><small>{t("ASSIGNEE")}</small><AssigneeCell currentMember={currentMember} members={members} mission={mission} onOpenProfile={onOpenProfile} /></div>
     </div>
     <div className="mission-card-progress">
       <span className={`badge badge--priority badge--priority-${mission.priority.toLowerCase()}`}><span />{t(mission.priority)}</span>
@@ -193,8 +193,8 @@ function MissionCard({ mission, systemStatuses, currentMember, canManage, member
     <div className="mission-card-actions">
       <span
         aria-label={hasDataError
-          ? t("Avanzamento sistema: errore dati")
-          : t("Avanzamento sistema: {current} di {total} completati", {
+          ? t("System progress: data error")
+          : t("System progress: {current} of {total} complete", {
             current: missionProgressStatuses.filter((status) => statuses.includes(status)).length,
             total: missionProgressStatuses.length,
           })}
@@ -202,7 +202,7 @@ function MissionCard({ mission, systemStatuses, currentMember, canManage, member
         role="group"
       >
         {missionProgressStatuses.map((status) => {
-          const tooltip = t(hasDataError ? "Errore dati" : status);
+          const tooltip = t(hasDataError ? "Data error" : status);
           return (
             <label aria-label={tooltip} className={`mission-system-progress-item${canUpdateSystemStatus ? " mission-system-progress-item-editable" : ""}`} key={status} title={tooltip}>
               {canUpdateSystemStatus && (
@@ -315,25 +315,25 @@ export function MissionTable({
   return (
     <section className="mission-section">
       <div className="toolbar">
-        <div className="filter-tabs" role="tablist" aria-label={t("Filtra per stato")}>
+        <div className="filter-tabs" role="tablist" aria-label={t("Filter by status")}>
           {(["Tutte", "In corso", "Attesa assegnate", "Attesa non assegnate", "Completata"] as MissionFilter[]).map((item) => <button aria-selected={filter === item} className={filter === item ? "filter-tab selected" : "filter-tab"} key={item} onClick={() => onFilterChange(item)} role="tab" type="button">{t(item)}<span>{counts[item]}</span></button>)}
         </div>
         <div className="toolbar-actions">
-          <label className="search-field"><Search size={15} /><input aria-label={t("Cerca per missione, pianeta, utente o tipo di missione")} onChange={(event) => onSearchChange(event.target.value)} placeholder={t("Cerca missione, utente o tipo")} ref={searchInput} value={search} /><kbd>/</kbd></label>
-          <div aria-label={t("Vista missioni")} className="view-toggle" role="group">
-            <button aria-label={t("Vista lista")} aria-pressed={viewMode === "list"} className={viewMode === "list" ? "selected" : ""} onClick={() => setViewOverride("list")} title={t("Vista lista")} type="button"><List size={15} /></button>
-            <button aria-label={t("Vista schede")} aria-pressed={viewMode === "cards"} className={viewMode === "cards" ? "selected" : ""} onClick={() => setViewOverride("cards")} title={t("Vista schede")} type="button"><LayoutGrid size={15} /></button>
+          <label className="search-field"><Search size={15} /><input aria-label={t("Search missions, planets, users, or mission type")} onChange={(event) => onSearchChange(event.target.value)} placeholder={t("Search missions, users, or type")} ref={searchInput} value={search} /><kbd>/</kbd></label>
+          <div aria-label={t("Mission view")} className="view-toggle" role="group">
+            <button aria-label={t("List view")} aria-pressed={viewMode === "list"} className={viewMode === "list" ? "selected" : ""} onClick={() => setViewOverride("list")} title={t("List view")} type="button"><List size={15} /></button>
+            <button aria-label={t("Card view")} aria-pressed={viewMode === "cards"} className={viewMode === "cards" ? "selected" : ""} onClick={() => setViewOverride("cards")} title={t("Card view")} type="button"><LayoutGrid size={15} /></button>
           </div>
         </div>
       </div>
       {viewMode === "list" ? <div className="mission-table-wrap">
         <table className="mission-table">
-          <thead><tr><th>{t("MISSIONE")}</th><th>{t("TIPO")}</th><th>{t("SETTORE")}</th><th>{t("SCOPRITORE")}</th><th>{t("ASSEGNATARIO")}</th><th>{t("PRIORITÀ")}</th><th>{t("AVANZAMENTO")}</th><th aria-label={t("Azioni")} /></tr></thead>
+          <thead><tr><th>{t("MISSION")}</th><th>{t("TYPE")}</th><th>{t("SECTOR")}</th><th>{t("DISCOVERER")}</th><th>{t("ASSIGNEE")}</th><th>{t("PRIORITY")}</th><th>{t("PROGRESS")}</th><th aria-label={t("Actions")} /></tr></thead>
           <tbody>
             {missions.map((mission) => <tr key={mission.id}>
-                  <td><div className="mission-name-cell"><span className={`mission-icon ${mission.status === "Completata" ? "mission-icon-done" : ""}`}>{mission.status === "Completata" ? <Check size={15} /> : <Compass size={15} />}</span><div><button aria-label={`${t("Apri la scheda del pianeta per")} ${mission.title}`} className="mission-title" onClick={() => onOpenPlanet(mission)} title={t("Apri scheda pianeta")} type="button">{mission.title}</button><span className="mission-description">{mission.description}</span></div></div></td>
+                  <td><div className="mission-name-cell"><span className={`mission-icon ${mission.status === "Completata" ? "mission-icon-done" : ""}`}>{mission.status === "Completata" ? <Check size={15} /> : <Compass size={15} />}</span><div><button aria-label={`${t("Open planet details for")} ${mission.title}`} className="mission-title" onClick={() => onOpenPlanet(mission)} title={t("Open planet details")} type="button">{mission.title}</button><span className="mission-description">{mission.description}</span></div></div></td>
               <td><span className={`badge badge--specialty badge--specialty-${mission.targetSpecialty ?? "all"}`}>{t(targetSpecialtyNames[mission.targetSpecialty ?? "all"])}</span></td>
-              <td><div className="system-cell"><GlyphStrip address={mission.systemAddress ?? ""} /><span className="system-caption">{mission.system || t("Sistema")} · {galaxyLabel(mission.galaxy ?? 0)}</span></div></td>
+              <td><div className="system-cell"><GlyphStrip address={mission.systemAddress ?? ""} /><span className="system-caption">{mission.system || t("System")} · {galaxyLabel(mission.galaxy ?? 0)}</span></div></td>
               <td><DiscovererCell email={mission.stationOwnerEmail} image={getDiscovererImage(mission.stationOwnerEmail)} name={mission.stationOwnerName} onOpenProfile={setProfileEmail} /></td>
               <td><AssigneeCell currentMember={currentMember} members={members} mission={mission} onOpenProfile={setProfileEmail} /></td>
               <td><span className={`badge badge--priority badge--priority-${mission.priority.toLowerCase()}`}><span />{t(mission.priority)}</span></td>
@@ -341,15 +341,15 @@ export function MissionTable({
               <td><MissionRowAction canManage={canManage} currentMember={currentMember} mission={mission} onClaim={onClaim} onComplete={onComplete} onDeleteMission={onDeleteMission} onEdit={onEdit} /></td>
             </tr>)}
             {loading && <tr><td className="empty-state mission-table-loading" colSpan={8}><LoadingSpinner /></td></tr>}
-            {!loading && missions.length === 0 && <tr><td className="empty-state" colSpan={8}><Search size={18} />{t("Nessuna missione corrisponde ai filtri.")}</td></tr>}
+            {!loading && missions.length === 0 && <tr><td className="empty-state" colSpan={8}><Search size={18} />{t("No missions match the filters.")}</td></tr>}
           </tbody>
         </table>
       </div> : <div className="mission-card-grid">
         {missions.map((mission) => <MissionCard canManage={canManage} currentMember={currentMember} getDiscovererImage={getDiscovererImage} key={mission.id} members={members} mission={mission} onClaim={onClaim} onComplete={onComplete} onDeleteMission={onDeleteMission} onEdit={onEdit} onOpenPlanet={onOpenPlanet} onOpenProfile={setProfileEmail} onToggleSystemStatus={onToggleSystemStatus} systemStatuses={planetStatuses} />)}
         {loading && <div className="mission-cards-loading"><LoadingSpinner /></div>}
-        {!loading && missions.length === 0 && <p className="mission-cards-empty">{t("Nessuna missione corrisponde ai filtri.")}</p>}
+        {!loading && missions.length === 0 && <p className="mission-cards-empty">{t("No missions match the filters.")}</p>}
       </div>}
-      <div className="table-footer"><span><span className="footer-live" />{t("Mostrate")} <strong>{missions.length}</strong> {t("di")} <strong>{counts.Tutte}</strong> {t("missioni")}</span></div>
+      <div className="table-footer"><span><span className="footer-live" />{t("Showing {visible} of {total} missions", { visible: missions.length, total: counts.Tutte })}</span></div>
       {profileEmail && <MemberCardDialog email={profileEmail} onClose={() => setProfileEmail(null)} />}
     </section>
   );
