@@ -12,9 +12,11 @@ import { MissionForm } from "@/components/mission-form";
 import { PlanetCard } from "@/components/planet-card";
 import { LoadingSpinner } from "@/components/loading-spinner";
 import { MemberCardDialog, type MemberMessageContext } from "@/components/member-card-dialog";
+import { MissionSystemProgress } from "@/components/mission-system-progress";
 import type { AllianceMember, AllianceSettings } from "@/lib/access-store";
 import { galaxyNames, galaxyLabel } from "@/lib/galaxies";
 import { decodePortalAddress, missionSpecialties, type Mission, type MissionInput, type MissionSpecialty } from "@/lib/missions";
+import { isMissionSystemStatus, planetSystemStatusKey, type MissionSystemStatus, type PlanetSystemStatuses } from "@/lib/planet-system-status";
 import { useLocale } from "@/components/locale-provider";
 
 type CachedPlanet = Readonly<{ galaxy: number; response: Record<string, unknown> }>;
@@ -72,6 +74,17 @@ function parseStations(value: unknown): StationEntry[] {
       availableSpecialties,
     }];
   });
+}
+
+function parsePlanetSystemStatuses(value: unknown): PlanetSystemStatuses {
+  const statuses = asRecord(value);
+  if (!statuses) throw new Error("Invalid system status response.");
+  return Object.fromEntries(Object.entries(statuses).map(([key, values]) => {
+    if (!Array.isArray(values) || !values.every(isMissionSystemStatus)) {
+      throw new Error("Invalid system status response.");
+    }
+    return [key, [...new Set(values)]];
+  }));
 }
 
 function stationOwnerName(station: StationEntry) {
@@ -159,6 +172,9 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
   const [pageMember, setPageMember] = useState(currentMember);
   const [allianceSettings, setAllianceSettings] = useState(alliance);
   const [stations, setStations] = useState<StationEntry[]>([]);
+  const [planetStatuses, setPlanetStatuses] = useState<PlanetSystemStatuses>({});
+  const [planetStatusesLoaded, setPlanetStatusesLoaded] = useState(false);
+  const [savingStatusKeys, setSavingStatusKeys] = useState<string[]>([]);
   const [selectedStation, setSelectedStation] = useState<{ portal: string; galaxy: number } | null>(null);
   const [profileTarget, setProfileTarget] = useState<{ memberId: string; messageContext: MemberMessageContext } | null>(null);
   const [stationNoteView, setStationNoteView] = useState<{ portal: string; note: string } | null>(null);
@@ -259,6 +275,59 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
         });
     }
   }, [canCreateMissions, t]);
+
+  useEffect(() => {
+    if (!canSeeAll) return;
+    const controller = new AbortController();
+    fetch("/api/planet-status", { cache: "no-store", signal: controller.signal })
+      .then(async (response) => {
+        const body: unknown = await response.json();
+        const record = asRecord(body);
+        if (!response.ok || !record || !("planets" in record)) {
+          const message = record && typeof record.error === "string" ? record.error : t("errors.request_failed");
+          throw new Error(message);
+        }
+        setPlanetStatuses(parsePlanetSystemStatuses(record.planets));
+        setPlanetStatusesLoaded(true);
+      })
+      .catch((error_: unknown) => {
+        if (!controller.signal.aborted) setError(error_ instanceof Error ? error_.message : t("errors.request_failed"));
+      });
+    return () => controller.abort();
+  }, [canSeeAll, t]);
+
+  async function toggleStationSystemStatus(portal: string, stationGalaxy: number, status: MissionSystemStatus, checked: boolean) {
+    const key = planetSystemStatusKey(portal, stationGalaxy);
+    if (savingStatusKeys.includes(key)) return;
+    const currentStatuses = planetStatuses[key] ?? [];
+    const nextStatuses = checked
+      ? [...currentStatuses, status]
+      : currentStatuses.filter((selected) => selected !== status);
+    setSavingStatusKeys((current) => [...current, key]);
+    setError("");
+    try {
+      const response = await fetch("/api/planet-status", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ portal, galaxy: stationGalaxy, systemStatuses: nextStatuses }),
+      });
+      const body: unknown = await response.json();
+      const record = asRecord(body);
+      if (!response.ok || !record || !Array.isArray(record.systemStatuses) || !record.systemStatuses.every(isMissionSystemStatus)) {
+        const message = record && typeof record.error === "string" ? record.error : t("errors.request_failed");
+        throw new Error(message);
+      }
+      const savedStatuses = record.systemStatuses.filter(isMissionSystemStatus);
+      setPlanetStatuses((current) => ({
+        ...current,
+        [key]: [...new Set(savedStatuses)],
+      }));
+    } catch (error_: unknown) {
+      setError(error_ instanceof Error ? error_.message : t("errors.request_failed"));
+    } finally {
+      setSavingStatusKeys((current) => current.filter((savingKey) => savingKey !== key));
+    }
+  }
 
   function handleStationLookup(lookup: NonNullable<SystemAddressValidation["lookup"]>) {
     const nextPlanetType = lookup.planetType?.trim() ?? "";
@@ -424,8 +493,18 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
             {visibleStations.length > 0 && <ul className={`station-list ${viewMode === "cards" ? "station-list-cards" : ""}`}>{visibleStations.map((station) => {
               const planetImageUrl = cachedPlanetImageUrl(station.planet);
               const stationDisplayName = station.name || cachedPlanetType(station.planet) || cachedPlanetTitle(station.planet) || t("planet.unnamed_planet");
+              const statusKey = planetSystemStatusKey(station.portal, station.galaxy);
               const canEditStation = canSeeAll ||
                 (station.createdByMemberId ?? station.ownerId) === pageMember.publicId;
+              const stationOwner = canSeeAll && <StationOwnerCell onOpenProfile={(memberId) => setProfileTarget({
+                memberId,
+                messageContext: {
+                  type: "planet",
+                  portal: station.portal,
+                  galaxy: station.galaxy,
+                  subjectLabel: station.name || cachedPlanetTitle(station.planet) || cachedPlanetType(station.planet),
+                },
+              })} ownerLabel={t("stations.station_owner")} station={station} />;
               return <li key={`${station.portal}:${station.galaxy}:${station.ownerId}`}>
                 {viewMode === "cards" && <button className={`station-card-title${planetImageUrl ? " station-card-title-with-image" : ""}`} onClick={() => setSelectedStation({ portal: station.portal, galaxy: station.galaxy })} type="button">
                   {planetImageUrl && <Image alt="" className="station-card-planet-image" height={112} src={planetImageUrl} unoptimized width={112} />}
@@ -434,15 +513,8 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
                     <strong>{stationDisplayName}</strong>
                   </span>
                 </button>}
-                <div className="station-portal-code"><strong className="station-name">{stationDisplayName}</strong><GlyphStrip address={station.portal} /><code>{station.portal}</code>{canSeeAll && <StationOwnerCell onOpenProfile={(memberId) => setProfileTarget({
-                    memberId,
-                    messageContext: {
-                      type: "planet",
-                      portal: station.portal,
-                      galaxy: station.galaxy,
-                      subjectLabel: station.name || cachedPlanetTitle(station.planet) || cachedPlanetType(station.planet),
-                    },
-                  })} ownerLabel={t("stations.station_owner")} station={station} />}</div>
+                {viewMode === "cards" && stationOwner && <div className="station-card-owner">{stationOwner}</div>}
+                <div className="station-portal-code"><strong className="station-name">{stationDisplayName}</strong><GlyphStrip address={station.portal} /><code>{station.portal}</code>{viewMode === "list" && stationOwner}</div>
                 <div className="station-planet-info-list">
                   {station.planet
                     ? <CachedPlanetInfo onOpen={() => setSelectedStation({ portal: station.portal, galaxy: station.galaxy })} planet={station.planet} />
@@ -450,7 +522,17 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
                       ? <p className="station-card-no-planet">{t("planet.no_almanac_data")}</p>
                       : <button className="station-planet-open station-planet-unknown" onClick={() => setSelectedStation({ portal: station.portal, galaxy: station.galaxy })} type="button"><span>{galaxyLabel(station.galaxy)}</span><strong>{t("planet.no_almanac_data_open_details")}</strong></button>}
                 </div>
-                <div className="station-actions">
+                <div className="station-card-footer">
+                  {canSeeAll && planetStatusesLoaded && <div className="station-system-status">
+                    <strong>{t("system.system_status")}</strong>
+                    <MissionSystemProgress
+                      disabled={savingStatusKeys.includes(statusKey)}
+                      editable
+                      onToggle={(status, checked) => void toggleStationSystemStatus(station.portal, station.galaxy, status, checked)}
+                      statuses={planetStatuses[statusKey] ?? []}
+                    />
+                  </div>}
+                  <div className="station-actions">
                   {canCreateMissions && station.availableSpecialties.length > 0 && <button aria-label={t("stations.create_mission_from_portal", { portal: station.portal })} className="member-icon-action create-station-mission" data-tooltip={t("stations.create_mission_from_station")} onClick={() => setMissionStation({ portal: station.portal, galaxy: station.galaxy, title: cachedPlanetTitle(station.planet), ownerMemberId: station.ownerId })} type="button"><CirclePlus size={14} /></button>}
                   {station.hasMissions
                     ? canSeeAll
@@ -459,6 +541,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
                     : (canSeeAll || station.ownerId === pageMember.publicId) && <button aria-label={t("stations.remove_portal_portal_in_galaxy_from_owner_s_archive", { portal: station.portal, galaxy: galaxyLabel(station.galaxy), owner: stationOwnerName(station) })} className="member-icon-action delete-member" data-tooltip={t("stations.delete_station")} onClick={() => void removeStation(station.portal, station.galaxy, station.ownerId, stationOwnerName(station))} type="button"><Trash2 size={14} /></button>}
                   {canEditStation && <button aria-label={t("stations.edit_station_portal", { portal: station.portal })} className="member-icon-action" data-tooltip={t("stations.edit_station")} onClick={() => openEditStation(station)} type="button"><Pencil size={14} /></button>}
                   {station.note && <button aria-label={t("stations.view_notes_for_station", { station: stationDisplayName })} className="member-icon-action station-notes-action" data-tooltip={t("stations.view_station_notes")} onClick={() => setStationNoteView({ portal: station.portal, note: station.note ?? "" })} type="button"><FileText size={14} /></button>}
+                  </div>
                 </div>
               </li>;
             })}</ul>}

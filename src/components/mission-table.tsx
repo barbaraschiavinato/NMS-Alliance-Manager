@@ -5,11 +5,12 @@ import type { Mission, MissionSpecialty, MissionStatus } from "@/lib/missions";
 import { GlyphStrip } from "@/components/portal-address-field";
 import type { AllianceMember } from "@/lib/access-store";
 import { galaxyLabel } from "@/lib/galaxies";
-import { missionSystemStatuses, planetSystemStatusKey, type MissionSystemStatus, type PlanetSystemStatuses } from "@/lib/planet-system-status";
+import { planetSystemStatusKey, type MissionSystemStatus, type PlanetSystemStatuses } from "@/lib/planet-system-status";
 import { useEffect, useRef, useState } from "react";
 import { MemberCardDialog, type MemberMessageContext } from "@/components/member-card-dialog";
 import { LoadingSpinner } from "@/components/loading-spinner";
 import { useLocale } from "@/components/locale-provider";
+import { MissionSystemProgress } from "@/components/mission-system-progress";
 
 export type MissionFilter = "all" | MissionStatus | "pending_assigned" | "pending_unassigned";
 type MissionCounts = Record<MissionFilter, number>;
@@ -37,8 +38,6 @@ const missionFilterLabels: Record<MissionFilter, string> = {
   pending_unassigned: "missions.pending_unassigned",
   completed: "missions.status_completed",
 };
-
-const missionProgressStatuses = missionSystemStatuses.filter((status) => status !== "data_error");
 
 function MissionRowAction({ mission, currentMember, canManage, onEdit, onDeleteMission, onClaim, onComplete }: Readonly<{
   mission: Mission;
@@ -77,45 +76,6 @@ function MissionStationLink({ mission, canManage }: Readonly<{ mission: Mission;
     href={`/stations?${params.toString()}`}
     title={label}
   ><Compass size={14} /></Link>;
-}
-
-function MissionSystemProgress({ mission, statuses, editable, onToggle }: Readonly<{
-  mission: Mission;
-  statuses: MissionSystemStatus[];
-  editable: boolean;
-  onToggle: (mission: Mission, status: MissionSystemStatus, checked: boolean) => void;
-}>) {
-  const { t } = useLocale();
-  const hasDataError = statuses.includes("data_error");
-  return <span
-    aria-label={hasDataError
-      ? t("errors.system_progress_data_error")
-      : t("missions.system_progress_current_of_total_complete", {
-        current: missionProgressStatuses.filter((status) => statuses.includes(status)).length,
-        total: missionProgressStatuses.length,
-      })}
-    className="mission-system-progress"
-    role="group"
-  >
-    {missionProgressStatuses.map((status) => {
-      const tooltip = t(hasDataError ? "system.data_error" : status);
-      return <label aria-label={tooltip} className={`mission-system-progress-item${editable ? " mission-system-progress-item-editable" : ""}`} key={status} title={tooltip}>
-        {editable && <input
-          aria-label={tooltip}
-          checked={statuses.includes(status)}
-          onChange={(event) => onToggle(mission, status, event.target.checked)}
-          type="checkbox"
-        />}
-        <span
-          aria-hidden="true"
-          className={hasDataError
-            ? "mission-system-progress-square mission-system-progress-square-error"
-            : `mission-system-progress-square${statuses.includes(status) ? " mission-system-progress-square-done" : ""}`}
-        />
-        <span aria-hidden="true" className="mission-system-progress-tooltip">{tooltip}</span>
-      </label>;
-    })}
-  </span>;
 }
 
 function AssigneeCell({ mission, members, currentMember, onOpenProfile }: Readonly<{
@@ -384,7 +344,7 @@ function MissionCard({ mission, systemStatuses, currentMember, canManage, member
       <MissionProgress editable={canUpdateProgress} mission={mission} onChange={onUpdateProgress} />
     </div>
     <div className="mission-card-actions">
-      <MissionSystemProgress editable={canUpdateSystemStatus} mission={mission} onToggle={onToggleSystemStatus} statuses={statuses} />
+      <MissionSystemProgress editable={canUpdateSystemStatus} onToggle={(status, checked) => onToggleSystemStatus(mission, status, checked)} statuses={statuses} />
       <div className="mission-card-action-buttons">
         <MissionStationLink canManage={canManage} mission={mission} />
         <MissionRowAction canManage={canManage} currentMember={currentMember} mission={mission} onClaim={onClaim} onComplete={onComplete} onDeleteMission={onDeleteMission} onEdit={onEdit} />
@@ -511,8 +471,7 @@ export function MissionTable({
               <td><MissionProgress editable={!canManage && mission.assignedMemberId === currentMember.publicId} mission={mission} onChange={onUpdateProgress} /></td>
               <td><MissionSystemProgress
                 editable={mission.assignedMemberId === currentMember.publicId}
-                mission={mission}
-                onToggle={onToggleSystemStatus}
+                onToggle={(status, checked) => onToggleSystemStatus(mission, status, checked)}
                 statuses={planetStatuses[planetSystemStatusKey(mission.systemAddress, mission.galaxy)] ?? []}
               /></td>
               <td><span className="mission-row-actions"><MissionStationLink canManage={canManage} mission={mission} /><MissionRowAction canManage={canManage} currentMember={currentMember} mission={mission} onClaim={onClaim} onComplete={onComplete} onDeleteMission={onDeleteMission} onEdit={onEdit} />{canViewMissionNotes(mission) && <MissionNotesButton mission={mission} onView={setMissionNoteView} />}</span></td>

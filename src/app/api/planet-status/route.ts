@@ -29,11 +29,13 @@ export async function GET(request: Request) {
       const [missions, statuses] = await Promise.all([readMissions(), readPlanetSystemStatuses()]);
       const visibleKeys = new Set(
         missions
-          .filter((mission) => hasRole(member, "moderator") || canViewMission(mission, member))
+          .filter((mission) => canViewMission(mission, member))
           .map((mission) => `${mission.galaxy}:${mission.systemAddress.toUpperCase()}`),
       );
       return NextResponse.json({
-        planets: Object.fromEntries(Object.entries(statuses).filter(([key]) => visibleKeys.has(key))),
+        planets: Object.fromEntries(Object.entries(statuses).filter(([key]) =>
+          hasRole(member, "moderator") || visibleKeys.has(key),
+        )),
       });
     }
     const galaxy = galaxyValue === null ? NaN : Number(galaxyValue);

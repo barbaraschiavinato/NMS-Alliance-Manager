@@ -535,11 +535,12 @@ select { appearance: none; padding-right: 29px; background-image: linear-gradien
 .station-card-title-copy > span { color: #a4adae; font-size: 8px; }
 .station-card-title-copy > strong { max-width: 100%; overflow: hidden; color: var(--lime); font-size: 14px; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
 .station-card-title:hover > strong { color: #ff8400; }
+.station-list-cards .station-card-owner { min-width: 0; grid-column: 2; grid-row: 1; justify-self: end; }
+.station-list-cards .station-card-owner .station-owner-card { justify-items: end; margin: 0; }
+.station-list-cards .station-card-owner .station-owner-link { justify-content: flex-end; }
 .station-list-cards .station-portal-code { grid-column: 1 / -1; grid-row: 2; display: grid; grid-template-columns: minmax(0, 1fr) max-content; align-items: start; gap: 4px; padding-top: 10px; border-top: 1px solid #354044; }
 .station-list-cards .station-portal-code > .glyph-strip { grid-column: 1; grid-row: 1; }
 .station-list-cards .station-portal-code > code { grid-column: 2; grid-row: 1; align-self: start; text-align: right; }
-.station-list-cards .station-portal-code > .station-owner,
-.station-list-cards .station-portal-code > .station-owner-card { grid-column: 1 / -1; }
 .station-list-cards .station-planet-info-list { grid-column: 1 / -1; grid-row: 3; }
 .station-list-cards .station-planet-info { grid-template-columns: minmax(0, 1fr); }
 .station-list-cards .station-planet-open { display: none; }
@@ -547,7 +548,6 @@ select { appearance: none; padding-right: 29px; background-image: linear-gradien
 .station-card-no-planet { margin: 0; color: #a4adae; font-size: 9px; }
 .station-list:not(.station-list-cards) .station-name { color: #526a55; font-size: 10px; }
 .station-list-cards .station-name { display: none; }
-.station-list-cards .station-actions { grid-column: 2; grid-row: 1; align-self: start; }
 .station-portal-code { min-width: 0; display: grid; justify-items: start; gap: 4px; }
 .station-owner { color: #b4bfbe; font-size: 8px; line-height: 1.3; overflow-wrap: anywhere; }
 .station-owner-card { min-width: 0; display: grid; justify-items: start; gap: 5px; margin-top: 4px; }
@@ -560,6 +560,9 @@ select { appearance: none; padding-right: 29px; background-image: linear-gradien
 .mission-notes-dialog .dialog-heading h2 { margin-top: 0; }
 .station-list code { color: var(--lime); font-family: "SFMono-Regular", Consolas, monospace; font-size: 9px; }
 .station-planet-info-list { min-width: 0; display: grid; gap: 7px; }
+.station-card-footer { min-width: 0; grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 2px; padding-top: 10px; border-top: 1px solid #354044; }
+.station-system-status { min-width: 0; display: flex; align-items: center; gap: 5px; }
+.station-system-status > strong { color: #a4adae; font-family: "SFMono-Regular", Consolas, monospace; font-size: 7px; letter-spacing: .4px; text-transform: uppercase; }
 .station-planet-info { min-width: 0; display: grid; grid-template-columns: 135px minmax(0, 1fr); align-items: center; gap: 9px; padding: 5px 0; border-bottom: 1px solid #354044; }
 .station-planet-info:last-child { border-bottom: 0; }
 .station-planet-open { min-width: 0; display: grid; justify-items: start; gap: 3px; padding: 0; color: inherit; border: 0; background: transparent; cursor: pointer; text-align: left; }
@@ -874,8 +877,9 @@ select { appearance: none; padding-right: 29px; background-image: linear-gradien
   .station-list-cards li { grid-template-columns: minmax(0, 1fr) max-content; gap: 10px; padding: 12px; }
   .station-list-cards .station-portal-code { grid-column: 1 / -1; grid-row: 2; }
   .station-list-cards .station-planet-info-list { grid-column: 1 / -1; grid-row: 3; }
-  .station-list-cards .station-actions { grid-column: 2; grid-row: 1; }
-  .station-actions { grid-column: 2; grid-row: 1 / span 2; flex-direction: column; align-items: flex-end; }
+  .station-card-footer { grid-row: auto; }
+  .station-card-footer .station-actions { grid-column: auto; grid-row: auto; flex-direction: row; align-items: center; }
+  .station-system-status { flex-wrap: wrap; }
   .station-mission-lock { max-width: 58px; }
   .station-planet-info { grid-template-columns: minmax(0, 1fr) auto; gap: 6px; }
   .station-planet-info dl { grid-column: 1 / span 2; grid-template-columns: repeat(2, minmax(0, 1fr)); }
