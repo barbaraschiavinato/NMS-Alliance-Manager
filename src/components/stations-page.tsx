@@ -22,7 +22,7 @@ import { useNavigationSearchState } from "@/components/navigation-search-reset";
 
 type CachedPlanet = Readonly<{ galaxy: number; response: Record<string, unknown> }>;
 type StationMissionStatus = "none" | "in_progress" | "completed";
-type StationFilter = "all" | "in_progress" | "completed";
+type StationFilter = "all" | "pending" | "in_progress" | "completed";
 type StationEntry = Readonly<{
   portal: string;
   galaxy: number;
@@ -221,12 +221,13 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
   ), [initialStation, search, stations]);
   const stationCounts: Record<StationFilter, number> = {
     all: searchedStations.length,
+    pending: searchedStations.filter((station) => station.missionStatus === "none").length,
     in_progress: searchedStations.filter((station) => station.missionStatus === "in_progress").length,
     completed: searchedStations.filter((station) => station.missionStatus === "completed").length,
   };
   const visibleStations = stationFilter === "all"
     ? searchedStations
-    : searchedStations.filter((station) => station.missionStatus === stationFilter);
+    : searchedStations.filter((station) => station.missionStatus === (stationFilter === "pending" ? "none" : stationFilter));
 
   async function fetchStations() {
     const response = await fetch("/api/stations", { cache: "no-store" });
@@ -497,14 +498,14 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
           <section aria-label={t("stations.my_space_stations")} className="station-list-section">
             <div className="station-list-heading">
               <div aria-label={t("stations.filter_stations_by_mission_status")} className="member-filter-tabs station-filter-tabs" role="tablist">
-                {(["all", "in_progress", "completed"] as StationFilter[]).map((status) => <button
+                {(["all", "pending", "in_progress", "completed"] as StationFilter[]).map((status) => <button
                   aria-selected={stationFilter === status}
                   className={`member-filter-tab${stationFilter === status ? " selected" : ""}`}
                   key={status}
                   onClick={() => setStationFilter(status)}
                   role="tab"
                   type="button"
-                >{t(status === "all" ? "stations.filter_all" : status === "in_progress" ? "stations.filter_in_mission" : "stations.filter_mission_completed")}<span>{stationCounts[status]}</span></button>)}
+                >{t(status === "all" ? "stations.filter_all" : status === "pending" ? "common.pending_status_label" : status === "in_progress" ? "stations.filter_in_mission" : "stations.filter_mission_completed")}<span>{stationCounts[status]}</span></button>)}
               </div>
               <div className="station-list-heading-tools">
                 <label className="search-field station-search"><Search size={15} /><input aria-label={t("stations.search_stations_by_portal_owner_or_galaxy")} onChange={(event) => setSearch(event.target.value)} placeholder={t("stations.search_portal_username_or_galaxy")} value={search} /></label>
