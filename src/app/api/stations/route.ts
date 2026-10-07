@@ -246,6 +246,11 @@ async function readStations(member: AllianceMember) {
       ...(owner?.image ? { ownerImage: owner.image } : {}),
       planet: almanacByPortal[station.portal]?.find((entry) => entry.galaxy === station.galaxy)?.response ?? null,
       hasMissions: matchingMissions.length > 0,
+      missionStatus: matchingMissions.length === 0
+        ? "none"
+        : matchingMissions.every((mission) => mission.status === "completed")
+          ? "completed"
+          : "in_progress",
       availableSpecialties,
     };
   });

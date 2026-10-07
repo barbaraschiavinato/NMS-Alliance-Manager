@@ -520,12 +520,12 @@ select { appearance: none; padding-right: 29px; background-image: linear-gradien
 .station-list-section { width: min(1180px, 100%); margin: 0 auto; }
 .station-dialog { width: min(560px, 100%); }
 .station-add-form .portal-field { margin-bottom: 0; }
-.station-list-heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.station-list-heading { display: flex; align-items: stretch; justify-content: space-between; gap: 16px; margin-bottom: 8px; border-bottom: 1px solid #dfe4dc; }
 .station-list-heading h2 { margin: 0; color: var(--lime); font-size: 12px; font-weight: 650; }
 .station-list-heading-tools { display: flex; align-items: center; gap: 8px; }
+.station-filter-tabs { min-height: 43px; flex: 1; margin: 0; border-bottom: 0; }
 .station-search { width: 194px; }
-.station-count { min-width: 22px; padding: 2px 4px; color: #849088; border: 1px solid #354044; background: #111719; font-family: "SFMono-Regular", Consolas, monospace; font-size: 8px; text-align: center; }
-.station-list { margin: 0; padding: 0; border-top: 1px solid #dfe4dc; list-style: none; }
+.station-list { margin: 0; padding: 0; list-style: none; }
 .station-list li { min-height: 48px; display: grid; grid-template-columns: minmax(215px, 235px) minmax(0, 1fr) minmax(30px, max-content); align-items: center; gap: 12px; padding: 10px 3px; border-bottom: 1px solid #e5e9e2; }
 .station-list-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; border-top: 0; }
 .station-list-cards li { min-height: 0; grid-template-columns: minmax(0, 1fr) max-content; align-items: start; gap: 10px; padding: 14px; color: #f1eee7; border: 1px solid #394548; border-radius: 4px; background: #171e21; }
@@ -546,7 +546,7 @@ select { appearance: none; padding-right: 29px; background-image: linear-gradien
 .station-list-cards .station-planet-open { display: none; }
 .station-list-cards .station-planet-unknown { display: none; }
 .station-card-no-planet { margin: 0; color: #a4adae; font-size: 9px; }
-.station-list:not(.station-list-cards) .station-name { color: #526a55; font-size: 10px; }
+.station-list:not(.station-list-cards) .station-name { color: var(--lime); font-size: 10px; }
 .station-list-cards .station-name { display: none; }
 .station-portal-code { min-width: 0; display: grid; justify-items: start; gap: 4px; }
 .station-owner { color: #b4bfbe; font-size: 8px; line-height: 1.3; overflow-wrap: anywhere; }
@@ -587,6 +587,7 @@ select { appearance: none; padding-right: 29px; background-image: linear-gradien
 .member-page-actions [data-tooltip]:focus-visible::after { opacity: 1; transform: translateY(0); }
 .station-mission-lock { max-width: 92px; color: #889289; font-size: 7px; line-height: 1.3; text-align: right; }
 .station-list-empty { margin: 0; padding: 22px 0; color: #78847b; border-top: 1px solid #dfe4dc; border-bottom: 1px solid #e5e9e2; font-size: 10px; }
+.station-list-section > p.station-list-empty { border-top: 0; }
 .members-list-section { width: min(1180px, 100%); margin: 0 auto; }
 .members-toolbar { min-height: 54px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(190px, 290px) 61px; align-items: center; gap: 12px; border-bottom: 1px solid #dfe4dc; }
 .member-filter-tabs { min-width: 0; height: 54px; display: flex; align-items: stretch; gap: 20px; overflow-x: auto; }

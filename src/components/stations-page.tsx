@@ -21,6 +21,8 @@ import { useLocale } from "@/components/locale-provider";
 import { useNavigationSearchState } from "@/components/navigation-search-reset";
 
 type CachedPlanet = Readonly<{ galaxy: number; response: Record<string, unknown> }>;
+type StationMissionStatus = "none" | "in_progress" | "completed";
+type StationFilter = "all" | "in_progress" | "completed";
 type StationEntry = Readonly<{
   portal: string;
   galaxy: number;
@@ -33,6 +35,7 @@ type StationEntry = Readonly<{
   note?: string;
   planet: CachedPlanet | null;
   hasMissions: boolean;
+  missionStatus: StationMissionStatus;
   availableSpecialties: MissionSpecialty[];
 }>;
 type StationMissionSeed = Readonly<{ portal: string; galaxy: number; title: string; ownerMemberId: string }>;
@@ -74,6 +77,9 @@ function parseStations(value: unknown): StationEntry[] {
       ...(typeof station.note === "string" ? { note: station.note } : {}),
       planet,
       hasMissions: station.hasMissions === true,
+      missionStatus: station.missionStatus === "in_progress" || station.missionStatus === "completed"
+        ? station.missionStatus
+        : "none",
       availableSpecialties,
     }];
   });
@@ -178,6 +184,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
   const [planetStatuses, setPlanetStatuses] = useState<PlanetSystemStatuses>({});
   const [planetStatusesLoaded, setPlanetStatusesLoaded] = useState(false);
   const [savingStatusKeys, setSavingStatusKeys] = useState<string[]>([]);
+  const [stationFilter, setStationFilter] = useState<StationFilter>("all");
   const [selectedStation, setSelectedStation] = useState<{ portal: string; galaxy: number } | null>(null);
   const [profileTarget, setProfileTarget] = useState<{ memberId: string; messageContext: MemberMessageContext } | null>(null);
   const [stationNoteView, setStationNoteView] = useState<{ portal: string; note: string } | null>(null);
@@ -204,7 +211,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
   const canSeeAll = pageMember.role === "moderator" || pageMember.role === "admin";
   const canCreateMissions = canSeeAll;
   const viewMode = viewOverride ?? allianceSettings.defaultTableView;
-  const visibleStations = useMemo(() => stations.filter((station) =>
+  const searchedStations = useMemo(() => stations.filter((station) =>
     (!initialStation || (
       station.portal === initialStation.portal &&
       station.galaxy === initialStation.galaxy &&
@@ -212,6 +219,14 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
     )) &&
     `${station.name ?? cachedPlanetType(station.planet)} ${station.note ?? ""} ${station.portal} ${station.ownerNmsName ?? ""} ${station.ownerName ?? ""} ${galaxyLabel(station.galaxy)}`.toLowerCase().includes(search.toLowerCase()),
   ), [initialStation, search, stations]);
+  const stationCounts: Record<StationFilter, number> = {
+    all: searchedStations.length,
+    in_progress: searchedStations.filter((station) => station.missionStatus === "in_progress").length,
+    completed: searchedStations.filter((station) => station.missionStatus === "completed").length,
+  };
+  const visibleStations = stationFilter === "all"
+    ? searchedStations
+    : searchedStations.filter((station) => station.missionStatus === stationFilter);
 
   async function fetchStations() {
     const response = await fetch("/api/stations", { cache: "no-store" });
@@ -481,9 +496,17 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
 
           <section aria-label={t("stations.my_space_stations")} className="station-list-section">
             <div className="station-list-heading">
-              <h2>{t("stations.saved_portals")}</h2>
+              <div aria-label={t("stations.filter_stations_by_mission_status")} className="member-filter-tabs station-filter-tabs" role="tablist">
+                {(["all", "in_progress", "completed"] as StationFilter[]).map((status) => <button
+                  aria-selected={stationFilter === status}
+                  className={`member-filter-tab${stationFilter === status ? " selected" : ""}`}
+                  key={status}
+                  onClick={() => setStationFilter(status)}
+                  role="tab"
+                  type="button"
+                >{t(status === "all" ? "stations.filter_all" : status === "in_progress" ? "stations.filter_in_mission" : "stations.filter_mission_completed")}<span>{stationCounts[status]}</span></button>)}
+              </div>
               <div className="station-list-heading-tools">
-                <span className="station-count">{visibleStations.length}</span>
                 <label className="search-field station-search"><Search size={15} /><input aria-label={t("stations.search_stations_by_portal_owner_or_galaxy")} onChange={(event) => setSearch(event.target.value)} placeholder={t("stations.search_portal_username_or_galaxy")} value={search} /></label>
                 <div aria-label={t("stations.station_view")} className="view-toggle" role="group">
                   <button aria-label={t("navigation.list_view")} aria-pressed={viewMode === "list"} className={viewMode === "list" ? "selected" : ""} onClick={() => setViewOverride("list")} title={t("navigation.list_view")} type="button"><List size={15} /></button>
