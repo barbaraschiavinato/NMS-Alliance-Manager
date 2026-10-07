@@ -1018,3 +1018,23 @@ body:has(.sidebar-compact) .mission-notes-content, body:has(.sidebar-compact) .p
 .sidebar-compact ~ .main-panel .mission-card-action-buttons { gap: 8px; }
 .sidebar-compact ~ .main-panel .mission-card-action-buttons .mission-station-link { width: 44px; height: 44px; }
 .sidebar-compact ~ .main-panel .mission-card-action-buttons .mission-station-link svg { width: 20px; height: 20px; }
+
+@media (max-width: 950px) {
+  .sidebar-compact ~ .main-panel .topbar { height: 53px; padding: 0 12px; }
+  .sidebar-compact ~ .main-panel .content-wrap { padding: 13px 12px 17px; }
+  .sidebar-compact ~ .main-panel .mission-card-grid { grid-template-columns: 1fr; }
+  .sidebar-compact ~ .main-panel .mission-banner-inner { padding: 18px 12px; }
+  .sidebar-compact ~ .main-panel .banner-copy { max-width: 82%; }
+  .sidebar-compact ~ .main-panel .banner-add { position: absolute; right: 15px; bottom: 15px; }
+  .sidebar-compact ~ .main-panel .toolbar { align-items: flex-start; flex-direction: column-reverse; gap: 2px; }
+  .sidebar-compact ~ .main-panel .toolbar-actions { width: 100%; justify-content: flex-end; padding: 10px 0 2px; }
+  .sidebar-compact ~ .main-panel .filter-tabs { width: 100%; justify-content: space-between; gap: 8px; overflow-x: auto; }
+  .sidebar-compact ~ .main-panel .member-filter-tabs { height: 42px; overflow-x: auto; justify-content: flex-start; gap: 14px; }
+  .sidebar-compact ~ .main-panel .station-list-heading { align-items: flex-start; flex-direction: column; gap: 8px; }
+  .sidebar-compact ~ .main-panel .station-list-heading-tools { width: 100%; }
+  .sidebar-compact ~ .main-panel .station-list-cards, .member-card-grid { grid-template-columns: 1fr; }
+  .sidebar-compact ~ .main-panel .station-list-cards li { padding: 12px; }
+  .sidebar-compact ~ .main-panel .station-system-status { flex-wrap: wrap; }
+  .sidebar-compact ~ .main-panel .planet-resource-groups { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .sidebar-compact ~ .main-panel .dialog-actions { flex-wrap: wrap; }
+}
