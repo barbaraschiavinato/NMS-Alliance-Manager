@@ -914,3 +914,6 @@ select { appearance: none; padding-right: 29px; background-image: linear-gradien
 .message-acknowledgement input { width: 14px; height: 14px; margin-top: 1px; flex: 0 0 14px; accent-color: var(--lime); }
 
 .message-thread-toggle { width: auto; min-width: 29px; display: inline-flex; gap: 4px; padding: 0 8px; font-size: 10px; }
+
+.message-unread { border-left: 3px solid var(--lime); }
+.member-filter-tab > .unread-count, .member-filter-tab.selected > .unread-count { color: #213329; border-color: var(--lime); background: var(--lime); }

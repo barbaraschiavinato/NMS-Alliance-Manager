@@ -3,7 +3,7 @@ import { getCurrentMember, hasRole } from "@/lib/authorization";
 import { readAccessData } from "@/lib/access-store";
 import { readAlmanacResponse } from "@/lib/almanac-store";
 import { decodePortalAddress } from "@/lib/missions";
-import { deletePrivateMessageBranch, readPrivateMessages, savePrivateMessage } from "@/lib/private-messages-store";
+import { deletePrivateMessageBranch, markPrivateMessagesRead, readPrivateMessages, savePrivateMessage } from "@/lib/private-messages-store";
 import { readStationPortals } from "@/lib/stations-store";
 import { readMissions } from "@/lib/store";
 import { isEmailAddress } from "@/lib/member-types";
@@ -17,6 +17,16 @@ export async function GET(request: Request) {
 
   const params = new URL(request.url).searchParams;
   if (params.has("recipientId")) return getPlanetSubject(params);
+  if (params.get("count") === "unread") {
+    try {
+      const messages = await readPrivateMessages();
+      const count = messages.filter((message) => message.unread && message.recipientMemberId === member.publicId).length;
+      return NextResponse.json({ count }, { headers: { "Cache-Control": "no-store" } });
+    } catch (error) {
+      console.error("Unable to count unread messages", error);
+      return NextResponse.json({ error: "profile.message_unable_to_read" }, { status: 503 });
+    }
+  }
 
   try {
     const [messages, accessData] = await Promise.all([readPrivateMessages(), readAccessData()]);
@@ -249,5 +259,24 @@ export async function DELETE(request: Request) {
   } catch (error) {
     console.error("Unable to delete private message", error);
     return NextResponse.json({ error: "messages.error_unable_to_delete" }, { status: 503 });
+  }
+}
+
+export async function PATCH(request: Request) {
+  const member = await getCurrentMember();
+  if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
+
+  const body: unknown = await request.json().catch(() => null);
+  const ids = body && typeof body === "object" && !Array.isArray(body) && "messageIds" in body && Array.isArray(body.messageIds)
+    ? body.messageIds.filter((id): id is string => typeof id === "string").slice(0, 200)
+    : [];
+  if (ids.length === 0) return NextResponse.json({ error: "messages.message_not_found" }, { status: 400 });
+
+  try {
+    await markPrivateMessagesRead(member.publicId, ids);
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    console.error("Unable to mark messages as read", error);
+    return NextResponse.json({ error: "profile.message_unable_to_save" }, { status: 503 });
   }
 }

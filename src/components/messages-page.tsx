@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type ReactNode, type SubmitEvent } from "react";
 import Link from "next/link";
-import { ChevronDown, ChevronRight, CircleAlert, Compass, Crosshair, Reply, Send, Trash2, X } from "lucide-react";
+import { ChevronDown, ChevronRight, CircleAlert, Crosshair, MailCheck, Orbit, Reply, Send, Trash2, X } from "lucide-react";
 import { AllianceSidebar, DashboardTopbar, MissionHero } from "@/components/dashboard-chrome";
 import { AdminPanel } from "@/components/admin-panel";
 import { MemberProfilePanel } from "@/components/member-profile-panel";
@@ -25,6 +25,7 @@ type MessageEntry = Readonly<{
   galaxy?: number;
   planetNumber?: number;
   missionCode?: string;
+  unread?: boolean;
   createdAt: string;
 }>;
 
@@ -102,6 +103,21 @@ export function MessagesPage({ currentMember, alliance, missionCount, stationCou
     return () => controller.abort();
   }, [fetchScope]);
 
+  async function markRead(ids: string[]) {
+    const idSet = new Set(ids.filter((id) => messages.some((entry) => entry.id === id && entry.unread && entry.recipientMemberId === member.publicId)));
+    if (idSet.size === 0) return;
+    setMessages((current) => current.map((entry) => idSet.has(entry.id) ? { ...entry, unread: false } : entry));
+    try {
+      await fetch("/api/messages", {
+        body: JSON.stringify({ messageIds: [...idSet] }),
+        headers: { "Content-Type": "application/json" },
+        method: "PATCH",
+      });
+    } finally {
+      window.dispatchEvent(new Event("messages-unread-changed"));
+    }
+  }
+
   async function sendReply(event: SubmitEvent<HTMLFormElement>, originalMessage: MessageEntry) {
     event.preventDefault();
     setSendingReply(true);
@@ -170,6 +186,7 @@ export function MessagesPage({ currentMember, alliance, missionCount, stationCou
 
   const isAdmin = member.role === "admin";
   const receivedMessages = messages.filter((message) => message.recipientMemberId === member.publicId);
+  const unreadReceivedCount = receivedMessages.filter((message) => message.unread).length;
   const sentMessages = messages.filter((message) => message.senderMemberId === member.publicId);
   const messageTree = buildMessageTree(tab === "all" ? messages : tab === "sent" ? sentMessages : receivedMessages);
 
@@ -180,25 +197,26 @@ export function MessagesPage({ currentMember, alliance, missionCount, stationCou
     const canReply = sentByCurrentMember || receivedByCurrentMember;
     const isCollapsed = !expandedMessageIds.has(message.id);
     const isReply = Boolean(message.replyToId);
+    const isUnread = Boolean(message.unread) && receivedByCurrentMember;
     return <li className="message-tree-node" key={message.id}>
-      <article className="message-card">
+      <article className={isUnread ? "message-card message-unread" : "message-card"}>
         <div className="message-card-heading">
           <div className="message-card-main-heading">
             <div className="message-card-subject">
               {!isReply && message.subjectType === "mission" && message.missionCode && <Link
                 aria-label={t("messages.open_mission")}
-                className="member-icon-action message-subject-link"
+                className="member-icon-action message-subject-link member-link-action"
                 data-tooltip={t("messages.open_mission")}
                 href={`/?search=${encodeURIComponent(message.missionCode)}`}
                 title={t("messages.open_mission")}
               ><Crosshair size={15} /></Link>}
               {!isReply && message.subjectType === "planet" && message.portal && <Link
                 aria-label={t("messages.open_planet_station")}
-                className="member-icon-action message-subject-link"
+                className="member-icon-action message-subject-link member-station-filter"
                 data-tooltip={t("messages.open_planet_station")}
                 href={`/stations?search=${encodeURIComponent(message.portal)}`}
                 title={t("messages.open_planet_station")}
-              ><Compass size={15} /></Link>}
+              ><Orbit size={15} /></Link>}
               {!isReply && <h2>{message.subject || t("messages.no_subject")}</h2>}
             </div>
             <p className="message-participants">
@@ -207,6 +225,13 @@ export function MessagesPage({ currentMember, alliance, missionCount, stationCou
             </p>
           </div>
           <div className="message-card-tools">
+            {isUnread && <button
+              aria-label={t("messages.mark_read")}
+              className="member-icon-action"
+              onClick={() => void markRead([message.id])}
+              title={t("messages.mark_read")}
+              type="button"
+            ><MailCheck size={14} /></button>}
             <time dateTime={message.createdAt}>{formatDate(message.createdAt)}</time>
             {(canReply || isAdmin) && <button
               aria-label={t("messages.delete_message")}
@@ -225,12 +250,15 @@ export function MessagesPage({ currentMember, alliance, missionCount, stationCou
             aria-label={t(isCollapsed ? "messages.show_replies" : "messages.hide_replies", { count: node.children.length })}
             className="member-icon-action message-thread-toggle"
             title={t(isCollapsed ? "messages.show_replies" : "messages.hide_replies", { count: node.children.length })}
-            onClick={() => setExpandedMessageIds((current) => {
+            onClick={() => {
+              if (isCollapsed) void markRead([message.id, ...node.children.map((child) => child.message.id)]);
+              setExpandedMessageIds((current) => {
               const next = new Set(current);
               if (next.has(message.id)) next.delete(message.id);
               else next.add(message.id);
               return next;
-            })}
+              });
+            }}
             type="button"
           >{isCollapsed ? <ChevronRight size={14} /> : <ChevronDown size={14} />}<span className="thread-count">{node.children.length}</span></button>}
           {canReply && replyingTo !== message.id && <button className="member-icon-action message-reply-button" onClick={() => {
@@ -273,7 +301,7 @@ export function MessagesPage({ currentMember, alliance, missionCount, stationCou
           {(["received", "sent", ...(isAdmin ? ["all" as const] : [])] as MessageTab[]).map((key) => <button aria-selected={tab === key} className={tab === key ? "member-filter-tab selected" : "member-filter-tab"} key={key} onClick={() => {
             setTab(key);
             setExpandedMessageIds(new Set());
-          }} role="tab" type="button">{t(`messages.tab_${key}`)}<span>{key === "all" ? messages.length : key === "sent" ? sentMessages.length : receivedMessages.length}</span></button>)}
+          }} role="tab" type="button">{t(`messages.tab_${key}`)}<span>{key === "all" ? messages.length : key === "sent" ? sentMessages.length : receivedMessages.length}</span>{key === "received" && unreadReceivedCount > 0 && <span className="unread-count" title={t("messages.unread_count", { count: unreadReceivedCount })}>{unreadReceivedCount}</span>}</button>)}
         </div>
         {error && <p className="form-error"><CircleAlert size={15} />{t(error)}</p>}
         {loading

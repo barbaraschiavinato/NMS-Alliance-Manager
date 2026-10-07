@@ -11,6 +11,7 @@ export async function getCurrentMember(options: Readonly<{ allowPending?: boolea
     name: session.user?.name ?? email,
     image: session.user?.image ?? "",
   });
+  if (member.offline) return null;
   if (member.membershipStatus === "blocked" && !options.allowBlocked) return null;
   if (member.membershipStatus === "pending" && !options.allowPending) return null;
   return member;

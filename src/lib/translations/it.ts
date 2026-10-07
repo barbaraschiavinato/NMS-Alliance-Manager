@@ -191,6 +191,8 @@ export const translations: TranslationCatalog = {
     "missions.complete_mission": "Completa missione",
   },
   messages: {
+    "messages.mark_read": "Segna come letto",
+    "messages.unread_count": "{count} non letti",
     "messages.tab_received": "Ricevuti",
     "messages.tab_sent": "Inviati",
     "messages.tab_all": "Tutti i messaggi",

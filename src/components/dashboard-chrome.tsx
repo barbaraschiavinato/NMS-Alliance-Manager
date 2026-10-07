@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { signOut } from "next-auth/react";
 import Image from "next/image";
 import Link from "next/link";
@@ -33,6 +33,25 @@ export function AllianceSidebar({ missionCount, stationCount, userCount, offline
 }>) {
   const { t } = useLocale();
   const resetSearch = useRequestSearchReset();
+  const [unreadCount, setUnreadCount] = useState(0);
+  useEffect(() => {
+    const controller = new AbortController();
+    async function loadUnread() {
+      try {
+        const response = await fetch("/api/messages?count=unread", { cache: "no-store", signal: controller.signal });
+        const body: unknown = await response.json();
+        if (response.ok && body && typeof body === "object" && "count" in body && typeof body.count === "number") setUnreadCount(body.count);
+      } catch {
+        // Il contatore è solo informativo.
+      }
+    }
+    void loadUnread();
+    window.addEventListener("messages-unread-changed", loadUnread);
+    return () => {
+      controller.abort();
+      window.removeEventListener("messages-unread-changed", loadUnread);
+    };
+  }, []);
   const displayName = currentMember.nmsName || currentMember.name;
   let roleLabel = t("members.member_role_label");
   if (currentMember.role === "admin") roleLabel = t("admin.administrator");
@@ -48,7 +67,7 @@ export function AllianceSidebar({ missionCount, stationCount, userCount, offline
         <Link className={`nav-item ${activeSection === "stazioni" ? "active" : ""}`} href="/stations" onClick={resetSearch}><Orbit size={17} /><span>{t("stations.stations")}</span><span className="nav-count">{stationCount}</span></Link>
         {(currentMember.role === "admin" || currentMember.role === "moderator") && <Link className={`nav-item ${activeSection === "utenti" ? "active" : ""}`} href="/users" onClick={resetSearch}><UsersRound size={17} /><span>{t("members.users")}</span><span className="nav-count">{userCount ?? 0}</span></Link>}
         {(currentMember.role === "admin" || currentMember.role === "moderator") && <Link className={`nav-item ${activeSection === "offline" ? "active" : ""}`} href="/offline-players" onClick={resetSearch}><UserRoundX size={17} /><span>{t("members.offline_players")}</span><span className="nav-count">{offlineCount ?? 0}</span></Link>}
-        <Link className={`nav-item ${activeSection === "messaggi" ? "active" : ""}`} href="/messages" onClick={resetSearch}><Mail size={17} /><span>{t("messages.messages")}</span><span className="nav-beta">BETA</span></Link>
+        <Link className={`nav-item ${activeSection === "messaggi" ? "active" : ""}`} href="/messages" onClick={resetSearch}><Mail size={17} /><span>{t("messages.messages")}</span><span aria-label={t("messages.unread_count", { count: unreadCount })} className="nav-count" title={t("messages.unread_count", { count: unreadCount })}>{unreadCount}</span></Link>
       </nav>
       <div className="sidebar-bottom">
         <div className="profile"><span className="avatar">{currentMember.image

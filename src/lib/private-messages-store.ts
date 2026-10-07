@@ -18,6 +18,7 @@ export type PrivateMessage = Readonly<{
   galaxy?: number;
   planetNumber?: number;
   missionCode?: string;
+  unread?: boolean;
   createdAt: string;
 }>;
 
@@ -53,6 +54,7 @@ function parseMessages(value: unknown): StoredPrivateMessage[] {
       (message.galaxy !== undefined && (typeof message.galaxy !== "number" || !Number.isInteger(message.galaxy) || message.galaxy < 0 || message.galaxy > 255)) ||
       (message.planetNumber !== undefined && (typeof message.planetNumber !== "number" || !Number.isInteger(message.planetNumber) || message.planetNumber < 0 || message.planetNumber > 6)) ||
       (message.missionCode !== undefined && typeof message.missionCode !== "string") ||
+      (message.unread !== undefined && typeof message.unread !== "boolean") ||
       typeof message.createdAt !== "string"
     ) {
       throw new Error("Invalid private message in storage.");
@@ -159,6 +161,7 @@ export async function savePrivateMessage(
     recipientMemberId: recipientMemberId.trim(),
     body,
     ...context,
+    unread: true,
     createdAt: new Date().toISOString(),
   });
   await writeMessages(messages);
@@ -171,4 +174,16 @@ export async function reassignPrivateMessageMember(fromMemberId: string, toMembe
     ...(message.senderMemberId === fromMemberId ? { senderMemberId: toMemberId } : {}),
     ...(message.recipientMemberId === fromMemberId ? { recipientMemberId: toMemberId } : {}),
   })));
+}
+
+export async function markPrivateMessagesRead(memberId: string, messageIds: readonly string[]): Promise<void> {
+  const ids = new Set(messageIds);
+  const messages = await readMessages();
+  let changed = false;
+  const updated = messages.map((message) => {
+    if (!message.unread || message.recipientMemberId !== memberId || !ids.has(message.id)) return message;
+    changed = true;
+    return { ...message, unread: false };
+  });
+  if (changed) await writeMessages(updated);
 }
