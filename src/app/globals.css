@@ -333,10 +333,10 @@ select { appearance: none; padding-right: 29px; background-image: linear-gradien
 .portal-field-heading { display: flex; align-items: center; justify-content: space-between; color: #647268; font-family: "SFMono-Regular", Consolas, monospace; font-size: 8px; letter-spacing: .5px; }
 .portal-field-heading > span:last-child { color: #89948a; font-size: 7px; }
 .portal-field-heading b { margin-left: 5px; color: #4f7856; font-weight: 700; }
-.address-input-row { display: flex; gap: 6px; }
+.address-input-row { display: flex; align-items: stretch; gap: 6px; }
 .address-input-row input { height: 34px; flex: 1; min-width: 0; padding: 0 9px; color: #34473a; border: 1px solid #dce2da; background: #fff; font-family: "SFMono-Regular", Consolas, monospace; font-size: 11px; letter-spacing: 1px; }
 .address-input-row input::placeholder { color: #9da79e; font-family: "Avenir Next", Avenir, sans-serif; font-size: 10px; letter-spacing: 0; }
-.address-input-row .square-button { width: 34px; height: 34px; }
+.address-input-row .square-button { width: 34px; height: auto; min-height: 34px; }
 .glyph-keypad { width: max-content; display: grid; grid-template-columns: repeat(8, 38px); gap: 4px; }
 .glyph-keypad button { width: 38px; height: 38px; display: grid; place-items: center; padding: 5px; border: 1px solid #3d494c; background: #1c2427; cursor: pointer; }
 .glyph-keypad button:hover:not(:disabled) { border-color: var(--lime); background: #302719; }
@@ -1038,3 +1038,9 @@ body:has(.sidebar-compact) .mission-notes-content, body:has(.sidebar-compact) .p
   .sidebar-compact ~ .main-panel .planet-resource-groups { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .sidebar-compact ~ .main-panel .dialog-actions { flex-wrap: wrap; }
 }
+body:has(.sidebar-compact) .address-input-row .square-button { width: 44px; min-height: 44px; }
+body:has(.sidebar-compact) .address-input-row .square-button svg { width: 20px; height: 20px; }
+.dialog-heading .icon-button { width: 38px; height: 38px; flex: 0 0 38px; }
+.dialog-heading .icon-button svg { width: 20px; height: 20px; }
+body:has(.sidebar-compact) .dialog-heading .icon-button { width: 48px; height: 48px; flex-basis: 48px; }
+body:has(.sidebar-compact) .dialog-heading .icon-button svg { width: 26px; height: 26px; }
