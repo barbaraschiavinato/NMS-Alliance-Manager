@@ -9,6 +9,7 @@ import { AdminPanel } from "@/components/admin-panel";
 import { MemberProfilePanel } from "@/components/member-profile-panel";
 import { LoadingSpinner } from "@/components/loading-spinner";
 import { useLocale } from "@/components/locale-provider";
+import { useNavigationSearchState } from "@/components/navigation-search-reset";
 
 type MemberFilter = "all" | MembershipStatus;
 type ManagedMember = AllianceMember & { protectedAdmin: boolean };
@@ -75,7 +76,7 @@ export function MembersPage({ currentMember, alliance, missionCount, sidebarStat
   const [filter, setFilter] = useState<MemberFilter>("all");
   const [viewOverride, setViewOverride] = useState<"list" | "cards" | null>(null);
   const viewMode = viewOverride ?? allianceSettings.defaultTableView;
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useNavigationSearchState("");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [adminOpen, setAdminOpen] = useState(false);

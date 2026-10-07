@@ -18,6 +18,7 @@ import { galaxyNames, galaxyLabel } from "@/lib/galaxies";
 import { decodePortalAddress, missionSpecialties, type Mission, type MissionInput, type MissionSpecialty } from "@/lib/missions";
 import { isMissionSystemStatus, planetSystemStatusKey, type MissionSystemStatus, type PlanetSystemStatuses } from "@/lib/planet-system-status";
 import { useLocale } from "@/components/locale-provider";
+import { useNavigationSearchState } from "@/components/navigation-search-reset";
 
 type CachedPlanet = Readonly<{ galaxy: number; response: Record<string, unknown> }>;
 type StationEntry = Readonly<{
@@ -197,7 +198,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
-  const [search, setSearch] = useState(initialSearch);
+  const [search, setSearch] = useNavigationSearchState(initialSearch);
   const [adminOpen, setAdminOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const canSeeAll = pageMember.role === "moderator" || pageMember.role === "admin";

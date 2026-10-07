@@ -19,6 +19,7 @@ import type { MissionFilter } from "@/components/mission-table";
 import type { AllianceMember, AllianceSettings } from "@/lib/access-store";
 import { useLocale } from "@/components/locale-provider";
 import { LanguageSelector } from "@/components/language-selector";
+import { useRequestSearchReset } from "@/components/navigation-search-reset";
 
 export function AllianceSidebar({ missionCount, stationCount, userCount, currentMember, settings, activeSection }: Readonly<{
   missionCount: number;
@@ -29,6 +30,7 @@ export function AllianceSidebar({ missionCount, stationCount, userCount, current
   activeSection: "missioni" | "utenti" | "stazioni" | "messaggi";
 }>) {
   const { t } = useLocale();
+  const resetSearch = useRequestSearchReset();
   const displayName = currentMember.nmsName || currentMember.name;
   let roleLabel = t("members.member_role_label");
   if (currentMember.role === "admin") roleLabel = t("admin.administrator");
@@ -40,10 +42,10 @@ export function AllianceSidebar({ missionCount, stationCount, userCount, current
         <span><strong>{settings.name}</strong></span>
       </Link>
       <nav className="side-nav" aria-label={t("navigation.main_navigation")}>
-        <Link className={`nav-item ${activeSection === "missioni" ? "active" : ""}`} href="/"><Crosshair size={17} /><span>{t("missions.section_title")}</span><span className="nav-count">{missionCount}</span></Link>
-        <Link className={`nav-item ${activeSection === "stazioni" ? "active" : ""}`} href="/stations"><Orbit size={17} /><span>{t("stations.stations")}</span><span className="nav-count">{stationCount}</span></Link>
-        {(currentMember.role === "admin" || currentMember.role === "moderator") && <Link className={`nav-item ${activeSection === "utenti" ? "active" : ""}`} href="/users"><UsersRound size={17} /><span>{t("members.users")}</span><span className="nav-count">{userCount ?? 0}</span></Link>}
-        <Link className={`nav-item ${activeSection === "messaggi" ? "active" : ""}`} href="/messages"><Mail size={17} /><span>{t("messages.messages")}</span><span className="nav-beta">BETA</span></Link>
+        <Link className={`nav-item ${activeSection === "missioni" ? "active" : ""}`} href="/" onClick={resetSearch}><Crosshair size={17} /><span>{t("missions.section_title")}</span><span className="nav-count">{missionCount}</span></Link>
+        <Link className={`nav-item ${activeSection === "stazioni" ? "active" : ""}`} href="/stations" onClick={resetSearch}><Orbit size={17} /><span>{t("stations.stations")}</span><span className="nav-count">{stationCount}</span></Link>
+        {(currentMember.role === "admin" || currentMember.role === "moderator") && <Link className={`nav-item ${activeSection === "utenti" ? "active" : ""}`} href="/users" onClick={resetSearch}><UsersRound size={17} /><span>{t("members.users")}</span><span className="nav-count">{userCount ?? 0}</span></Link>}
+        <Link className={`nav-item ${activeSection === "messaggi" ? "active" : ""}`} href="/messages" onClick={resetSearch}><Mail size={17} /><span>{t("messages.messages")}</span><span className="nav-beta">BETA</span></Link>
       </nav>
       <div className="sidebar-bottom">
         <div className="profile"><span className="avatar">{currentMember.image

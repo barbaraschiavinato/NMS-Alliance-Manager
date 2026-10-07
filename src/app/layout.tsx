@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { LocaleProvider } from "@/components/locale-provider";
+import { NavigationSearchResetProvider } from "@/components/navigation-search-reset";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -10,7 +11,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="it" suppressHydrationWarning>
-      <body><LocaleProvider>{children}</LocaleProvider></body>
+      <body><LocaleProvider><NavigationSearchResetProvider>{children}</NavigationSearchResetProvider></LocaleProvider></body>
     </html>
   );
 }

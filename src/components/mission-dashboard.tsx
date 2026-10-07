@@ -18,6 +18,7 @@ import { PlanetCard } from "@/components/planet-card";
 import { isValidNmsFriendCode } from "@/lib/member-types";
 import { planetSystemStatusKey, type MissionSystemStatus, type PlanetSystemStatuses } from "@/lib/planet-system-status";
 import { useLocale } from "@/components/locale-provider";
+import { useNavigationSearchState } from "@/components/navigation-search-reset";
 
 const missionTypeLabels: Record<Mission["targetSpecialty"], string> = {
   all: "Tutti",
@@ -40,7 +41,7 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
   const [loadingMissions, setLoadingMissions] = useState(true);
   const [planetStatuses, setPlanetStatuses] = useState<PlanetSystemStatuses>({});
   const [filter, setFilter] = useState<MissionFilter>("all");
-  const [search, setSearch] = useState(initialSearch);
+  const [search, setSearch] = useNavigationSearchState(initialSearch);
   const [dialogMission, setDialogMission] = useState<Mission | null>(null);
   const [planetMission, setPlanetMission] = useState<Mission | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
