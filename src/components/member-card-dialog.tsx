@@ -107,7 +107,7 @@ export function MemberCardDialog({ memberId, messageContext, onClose }: Readonly
       }
       setMessage("");
       setAcknowledged(false);
-      setMessageSent(true);
+      onClose();
     } catch (error_: unknown) {
       setMessageError(error_ instanceof Error ? error_.message : "profile.message_unable_to_save");
     } finally {

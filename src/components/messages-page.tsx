@@ -186,7 +186,6 @@ export function MessagesPage({ currentMember, alliance, missionCount, stationCou
 
   const isAdmin = member.role === "admin";
   const receivedMessages = messages.filter((message) => message.recipientMemberId === member.publicId);
-  const unreadReceivedCount = receivedMessages.filter((message) => message.unread).length;
   const sentMessages = messages.filter((message) => message.senderMemberId === member.publicId);
   const messageTree = buildMessageTree(tab === "all" ? messages : tab === "sent" ? sentMessages : receivedMessages);
 
@@ -300,8 +299,9 @@ export function MessagesPage({ currentMember, alliance, missionCount, stationCou
         <div aria-label={t("messages.messages")} className="member-filter-tabs" role="tablist">
           {(["received", "sent", ...(isAdmin ? ["all" as const] : [])] as MessageTab[]).map((key) => <button aria-selected={tab === key} className={tab === key ? "member-filter-tab selected" : "member-filter-tab"} key={key} onClick={() => {
             setTab(key);
+            void markRead(receivedMessages.map((entry) => entry.id));
             setExpandedMessageIds(new Set());
-          }} role="tab" type="button">{t(`messages.tab_${key}`)}<span>{key === "all" ? messages.length : key === "sent" ? sentMessages.length : receivedMessages.length}</span>{key === "received" && unreadReceivedCount > 0 && <span className="unread-count" title={t("messages.unread_count", { count: unreadReceivedCount })}>{unreadReceivedCount}</span>}</button>)}
+          }} role="tab" type="button">{t(`messages.tab_${key}`)}<span>{key === "all" ? messages.length : key === "sent" ? sentMessages.length : receivedMessages.length}</span></button>)}
         </div>
         {error && <p className="form-error"><CircleAlert size={15} />{t(error)}</p>}
         {loading
