@@ -49,7 +49,7 @@ export async function PATCH(request: Request, context: RouteContext) {
         id,
       };
     } else {
-      if (missions[index].assignedEmail !== member.email || !isProgressUpdate(input)) {
+      if (missions[index].assignedEmail?.toLowerCase() !== member.email.toLowerCase() || !isProgressUpdate(input)) {
         return NextResponse.json({ error: "Puoi aggiornare solo l'avanzamento delle missioni assegnate a te." }, { status: 403 });
       }
       updated = { ...missions[index], ...input };

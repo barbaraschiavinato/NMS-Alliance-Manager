@@ -5,7 +5,7 @@ import { GlyphStrip } from "@/components/portal-address-field";
 import type { AllianceMember } from "@/lib/access-store";
 import { galaxyLabel } from "@/lib/galaxies";
 import { missionSystemStatuses, planetSystemStatusKey, type MissionSystemStatus, type PlanetSystemStatuses } from "@/lib/planet-system-status";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { MemberCardDialog } from "@/components/member-card-dialog";
 import { LoadingSpinner } from "@/components/loading-spinner";
 import { useLocale } from "@/components/locale-provider";
@@ -102,6 +102,48 @@ function DiscovererCell({ email, name, image, onOpenProfile }: Readonly<{
     : <span className="assignee-cell">{content}</span>;
 }
 
+function MissionProgress({ mission, editable, onChange }: Readonly<{
+  mission: Mission;
+  editable: boolean;
+  onChange: (mission: Mission, progress: number) => Promise<void>;
+}>) {
+  const { t } = useLocale();
+  const [draft, setDraft] = useState<{ source: number; value: number } | null>(null);
+  const progress = draft?.source === mission.progress ? draft.value : mission.progress;
+  const committedProgress = useRef(mission.progress);
+
+  useEffect(() => {
+    committedProgress.current = mission.progress;
+  }, [mission.progress]);
+
+  function commitProgress(value: number) {
+    setDraft({ source: mission.progress, value });
+    if (value === committedProgress.current) return;
+    committedProgress.current = value;
+    void onChange(mission, value).catch(() => {
+      committedProgress.current = mission.progress;
+      setDraft(null);
+    });
+  }
+
+  return <div className={`progress-cell${editable ? " progress-cell-editable" : ""}`}>
+    {editable
+      ? <input
+        aria-label={t("missions.progress_for_mission", { title: mission.title })}
+        max={100}
+        min={0}
+        onBlur={(event) => commitProgress(Number(event.currentTarget.value))}
+        onChange={(event) => setDraft({ source: mission.progress, value: Number(event.target.value) })}
+        onKeyUp={(event) => commitProgress(Number(event.currentTarget.value))}
+        onPointerUp={(event) => commitProgress(Number(event.currentTarget.value))}
+        type="range"
+        value={progress}
+      />
+      : <div aria-hidden="true" className="progress-track"><span style={{ width: `${mission.progress}%` }} /></div>}
+    <span>{progress}%</span>
+  </div>;
+}
+
 function MemberAvatar({ image, label }: Readonly<{ image?: string; label: string }>) {
   const [imageFailed, setImageFailed] = useState(false);
   const initials = label.slice(0, 2).toUpperCase() || "—";
@@ -157,7 +199,7 @@ function MissionPlanetThumbnail({ mission }: Readonly<{ mission: Mission }>) {
   </span>;
 }
 
-function MissionCard({ mission, systemStatuses, currentMember, canManage, members, onEdit, onDeleteMission, onOpenPlanet, onClaim, onComplete, onToggleSystemStatus, onOpenProfile, getDiscovererImage }: Readonly<{
+function MissionCard({ mission, systemStatuses, currentMember, canManage, members, onEdit, onDeleteMission, onOpenPlanet, onClaim, onComplete, onToggleSystemStatus, onUpdateProgress, onOpenProfile, getDiscovererImage }: Readonly<{
   mission: Mission;
   systemStatuses: PlanetSystemStatuses;
   currentMember: AllianceMember;
@@ -169,6 +211,7 @@ function MissionCard({ mission, systemStatuses, currentMember, canManage, member
   onClaim: (mission: Mission) => void;
   onComplete: (mission: Mission) => void;
   onToggleSystemStatus: (mission: Mission, status: MissionSystemStatus, checked: boolean) => void;
+  onUpdateProgress: (mission: Mission, progress: number) => Promise<void>;
   onOpenProfile: (email: string) => void;
   getDiscovererImage: (email?: string) => string | undefined;
 }>) {
@@ -176,6 +219,7 @@ function MissionCard({ mission, systemStatuses, currentMember, canManage, member
   const statuses = systemStatuses[planetSystemStatusKey(mission.systemAddress, mission.galaxy)] ?? [];
   const hasDataError = statuses.includes("data_error");
   const canUpdateSystemStatus = mission.assignedEmail?.toLowerCase() === currentMember.email.toLowerCase();
+  const canUpdateProgress = !canManage && canUpdateSystemStatus;
   return <article className="mission-card">
     <div className="mission-card-heading">
       <div className="mission-name-cell">
@@ -197,7 +241,7 @@ function MissionCard({ mission, systemStatuses, currentMember, canManage, member
     </div>
     <div className="mission-card-progress">
       <span className={`badge badge--priority badge--priority-${mission.priority}`}><span />{t(`common.${mission.priority}`)}</span>
-      <div className="progress-cell"><div className="progress-track"><span style={{ width: `${mission.progress}%` }} /></div><span>{mission.progress}%</span></div>
+      <MissionProgress editable={canUpdateProgress} mission={mission} onChange={onUpdateProgress} />
     </div>
     <div className="mission-card-actions">
       <span
@@ -252,6 +296,7 @@ export function MissionTable({
   onClaim,
   onComplete,
   onToggleSystemStatus,
+  onUpdateProgress,
   currentMember,
   canManage,
   members,
@@ -272,6 +317,7 @@ export function MissionTable({
   onClaim: (mission: Mission) => void;
   onComplete: (mission: Mission) => void;
   onToggleSystemStatus: (mission: Mission, status: MissionSystemStatus, checked: boolean) => void;
+  onUpdateProgress: (mission: Mission, progress: number) => Promise<void>;
   currentMember: AllianceMember;
   canManage: boolean;
   members: AllianceMember[];
@@ -346,7 +392,7 @@ export function MissionTable({
               <td><DiscovererCell email={mission.stationOwnerEmail} image={getDiscovererImage(mission.stationOwnerEmail)} name={mission.stationOwnerName} onOpenProfile={setProfileEmail} /></td>
               <td><AssigneeCell currentMember={currentMember} members={members} mission={mission} onOpenProfile={setProfileEmail} /></td>
               <td><span className={`badge badge--priority badge--priority-${mission.priority}`}><span />{t(`common.${mission.priority}`)}</span></td>
-              <td><div className="progress-cell"><div className="progress-track"><span style={{ width: `${mission.progress}%` }} /></div><span>{mission.progress}%</span></div></td>
+              <td><MissionProgress editable={!canManage && mission.assignedEmail?.toLowerCase() === currentMember.email.toLowerCase()} mission={mission} onChange={onUpdateProgress} /></td>
               <td><MissionRowAction canManage={canManage} currentMember={currentMember} mission={mission} onClaim={onClaim} onComplete={onComplete} onDeleteMission={onDeleteMission} onEdit={onEdit} /></td>
             </tr>)}
             {loading && <tr><td className="empty-state mission-table-loading" colSpan={8}><LoadingSpinner /></td></tr>}
@@ -354,7 +400,7 @@ export function MissionTable({
           </tbody>
         </table>
       </div> : <div className="mission-card-grid">
-        {missions.map((mission) => <MissionCard canManage={canManage} currentMember={currentMember} getDiscovererImage={getDiscovererImage} key={mission.id} members={members} mission={mission} onClaim={onClaim} onComplete={onComplete} onDeleteMission={onDeleteMission} onEdit={onEdit} onOpenPlanet={onOpenPlanet} onOpenProfile={setProfileEmail} onToggleSystemStatus={onToggleSystemStatus} systemStatuses={planetStatuses} />)}
+        {missions.map((mission) => <MissionCard canManage={canManage} currentMember={currentMember} getDiscovererImage={getDiscovererImage} key={mission.id} members={members} mission={mission} onClaim={onClaim} onComplete={onComplete} onDeleteMission={onDeleteMission} onEdit={onEdit} onOpenPlanet={onOpenPlanet} onOpenProfile={setProfileEmail} onToggleSystemStatus={onToggleSystemStatus} onUpdateProgress={onUpdateProgress} systemStatuses={planetStatuses} />)}
         {loading && <div className="mission-cards-loading"><LoadingSpinner /></div>}
         {!loading && missions.length === 0 && <p className="mission-cards-empty">{t("missions.no_missions_match_the_filters")}</p>}
       </div>}

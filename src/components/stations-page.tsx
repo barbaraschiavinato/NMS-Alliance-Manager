@@ -21,6 +21,7 @@ type StationEntry = Readonly<{
   portal: string;
   galaxy: number;
   owner: string;
+  createdByEmail?: string;
   name?: string;
   planet: CachedPlanet | null;
   hasMissions: boolean;
@@ -57,6 +58,7 @@ function parseStations(value: unknown): StationEntry[] {
       portal: station.portal,
       galaxy: station.galaxy,
       owner: station.owner,
+      ...(typeof station.createdByEmail === "string" ? { createdByEmail: station.createdByEmail } : {}),
       ...(typeof station.name === "string" ? { name: station.name } : {}),
       planet,
       hasMissions: station.hasMissions === true,
@@ -368,6 +370,8 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
             {visibleStations.length > 0 && <ul className={`station-list ${viewMode === "cards" ? "station-list-cards" : ""}`}>{visibleStations.map((station) => {
               const planetImageUrl = cachedPlanetImageUrl(station.planet);
               const stationDisplayName = station.name || cachedPlanetType(station.planet) || cachedPlanetTitle(station.planet) || t("planet.unnamed_planet");
+              const canEditStation = canSeeAll ||
+                (station.createdByEmail ?? station.owner).toLowerCase() === pageMember.email.toLowerCase();
               return <li key={`${station.portal}:${station.galaxy}:${station.owner}`}>
                 {viewMode === "cards" && <button className={`station-card-title${planetImageUrl ? " station-card-title-with-image" : ""}`} onClick={() => setSelectedStation({ portal: station.portal, galaxy: station.galaxy })} type="button">
                   {planetImageUrl && <Image alt="" className="station-card-planet-image" height={112} src={planetImageUrl} unoptimized width={112} />}
@@ -390,8 +394,8 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
                     ? canSeeAll
                       ? <Link aria-label={t("planet.open_missions_for_planet_portal", { portal: station.portal })} className="member-icon-action station-missions-link" data-tooltip={t("missions.open_associated_missions")} href={`/?search=${encodeURIComponent(station.portal)}`}><Crosshair size={14} /></Link>
                       : <span className="station-mission-lock">{t("missions.associated_mission")}</span>
-                    : <>{(canSeeAll || station.owner.toLowerCase() === pageMember.email.toLowerCase()) && <button aria-label={t("stations.edit_station_portal", { portal: station.portal })} className="member-icon-action" data-tooltip={t("stations.edit_station")} onClick={() => openEditStation(station)} type="button"><Pencil size={14} /></button>}
-                      {(canSeeAll || station.owner.toLowerCase() === pageMember.email.toLowerCase()) && <button aria-label={t("stations.remove_portal_portal_in_galaxy_from_owner_s_archive", { portal: station.portal, galaxy: galaxyLabel(station.galaxy), owner: station.owner })} className="member-icon-action delete-member" data-tooltip={t("stations.delete_station")} onClick={() => void removeStation(station.portal, station.galaxy, station.owner)} type="button"><Trash2 size={14} /></button>}</>}
+                    : (canSeeAll || station.owner.toLowerCase() === pageMember.email.toLowerCase()) && <button aria-label={t("stations.remove_portal_portal_in_galaxy_from_owner_s_archive", { portal: station.portal, galaxy: galaxyLabel(station.galaxy), owner: station.owner })} className="member-icon-action delete-member" data-tooltip={t("stations.delete_station")} onClick={() => void removeStation(station.portal, station.galaxy, station.owner)} type="button"><Trash2 size={14} /></button>}
+                  {canEditStation && <button aria-label={t("stations.edit_station_portal", { portal: station.portal })} className="member-icon-action" data-tooltip={t("stations.edit_station")} onClick={() => openEditStation(station)} type="button"><Pencil size={14} /></button>}
                 </div>
               </li>;
             })}</ul>}
@@ -418,15 +422,15 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
                 value={stationName}
               />
             </label>
-            <SystemAddressField address={portal} galaxy={galaxy} onChange={(value) => {
+            {!editingStation?.hasMissions && <SystemAddressField address={portal} galaxy={galaxy} onChange={(value) => {
               setPortal(value);
               setStationName("");
               setPlanetType("");
               setStationNameEdited(false);
               setError("");
               setValidation({ valid: false, lookup: null });
-            }} onLookupResolved={handleStationLookup} onStateChange={setValidation} />
-            <label className="field station-galaxy-select">
+            }} onLookupResolved={handleStationLookup} onStateChange={setValidation} />}
+            {!editingStation?.hasMissions && <label className="field station-galaxy-select">
               <span>{t("stations.galaxy")}</span>
               <select onChange={(event) => {
                 setGalaxy(Number(event.target.value));
@@ -437,8 +441,8 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
               }} value={galaxy}>
                 {galaxyNames.map((name, index) => <option key={index} value={index}>{name}</option>)}
               </select>
-            </label>
-            {canSeeAll && <label className="field">
+            </label>}
+            {canSeeAll && !editingStation?.hasMissions && <label className="field">
               <span>{t("stations.station_owner")}</span>
               <select onChange={(event) => setStationOwnerEmail(event.target.value)} required value={stationOwnerEmail}>
                 {[pageMember, ...members.filter((candidate) => candidate.email.toLowerCase() !== pageMember.email.toLowerCase())]
@@ -453,7 +457,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
             <div className="dialog-actions">
               <span className="action-spacer" />
               <button className="quiet-button" onClick={closeStationDialog} type="button">{t("common.cancel")}</button>
-              <button className="primary-button" disabled={saving || !validation.valid} type="submit">{saving ? t("common.saving") : t(editingStation ? "common.save" : "common.add")}{editingStation ? <Pencil size={15} /> : <Plus size={15} />}</button>
+              <button className="primary-button" disabled={saving || (!editingStation?.hasMissions && !validation.valid)} type="submit">{saving ? t("common.saving") : t(editingStation ? "common.save" : "common.add")}{editingStation ? <Pencil size={15} /> : <Plus size={15} />}</button>
             </div>
           </form>
         </dialog>

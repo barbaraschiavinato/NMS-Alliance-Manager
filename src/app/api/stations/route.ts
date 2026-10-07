@@ -55,7 +55,7 @@ export async function POST(request: Request) {
     if ((await readStationPortals(requestedOwner)).some((station) => station.portal === portal && station.galaxy === galaxy)) {
       return NextResponse.json({ error: "stations.this_portal_is_already_in_the_selected_owner_s_list" }, { status: 409 });
     }
-    await addStationPortal(requestedOwner, portal, galaxy, name);
+    await addStationPortal(requestedOwner, portal, galaxy, name, member.email);
     await cacheStationPlanet(portal, galaxy);
     return NextResponse.json({ stations: await readStations(member) }, { status: 201 });
   } catch (error) {
@@ -129,30 +129,39 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "stations.error_invalid_station_data" }, { status: 400 });
   }
   const isModerator = hasRole(member, "moderator");
-  if (!isModerator && (currentOwner !== member.email.toLowerCase() || owner !== member.email.toLowerCase())) {
-    return NextResponse.json({ error: "stations.error_cannot_edit_another_member_s_station" }, { status: 403 });
-  }
 
   try {
-    const access = await readAccessData();
-    if (!access.members.some((candidate) =>
-      candidate.email.toLowerCase() === owner && candidate.membershipStatus === "approved",
-    )) {
-      return NextResponse.json({ error: "stations.error_owner_must_be_approved" }, { status: 400 });
-    }
-
     const [missions, currentStations, destinationStations] = await Promise.all([
       readMissions(),
       readStationPortals(currentOwner),
       readStationPortals(owner),
     ]);
-    if (missions.some((mission) =>
-      mission.systemAddress.toUpperCase() === currentPortal && mission.galaxy === currentGalaxy,
-    )) {
-      return NextResponse.json({ error: "stations.error_station_associated_with_mission_cannot_be_edited" }, { status: 409 });
-    }
-    if (!currentStations.some((station) => station.portal === currentPortal && station.galaxy === currentGalaxy)) {
+    const currentStation = currentStations.find((station) =>
+      station.portal === currentPortal && station.galaxy === currentGalaxy,
+    );
+    if (!currentStation) {
       return NextResponse.json({ error: "stations.error_station_not_found_in_owner_archive" }, { status: 404 });
+    }
+    const creatorEmail = currentStation.createdByEmail ?? currentOwner;
+    if (!isModerator && creatorEmail !== member.email.toLowerCase()) {
+      return NextResponse.json({ error: "stations.error_cannot_edit_another_member_s_station" }, { status: 403 });
+    }
+    const hasAssociatedMission = missions.some((mission) =>
+      mission.systemAddress.toUpperCase() === currentPortal && mission.galaxy === currentGalaxy,
+    );
+    if (
+      hasAssociatedMission &&
+      (portal !== currentPortal || galaxy !== currentGalaxy || owner !== currentOwner)
+    ) {
+      return NextResponse.json({ error: "stations.error_station_associated_with_mission_title_only" }, { status: 409 });
+    }
+    if (!hasAssociatedMission) {
+      const access = await readAccessData();
+      if (!access.members.some((candidate) =>
+        candidate.email.toLowerCase() === owner && candidate.membershipStatus === "approved",
+      )) {
+        return NextResponse.json({ error: "stations.error_owner_must_be_approved" }, { status: 400 });
+      }
     }
     if (destinationStations.some((station) =>
       station.portal === portal &&

@@ -196,6 +196,21 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
     setNotice("Mission completed.");
   }
 
+  async function updateMissionProgress(mission: Mission, progress: number) {
+    const status = progress === 100 ? "completed" : "in_progress";
+    const response = await fetch(`/api/missions/${mission.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status, progress }),
+    });
+    const body: unknown = await response.json();
+    if (!response.ok || !body || typeof body !== "object" || !("id" in body) || body.id !== mission.id) {
+      const message = body && typeof body === "object" && "error" in body ? body.error : null;
+      throw new Error(typeof message === "string" ? message : t("errors.update_failed"));
+    }
+    setMissions((current) => current.map((item) => item.id === mission.id ? body as Mission : item));
+  }
+
   async function togglePlanetSystemStatus(mission: Mission, status: MissionSystemStatus, checked: boolean) {
     const key = planetSystemStatusKey(mission.systemAddress, mission.galaxy);
     const currentStatuses = planetStatuses[key] ?? [];
@@ -242,6 +257,14 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
             planetStatuses={planetStatuses}
             onClaim={(mission) => void claimMission(mission).catch((error: unknown) => setNotice(error instanceof Error ? error.message : t("errors.request_failed")))}
             onComplete={(mission) => void completeMission(mission).catch((error: unknown) => setNotice(error instanceof Error ? error.message : t("errors.request_failed")))}
+            onUpdateProgress={async (mission, progress) => {
+              try {
+                await updateMissionProgress(mission, progress);
+              } catch (error: unknown) {
+                setNotice(error instanceof Error ? error.message : t("errors.request_failed"));
+                throw error;
+              }
+            }}
             onToggleSystemStatus={(mission, status, checked) => void togglePlanetSystemStatus(mission, status, checked).catch((error: unknown) => setNotice(error instanceof Error ? error.message : t("errors.request_failed")))}
             onEdit={(mission) => openMission(mission)}
             onDeleteMission={(mission) => {
