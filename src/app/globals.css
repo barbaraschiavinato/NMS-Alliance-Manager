@@ -503,7 +503,7 @@ select { appearance: none; padding-right: 29px; background-image: linear-gradien
 .station-actions [data-tooltip]:hover::after,
 .station-actions [data-tooltip]:focus-visible::after { opacity: 1; transform: translateY(0); }
 .member-page-actions [data-tooltip] { position: relative; }
-.member-page-actions [data-tooltip]::after { position: absolute; z-index: 30; right: 0; bottom: calc(100% + 7px); padding: 6px 8px; color: #f1eee7; border: 1px solid #394548; border-radius: 3px; background: #111719; box-shadow: 0 4px 14px #0008; content: attr(data-tooltip); font-size: 9px; font-weight: 500; line-height: 1.2; opacity: 0; pointer-events: none; text-transform: none; transform: translateY(3px); transition: opacity .12s, transform .12s; white-space: nowrap; }
+.member-page-actions [data-tooltip]::after { position: absolute; z-index: 30; right: 0; bottom: calc(100% + 7px); padding: 6px 8px; color: #f1eee7; border: 1px solid #394548; border-radius: 3px; background: #111719; box-shadow: 0 4px 14px #0008; content: attr(data-tooltip); font-family: "Raleway", sans-serif; font-size: 9px; font-weight: 500; letter-spacing: normal; line-height: 1.2; opacity: 0; pointer-events: none; text-transform: none; transform: translateY(3px); transition: opacity .12s, transform .12s; white-space: nowrap; }
 .member-page-actions [data-tooltip]:hover::after,
 .member-page-actions [data-tooltip]:focus-visible::after { opacity: 1; transform: translateY(0); }
 .station-mission-lock { max-width: 92px; color: #889289; font-size: 7px; line-height: 1.3; text-align: right; }
