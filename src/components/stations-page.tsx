@@ -22,11 +22,9 @@ type StationEntry = Readonly<{
   portal: string;
   galaxy: number;
   ownerId: string;
-  owner?: string;
   ownerName?: string;
   ownerImage?: string;
   createdByMemberId?: string;
-  createdByEmail?: string;
   name?: string;
   note?: string;
   planet: CachedPlanet | null;
@@ -64,11 +62,9 @@ function parseStations(value: unknown): StationEntry[] {
       portal: station.portal,
       galaxy: station.galaxy,
       ownerId: station.ownerId,
-      ...(typeof station.owner === "string" ? { owner: station.owner } : {}),
       ...(typeof station.ownerName === "string" ? { ownerName: station.ownerName } : {}),
       ...(typeof station.ownerImage === "string" ? { ownerImage: station.ownerImage } : {}),
       ...(typeof station.createdByMemberId === "string" ? { createdByMemberId: station.createdByMemberId } : {}),
-      ...(typeof station.createdByEmail === "string" ? { createdByEmail: station.createdByEmail } : {}),
       ...(typeof station.name === "string" ? { name: station.name } : {}),
       ...(typeof station.note === "string" ? { note: station.note } : {}),
       planet,
@@ -170,7 +166,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
   const [viewOverride, setViewOverride] = useState<"list" | "cards" | null>(null);
   const [portal, setPortal] = useState("");
   const [galaxy, setGalaxy] = useState(0);
-  const [stationOwnerEmail, setStationOwnerEmail] = useState(currentMember.email);
+  const [stationOwnerId, setStationOwnerId] = useState(currentMember.publicId);
   const [stationName, setStationName] = useState("");
   const [stationNote, setStationNote] = useState("");
   const [planetType, setPlanetType] = useState("");
@@ -210,7 +206,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
     setEditingStation(null);
     setPortal("");
     setGalaxy(0);
-    setStationOwnerEmail(pageMember.email);
+    setStationOwnerId(pageMember.publicId);
     setStationName("");
     setStationNote("");
     setPlanetType("");
@@ -224,7 +220,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
     setEditingStation(station);
     setPortal(station.portal);
     setGalaxy(station.galaxy);
-    setStationOwnerEmail(station.owner ?? pageMember.email);
+    setStationOwnerId(station.ownerId);
     setStationName(station.name ?? cachedPlanetTitle(station.planet) ?? "");
     setStationNote(station.note ?? "");
     setPlanetType(cachedPlanetType(station.planet));
@@ -272,15 +268,15 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
       return;
     }
     const canonicalPortal = portal.toUpperCase();
-    const requestedOwner = canSeeAll ? stationOwnerEmail.trim().toLowerCase() : pageMember.email.toLowerCase();
-    if (!requestedOwner) {
+    const requestedOwnerId = canSeeAll ? stationOwnerId : pageMember.publicId;
+    if (!requestedOwnerId) {
       setError(t("stations.select_the_station_owner"));
       return;
     }
     if (stations.some((station) =>
       station.portal === canonicalPortal &&
       station.galaxy === galaxy &&
-      (canSeeAll ? station.owner?.toLowerCase() === requestedOwner : station.ownerId === pageMember.publicId) &&
+      station.ownerId === requestedOwnerId &&
       !(editingStation &&
         station.portal === editingStation.portal &&
         station.galaxy === editingStation.galaxy &&
@@ -302,17 +298,16 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
             currentPortal: editingStation.portal,
             currentGalaxy: editingStation.galaxy,
             currentOwnerId: editingStation.ownerId,
-            ...(canSeeAll && editingStation.owner ? { currentOwner: editingStation.owner } : {}),
             portal: canonicalPortal,
             galaxy,
-            ...(canSeeAll ? { owner: requestedOwner } : { ownerId: pageMember.publicId }),
+            ownerId: requestedOwnerId,
             name: stationName,
             note: stationNote,
           }
           : {
             portal: canonicalPortal,
             galaxy,
-            ...(canSeeAll ? { owner: requestedOwner } : { ownerId: pageMember.publicId }),
+            ownerId: requestedOwnerId,
             name: stationName,
             note: stationNote,
           }),
@@ -332,8 +327,8 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
       closeStationDialog();
       setNotice(editingStation
         ? t("stations.station_updated")
-        : canSeeAll && requestedOwner !== pageMember.email.toLowerCase()
-          ? t("stations.station_added_to_owner_s_archive", { owner: members.find((candidate) => candidate.email.toLowerCase() === requestedOwner)?.nmsName || members.find((candidate) => candidate.email.toLowerCase() === requestedOwner)?.name || requestedOwner })
+        : canSeeAll && requestedOwnerId !== pageMember.publicId
+          ? t("stations.station_added_to_owner_s_archive", { owner: members.find((candidate) => candidate.publicId === requestedOwnerId)?.nmsName || members.find((candidate) => candidate.publicId === requestedOwnerId)?.name || t("common.not_specified") })
           : t("stations.portal_added_to_your_stations"));
     } catch (error_: unknown) {
       setError(error_ instanceof Error ? error_.message : t("errors.save_failed"));
@@ -516,11 +511,11 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
             </label>}
             {canSeeAll && <label className="field">
               <span>{t("stations.station_owner")}</span>
-              <select onChange={(event) => setStationOwnerEmail(event.target.value)} required value={stationOwnerEmail}>
-                {[pageMember, ...members.filter((candidate) => candidate.email.toLowerCase() !== pageMember.email.toLowerCase())]
+              <select onChange={(event) => setStationOwnerId(event.target.value)} required value={stationOwnerId}>
+                {[pageMember, ...members.filter((candidate) => candidate.publicId !== pageMember.publicId)]
                   .map((candidate) => (
-                    <option key={candidate.email} value={candidate.email}>
-                      {candidate.nmsName || candidate.name} · {candidate.email}
+                    <option key={candidate.publicId} value={candidate.publicId}>
+                      {candidate.nmsName || candidate.name}
                     </option>
                   ))}
               </select>

@@ -22,15 +22,16 @@ export async function PATCH(request: Request, context: RouteContext) {
     let updated;
     if (hasRole(member, "moderator")) {
       if (!isMissionInput(input)) return NextResponse.json({ error: "Dati missione non validi." }, { status: 400 });
-      const assignedEmail = input.assignedEmail?.trim().toLowerCase();
-      let assignedTo = input.assignedTo;
-      if (assignedEmail) {
-        const access = await readAccessData();
-        const assignee = access.members.find((candidate) =>
-          candidate.email === assignedEmail && candidate.membershipStatus === "approved" && candidate.nmsName && isValidNmsFriendCode(candidate.nmsCode) && candidate.platforms.length > 0 && candidate.specialty,
-        );
-        if (!assignee) return NextResponse.json({ error: "Membro assegnatario non trovato." }, { status: 400 });
-        assignedTo = assignee.nmsName || assignee.name;
+      const existingMission = missions[index];
+      const access = await readAccessData();
+      const assignedMemberId = input.assignedMemberId?.trim() || undefined;
+      const assignedMember = assignedMemberId
+        ? access.members.find((candidate) => candidate.publicId === assignedMemberId &&
+          candidate.membershipStatus === "approved" && candidate.nmsName &&
+          isValidNmsFriendCode(candidate.nmsCode) && candidate.platforms.length > 0 && candidate.specialty)
+        : null;
+      if (assignedMemberId && !assignedMember && assignedMemberId !== existingMission.assignedMemberId) {
+        return NextResponse.json({ error: "Membro assegnatario non trovato." }, { status: 400 });
       }
       const stationOwner = input.stationOwnerMemberId
         ? await findStationOwner(input.stationOwnerMemberId, input.systemAddress, input.galaxy)
@@ -40,17 +41,17 @@ export async function PATCH(request: Request, context: RouteContext) {
       }
       updated = {
         ...input,
-        createdByEmail: missions[index].createdByEmail,
-        createdByName: missions[index].createdByName,
+        createdByMemberId: existingMission.createdByMemberId,
+        createdByName: existingMission.createdByName,
         stationOwnerMemberId: stationOwner?.publicId,
         stationOwnerName: stationOwner?.name,
-        assignedTo,
-        assignedEmail,
+        assignedTo: assignedMember?.nmsName || assignedMember?.name || (assignedMemberId ? existingMission.assignedTo : ""),
+        assignedMemberId: assignedMember?.publicId ?? assignedMemberId,
         systemAddress: input.systemAddress.toUpperCase(),
         id,
       };
     } else {
-      if (missions[index].assignedEmail?.toLowerCase() !== member.email.toLowerCase() || !isProgressUpdate(input)) {
+      if (missions[index].assignedMemberId !== member.publicId || !isProgressUpdate(input)) {
         return NextResponse.json({ error: "Puoi aggiornare solo l'avanzamento delle missioni assegnate a te." }, { status: 403 });
       }
       updated = { ...missions[index], ...input };
@@ -58,7 +59,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     missions[index] = updated;
     await writeMissions(missions);
     const accessData = await readAccessData();
-    return NextResponse.json(serializeMission(updated, accessData.members, hasRole(member, "moderator")));
+    return NextResponse.json(serializeMission(updated, accessData.members));
   } catch (error) {
     console.error("Unable to update mission", error);
     return NextResponse.json({ error: "Impossibile aggiornare la missione." }, { status: 503 });
@@ -71,7 +72,7 @@ async function findStationOwner(publicId: string, portal: string, galaxy: number
     candidate.publicId === publicId && candidate.membershipStatus === "approved",
   );
   if (!owner) return null;
-  const stations = await readStationPortals(owner.email);
+  const stations = await readStationPortals(owner.publicId);
   if (!stations.some((station) => station.portal === portal.toUpperCase() && station.galaxy === galaxy)) return null;
   return { publicId: owner.publicId, name: owner.nmsName || owner.name };
 }

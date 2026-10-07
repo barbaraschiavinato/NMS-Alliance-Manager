@@ -106,7 +106,7 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
 
   const counts = useMemo(() => {
     const waitingMissions = availableMissions.filter((mission) => mission.status === "pending");
-    const isAssigned = (mission: Mission) => Boolean(mission.assignedMemberId || mission.assignedEmail || mission.assignedTo.trim());
+    const isAssigned = (mission: Mission) => Boolean(mission.assignedMemberId || mission.assignedTo.trim());
     return {
       all: availableMissions.length,
       in_progress: availableMissions.filter((mission) => mission.status === "in_progress").length,
@@ -120,7 +120,7 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
   const visibleMissions = useMemo(() => availableMissions
     .filter((mission) => {
       if (filter === "all") return true;
-      const isAssigned = Boolean(mission.assignedMemberId || mission.assignedEmail || mission.assignedTo.trim());
+      const isAssigned = Boolean(mission.assignedMemberId || mission.assignedTo.trim());
       if (filter === "pending_assigned") return mission.status === "pending" && isAssigned;
       if (filter === "pending_unassigned") return mission.status === "pending" && !isAssigned;
       return mission.status === filter;
@@ -135,10 +135,8 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
         mission.notes,
         mission.system,
         mission.assignedTo,
-        mission.assignedEmail,
         mission.stationOwnerName,
         mission.createdByName,
-        mission.createdByEmail,
         missionTypeLabels[mission.targetSpecialty],
       ].filter(Boolean).join(" ").toLowerCase();
       const textMatches = searchableText.includes(searchText);

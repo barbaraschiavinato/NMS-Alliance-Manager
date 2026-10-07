@@ -67,7 +67,7 @@ export async function PATCH(request: Request) {
     if (!hasRole(member, "moderator")) {
       const missions = await readMissions();
       const assignedToMember = missions.some((mission) =>
-        mission.assignedEmail?.toLowerCase() === member.email.toLowerCase() &&
+        mission.assignedMemberId === member.publicId &&
         mission.systemAddress.toUpperCase() === input.portal.toUpperCase() &&
         mission.galaxy === input.galaxy,
       );

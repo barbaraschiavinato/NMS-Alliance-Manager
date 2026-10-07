@@ -17,13 +17,7 @@ function asRecord(value: unknown): Record<string, unknown> | null {
 }
 
 function isMissionAssignee(mission: Mission, member: AllianceMember): boolean {
-  if (mission.assignedMemberId) return mission.assignedMemberId === member.publicId;
-  const assignedEmail = mission.assignedEmail?.trim().toLowerCase();
-  if (assignedEmail) return assignedEmail === member.email.trim().toLowerCase();
-
-  const assignedName = mission.assignedTo.trim().toLowerCase();
-  return Boolean(assignedName) && [member.nmsName, member.name, member.email]
-    .some((name) => name?.trim().toLowerCase() === assignedName);
+  return Boolean(mission.assignedMemberId && mission.assignedMemberId === member.publicId);
 }
 
 const targetSpecialtyNames: Record<MissionSpecialty, string> = {
@@ -61,10 +55,10 @@ function MissionRowAction({ mission, currentMember, canManage, onEdit, onDeleteM
       <button aria-label={`${t("common.delete")} ${mission.title}`} className="row-action row-action-delete" data-tooltip={t("missions.delete_mission")} onClick={() => onDeleteMission(mission)} type="button"><Trash2 size={15} /></button>
     </span>;
   }
-  if ((mission.assignedMemberId === currentMember.publicId || mission.assignedEmail === currentMember.email) && mission.status !== "completed") {
+  if (mission.assignedMemberId === currentMember.publicId && mission.status !== "completed") {
     return <button className="claim-button mission-action-button" onClick={() => onComplete(mission)} type="button">{t("missions.complete_mission")}</button>;
   }
-  if (!mission.assignedEmail && !mission.assignedTo.trim()) {
+  if (!mission.assignedMemberId && !mission.assignedTo.trim()) {
     return <button className="claim-button mission-action-button" onClick={() => onClaim(mission)} type="button">{t("missions.claim")}</button>;
   }
   return <span className="no-row-action">—</span>;
@@ -77,12 +71,8 @@ function AssigneeCell({ mission, members, currentMember, onOpenProfile }: Readon
   onOpenProfile: (memberId: string, context: MemberMessageContext) => void;
 }>) {
   const { t } = useLocale();
-  const assignedMember = members.find((member) => member.email === mission.assignedEmail)
-    ?? members.find((member) => member.publicId === mission.assignedMemberId)
-    ?? (mission.assignedMemberId === currentMember.publicId ? currentMember : undefined)
-    ?? (mission.assignedEmail === currentMember.email ? currentMember : undefined)
-    ?? ([currentMember.nmsName, currentMember.name].includes(mission.assignedTo) ? currentMember : undefined)
-    ?? members.find((member) => member.nmsName === mission.assignedTo || member.name === mission.assignedTo);
+  const assignedMember = members.find((member) => member.publicId === mission.assignedMemberId)
+    ?? (mission.assignedMemberId === currentMember.publicId ? currentMember : undefined);
   const image = assignedMember?.image;
   const name = mission.assignedTo || t("missions.not_assigned");
   const memberId = mission.assignedMemberId || assignedMember?.publicId;
@@ -308,8 +298,7 @@ function MissionCard({ mission, systemStatuses, currentMember, canManage, member
   const { t } = useLocale();
   const statuses = systemStatuses[planetSystemStatusKey(mission.systemAddress, mission.galaxy)] ?? [];
   const hasDataError = statuses.includes("data_error");
-  const canUpdateSystemStatus = mission.assignedMemberId === currentMember.publicId ||
-    mission.assignedEmail?.toLowerCase() === currentMember.email.toLowerCase();
+  const canUpdateSystemStatus = mission.assignedMemberId === currentMember.publicId;
   const canUpdateProgress = !canManage && canUpdateSystemStatus;
   const canViewNotes = canManage || isMissionAssignee(mission, currentMember);
   return <article className="mission-card">
@@ -494,7 +483,7 @@ export function MissionTable({
               <td><DiscovererCell memberId={mission.stationOwnerMemberId} galaxy={mission.galaxy} image={getDiscovererImage(mission.stationOwnerMemberId)} name={mission.stationOwnerName} onOpenProfile={(memberId, messageContext) => setProfileTarget({ memberId, messageContext })} portal={mission.systemAddress} /></td>
               <td><AssigneeCell currentMember={currentMember} members={members} mission={mission} onOpenProfile={(memberId, messageContext) => setProfileTarget({ memberId, messageContext })} /></td>
               <td><span className={`badge badge--priority badge--priority-${mission.priority}`}><span />{t(`common.${mission.priority}`)}</span></td>
-              <td><MissionProgress editable={!canManage && (mission.assignedMemberId === currentMember.publicId || mission.assignedEmail?.toLowerCase() === currentMember.email.toLowerCase())} mission={mission} onChange={onUpdateProgress} /></td>
+              <td><MissionProgress editable={!canManage && mission.assignedMemberId === currentMember.publicId} mission={mission} onChange={onUpdateProgress} /></td>
               <td><MissionRowAction canManage={canManage} currentMember={currentMember} mission={mission} onClaim={onClaim} onComplete={onComplete} onDeleteMission={onDeleteMission} onEdit={onEdit} /></td>
             </tr>)}
             {loading && <tr><td className="empty-state mission-table-loading" colSpan={8}><LoadingSpinner /></td></tr>}

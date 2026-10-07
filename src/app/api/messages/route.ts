@@ -23,19 +23,17 @@ export async function GET(request: Request) {
     const isModerator = hasRole(member, "moderator");
     const visibleMessages = messages.filter((message) =>
       isModerator ||
-      message.senderEmail.toLowerCase() === member.email.toLowerCase() ||
-      message.recipientEmail.toLowerCase() === member.email.toLowerCase(),
+      message.senderMemberId === member.publicId ||
+      message.recipientMemberId === member.publicId,
     );
-    const membersByEmail = new Map(accessData.members.map((profile) => [profile.email.toLowerCase(), profile]));
+    const membersById = new Map(accessData.members.map((profile) => [profile.publicId, profile]));
     const responseMessages = visibleMessages
       .toSorted((left, right) => right.createdAt.localeCompare(left.createdAt))
-      .map(({ senderEmail, recipientEmail, ...message }) => {
-        const sender = membersByEmail.get(senderEmail.toLowerCase());
-        const recipient = membersByEmail.get(recipientEmail.toLowerCase());
+      .map((message) => {
+        const sender = message.senderMemberId ? membersById.get(message.senderMemberId) : undefined;
+        const recipient = message.recipientMemberId ? membersById.get(message.recipientMemberId) : undefined;
         return {
           ...message,
-          senderMemberId: sender?.publicId,
-          recipientMemberId: recipient?.publicId,
           senderName: [sender?.nmsName, sender?.name].find((name) => name && !isEmailAddress(name)) || "Former member",
           recipientName: [recipient?.nmsName, recipient?.name].find((name) => name && !isEmailAddress(name)) || "Former member",
         };
@@ -47,8 +45,8 @@ export async function GET(request: Request) {
   }
 }
 
-async function resolvePlanetSubject(recipientEmail: string, portal: string, galaxy: number, planetNumber: number) {
-  const stations = await readStationPortals(recipientEmail);
+async function resolvePlanetSubject(recipientMemberId: string, portal: string, galaxy: number, planetNumber: number) {
+  const stations = await readStationPortals(recipientMemberId);
   const station = stations.find((entry) => entry.portal === portal && entry.galaxy === galaxy);
   if (!station) return null;
 
@@ -82,7 +80,7 @@ async function getPlanetSubject(params: URLSearchParams) {
     );
     if (!recipient) return NextResponse.json({ error: "profile.message_recipient_not_found" }, { status: 404 });
 
-    const subject = await resolvePlanetSubject(recipient.email, portal, galaxy, decoded.planet);
+    const subject = await resolvePlanetSubject(recipient.publicId, portal, galaxy, decoded.planet);
     if (!subject) return NextResponse.json({ error: "profile.message_context_invalid" }, { status: 404 });
     return NextResponse.json({ subject }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
@@ -118,18 +116,15 @@ export async function POST(request: Request) {
       const original = messages.find((entry) => entry.id === replyToId);
       if (!original) return NextResponse.json({ error: "messages.reply_original_not_found" }, { status: 404 });
 
-      const memberEmail = member.email.toLowerCase();
-      const senderEmail = original.senderEmail.toLowerCase();
-      const originalRecipientEmail = original.recipientEmail.toLowerCase();
-      const recipientEmail = memberEmail === senderEmail
-        ? originalRecipientEmail
-        : memberEmail === originalRecipientEmail
-          ? senderEmail
+      const recipientId = member.publicId === original.senderMemberId
+        ? original.recipientMemberId
+        : member.publicId === original.recipientMemberId
+          ? original.senderMemberId
           : "";
-      if (!recipientEmail) return NextResponse.json({ error: "messages.reply_not_allowed" }, { status: 403 });
+      if (!recipientId) return NextResponse.json({ error: "messages.reply_not_allowed" }, { status: 403 });
 
       const recipient = (await readAccessData()).members.find((candidate) =>
-        candidate.email.toLowerCase() === recipientEmail && candidate.membershipStatus === "approved",
+        candidate.publicId === recipientId && candidate.membershipStatus === "approved",
       );
       if (!recipient) return NextResponse.json({ error: "profile.message_recipient_not_found" }, { status: 404 });
 
@@ -164,7 +159,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "messages.reply_context_missing" }, { status: 400 });
       }
 
-      await savePrivateMessage(member.email, recipient.email, message, replyContext, {
+      await savePrivateMessage(member.publicId, recipient.publicId, message, replyContext, {
         threadId: original.threadId ?? original.id,
         replyToId: original.id,
       });
@@ -197,7 +192,7 @@ export async function POST(request: Request) {
       if (!decoded || decoded.errors.length > 0) {
         return NextResponse.json({ error: "profile.message_context_invalid" }, { status: 400 });
       }
-      const planetName = await resolvePlanetSubject(recipient.email, portal, context.galaxy, decoded.planet);
+      const planetName = await resolvePlanetSubject(recipient.publicId, portal, context.galaxy, decoded.planet);
       if (!planetName) return NextResponse.json({ error: "profile.message_context_invalid" }, { status: 400 });
       messageContext = {
         subjectType: "planet",
@@ -208,12 +203,7 @@ export async function POST(request: Request) {
       };
     } else if (context?.type === "mission" && typeof context.missionCode === "string" && context.missionCode.trim()) {
       const mission = (await readMissions()).find((candidate) => candidate.id === context.missionCode);
-      const recipientNames = [recipient.nmsName, recipient.name]
-        .map((name) => name.trim().toLowerCase())
-        .filter(Boolean);
-      const isAssignee = mission?.assignedEmail
-        ? mission.assignedEmail.toLowerCase() === recipient.email.toLowerCase()
-        : recipientNames.includes(mission?.assignedTo.trim().toLowerCase() ?? "");
+      const isAssignee = mission?.assignedMemberId === recipient.publicId;
       if (!mission || !isAssignee) {
         return NextResponse.json({ error: "profile.message_context_invalid" }, { status: 400 });
       }
@@ -221,7 +211,7 @@ export async function POST(request: Request) {
     } else {
       return NextResponse.json({ error: "profile.message_context_required" }, { status: 400 });
     }
-    await savePrivateMessage(member.email, recipient.email, message, messageContext);
+    await savePrivateMessage(member.publicId, recipient.publicId, message, messageContext);
     return NextResponse.json({ ok: true }, { status: 201 });
   } catch (error) {
     console.error("Unable to save private message", error);
@@ -244,9 +234,8 @@ export async function DELETE(request: Request) {
     const message = messages.find((entry) => entry.id === messageId);
     if (!message) return NextResponse.json({ error: "messages.message_not_found" }, { status: 404 });
 
-    const memberEmail = member.email.toLowerCase();
-    const isParticipant = memberEmail === message.senderEmail.toLowerCase() ||
-      memberEmail === message.recipientEmail.toLowerCase();
+    const isParticipant = member.publicId === message.senderMemberId ||
+      member.publicId === message.recipientMemberId;
     if (!isParticipant && !hasRole(member, "moderator")) {
       return NextResponse.json({ error: "messages.delete_not_allowed" }, { status: 403 });
     }

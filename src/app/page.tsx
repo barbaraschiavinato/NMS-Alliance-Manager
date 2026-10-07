@@ -29,7 +29,7 @@ export default async function Home({ searchParams }: Readonly<{
   const initialSearch = typeof params.search === "string" ? params.search.slice(0, 80) : "";
   const stations = member.role === "admin" || member.role === "moderator"
     ? await readAllStationPortals()
-    : await readStationPortals(member.email);
+    : await readStationPortals(member.publicId);
   return <MissionDashboard
     alliance={alliance}
     currentMember={member}

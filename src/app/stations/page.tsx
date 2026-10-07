@@ -30,7 +30,7 @@ export default async function StationsRoute({ searchParams }: Readonly<{
     readMissions(),
     member.role === "admin" || member.role === "moderator"
       ? readAllStationPortals()
-      : readStationPortals(member.email),
+      : readStationPortals(member.publicId),
   ]);
   const params = await searchParams;
   const initialSearch = typeof params.search === "string" ? params.search.slice(0, 254) : "";

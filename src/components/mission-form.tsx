@@ -273,19 +273,14 @@ export function MissionForm({
             <label className="field">
                 <span>{t("common.assign_to")}</span>
                 <select onChange={(event) => {
-                  const selectedEmail = event.target.value;
-                  if (selectedEmail === "__legacy") {
-                    update("assignedEmail", undefined);
-                    return;
-                  }
-                  const assignedEmail = selectedEmail;
-                  const assignedMember = members.find((candidate) => candidate.email === assignedEmail);
-                  update("assignedEmail", assignedEmail || undefined);
+                  const selectedMemberId = event.target.value;
+                  const assignedMember = members.find((candidate) => candidate.publicId === selectedMemberId);
+                  update("assignedMemberId", selectedMemberId || undefined);
                   update("assignedTo", assignedMember?.nmsName || assignedMember?.name || "");
-                }} value={form.assignedEmail ?? (form.assignedTo ? "__legacy" : "")}>
+                }} value={form.assignedMemberId ?? ""}>
                   <option value="">{t("missions.not_assigned")}</option>
-                  {form.assignedTo && !form.assignedEmail && <option value="__legacy">{form.assignedTo} · {t("common.existing_assignment")}</option>}
-                  {members.map((candidate) => <option key={candidate.email} value={candidate.email}>{candidate.nmsName || candidate.name} · {candidate.specialty ? t(specialtyNames[candidate.specialty]) : t("profile.specialty_incomplete")} · {candidate.nmsCode} · {candidate.platforms.join(", ")}</option>)}
+                  {form.assignedMemberId && !members.some((candidate) => candidate.publicId === form.assignedMemberId) && <option value={form.assignedMemberId}>{form.assignedTo || t("common.existing_assignment")}</option>}
+                  {members.map((candidate) => <option key={candidate.publicId} value={candidate.publicId}>{candidate.nmsName || candidate.name} · {candidate.specialty ? t(specialtyNames[candidate.specialty]) : t("profile.specialty_incomplete")} · {candidate.nmsCode} · {candidate.platforms.join(", ")}</option>)}
                 </select>
             </label>
             <label className="field">

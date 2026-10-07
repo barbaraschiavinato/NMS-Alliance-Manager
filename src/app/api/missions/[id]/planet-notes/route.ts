@@ -29,7 +29,7 @@ export async function GET(_request: Request, context: RouteContext) {
       candidate.publicId === mission.stationOwnerMemberId && candidate.membershipStatus === "approved",
     );
     if (!owner) return NextResponse.json({ note: null }, { headers: { "Cache-Control": "no-store" } });
-    const stations = await readStationPortals(owner.email);
+    const stations = await readStationPortals(owner.publicId);
     const station = stations.find((candidate) =>
       candidate.portal === mission.systemAddress.toUpperCase() && candidate.galaxy === mission.galaxy,
     );

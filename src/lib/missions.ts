@@ -54,13 +54,11 @@ export type Mission = {
   galaxy: number;
   systemVerified?: boolean;
   systemLabelFromAlmanac?: boolean;
-  createdByEmail?: string;
   createdByName?: string;
   createdByMemberId?: string;
   stationOwnerName?: string;
   stationOwnerMemberId?: string;
   assignedTo: string;
-  assignedEmail?: string;
   assignedMemberId?: string;
   targetSpecialty: MissionSpecialty;
   dueDate: string;
@@ -81,17 +79,8 @@ export type MissionViewer = Readonly<{
 
 export function canViewMission(mission: Mission, viewer: MissionViewer): boolean {
   const assignedMemberId = mission.assignedMemberId?.trim() ?? "";
-  if (assignedMemberId && viewer.publicId) return assignedMemberId === viewer.publicId;
-
-  const assignedEmail = mission.assignedEmail?.trim().toLowerCase() ?? "";
-  const assignedName = mission.assignedTo.trim().toLowerCase();
-  const viewerEmail = viewer.email.trim().toLowerCase();
-
-  if (assignedEmail) return assignedEmail === viewerEmail;
-  if (assignedName) {
-    return [viewer.nmsName, viewer.name, viewer.email]
-      .some((name) => name?.trim().toLowerCase() === assignedName);
-  }
+  if (assignedMemberId) return Boolean(viewer.publicId && assignedMemberId === viewer.publicId);
+  if (mission.assignedTo.trim()) return false;
 
   return mission.targetSpecialty === "all" || mission.targetSpecialty === viewer.specialty;
 }
@@ -158,12 +147,14 @@ export function isMissionInput(value: unknown): value is MissionInput {
     mission.galaxy <= 255 &&
     (mission.systemVerified === undefined || typeof mission.systemVerified === "boolean") &&
     (mission.systemLabelFromAlmanac === undefined || typeof mission.systemLabelFromAlmanac === "boolean") &&
-    (mission.createdByEmail === undefined || (typeof mission.createdByEmail === "string" && mission.createdByEmail.length <= 254)) &&
     (mission.createdByName === undefined || (typeof mission.createdByName === "string" && mission.createdByName.length <= 80)) &&
+    (mission.createdByMemberId === undefined || typeof mission.createdByMemberId === "string") &&
     (mission.stationOwnerName === undefined || (typeof mission.stationOwnerName === "string" && mission.stationOwnerName.length <= 80)) &&
     (mission.stationOwnerMemberId === undefined || typeof mission.stationOwnerMemberId === "string") &&
     typeof mission.assignedTo === "string" &&
-    (mission.assignedEmail === undefined || typeof mission.assignedEmail === "string") &&
+    (mission.assignedMemberId === undefined || typeof mission.assignedMemberId === "string") &&
+    mission.createdByEmail === undefined &&
+    mission.assignedEmail === undefined &&
     missionSpecialties.includes(mission.targetSpecialty as MissionSpecialty) &&
     typeof mission.dueDate === "string" &&
     isMissionStatus(mission.status) &&

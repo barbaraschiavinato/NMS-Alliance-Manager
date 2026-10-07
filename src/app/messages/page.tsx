@@ -29,7 +29,7 @@ export default async function MessagesRoute() {
   const isModerator = member.role === "admin" || member.role === "moderator";
   const [missions, stations] = await Promise.all([
     readMissions(),
-    isModerator ? readAllStationPortals() : readStationPortals(member.email),
+    isModerator ? readAllStationPortals() : readStationPortals(member.publicId),
   ]);
   return <MessagesPage
     alliance={accessData.alliance}

@@ -15,9 +15,9 @@ export async function GET() {
     const member = await getCurrentMember();
     if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
     const [missions, accessData] = await Promise.all([readMissions(), readAccessData()]);
-    const canSeeEmails = hasRole(member, "moderator");
-    const visibleMissions = canSeeEmails ? missions : missions.filter((mission) => canViewMission(mission, member));
-    return NextResponse.json(visibleMissions.map((mission) => serializeMission(mission, accessData.members, canSeeEmails)));
+    const canManage = hasRole(member, "moderator");
+    const visibleMissions = canManage ? missions : missions.filter((mission) => canViewMission(mission, member));
+    return NextResponse.json(visibleMissions.map((mission) => serializeMission(mission, accessData.members)));
   } catch (error) {
     console.error("Unable to read missions", error);
     return NextResponse.json({ error: "Impossibile leggere le missioni." }, { status: 503 });
@@ -37,10 +37,10 @@ export async function POST(request: Request) {
 
   try {
     const missions = await readMissions();
-    const assignedMember = typeof input.assignedEmail === "string"
-      ? await findAssignableMember(input.assignedEmail)
+    const assignedMember = typeof input.assignedMemberId === "string"
+      ? await findAssignableMember(input.assignedMemberId)
       : null;
-    if (input.assignedEmail && !assignedMember) {
+    if (input.assignedMemberId && !assignedMember) {
       return NextResponse.json({ error: "Seleziona un membro registrato per l'assegnazione." }, { status: 400 });
     }
     const stationOwner = typeof input.stationOwnerMemberId === "string"
@@ -58,19 +58,19 @@ export async function POST(request: Request) {
       return {
         ...input,
         targetSpecialty,
-        createdByEmail: member.email,
+        createdByMemberId: member.publicId,
         createdByName: member.nmsName || member.name,
         stationOwnerMemberId: stationOwner?.publicId,
         stationOwnerName: stationOwner?.name,
         assignedTo: assignee?.nmsName || assignee?.name || "",
-        assignedEmail: assignee?.email,
+        assignedMemberId: assignee?.publicId,
         systemAddress: input.systemAddress.toUpperCase(),
         id: crypto.randomUUID(),
       };
     });
     await writeMissions([...createdMissions, ...missions]);
     const accessData = await readAccessData();
-    return NextResponse.json(createdMissions.map((mission) => serializeMission(mission, accessData.members, true)), { status: 201 });
+    return NextResponse.json(createdMissions.map((mission) => serializeMission(mission, accessData.members)), { status: 201 });
   } catch (error) {
     console.error("Unable to save mission", error);
     return NextResponse.json({ error: "Impossibile salvare la missione." }, { status: 503 });
@@ -83,15 +83,14 @@ async function findStationOwner(publicId: string, portal: string, galaxy: number
     candidate.publicId === publicId && candidate.membershipStatus === "approved",
   );
   if (!owner) return null;
-  const stations = await readStationPortals(owner.email);
+  const stations = await readStationPortals(owner.publicId);
   if (!stations.some((station) => station.portal === portal.toUpperCase() && station.galaxy === galaxy)) return null;
   return { publicId: owner.publicId, name: owner.nmsName || owner.name };
 }
 
-async function findAssignableMember(email: string) {
-  const { readAccessData } = await import("@/lib/access-store");
+async function findAssignableMember(publicId: string) {
   const data = await readAccessData();
   return data.members.find((candidate) =>
-    candidate.email === email.trim().toLowerCase() && candidate.membershipStatus === "approved" && candidate.nmsName && isValidNmsFriendCode(candidate.nmsCode) && candidate.platforms.length > 0 && candidate.specialty,
+    candidate.publicId === publicId.trim() && candidate.membershipStatus === "approved" && candidate.nmsName && isValidNmsFriendCode(candidate.nmsCode) && candidate.platforms.length > 0 && candidate.specialty,
   ) ?? null;
 }

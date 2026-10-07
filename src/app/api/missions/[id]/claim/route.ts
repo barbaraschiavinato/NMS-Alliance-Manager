@@ -24,19 +24,19 @@ export async function POST(_request: Request, context: RouteContext) {
     if (mission.targetSpecialty !== "all" && mission.targetSpecialty !== member.specialty) {
       return NextResponse.json({ error: "Questa missione è riservata a un’altra specializzazione." }, { status: 403 });
     }
-    if (mission.assignedEmail || mission.assignedTo.trim()) {
+    if (mission.assignedMemberId || mission.assignedTo.trim()) {
       return NextResponse.json({ error: "Questa missione è già assegnata." }, { status: 409 });
     }
     const claimed: Mission = {
       ...mission,
       assignedTo: member.nmsName,
-      assignedEmail: member.email,
+      assignedMemberId: member.publicId,
       status: "in_progress",
     };
     missions[index] = claimed;
     await writeMissions(missions);
     const accessData = await readAccessData();
-    return NextResponse.json(serializeMission(claimed, accessData.members, false));
+    return NextResponse.json(serializeMission(claimed, accessData.members));
   } catch (error) {
     console.error("Unable to claim mission", error);
     return NextResponse.json({ error: "Impossibile prendere la missione." }, { status: 503 });
