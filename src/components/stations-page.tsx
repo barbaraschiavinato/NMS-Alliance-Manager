@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState, type SubmitEvent } from "react";
-import { CircleAlert, CirclePlus, Crosshair, FileText, LayoutGrid, List, Pencil, Plus, Search, Trash2, X } from "lucide-react";
+import { CircleAlert, CirclePlus, Crosshair, FileText, Eye, EyeOff, LayoutGrid, List, Pencil, Plus, Search, Trash2, X } from "lucide-react";
 import { AllianceSidebar, DashboardTopbar, MissionHero } from "@/components/dashboard-chrome";
 import { AdminPanel } from "@/components/admin-panel";
 import { MemberProfilePanel } from "@/components/member-profile-panel";
@@ -211,15 +211,17 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
   const [profileOpen, setProfileOpen] = useState(false);
   const canSeeAll = pageMember.role === "moderator" || pageMember.role === "admin";
   const canCreateMissions = canSeeAll;
+  const [showAllStations, setShowAllStations] = useState(true);
   const viewMode = viewOverride ?? allianceSettings.defaultTableView;
   const searchedStations = useMemo(() => stations.filter((station) =>
+    (showAllStations || station.ownerId === pageMember.publicId) &&
     (!initialStation || (
       station.portal === initialStation.portal &&
       station.galaxy === initialStation.galaxy &&
       station.ownerId === initialStation.ownerId
     )) &&
     `${station.name ?? cachedPlanetType(station.planet)} ${station.note ?? ""} ${station.portal} ${station.ownerNmsName ?? ""} ${station.ownerName ?? ""} ${galaxyLabel(station.galaxy)}`.toLowerCase().includes(search.toLowerCase()),
-  ), [initialStation, search, stations]);
+  ), [initialStation, pageMember.publicId, search, showAllStations, stations]);
   const stationCounts: Record<StationFilter, number> = {
     all: searchedStations.length,
     pending: searchedStations.filter((station) => station.missionStatus === "none").length,
@@ -512,6 +514,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
                 >{t(status === "all" ? "stations.filter_all" : status === "pending" ? "common.pending_status_label" : status === "in_progress" ? "stations.filter_in_mission" : status === "completed" ? "stations.filter_mission_completed" : "stations.filter_with_notes")}<span>{stationCounts[status]}</span></button>)}
               </div>
               <div className="station-list-heading-tools">
+                {canSeeAll && <button aria-label={t(showAllStations ? "stations.showing_all" : "stations.showing_mine")} aria-pressed={showAllStations} className={showAllStations ? "member-icon-action scope-toggle selected" : "member-icon-action scope-toggle"} data-tooltip={t(showAllStations ? "stations.showing_all" : "stations.showing_mine")} onClick={() => setShowAllStations((current) => !current)} type="button">{showAllStations ? <Eye size={15} /> : <EyeOff size={15} />}</button>}
                 <label className="search-field station-search"><Search size={15} /><input aria-label={t("stations.search_stations_by_portal_owner_or_galaxy_or_notes")} onChange={(event) => setSearch(event.target.value)} placeholder={t("stations.search_portal_username_galaxy_or_notes")} value={search} /></label>
                 <div aria-label={t("stations.station_view")} className="view-toggle" role="group">
                   <button aria-label={t("navigation.list_view")} aria-pressed={viewMode === "list"} className={viewMode === "list" ? "selected" : ""} onClick={() => setViewOverride("list")} title={t("navigation.list_view")} type="button"><List size={15} /></button>

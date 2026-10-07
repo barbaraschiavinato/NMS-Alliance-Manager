@@ -1,4 +1,4 @@
-import { Check, Compass, FileText, Info, LayoutGrid, List, Orbit, Pencil, Search, Trash2, X } from "lucide-react";
+import { Check, Compass, Eye, EyeOff, FileText, Info, LayoutGrid, List, Orbit, Pencil, Search, Trash2, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import type { Mission, MissionSpecialty, MissionStatus } from "@/lib/missions";
@@ -362,6 +362,8 @@ export function MissionTable({
   searchInput,
   onFilterChange,
   onSearchChange,
+  onScopeChange,
+  showAll = true,
   onEdit,
   onDeleteMission,
   onOpenPlanet,
@@ -383,6 +385,8 @@ export function MissionTable({
   searchInput: React.RefObject<HTMLInputElement | null>;
   onFilterChange: (filter: MissionFilter) => void;
   onSearchChange: (search: string) => void;
+  onScopeChange?: (showAll: boolean) => void;
+  showAll?: boolean;
   onEdit: (mission: Mission) => void;
   onDeleteMission: (mission: Mission) => void;
   onOpenPlanet: (mission: Mission) => void;
@@ -450,6 +454,7 @@ export function MissionTable({
           {(["all", "in_progress", "pending_assigned", "pending_unassigned", "completed"] as MissionFilter[]).map((item) => <button aria-selected={filter === item} className={filter === item ? "filter-tab selected" : "filter-tab"} key={item} onClick={() => onFilterChange(item)} role="tab" type="button">{t(missionFilterLabels[item])}<span>{counts[item]}</span></button>)}
         </div>
         <div className="toolbar-actions">
+          {onScopeChange && <button aria-label={t(showAll ? "missions.showing_all" : "missions.showing_mine")} aria-pressed={showAll} className={showAll ? "member-icon-action scope-toggle selected" : "member-icon-action scope-toggle"} data-tooltip={t(showAll ? "missions.showing_all" : "missions.showing_mine")} onClick={() => onScopeChange(!showAll)} type="button">{showAll ? <Eye size={15} /> : <EyeOff size={15} />}</button>}
           <label className="search-field"><Search size={15} /><input aria-label={t("planet.search_missions_planets_users_or_mission_type")} onChange={(event) => onSearchChange(event.target.value)} placeholder={t("members.search_missions_users_or_type")} ref={searchInput} value={search} /><kbd>/</kbd></label>
           <div aria-label={t("missions.mission_view")} className="view-toggle" role="group">
             <button aria-label={t("navigation.list_view")} aria-pressed={viewMode === "list"} className={viewMode === "list" ? "selected" : ""} onClick={() => setViewOverride("list")} title={t("navigation.list_view")} type="button"><List size={15} /></button>

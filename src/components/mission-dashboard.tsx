@@ -54,6 +54,7 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
   const [profileOpen, setProfileOpen] = useState(false);
   const searchInput = useRef<HTMLInputElement>(null);
   const canManage = member.role === "moderator" || member.role === "admin";
+  const [showAllMissions, setShowAllMissions] = useState(true);
   const profileComplete = Boolean(member.nmsName.trim() && isValidNmsFriendCode(member.nmsCode) && member.specialty);
 
   useEffect(() => {
@@ -104,7 +105,11 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
     }
   }, [canManage]);
 
-  const availableMissions = canManage ? missions : missions.filter((mission) => canViewMission(mission, member));
+  const availableMissions = canManage
+    ? showAllMissions
+      ? missions
+      : missions.filter((mission) => [mission.assignedMemberId, mission.stationOwnerMemberId].includes(member.publicId))
+    : missions.filter((mission) => canViewMission(mission, member));
 
   const counts = useMemo(() => {
     const waitingMissions = availableMissions.filter((mission) => mission.status === "pending");
@@ -277,6 +282,8 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
             onOpenPlanet={setPlanetMission}
             onFilterChange={setFilter}
             onSearchChange={setSearch}
+            onScopeChange={canManage ? setShowAllMissions : undefined}
+            showAll={showAllMissions}
             search={search}
             searchInput={searchInput}
             loading={loadingMissions}

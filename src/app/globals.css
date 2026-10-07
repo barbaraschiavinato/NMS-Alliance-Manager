@@ -916,3 +916,7 @@ select { appearance: none; padding-right: 29px; background-image: linear-gradien
 .message-thread-toggle { width: auto; min-width: 29px; display: inline-flex; gap: 4px; padding: 0 8px; font-size: 10px; }
 
 .message-unread { border-left: 3px solid var(--lime); }
+.member-icon-action.scope-toggle.selected { color: var(--lime); border-color: var(--lime); background: #252d30; }
+.scope-toggle[data-tooltip] { position: relative; }
+.scope-toggle[data-tooltip]::after { position: absolute; z-index: 30; top: calc(100% + 7px); left: 0; padding: 6px 8px; color: #f1eee7; border: 1px solid #394548; border-radius: 3px; background: #111719; box-shadow: 0 4px 14px #0008; content: attr(data-tooltip); font-size: 9px; font-weight: 500; line-height: 1.2; opacity: 0; pointer-events: none; text-transform: none; transform: translateY(-3px); transition: opacity .12s, transform .12s; white-space: nowrap; }
+.scope-toggle[data-tooltip]:hover::after, .scope-toggle[data-tooltip]:focus-visible::after { opacity: 1; transform: translateY(0); }
