@@ -4,7 +4,7 @@ import path from "node:path";
 import { getBlobAuthOptions } from "@/lib/blob-config";
 import { decodePortalAddress } from "@/lib/missions";
 
-export type StationPortal = Readonly<{ portal: string; galaxy: number; name?: string; createdByEmail?: string }>;
+export type StationPortal = Readonly<{ portal: string; galaxy: number; name?: string; note?: string; createdByEmail?: string }>;
 export type OwnedStationPortal = StationPortal & Readonly<{ owner: string }>;
 type StationIndex = Record<string, StationPortal[]>;
 
@@ -23,6 +23,7 @@ function normalizeStationIndex(value: unknown): StationIndex {
       const galaxy = "galaxy" in station && typeof station.galaxy === "number" ? station.galaxy : 0;
       if (!Number.isInteger(galaxy) || galaxy < 0 || galaxy > 255 || decodePortalAddress(station.portal)?.errors.length !== 0) return [];
       const name = "name" in station && typeof station.name === "string" ? station.name.trim().slice(0, 80) : "";
+      const note = "note" in station && typeof station.note === "string" ? station.note.trim().slice(0, 1000) : "";
       const createdByEmail = "createdByEmail" in station && typeof station.createdByEmail === "string"
         ? station.createdByEmail.trim().toLowerCase()
         : "";
@@ -30,6 +31,7 @@ function normalizeStationIndex(value: unknown): StationIndex {
         portal: station.portal.toUpperCase(),
         galaxy,
         ...(name ? { name } : {}),
+        ...(note ? { note } : {}),
         ...(createdByEmail ? { createdByEmail } : {}),
       }];
     });
@@ -88,17 +90,20 @@ export async function addStationPortal(
   galaxy: number,
   name?: string,
   createdByEmail?: string,
+  note?: string,
 ): Promise<StationPortal[]> {
   const index = await readStationIndex();
   const owner = email.trim().toLowerCase();
   const stations = index[owner] ?? [];
   if (!stations.some((station) => station.portal === portal && station.galaxy === galaxy)) {
     const normalizedName = name?.trim().slice(0, 80);
+    const normalizedNote = note?.trim().slice(0, 1000);
     const creator = createdByEmail?.trim().toLowerCase();
     stations.push({
       portal,
       galaxy,
       ...(normalizedName ? { name: normalizedName } : {}),
+      ...(normalizedNote ? { note: normalizedNote } : {}),
       ...(creator ? { createdByEmail: creator } : {}),
     });
   }
@@ -125,6 +130,7 @@ export async function updateStationPortal(
   portal: string,
   galaxy: number,
   name?: string,
+  note?: string,
 ): Promise<boolean> {
   const index = await readStationIndex();
   const currentOwner = currentOwnerEmail.trim().toLowerCase();
@@ -148,10 +154,12 @@ export async function updateStationPortal(
   else delete index[currentOwner];
 
   const normalizedName = name?.trim().slice(0, 80);
+  const normalizedNote = note?.trim().slice(0, 1000);
   const updatedStation = {
     portal,
     galaxy,
     ...(normalizedName ? { name: normalizedName } : {}),
+    ...(normalizedNote ? { note: normalizedNote } : {}),
     ...(existingStation.createdByEmail ? { createdByEmail: existingStation.createdByEmail } : {}),
   };
   index[owner] = [...(index[owner] ?? []), updatedStation];

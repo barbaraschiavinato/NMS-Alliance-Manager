@@ -128,6 +128,7 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
 
       const searchableText = [
         mission.title,
+        mission.notes,
         mission.system,
         mission.assignedTo,
         mission.assignedEmail,

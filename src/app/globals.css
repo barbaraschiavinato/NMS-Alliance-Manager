@@ -185,6 +185,7 @@ kbd { display: inline-flex; align-items: center; gap: 2px; padding: 2px 4px; col
 .mission-card-progress { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .mission-card-progress .progress-cell { min-width: 100px; flex: 1; justify-content: flex-end; }
 .mission-card-actions { display: flex; align-items: center; justify-content: space-between; padding-top: 10px; border-top: 1px solid #354044; }
+.mission-card-action-buttons { display: flex; align-items: center; gap: 5px; margin-left: auto; }
 .mission-system-progress { display: inline-flex; align-items: center; gap: 2px; }
 .mission-system-progress-item { width: 20px; height: 24px; position: relative; z-index: 0; display: grid; flex: 0 0 20px; place-items: center; cursor: default; outline: none; }
 .mission-system-progress-item-editable { cursor: pointer; }
@@ -216,7 +217,17 @@ kbd { display: inline-flex; align-items: center; gap: 2px; padding: 2px 4px; col
 .mission-title { max-width: 290px; display: block; overflow: hidden; padding: 0; color: var(--lime); border: 0; background: none; cursor: pointer; font-size: 10px; font-weight: 650; text-align: left; text-overflow: ellipsis; }
 .mission-title-static { max-width: 290px; display: block; overflow: hidden; color: var(--lime); font-size: 10px; font-weight: 650; text-overflow: ellipsis; }
 .mission-title:hover { color: var(--lime); text-decoration: underline; text-underline-offset: 2px; }
+.mission-title-with-info { display: flex; align-items: center; gap: 5px; }
+.mission-title-with-info .mission-title { min-width: 0; }
+.planet-notes-button { position: relative; width: 17px; height: 17px; display: grid; flex: 0 0 17px; place-items: center; padding: 0; color: #ff8400; border: 0; border-radius: 50%; background: transparent; cursor: pointer; }
+.planet-notes-button:hover, .planet-notes-button:focus-visible { color: var(--lime); outline: 1px solid currentColor; }
+.planet-notes-button::after { position: absolute; z-index: 30; left: 50%; bottom: calc(100% + 7px); padding: 6px 8px; color: #f1eee7; border: 1px solid #394548; border-radius: 3px; background: #111719; box-shadow: 0 4px 14px #0008; content: attr(data-tooltip); font-size: 9px; font-weight: 500; line-height: 1.2; opacity: 0; pointer-events: none; text-transform: none; transform: translate(-50%, 3px); transition: opacity .12s, transform .12s; white-space: nowrap; }
+.planet-notes-button:hover::after, .planet-notes-button:focus-visible::after { opacity: 1; transform: translate(-50%, 0); }
+.planet-notes-button svg { width: 14px; height: 14px; }
 .mission-description { max-width: 285px; display: block; overflow: hidden; margin-top: 4px; color: #b8c1bf; font-size: 8px; text-overflow: ellipsis; }
+.planet-notes-list { display: grid; gap: 10px; margin: 0; padding: 0; color: #d4dad6; font-size: 11px; line-height: 1.6; list-style: none; text-align: left; }
+.mission-notes-field { margin-top: 16px; }
+.mission-notes-field textarea { min-height: 64px; resize: vertical; }
 .badge { display: inline-flex; align-items: center; padding: 4px 6px; border: 1px solid #354044; border-radius: 3px; background: #1a2124; font-size: 8px; line-height: 1.2; white-space: nowrap; }
 .badge--specialty { color: #a4adae; }
 .badge--specialty-builder { color: #ffb45d; border-color: #6a4a28; background: #2b2115; }
@@ -259,6 +270,14 @@ kbd { display: inline-flex; align-items: center; gap: 2px; padding: 2px 4px; col
 .progress-track > span { height: 100%; display: block; background: #72d1c4; }
 .progress-cell-editable input[type="range"] { width: 68px; height: 14px; margin: 0; accent-color: #72d1c4; cursor: pointer; }
 .mission-card-progress .progress-cell-editable input[type="range"] { width: min(120px, 100%); }
+.mission-notes-button { width: 29px; height: 29px; display: grid; flex: 0 0 29px; place-items: center; padding: 0; color: #e4b478; border: 1px solid #394548; border-radius: 3px; background: #1a2124; cursor: pointer; }
+.mission-notes-button { position: relative; }
+.mission-notes-button::after { position: absolute; z-index: 30; right: 0; bottom: calc(100% + 7px); padding: 6px 8px; color: #f1eee7; border: 1px solid #394548; border-radius: 3px; background: #111719; box-shadow: 0 4px 14px #0008; content: attr(data-tooltip); font-size: 9px; font-weight: 500; line-height: 1.2; opacity: 0; pointer-events: none; text-transform: none; transform: translateY(3px); transition: opacity .12s, transform .12s; white-space: nowrap; }
+.mission-notes-button:hover::after, .mission-notes-button:focus-visible::after { opacity: 1; transform: translateY(0); }
+.mission-notes-button svg { width: 15px; height: 15px; }
+.mission-notes-button:hover { color: var(--lime); border-color: var(--lime); background: #252d30; }
+.mission-notes-content { margin: 0; color: #d4dad6; font-size: 11px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
+.mission-notes-dialog { width: min(460px, 100%); }
 .mission-row-actions { display: inline-flex; align-items: center; gap: 5px; }
 .mission-row-actions [data-tooltip] { position: relative; }
 .mission-row-actions [data-tooltip]::after { position: absolute; z-index: 30; right: 0; bottom: calc(100% + 7px); padding: 6px 8px; color: #f1eee7; border: 1px solid #394548; border-radius: 3px; background: #111719; box-shadow: 0 4px 14px #0008; content: attr(data-tooltip); font-size: 9px; font-weight: 500; line-height: 1.2; opacity: 0; pointer-events: none; text-transform: none; transform: translateY(3px); transition: opacity .12s, transform .12s; white-space: nowrap; }
@@ -484,6 +503,12 @@ select { appearance: none; padding-right: 29px; background-image: linear-gradien
 .station-list-cards .station-actions { grid-column: 2; grid-row: 1; align-self: start; }
 .station-portal-code { min-width: 0; display: grid; justify-items: start; gap: 4px; }
 .station-owner { color: #b4bfbe; font-size: 8px; line-height: 1.3; overflow-wrap: anywhere; }
+.station-note { max-width: 100%; margin: 2px 0 0; color: #a4adae; font-size: 9px; line-height: 1.4; white-space: pre-wrap; overflow-wrap: anywhere; }
+.station-actions .station-notes-action { color: #e4b478; }
+.station-notes-dialog { width: min(460px, 100%); }
+.station-notes-dialog .dialog-heading h2 { margin-top: 0; }
+.station-notes-content { margin: 0; color: #d4dad6; font-size: 11px; line-height: 1.6; text-align: left; white-space: pre-wrap; overflow-wrap: anywhere; }
+.mission-notes-dialog .dialog-heading h2 { margin-top: 0; }
 .station-list code { color: var(--lime); font-family: "SFMono-Regular", Consolas, monospace; font-size: 9px; }
 .station-planet-info-list { min-width: 0; display: grid; gap: 7px; }
 .station-planet-info { min-width: 0; display: grid; grid-template-columns: 135px minmax(0, 1fr); align-items: center; gap: 9px; padding: 5px 0; border-bottom: 1px solid #354044; }

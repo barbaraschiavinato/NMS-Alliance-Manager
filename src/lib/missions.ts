@@ -48,6 +48,7 @@ export type Mission = {
   id: string;
   title: string;
   description: string;
+  notes?: string;
   system: string;
   systemAddress: string;
   galaxy: number;
@@ -141,6 +142,7 @@ export function isMissionInput(value: unknown): value is MissionInput {
     mission.title.trim().length > 0 &&
     mission.title.length <= 120 &&
     typeof mission.description === "string" &&
+    (mission.notes === undefined || (typeof mission.notes === "string" && mission.notes.length <= 1000)) &&
     typeof mission.system === "string" &&
     typeof mission.systemAddress === "string" &&
     decodePortalAddress(mission.systemAddress)?.errors.length === 0 &&

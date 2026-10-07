@@ -30,6 +30,7 @@ export async function POST(request: Request) {
     : "";
   const galaxy = payload.galaxy;
   const name = typeof payload.name === "string" ? payload.name.trim() : "";
+  const note = typeof payload.note === "string" ? payload.note.trim() : "";
   const requestedOwner = typeof payload.owner === "string" ? payload.owner.trim().toLowerCase() : member.email.toLowerCase();
   const decoded = decodePortalAddress(portal);
   if (!decoded || decoded.errors.length > 0 || typeof galaxy !== "number" || !Number.isInteger(galaxy) || galaxy < 0 || galaxy > 255) {
@@ -40,6 +41,9 @@ export async function POST(request: Request) {
   }
   if (name.length > 80) {
     return NextResponse.json({ error: "stations.error_station_name_too_long" }, { status: 400 });
+  }
+  if (note.length > 1000) {
+    return NextResponse.json({ error: "stations.error_station_note_too_long" }, { status: 400 });
   }
   if (!hasRole(member, "moderator") && requestedOwner !== member.email.toLowerCase()) {
     return NextResponse.json({ error: "stations.error_cannot_create_stations_for_another_member" }, { status: 403 });
@@ -55,7 +59,7 @@ export async function POST(request: Request) {
     if ((await readStationPortals(requestedOwner)).some((station) => station.portal === portal && station.galaxy === galaxy)) {
       return NextResponse.json({ error: "stations.this_portal_is_already_in_the_selected_owner_s_list" }, { status: 409 });
     }
-    await addStationPortal(requestedOwner, portal, galaxy, name, member.email);
+    await addStationPortal(requestedOwner, portal, galaxy, name, member.email, note);
     await cacheStationPlanet(portal, galaxy);
     return NextResponse.json({ stations: await readStations(member) }, { status: 201 });
   } catch (error) {
@@ -113,6 +117,7 @@ export async function PATCH(request: Request) {
   const galaxy = payload.galaxy;
   const owner = typeof payload.owner === "string" ? payload.owner.trim().toLowerCase() : "";
   const name = typeof payload.name === "string" ? payload.name.trim() : "";
+  const note = typeof payload.note === "string" ? payload.note.trim() : "";
 
   if (
     !decodePortalAddress(currentPortal) ||
@@ -124,7 +129,8 @@ export async function PATCH(request: Request) {
     typeof galaxy !== "number" || !Number.isInteger(galaxy) || galaxy < 0 || galaxy > 255 ||
     !owner ||
     name.length > 80 ||
-    Object.keys(payload).some((key) => !["currentPortal", "currentGalaxy", "currentOwner", "portal", "galaxy", "owner", "name"].includes(key))
+    note.length > 1000 ||
+    Object.keys(payload).some((key) => !["currentPortal", "currentGalaxy", "currentOwner", "portal", "galaxy", "owner", "name", "note"].includes(key))
   ) {
     return NextResponse.json({ error: "stations.error_invalid_station_data" }, { status: 400 });
   }
@@ -171,7 +177,7 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: "stations.this_portal_is_already_in_the_selected_owner_s_list" }, { status: 409 });
     }
 
-    const updated = await updateStationPortal(currentOwner, currentPortal, currentGalaxy, owner, portal, galaxy, name);
+    const updated = await updateStationPortal(currentOwner, currentPortal, currentGalaxy, owner, portal, galaxy, name, note);
     if (!updated) {
       return NextResponse.json({ error: "stations.error_station_missing_or_portal_already_saved" }, { status: 409 });
     }

@@ -1,4 +1,4 @@
-import { Check, Compass, LayoutGrid, List, Pencil, Search, Trash2 } from "lucide-react";
+import { Check, Compass, FileText, Info, LayoutGrid, List, Pencil, Search, Trash2, X } from "lucide-react";
 import Image from "next/image";
 import type { Mission, MissionSpecialty, MissionStatus } from "@/lib/missions";
 import { GlyphStrip } from "@/components/portal-address-field";
@@ -144,6 +144,80 @@ function MissionProgress({ mission, editable, onChange }: Readonly<{
   </div>;
 }
 
+function MissionNotesButton({ mission, onView }: Readonly<{
+  mission: Mission;
+  onView: (mission: Mission) => void;
+}>) {
+  const { t } = useLocale();
+  if (!mission.notes?.trim()) return null;
+  return <button
+    aria-label={t("missions.view_notes_for_mission", { title: mission.title })}
+    className="mission-notes-button"
+    data-tooltip={t("missions.view_mission_notes")}
+    onClick={() => onView(mission)}
+    type="button"
+  ><FileText size={14} /></button>;
+}
+
+type PlanetNotes = Readonly<{ title: string; portal: string; notes: string[] }>;
+const planetNotesRequests = new Map<string, Promise<string[]>>();
+
+function readPlanetNotes(mission: Mission): Promise<string[]> {
+  const key = mission.id;
+  const cachedRequest = planetNotesRequests.get(key);
+  if (cachedRequest) return cachedRequest;
+
+  const request = fetch(`/api/missions/${encodeURIComponent(mission.id)}/planet-notes`, {
+    cache: "no-store",
+  }).then(async (response) => {
+    const body: unknown = await response.json();
+    if (!response.ok) {
+      const message = body && typeof body === "object" && "error" in body ? body.error : null;
+      throw new Error(typeof message === "string" ? message : "Unable to read planet notes.");
+    }
+    const note = asRecord(body)?.note;
+    return typeof note === "string" && note.trim() ? [note.trim()] : [];
+  }).catch((error: unknown) => {
+    planetNotesRequests.delete(key);
+    throw error;
+  });
+  planetNotesRequests.set(key, request);
+  return request;
+}
+
+function PlanetNotesButton({ mission, onView }: Readonly<{
+  mission: Mission;
+  onView: (notes: PlanetNotes) => void;
+}>) {
+  const { t } = useLocale();
+  const [hasNotes, setHasNotes] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    readPlanetNotes(mission)
+      .then((notes) => {
+        if (active) setHasNotes(notes.length > 0);
+      })
+      .catch((error: unknown) => {
+        if (active) console.error("Unable to load planet notes", error);
+      });
+    return () => {
+      active = false;
+    };
+  }, [mission]);
+
+  if (!hasNotes) return null;
+  return <button
+    aria-label={t("planet.view_notes_for_planet", { title: mission.title })}
+    className="planet-notes-button"
+    data-tooltip={t("planet.view_planet_notes")}
+    onClick={() => void readPlanetNotes(mission)
+      .then((notes) => onView({ title: mission.title, portal: mission.systemAddress, notes }))
+      .catch((error: unknown) => console.error("Unable to open planet notes", error))}
+    type="button"
+  ><Info size={14} /></button>;
+}
+
 function MemberAvatar({ image, label }: Readonly<{ image?: string; label: string }>) {
   const [imageFailed, setImageFailed] = useState(false);
   const initials = label.slice(0, 2).toUpperCase() || "—";
@@ -199,7 +273,7 @@ function MissionPlanetThumbnail({ mission }: Readonly<{ mission: Mission }>) {
   </span>;
 }
 
-function MissionCard({ mission, systemStatuses, currentMember, canManage, members, onEdit, onDeleteMission, onOpenPlanet, onClaim, onComplete, onToggleSystemStatus, onUpdateProgress, onOpenProfile, getDiscovererImage }: Readonly<{
+function MissionCard({ mission, systemStatuses, currentMember, canManage, members, onEdit, onDeleteMission, onOpenPlanet, onClaim, onComplete, onToggleSystemStatus, onUpdateProgress, onViewNotes, onViewPlanetNotes, onOpenProfile, getDiscovererImage }: Readonly<{
   mission: Mission;
   systemStatuses: PlanetSystemStatuses;
   currentMember: AllianceMember;
@@ -212,6 +286,8 @@ function MissionCard({ mission, systemStatuses, currentMember, canManage, member
   onComplete: (mission: Mission) => void;
   onToggleSystemStatus: (mission: Mission, status: MissionSystemStatus, checked: boolean) => void;
   onUpdateProgress: (mission: Mission, progress: number) => Promise<void>;
+  onViewNotes: (mission: Mission) => void;
+  onViewPlanetNotes: (notes: PlanetNotes) => void;
   onOpenProfile: (email: string) => void;
   getDiscovererImage: (email?: string) => string | undefined;
 }>) {
@@ -220,12 +296,16 @@ function MissionCard({ mission, systemStatuses, currentMember, canManage, member
   const hasDataError = statuses.includes("data_error");
   const canUpdateSystemStatus = mission.assignedEmail?.toLowerCase() === currentMember.email.toLowerCase();
   const canUpdateProgress = !canManage && canUpdateSystemStatus;
+  const canViewNotes = canManage || canUpdateSystemStatus;
   return <article className="mission-card">
     <div className="mission-card-heading">
       <div className="mission-name-cell">
         <MissionPlanetThumbnail mission={mission} />
         <div>
-          <button aria-label={`${t("planet.open_planet_details_for")} ${mission.title}`} className="mission-title" onClick={() => onOpenPlanet(mission)} type="button">{mission.title}</button>
+          <div className="mission-title-with-info">
+            <button aria-label={`${t("planet.open_planet_details_for")} ${mission.title}`} className="mission-title" onClick={() => onOpenPlanet(mission)} type="button">{mission.title}</button>
+            <PlanetNotesButton mission={mission} onView={onViewPlanetNotes} />
+          </div>
           {mission.description && <span className="mission-description">{mission.description}</span>}
         </div>
       </div>
@@ -277,7 +357,10 @@ function MissionCard({ mission, systemStatuses, currentMember, canManage, member
           );
         })}
       </span>
-      <MissionRowAction canManage={canManage} currentMember={currentMember} mission={mission} onClaim={onClaim} onComplete={onComplete} onDeleteMission={onDeleteMission} onEdit={onEdit} />
+      <div className="mission-card-action-buttons">
+        <MissionRowAction canManage={canManage} currentMember={currentMember} mission={mission} onClaim={onClaim} onComplete={onComplete} onDeleteMission={onDeleteMission} onEdit={onEdit} />
+        {canViewNotes && <MissionNotesButton mission={mission} onView={onViewNotes} />}
+      </div>
     </div>
   </article>;
 }
@@ -327,6 +410,8 @@ export function MissionTable({
 }>) {
   const { t } = useLocale();
   const [profileEmail, setProfileEmail] = useState<string | null>(null);
+  const [missionNoteView, setMissionNoteView] = useState<Mission | null>(null);
+  const [planetNoteView, setPlanetNoteView] = useState<PlanetNotes | null>(null);
   const [viewOverride, setViewOverride] = useState<"list" | "cards" | null>(null);
   const viewMode = viewOverride ?? defaultView;
   const [discovererImages, setDiscovererImages] = useState<Record<string, string>>({});
@@ -366,6 +451,8 @@ export function MissionTable({
       ?? members.find((member) => member.email.toLowerCase() === email.toLowerCase())?.image
       ?? (currentMember.email.toLowerCase() === email.toLowerCase() ? currentMember.image : undefined);
   }
+  const canViewMissionNotes = (mission: Mission) =>
+    canManage || mission.assignedEmail?.toLowerCase() === currentMember.email.toLowerCase();
 
   return (
     <section className="mission-section">
@@ -386,7 +473,7 @@ export function MissionTable({
           <thead><tr><th>{t("missions.mission_column_heading")}</th><th>{t("common.type_column_heading")}</th><th>{t("common.sector")}</th><th>{t("missions.discoverer_column_heading")}</th><th>{t("missions.assignee_column_heading")}</th><th>{t("missions.priority_column_heading")}</th><th>{t("missions.progress_column_heading")}</th><th aria-label={t("common.actions_label")} /></tr></thead>
           <tbody>
             {missions.map((mission) => <tr key={mission.id}>
-                  <td><div className="mission-name-cell"><span className={`mission-icon ${mission.status === "completed" ? "mission-icon-done" : ""}`}>{mission.status === "completed" ? <Check size={15} /> : <Compass size={15} />}</span><div><button aria-label={`${t("planet.open_planet_details_for")} ${mission.title}`} className="mission-title" onClick={() => onOpenPlanet(mission)} title={t("planet.open_planet_details")} type="button">{mission.title}</button><span className="mission-description">{mission.description}</span></div></div></td>
+                  <td><div className="mission-name-cell"><span className={`mission-icon ${mission.status === "completed" ? "mission-icon-done" : ""}`}>{mission.status === "completed" ? <Check size={15} /> : <Compass size={15} />}</span><div><div className="mission-title-with-info"><button aria-label={`${t("planet.open_planet_details_for")} ${mission.title}`} className="mission-title" onClick={() => onOpenPlanet(mission)} title={t("planet.open_planet_details")} type="button">{mission.title}</button><PlanetNotesButton mission={mission} onView={setPlanetNoteView} /></div><span className="mission-description">{mission.description}</span></div>{canViewMissionNotes(mission) && <MissionNotesButton mission={mission} onView={setMissionNoteView} />}</div></td>
               <td><span className={`badge badge--specialty badge--specialty-${mission.targetSpecialty ?? "all"}`}>{t(targetSpecialtyNames[mission.targetSpecialty ?? "all"])}</span></td>
               <td><div className="system-cell"><GlyphStrip address={mission.systemAddress ?? ""} /><span className="system-caption">{mission.system || t("system.system_label")} · {galaxyLabel(mission.galaxy ?? 0)}</span></div></td>
               <td><DiscovererCell email={mission.stationOwnerEmail} image={getDiscovererImage(mission.stationOwnerEmail)} name={mission.stationOwnerName} onOpenProfile={setProfileEmail} /></td>
@@ -400,12 +487,30 @@ export function MissionTable({
           </tbody>
         </table>
       </div> : <div className="mission-card-grid">
-        {missions.map((mission) => <MissionCard canManage={canManage} currentMember={currentMember} getDiscovererImage={getDiscovererImage} key={mission.id} members={members} mission={mission} onClaim={onClaim} onComplete={onComplete} onDeleteMission={onDeleteMission} onEdit={onEdit} onOpenPlanet={onOpenPlanet} onOpenProfile={setProfileEmail} onToggleSystemStatus={onToggleSystemStatus} onUpdateProgress={onUpdateProgress} systemStatuses={planetStatuses} />)}
+        {missions.map((mission) => <MissionCard canManage={canManage} currentMember={currentMember} getDiscovererImage={getDiscovererImage} key={mission.id} members={members} mission={mission} onClaim={onClaim} onComplete={onComplete} onDeleteMission={onDeleteMission} onEdit={onEdit} onOpenPlanet={onOpenPlanet} onOpenProfile={setProfileEmail} onToggleSystemStatus={onToggleSystemStatus} onUpdateProgress={onUpdateProgress} onViewNotes={setMissionNoteView} onViewPlanetNotes={setPlanetNoteView} systemStatuses={planetStatuses} />)}
         {loading && <div className="mission-cards-loading"><LoadingSpinner /></div>}
         {!loading && missions.length === 0 && <p className="mission-cards-empty">{t("missions.no_missions_match_the_filters")}</p>}
       </div>}
       <div className="table-footer"><span><span className="footer-live" />{t("missions.showing_visible_of_total_missions", { visible: missions.length, total: counts.all })}</span></div>
       {profileEmail && <MemberCardDialog email={profileEmail} onClose={() => setProfileEmail(null)} />}
+      {missionNoteView && canViewMissionNotes(missionNoteView) && <div className="dialog-backdrop">
+        <dialog aria-labelledby="mission-notes-title" aria-modal="true" className="mission-dialog mission-notes-dialog" open>
+          <div className="dialog-heading">
+            <div><span className="eyebrow">{missionNoteView.title}</span><h2 id="mission-notes-title">{t("missions.mission_notes")}</h2></div>
+            <button aria-label={t("common.close")} className="icon-button" onClick={() => setMissionNoteView(null)} type="button"><X size={18} /></button>
+          </div>
+          <p className="mission-notes-content">{missionNoteView.notes}</p>
+        </dialog>
+      </div>}
+      {planetNoteView && <div className="dialog-backdrop">
+        <dialog aria-labelledby="planet-notes-title" aria-modal="true" className="mission-dialog mission-notes-dialog" open>
+          <div className="dialog-heading">
+            <div><span className="eyebrow">{planetNoteView.portal}</span><h2 id="planet-notes-title">{t("planet.planet_notes_for")}</h2></div>
+            <button aria-label={t("common.close")} className="icon-button" onClick={() => setPlanetNoteView(null)} type="button"><X size={18} /></button>
+          </div>
+          <ul className="planet-notes-list">{planetNoteView.notes.map((note) => <li key={note}>{note}</li>)}</ul>
+        </dialog>
+      </div>}
     </section>
   );
 }

@@ -24,6 +24,7 @@ export type StationOwnerOption = Readonly<{ portal: string; galaxy: number; owne
 const emptyMission: MissionInput = {
   title: "",
   description: "",
+  notes: "",
   system: "",
   systemAddress: "",
   galaxy: 0,
@@ -328,6 +329,16 @@ export function MissionForm({
               )}
             </fieldset>
           </div>
+          <label className="field full-field mission-notes-field">
+            <span>{t("missions.mission_notes")} <small>{t("missions.optional_max_1000_characters")}</small></span>
+            <textarea
+              aria-label={t("missions.mission_notes")}
+              maxLength={1000}
+              onChange={(event) => update("notes", event.target.value)}
+              rows={3}
+              value={form.notes ?? ""}
+            />
+          </label>
           {error && <p className="form-error"><CircleAlert size={15} />{t(error)}</p>}
           <div className="dialog-actions">
             {mission && <button className="delete-button" disabled={saving} onClick={remove} type="button"><Trash2 size={15} /> {t("common.delete")}</button>}
