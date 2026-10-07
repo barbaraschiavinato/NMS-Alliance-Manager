@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState, type SubmitEvent } from "react";
-import { CircleAlert, CirclePlus, Crosshair, LayoutGrid, List, Plus, Search, Trash2, X } from "lucide-react";
+import { CircleAlert, CirclePlus, Crosshair, LayoutGrid, List, Pencil, Plus, Search, Trash2, X } from "lucide-react";
 import { AllianceSidebar, DashboardTopbar, MissionHero } from "@/components/dashboard-chrome";
 import { AdminPanel } from "@/components/admin-panel";
 import { MemberProfilePanel } from "@/components/member-profile-panel";
@@ -133,6 +133,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
   const [stationNameEdited, setStationNameEdited] = useState(false);
   const [validation, setValidation] = useState<SystemAddressValidation>({ valid: false, lookup: null });
   const [addOpen, setAddOpen] = useState(false);
+  const [editingStation, setEditingStation] = useState<StationEntry | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -162,6 +163,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
   }
 
   function openAddStation() {
+    setEditingStation(null);
     setPortal("");
     setGalaxy(0);
     setStationOwnerEmail(pageMember.email);
@@ -173,6 +175,24 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
     setAddOpen(true);
   }
 
+  function openEditStation(station: StationEntry) {
+    setEditingStation(station);
+    setPortal(station.portal);
+    setGalaxy(station.galaxy);
+    setStationOwnerEmail(station.owner);
+    setStationName(station.name ?? cachedPlanetTitle(station.planet) ?? "");
+    setPlanetType(cachedPlanetType(station.planet));
+    setStationNameEdited(true);
+    setValidation({ valid: true, lookup: null });
+    setError("");
+    setAddOpen(true);
+  }
+
+  function closeStationDialog() {
+    setAddOpen(false);
+    setEditingStation(null);
+  }
+
   useEffect(() => {
     fetchStations()
       .then(setStations)
@@ -182,7 +202,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
       fetch("/api/members", { cache: "no-store" })
         .then(async (response) => {
           const body: unknown = await response.json();
-          if (!response.ok || !Array.isArray(body)) throw new Error("Unable to load assignable members.");
+          if (!response.ok || !Array.isArray(body)) throw new Error(t("errors.unable_to_load_members"));
           setMembers(body as AllianceMember[]);
         })
         .catch((error_: unknown) => {
@@ -202,19 +222,25 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
     event.preventDefault();
     const decoded = decodePortalAddress(portal);
     if (!decoded || decoded.errors.length > 0) {
-      setError(decoded?.errors.join(" ") || "Enter a 12-glyph portal address.");
+      setError(decoded?.errors.join(" ") || t("stations.enter_a_12_glyph_portal_address"));
       return;
     }
     const canonicalPortal = portal.toUpperCase();
     const requestedOwner = canSeeAll ? stationOwnerEmail.trim().toLowerCase() : pageMember.email.toLowerCase();
     if (!requestedOwner) {
-      setError("Select the station owner.");
+      setError(t("stations.select_the_station_owner"));
       return;
     }
     if (stations.some((station) =>
-      station.portal === canonicalPortal && station.galaxy === galaxy && station.owner.toLowerCase() === requestedOwner,
+      station.portal === canonicalPortal &&
+      station.galaxy === galaxy &&
+      station.owner.toLowerCase() === requestedOwner &&
+      !(editingStation &&
+        station.portal === editingStation.portal &&
+        station.galaxy === editingStation.galaxy &&
+        station.owner.toLowerCase() === editingStation.owner.toLowerCase()),
     )) {
-      setError("This portal is already in the selected owner's list.");
+      setError(t("stations.this_portal_is_already_in_the_selected_owner_s_list"));
       return;
     }
 
@@ -223,14 +249,24 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
     setNotice("");
     try {
       const response = await fetch("/api/stations", {
-        method: "POST",
+        method: editingStation ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ portal: canonicalPortal, galaxy, owner: requestedOwner, name: stationName }),
+        body: JSON.stringify(editingStation
+          ? {
+            currentPortal: editingStation.portal,
+            currentGalaxy: editingStation.galaxy,
+            currentOwner: editingStation.owner,
+            portal: canonicalPortal,
+            galaxy,
+            owner: requestedOwner,
+            name: stationName,
+          }
+          : { portal: canonicalPortal, galaxy, owner: requestedOwner, name: stationName }),
       });
       const body: unknown = await response.json();
       if (!response.ok || !body || typeof body !== "object" || !("stations" in body) || !Array.isArray(body.stations)) {
         const message = body && typeof body === "object" && "error" in body ? body.error : null;
-        throw new Error(typeof message === "string" ? message : "Unable to save the portal.");
+        throw new Error(typeof message === "string" ? message : t("errors.save_failed"));
       }
       setStations(parseStations(body.stations));
       setPortal("");
@@ -238,12 +274,14 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
       setPlanetType("");
       setStationNameEdited(false);
       setValidation({ valid: false, lookup: null });
-      setAddOpen(false);
-      setNotice(canSeeAll && requestedOwner !== pageMember.email.toLowerCase()
-        ? t("stations.station_added_to_owner_s_archive", { owner: members.find((candidate) => candidate.email.toLowerCase() === requestedOwner)?.nmsName || members.find((candidate) => candidate.email.toLowerCase() === requestedOwner)?.name || requestedOwner })
-        : t("stations.portal_added_to_your_stations"));
+      closeStationDialog();
+      setNotice(editingStation
+        ? t("stations.station_updated")
+        : canSeeAll && requestedOwner !== pageMember.email.toLowerCase()
+          ? t("stations.station_added_to_owner_s_archive", { owner: members.find((candidate) => candidate.email.toLowerCase() === requestedOwner)?.nmsName || members.find((candidate) => candidate.email.toLowerCase() === requestedOwner)?.name || requestedOwner })
+          : t("stations.portal_added_to_your_stations"));
     } catch (error_: unknown) {
-      setError(error_ instanceof Error ? error_.message : "Unable to save the portal.");
+      setError(error_ instanceof Error ? error_.message : t("errors.save_failed"));
     } finally {
       setSaving(false);
     }
@@ -266,12 +304,12 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
       const body: unknown = await response.json();
       if (!response.ok || !body || typeof body !== "object" || !("stations" in body) || !Array.isArray(body.stations)) {
         const message = body && typeof body === "object" && "error" in body ? body.error : null;
-        throw new Error(typeof message === "string" ? message : "Unable to remove the portal.");
+        throw new Error(typeof message === "string" ? message : t("errors.deletion_failed"));
       }
       setStations(parseStations(body.stations));
       setNotice(t("stations.station_removed_from_the_owner_s_archive"));
     } catch (error_: unknown) {
-      setError(error_ instanceof Error ? error_.message : "Unable to remove the portal.");
+      setError(error_ instanceof Error ? error_.message : t("errors.deletion_failed"));
     }
   }
 
@@ -284,7 +322,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
     const body: unknown = await response.json();
     if (!response.ok || !Array.isArray(body)) {
       const message = body && typeof body === "object" && "error" in body ? body.error : null;
-      throw new Error(typeof message === "string" ? message : "Unable to create the mission.");
+      throw new Error(typeof message === "string" ? message : t("errors.save_failed"));
     }
     const created = body as Mission[];
     setNotice(created.length > 1
@@ -293,7 +331,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
     try {
       await refreshStations();
     } catch {
-      setError("Mission created, but station targets could not be updated.");
+      setError(t("stations.mission_created_but_station_targets_could_not_be_updated"));
     }
   }
 
@@ -352,7 +390,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
                     ? canSeeAll
                       ? <Link aria-label={t("planet.open_missions_for_planet_portal", { portal: station.portal })} className="member-icon-action station-missions-link" data-tooltip={t("missions.open_associated_missions")} href={`/?search=${encodeURIComponent(station.portal)}`}><Crosshair size={14} /></Link>
                       : <span className="station-mission-lock">{t("missions.associated_mission")}</span>
-                    : (canSeeAll || station.owner.toLowerCase() === pageMember.email.toLowerCase()) && <button aria-label={t("stations.remove_portal_portal_in_galaxy_from_owner_s_archive", { portal: station.portal, galaxy: galaxyLabel(station.galaxy), owner: station.owner })} className="member-icon-action delete-member" data-tooltip={t("stations.delete_station")} onClick={() => void removeStation(station.portal, station.galaxy, station.owner)} type="button"><Trash2 size={14} /></button>}
+                    : <>{canSeeAll && <button aria-label={t("stations.edit_station_portal", { portal: station.portal })} className="member-icon-action" data-tooltip={t("stations.edit_station")} onClick={() => openEditStation(station)} type="button"><Pencil size={14} /></button>}{(canSeeAll || station.owner.toLowerCase() === pageMember.email.toLowerCase()) && <button aria-label={t("stations.remove_portal_portal_in_galaxy_from_owner_s_archive", { portal: station.portal, galaxy: galaxyLabel(station.galaxy), owner: station.owner })} className="member-icon-action delete-member" data-tooltip={t("stations.delete_station")} onClick={() => void removeStation(station.portal, station.galaxy, station.owner)} type="button"><Trash2 size={14} /></button>}</>}
                 </div>
               </li>;
             })}</ul>}
@@ -362,8 +400,8 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
       {addOpen && <div className="dialog-backdrop">
         <dialog aria-labelledby="station-dialog-title" aria-modal="true" className="mission-dialog station-dialog" open>
           <div className="dialog-heading">
-            <div><span className="eyebrow">{t(canSeeAll ? "stations.station_archive" : "common.personal_archive")}</span><h2 id="station-dialog-title">{t("stations.add_station")}</h2></div>
-              <button aria-label={t("common.close")} className="icon-button" onClick={() => setAddOpen(false)} type="button"><X size={18} /></button>
+            <div><span className="eyebrow">{t(canSeeAll ? "stations.station_archive" : "common.personal_archive")}</span><h2 id="station-dialog-title">{t(editingStation ? "stations.edit_station" : "stations.add_station")}</h2></div>
+              <button aria-label={t("common.close")} className="icon-button" onClick={closeStationDialog} type="button"><X size={18} /></button>
           </div>
           <form className="station-add-form" onSubmit={addStation}>
             <label className="field full-field station-name-field">
@@ -413,8 +451,8 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
             {error && <p className="form-error"><CircleAlert size={15} />{t(error)}</p>}
             <div className="dialog-actions">
               <span className="action-spacer" />
-              <button className="quiet-button" onClick={() => setAddOpen(false)} type="button">{t("common.cancel")}</button>
-              <button className="primary-button" disabled={saving || !validation.valid} type="submit">{saving ? t("common.saving") : t("common.add")}<Plus size={15} /></button>
+              <button className="quiet-button" onClick={closeStationDialog} type="button">{t("common.cancel")}</button>
+              <button className="primary-button" disabled={saving || !validation.valid} type="submit">{saving ? t("common.saving") : t(editingStation ? "common.save" : "common.add")}{editingStation ? <Pencil size={15} /> : <Plus size={15} />}</button>
             </div>
           </form>
         </dialog>

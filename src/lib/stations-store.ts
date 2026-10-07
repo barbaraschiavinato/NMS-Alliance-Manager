@@ -96,3 +96,39 @@ export async function removeStationPortal(email: string, portal: string, galaxy:
   await writeStationIndex(index);
   return stations;
 }
+
+export async function updateStationPortal(
+  currentOwnerEmail: string,
+  currentPortal: string,
+  currentGalaxy: number,
+  ownerEmail: string,
+  portal: string,
+  galaxy: number,
+  name?: string,
+): Promise<boolean> {
+  const index = await readStationIndex();
+  const currentOwner = currentOwnerEmail.trim().toLowerCase();
+  const owner = ownerEmail.trim().toLowerCase();
+  const currentStations = index[currentOwner] ?? [];
+  const currentIndex = currentStations.findIndex((station) =>
+    station.portal === currentPortal && station.galaxy === currentGalaxy,
+  );
+  if (currentIndex === -1) return false;
+
+  const destinationStations = index[owner] ?? [];
+  if (destinationStations.some((station) =>
+    station.portal === portal &&
+    station.galaxy === galaxy &&
+    !(owner === currentOwner && station.portal === currentPortal && station.galaxy === currentGalaxy),
+  )) return false;
+
+  currentStations.splice(currentIndex, 1);
+  if (currentStations.length > 0) index[currentOwner] = currentStations;
+  else delete index[currentOwner];
+
+  const normalizedName = name?.trim().slice(0, 80);
+  const updatedStation = { portal, galaxy, ...(normalizedName ? { name: normalizedName } : {}) };
+  index[owner] = [...(index[owner] ?? []), updatedStation];
+  await writeStationIndex(index);
+  return true;
+}
