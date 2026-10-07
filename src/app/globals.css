@@ -485,7 +485,7 @@ select { appearance: none; padding-right: 29px; background-image: linear-gradien
 .profile-required-banner small { color: #76694e; font-size: 9px; }
 .messages-page { display: grid; gap: 14px; }
 .messages-loading { min-height: 120px; display: grid; place-items: center; }
-.messages-empty { margin: 0; padding: 22px; color: var(--muted); border: 1px solid var(--line); background: #fff; font-size: 11px; }
+.messages-empty { margin: 0; padding: 22px; color: #a4adae; border: 1px solid #394548; border-radius: 4px; background: #171e21; font-size: 11px; }
 .message-thread-controls { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
 .message-thread-controls button, .message-thread-toggle { display: inline-flex; align-items: center; gap: 6px; min-height: 29px; padding: 0 9px; color: #a4adae; border: 1px solid #394548; border-radius: 3px; background: #1a2124; cursor: pointer; font-size: 9px; }
 .message-thread-controls button:hover, .message-thread-toggle:hover { color: var(--lime); border-color: var(--lime); }
@@ -494,8 +494,9 @@ select { appearance: none; padding-right: 29px; background-image: linear-gradien
 .message-card { min-width: 0; padding: 15px; border: 1px solid #394548; border-radius: 4px; background: #171e21; }
 .message-thread-children { display: grid; gap: 8px; margin: 9px 0 0 12px; padding: 0 0 0 12px; border-left: 1px solid #596541; list-style: none; }
 .message-thread-children .message-card { background: #141a1d; }
-.message-card-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; color: #a4adae; font-size: 8px; }
+.message-card-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 6px; color: #a4adae; font-size: 8px; }
 .message-card-main-heading { display: flex; min-width: 0; flex-direction: column; align-items: flex-start; gap: 4px; }
+.message-card-subject { display: flex; min-width: 0; align-items: center; gap: 8px; }
 .message-card-tools { display: flex; flex: 0 0 auto; align-items: center; justify-content: flex-end; gap: 8px; margin-left: auto; }
 .message-subject-link { position: relative; flex: 0 0 29px; color: var(--lime); }
 .message-subject-link[data-tooltip]::after { position: absolute; z-index: 30; right: 0; bottom: calc(100% + 7px); padding: 6px 8px; color: #f1eee7; border: 1px solid #394548; border-radius: 3px; background: #111719; box-shadow: 0 4px 14px #0008; content: attr(data-tooltip); font-size: 9px; font-weight: 500; line-height: 1.2; opacity: 0; pointer-events: none; text-transform: none; transform: translateY(3px); transition: opacity .12s, transform .12s; white-space: nowrap; }
@@ -504,6 +505,7 @@ select { appearance: none; padding-right: 29px; background-image: linear-gradien
 .message-card-heading h2 { min-width: 0; margin: 0; color: var(--ink); font-family: var(--font-accent); font-size: 14px; font-weight: 700; overflow-wrap: anywhere; }
 .message-participants, .message-reference { margin: 0; color: #a4adae; font-size: 9px; line-height: 1.5; overflow-wrap: anywhere; }
 .message-participants strong { color: #d4dad6; }
+.message-participants strong.current-member { color: var(--lime); }
 .message-body { margin: 12px 0 0; padding-top: 10px; color: #d4dad6; border-top: 1px solid #354044; font-size: 11px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
 .message-card-actions { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
 .message-reply-button { display: inline-flex; align-items: center; gap: 7px; height: 29px; padding: 0 9px; color: #a4adae; border: 1px solid #394548; border-radius: 3px; background: #1a2124; cursor: pointer; font-size: 9px; }

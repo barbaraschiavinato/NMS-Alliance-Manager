@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type ReactNode, type SubmitEvent } from "react";
 import Link from "next/link";
-import { ChevronDown, ChevronRight, ChevronsDown, ChevronsUp, CircleAlert, Compass, Crosshair, Reply, Send } from "lucide-react";
+import { ChevronDown, ChevronRight, ChevronsDown, ChevronsUp, CircleAlert, Compass, Crosshair, Reply, Send, Trash2 } from "lucide-react";
 import { AllianceSidebar, DashboardTopbar, MissionHero } from "@/components/dashboard-chrome";
 import { AdminPanel } from "@/components/admin-panel";
 import { MemberProfilePanel } from "@/components/member-profile-panel";
@@ -75,6 +75,7 @@ export function MessagesPage({ currentMember, alliance, missionCount, stationCou
   const [replyBody, setReplyBody] = useState("");
   const [replyError, setReplyError] = useState("");
   const [sendingReply, setSendingReply] = useState(false);
+  const [deletingMessageIds, setDeletingMessageIds] = useState<Set<string>>(() => new Set());
   const [adminOpen, setAdminOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
 
@@ -118,6 +119,36 @@ export function MessagesPage({ currentMember, alliance, missionCount, stationCou
     }
   }
 
+  async function deleteMessage(message: MessageEntry) {
+    if (!window.confirm(t("messages.confirm_delete"))) return;
+    setError("");
+    setDeletingMessageIds((current) => new Set(current).add(message.id));
+    try {
+      const response = await fetch("/api/messages", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messageId: message.id }),
+      });
+      const body: unknown = await response.json();
+      if (!response.ok) {
+        const errorKey = body && typeof body === "object" && "error" in body ? body.error : null;
+        throw new Error(typeof errorKey === "string" ? errorKey : "messages.error_unable_to_delete");
+      }
+      const updatedMessages = await fetchMessages();
+      setMessages(updatedMessages);
+      const remainingIds = new Set(updatedMessages.map((entry) => entry.id));
+      setCollapsedMessageIds((current) => new Set([...current].filter((id) => remainingIds.has(id))));
+    } catch (error_: unknown) {
+      setError(error_ instanceof Error ? error_.message : "messages.error_unable_to_delete");
+    } finally {
+      setDeletingMessageIds((current) => {
+        const next = new Set(current);
+        next.delete(message.id);
+        return next;
+      });
+    }
+  }
+
   function formatDate(value: string) {
     const date = new Date(value);
     return Number.isNaN(date.getTime())
@@ -149,31 +180,38 @@ export function MessagesPage({ currentMember, alliance, missionCount, stationCou
       <article className="message-card">
         <div className="message-card-heading">
           <div className="message-card-main-heading">
-            {!isReply && <h2>{message.subject || t("messages.no_subject")}</h2>}
+            <div className="message-card-subject">
+              {!isReply && message.subjectType === "mission" && message.missionCode && <Link
+                aria-label={t("messages.open_mission")}
+                className="member-icon-action message-subject-link"
+                data-tooltip={t("messages.open_mission")}
+                href={`/?search=${encodeURIComponent(message.missionCode)}`}
+                title={t("messages.open_mission")}
+              ><Crosshair size={15} /></Link>}
+              {!isReply && message.subjectType === "planet" && message.portal && <Link
+                aria-label={t("messages.open_planet_station")}
+                className="member-icon-action message-subject-link"
+                data-tooltip={t("messages.open_planet_station")}
+                href={`/stations?search=${encodeURIComponent(message.portal)}`}
+                title={t("messages.open_planet_station")}
+              ><Compass size={15} /></Link>}
+              {!isReply && <h2>{message.subject || t("messages.no_subject")}</h2>}
+            </div>
             <p className="message-participants">
-              {isModerator
-                ? <>{t("messages.from")} <strong>{message.senderName}</strong> · {t("messages.to")} <strong>{message.recipientName}</strong></>
-                : sentByCurrentMember
-                  ? <>{t("messages.to")} <strong>{message.recipientName}</strong></>
-                  : <>{t("messages.from")} <strong>{message.senderName}</strong></>}
+              {t("messages.from")} <strong className={sentByCurrentMember ? "current-member" : undefined}>{message.senderName}</strong>
+              {" · "}{t("messages.to")} <strong className={!sentByCurrentMember && canReply ? "current-member" : undefined}>{message.recipientName}</strong>
             </p>
           </div>
           <div className="message-card-tools">
             <time dateTime={message.createdAt}>{formatDate(message.createdAt)}</time>
-            {!isReply && message.subjectType === "mission" && message.missionCode && <Link
-              aria-label={t("messages.open_mission")}
-              className="member-icon-action message-subject-link"
-              data-tooltip={t("messages.open_mission")}
-              href={`/?search=${encodeURIComponent(message.missionCode)}`}
-              title={t("messages.open_mission")}
-            ><Crosshair size={15} /></Link>}
-            {!isReply && message.subjectType === "planet" && message.portal && <Link
-              aria-label={t("messages.open_planet_station")}
-              className="member-icon-action message-subject-link"
-              data-tooltip={t("messages.open_planet_station")}
-              href={`/stations?search=${encodeURIComponent(message.portal)}`}
-              title={t("messages.open_planet_station")}
-            ><Compass size={15} /></Link>}
+            {(canReply || isModerator) && <button
+              aria-label={t("messages.delete_message")}
+              className="member-icon-action delete-member"
+              disabled={deletingMessageIds.has(message.id)}
+              onClick={() => void deleteMessage(message)}
+              title={t("messages.delete_message")}
+              type="button"
+            ><Trash2 size={14} /></button>}
           </div>
         </div>
         <p className="message-body">{message.body}</p>

@@ -74,13 +74,20 @@ function parseStations(value: unknown): StationEntry[] {
   });
 }
 
+function stationOwnerName(station: StationEntry) {
+  const profileName = station.ownerName?.trim();
+  if (profileName && !profileName.includes("@")) return profileName;
+  const username = station.owner.split("@", 1)[0].replace(/[._-]+/g, " ").trim();
+  return username || station.owner;
+}
+
 function StationOwnerCell({ station, onOpenProfile, ownerLabel }: Readonly<{
   station: StationEntry;
   onOpenProfile: (email: string) => void;
   ownerLabel: string;
 }>) {
   const [imageFailed, setImageFailed] = useState(false);
-  const name = station.ownerName || station.owner;
+  const name = stationOwnerName(station);
   const initials = name.slice(0, 2).toUpperCase() || "—";
 
   return <div className="station-owner-card">
@@ -416,8 +423,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
                     <strong>{stationDisplayName}</strong>
                   </span>
                 </button>}
-                <div className="station-portal-code"><strong className="station-name">{stationDisplayName}</strong><GlyphStrip address={station.portal} /><code>{station.portal}</code>{canSeeAll && (viewMode === "cards"
-                  ? <StationOwnerCell onOpenProfile={(email) => setProfileTarget({
+                <div className="station-portal-code"><strong className="station-name">{stationDisplayName}</strong><GlyphStrip address={station.portal} /><code>{station.portal}</code>{canSeeAll && <StationOwnerCell onOpenProfile={(email) => setProfileTarget({
                     email,
                     messageContext: {
                       type: "planet",
@@ -425,8 +431,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
                       galaxy: station.galaxy,
                       subjectLabel: station.name || cachedPlanetTitle(station.planet) || cachedPlanetType(station.planet),
                     },
-                  })} ownerLabel={t("stations.station_owner")} station={station} />
-                  : <span className="station-owner">{station.owner}</span>)}</div>
+                  })} ownerLabel={t("stations.station_owner")} station={station} />}</div>
                 <div className="station-planet-info-list">
                   {station.planet
                     ? <CachedPlanetInfo onOpen={() => setSelectedStation({ portal: station.portal, galaxy: station.galaxy })} planet={station.planet} />

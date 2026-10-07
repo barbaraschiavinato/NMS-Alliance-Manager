@@ -71,6 +71,27 @@ export async function readPrivateMessages(): Promise<PrivateMessage[]> {
   return readMessages();
 }
 
+export async function deletePrivateMessageBranch(messageId: string): Promise<number> {
+  const messages = await readMessages();
+  if (!messages.some((message) => message.id === messageId)) return 0;
+
+  const deletedIds = new Set([messageId]);
+  let foundReply = true;
+  while (foundReply) {
+    foundReply = false;
+    for (const message of messages) {
+      if (message.replyToId && deletedIds.has(message.replyToId) && !deletedIds.has(message.id)) {
+        deletedIds.add(message.id);
+        foundReply = true;
+      }
+    }
+  }
+
+  const retainedMessages = messages.filter((message) => !deletedIds.has(message.id));
+  await writeMessages(retainedMessages);
+  return deletedIds.size;
+}
+
 async function writeMessages(messages: PrivateMessage[]): Promise<void> {
   const json = `${JSON.stringify(messages, null, 2)}\n`;
   const blobAuthOptions = getBlobAuthOptions();

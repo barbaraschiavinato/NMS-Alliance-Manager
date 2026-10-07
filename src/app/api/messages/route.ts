@@ -3,7 +3,7 @@ import { getCurrentMember, hasRole } from "@/lib/authorization";
 import { readAccessData } from "@/lib/access-store";
 import { readAlmanacResponse } from "@/lib/almanac-store";
 import { decodePortalAddress } from "@/lib/missions";
-import { readPrivateMessages, savePrivateMessage } from "@/lib/private-messages-store";
+import { deletePrivateMessageBranch, readPrivateMessages, savePrivateMessage } from "@/lib/private-messages-store";
 import { readStationPortals } from "@/lib/stations-store";
 import { readMissions } from "@/lib/store";
 
@@ -222,5 +222,36 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("Unable to save private message", error);
     return NextResponse.json({ error: "profile.message_unable_to_save" }, { status: 503 });
+  }
+}
+
+export async function DELETE(request: Request) {
+  const member = await getCurrentMember();
+  if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
+
+  const body: unknown = await request.json().catch(() => null);
+  const messageId = body && typeof body === "object" && !Array.isArray(body) && "messageId" in body && typeof body.messageId === "string"
+    ? body.messageId.trim()
+    : "";
+  if (!messageId) return NextResponse.json({ error: "messages.message_not_found" }, { status: 400 });
+
+  try {
+    const messages = await readPrivateMessages();
+    const message = messages.find((entry) => entry.id === messageId);
+    if (!message) return NextResponse.json({ error: "messages.message_not_found" }, { status: 404 });
+
+    const memberEmail = member.email.toLowerCase();
+    const isParticipant = memberEmail === message.senderEmail.toLowerCase() ||
+      memberEmail === message.recipientEmail.toLowerCase();
+    if (!isParticipant && !hasRole(member, "moderator")) {
+      return NextResponse.json({ error: "messages.delete_not_allowed" }, { status: 403 });
+    }
+
+    const deletedCount = await deletePrivateMessageBranch(messageId);
+    if (!deletedCount) return NextResponse.json({ error: "messages.message_not_found" }, { status: 404 });
+    return NextResponse.json({ ok: true, deletedCount });
+  } catch (error) {
+    console.error("Unable to delete private message", error);
+    return NextResponse.json({ error: "messages.error_unable_to_delete" }, { status: 503 });
   }
 }
