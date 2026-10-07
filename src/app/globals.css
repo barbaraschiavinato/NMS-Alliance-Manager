@@ -901,3 +901,5 @@ select { appearance: none; padding-right: 29px; background-image: linear-gradien
   .dialog-actions { flex-wrap: wrap; }
   .delete-button { margin-right: auto; }
 }
+.members-toolbar.offline-toolbar { grid-template-columns: minmax(0, 1fr) minmax(190px, 290px); }
+.offline-table th:last-child, .offline-table td:last-child { padding-right: 2px; text-align: right; }

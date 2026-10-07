@@ -163,3 +163,12 @@ export async function savePrivateMessage(
   });
   await writeMessages(messages);
 }
+
+export async function reassignPrivateMessageMember(fromMemberId: string, toMemberId: string): Promise<void> {
+  const messages = await readMessages();
+  await writeMessages(messages.map((message) => ({
+    ...message,
+    ...(message.senderMemberId === fromMemberId ? { senderMemberId: toMemberId } : {}),
+    ...(message.recipientMemberId === fromMemberId ? { recipientMemberId: toMemberId } : {}),
+  })));
+}

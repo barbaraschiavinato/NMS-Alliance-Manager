@@ -68,6 +68,7 @@ function normalizeMember(value: unknown): AllianceMember | null {
     approvedBy: typeof member.approvedBy === "string" ? member.approvedBy : "",
     approvedAt: typeof member.approvedAt === "string" ? member.approvedAt : "",
     lastLogin: typeof member.lastLogin === "string" ? member.lastLogin : "",
+    ...(member.offline === true ? { offline: true } : {}),
   };
 }
 
@@ -155,6 +156,58 @@ export async function registerMember(identity: Pick<AllianceMember, "email" | "n
   return { member, alliance: data.alliance };
 }
 
+export type ProfileConflict = "name" | "code";
+
+function findProfileConflict(members: AllianceMember[], profile: MemberProfileInput, excludeEmail = ""): ProfileConflict | null {
+  const name = profile.nmsName.trim().toLowerCase();
+  const code = normalizeNmsFriendCode(profile.nmsCode);
+  const others = members.filter((member) => member.email !== excludeEmail);
+  if (others.some((member) => member.nmsName.trim().toLowerCase() === name)) return "name";
+  if (others.some((member) => normalizeNmsFriendCode(member.nmsCode) === code)) return "code";
+  return null;
+}
+
+export async function createOfflineMember(profile: MemberProfileInput, createdBy: string): Promise<AllianceMember | ProfileConflict> {
+  const data = await readAccessData();
+  const conflict = findProfileConflict(data.members, profile);
+  if (conflict) return conflict;
+  const publicId = randomUUID();
+  const member: AllianceMember = {
+    publicId,
+    email: `offline-${publicId}@offline.invalid`,
+    name: profile.nmsName.trim(),
+    image: "",
+    nmsName: profile.nmsName.trim(),
+    nmsCode: normalizeNmsFriendCode(profile.nmsCode),
+    platforms: [...new Set(profile.platforms)],
+    specialty: profile.specialty,
+    role: "user",
+    membershipStatus: "approved",
+    approvedBy: createdBy.trim().toLowerCase(),
+    approvedAt: new Date().toISOString(),
+    lastLogin: "",
+    offline: true,
+  };
+  data.members.push(member);
+  await writeAccessData(data);
+  return member;
+}
+
+export async function updateOfflineMember(publicId: string, profile: MemberProfileInput): Promise<AllianceMember | ProfileConflict | null> {
+  const data = await readAccessData();
+  const member = data.members.find((item) => item.publicId === publicId && item.offline);
+  if (!member) return null;
+  const conflict = findProfileConflict(data.members, profile, member.email);
+  if (conflict) return conflict;
+  member.name = profile.nmsName.trim();
+  member.nmsName = profile.nmsName.trim();
+  member.nmsCode = normalizeNmsFriendCode(profile.nmsCode);
+  member.platforms = [...new Set(profile.platforms)];
+  member.specialty = profile.specialty;
+  await writeAccessData(data);
+  return member;
+}
+
 export async function updateMemberApproval(email: string, approvedBy: string, membershipStatus: MembershipStatus, actorRole: MemberRole) {
   const normalizedEmail = email.trim().toLowerCase();
   const adminEmail = process.env.ALLIANCE_ADMIN_EMAIL?.trim().toLowerCase();
@@ -198,7 +251,7 @@ export function isMemberProfileInput(value: unknown): value is MemberProfileInpu
   return typeof profile.nmsName === "string" &&
     profile.nmsName.trim().length > 0 && profile.nmsName.trim().length <= 40 &&
     typeof profile.nmsCode === "string" && isValidNmsFriendCode(profile.nmsCode) &&
-    Array.isArray(profile.platforms) && profile.platforms.length > 0 &&
+    Array.isArray(profile.platforms) &&
     profile.platforms.every((platform) => nmsPlatforms.includes(platform as NmsPlatform)) &&
     memberSpecialties.includes(profile.specialty as MemberSpecialty);
 }
@@ -208,6 +261,8 @@ export async function updateMemberProfile(email: string, profile: MemberProfileI
   const data = await readAccessData();
   const member = data.members.find((item) => item.email === normalizedEmail);
   if (!member) return null;
+  const conflict = findProfileConflict(data.members, profile, normalizedEmail);
+  if (conflict) return conflict;
   member.nmsName = profile.nmsName.trim();
   member.nmsCode = normalizeNmsFriendCode(profile.nmsCode);
   member.platforms = [...new Set(profile.platforms)];

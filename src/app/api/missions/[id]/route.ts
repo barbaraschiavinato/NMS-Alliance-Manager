@@ -28,7 +28,7 @@ export async function PATCH(request: Request, context: RouteContext) {
       const assignedMember = assignedMemberId
         ? access.members.find((candidate) => candidate.publicId === assignedMemberId &&
           candidate.membershipStatus === "approved" && candidate.nmsName &&
-          isValidNmsFriendCode(candidate.nmsCode) && candidate.platforms.length > 0 && candidate.specialty)
+          isValidNmsFriendCode(candidate.nmsCode) && candidate.specialty)
         : null;
       if (assignedMemberId && !assignedMember && assignedMemberId !== existingMission.assignedMemberId) {
         return NextResponse.json({ error: "Membro assegnatario non trovato." }, { status: 400 });

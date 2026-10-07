@@ -76,7 +76,7 @@ async function getPlanetSubject(params: URLSearchParams) {
 
   try {
     const recipient = (await readAccessData()).members.find((candidate) =>
-      candidate.publicId === recipientId && candidate.membershipStatus === "approved",
+      candidate.publicId === recipientId && candidate.membershipStatus === "approved" && !candidate.offline,
     );
     if (!recipient) return NextResponse.json({ error: "profile.message_recipient_not_found" }, { status: 404 });
 
@@ -124,7 +124,7 @@ export async function POST(request: Request) {
       if (!recipientId) return NextResponse.json({ error: "messages.reply_not_allowed" }, { status: 403 });
 
       const recipient = (await readAccessData()).members.find((candidate) =>
-        candidate.publicId === recipientId && candidate.membershipStatus === "approved",
+        candidate.publicId === recipientId && candidate.membershipStatus === "approved" && !candidate.offline,
       );
       if (!recipient) return NextResponse.json({ error: "profile.message_recipient_not_found" }, { status: 404 });
 
@@ -171,7 +171,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "profile.message_recipient_not_found" }, { status: 400 });
     }
     const recipient = (await readAccessData()).members.find((candidate) =>
-      candidate.publicId === recipientId && candidate.membershipStatus === "approved",
+      candidate.publicId === recipientId && candidate.membershipStatus === "approved" && !candidate.offline,
     );
     if (!recipient) {
       return NextResponse.json({ error: "profile.message_recipient_not_found" }, { status: 404 });

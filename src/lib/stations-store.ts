@@ -204,3 +204,20 @@ export async function updateStationPortal(
   await writeStationIndex(index);
   return true;
 }
+export async function reassignStationOwner(fromMemberId: string, toMemberId: string): Promise<void> {
+  const index = await readStationIndex();
+  const moved = index[fromMemberId];
+  if (!moved) return;
+  const merged = new Map<string, StationPortal>((index[toMemberId] ?? []).map((station) => [`${station.portal}:${station.galaxy}`, station] as const));
+  for (const station of moved) {
+    const key = `${station.portal}:${station.galaxy}`;
+    const next = station.createdByMemberId === fromMemberId ? { ...station, createdByMemberId: toMemberId } : station;
+    if (!merged.has(key)) merged.set(key, next);
+  }
+  delete index[fromMemberId];
+  index[toMemberId] = [...merged.values()];
+  for (const [owner, stations] of Object.entries(index)) {
+    index[owner] = stations.map((station) => station.createdByMemberId === fromMemberId ? { ...station, createdByMemberId: toMemberId } : station);
+  }
+  await writeStationIndex(index);
+}

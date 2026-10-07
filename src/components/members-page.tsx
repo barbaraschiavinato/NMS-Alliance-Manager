@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Ban, Check, CircleAlert, CircleX, Crosshair, LayoutGrid, List, Orbit, Search, Trash2, UserRoundCheck } from "lucide-react";
+import { formatNmsFriendCode } from "@/lib/member-types";
 import type { AllianceMember, AllianceSettings, MemberRole, MemberSpecialty, MembershipStatus } from "@/lib/member-types";
 import { AllianceSidebar, DashboardTopbar, MissionHero } from "@/components/dashboard-chrome";
 import { AdminPanel } from "@/components/admin-panel";
@@ -40,6 +41,7 @@ function MemberActions({ member, canChangeRole, currentMemberEmail, onStatus, on
   const canManage = canChangeRole || member.role === "user";
   const isCurrentMember = member.email.toLowerCase() === currentMemberEmail.toLowerCase();
   if (member.protectedAdmin || isCurrentMember || !canManage) return null;
+
 
   if (member.role === "admin") return <div className="member-page-actions">
     <select aria-label={t("members.role_for_email", { email: member.email })} onChange={(event) => onRole(member.email, event.target.value as MemberRole)} value={member.role}>
@@ -88,7 +90,7 @@ export function MembersPage({ currentMember, alliance, missionCount, sidebarStat
       .then(async (response) => {
         const body = await response.json();
         if (!response.ok) throw new Error(body.error ?? "Unable to load the user list.");
-        setMembers(body as ManagedMember[]);
+        setMembers((body as ManagedMember[]).filter((member) => !member.offline));
       })
       .catch((error_: unknown) => setError(error_ instanceof Error ? error_.message : t("errors.unable_to_load_the_user_list")))
       .finally(() => setLoadingMembers(false));
@@ -187,7 +189,7 @@ export function MembersPage({ currentMember, alliance, missionCount, sidebarStat
             <tbody>
               {visibleMembers.map((member) => <tr key={member.email}>
                 <td><div className="member-page-identity"><span className="member-admin-avatar">{member.image ? <span style={{ backgroundImage: `url("${member.image}")` }} /> : (member.nmsName || member.name).slice(0, 1).toUpperCase()}</span><span><strong>{member.nmsName || t("common.nms_name_incomplete_label")}</strong><small>{member.email}</small></span></div></td>
-                <td className="member-code-cell">{member.nmsCode || t("common.incomplete")}</td>
+                <td className="member-code-cell">{member.nmsCode ? formatNmsFriendCode(member.nmsCode) : t("common.incomplete")}</td>
                 <td>{member.platforms.length ? member.platforms.join(", ") : t("common.not_selected")}</td>
                 <td>{member.specialty ? t(specialtyLabels[member.specialty]) : t("common.not_selected")}</td>
                 <td>{member.protectedAdmin
@@ -211,7 +213,7 @@ export function MembersPage({ currentMember, alliance, missionCount, sidebarStat
                 : <span className={`badge badge--member-status badge--member-status-${member.membershipStatus}`}>{t(statusLabels[member.membershipStatus])}</span>}
             </div>
             <dl className="member-card-details">
-              <div><dt>{t("profile.friend_code_label")}</dt><dd>{member.nmsCode || t("common.incomplete")}</dd></div>
+              <div><dt>{t("profile.friend_code_label")}</dt><dd>{member.nmsCode ? formatNmsFriendCode(member.nmsCode) : t("common.incomplete")}</dd></div>
               <div><dt>{t("profile.platforms_label")}</dt><dd>{member.platforms.length ? member.platforms.join(", ") : t("common.not_selected")}</dd></div>
               <div><dt>{t("profile.specialty_label")}</dt><dd>{member.specialty ? t(specialtyLabels[member.specialty]) : t("common.not_selected")}</dd></div>
               <div><dt>{t("members.role_label")}</dt><dd>{t(roleLabels[member.role])}</dd></div>
@@ -231,7 +233,7 @@ export function MembersPage({ currentMember, alliance, missionCount, sidebarStat
         </main>
       </section>
       {adminOpen && pageMember.role === "admin" && <AdminPanel onClose={() => setAdminOpen(false)} onSaved={setAllianceSettings} />}
-      {profileOpen && <MemberProfilePanel member={pageMember} onClose={() => setProfileOpen(false)} onSaved={(profile) => setPageMember((current) => ({ ...current, ...profile }))} />}
+      {profileOpen && <MemberProfilePanel member={pageMember} onClose={() => setProfileOpen(false)} onSaved={(profile) => setPageMember((current) => ({ ...current, nmsName: profile.nmsName, nmsCode: profile.nmsCode, platforms: profile.platforms, specialty: profile.specialty }))} />}
     </div>
   );
 }

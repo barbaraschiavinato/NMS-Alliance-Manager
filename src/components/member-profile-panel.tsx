@@ -2,7 +2,7 @@
 
 import { useState, type SubmitEvent } from "react";
 import { Compass, Hammer, Search, Check, CircleAlert, X } from "lucide-react";
-import { isValidNmsFriendCode, memberSpecialties, normalizeNmsFriendCode, nmsPlatforms, type AllianceMember, type MemberRole, type MemberSpecialty, type NmsPlatform } from "@/lib/member-types";
+import { formatNmsFriendCode, isValidNmsFriendCode, memberSpecialties, normalizeNmsFriendCode, nmsPlatforms, type AllianceMember, type MemberRole, type MemberSpecialty, type NmsPlatform } from "@/lib/member-types";
 import { useLocale } from "@/components/locale-provider";
 
 const roleLabels: Record<MemberRole, string> = {
@@ -17,10 +17,12 @@ const specialtyLabels: Record<MemberSpecialty, string> = {
   explorer: "common.explorer",
 };
 
-export function MemberProfilePanel({ member, onClose, onSaved }: Readonly<{
+export function MemberProfilePanel({ member, onClose, onSaved, createOffline = false, editOffline = false }: Readonly<{
   member: AllianceMember;
   onClose: () => void;
-  onSaved: (profile: Pick<AllianceMember, "nmsName" | "nmsCode" | "platforms" | "specialty">) => void;
+  onSaved: (profile: AllianceMember) => void;
+  createOffline?: boolean;
+  editOffline?: boolean;
 }>) {
   const { t } = useLocale();
   const [nmsName, setNmsName] = useState(member.nmsName);
@@ -29,6 +31,7 @@ export function MemberProfilePanel({ member, onClose, onSaved }: Readonly<{
   const [specialty, setSpecialty] = useState<MemberSpecialty | "">(member.specialty);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const offlineMode = createOffline || editOffline;
   const [saved, setSaved] = useState(false);
 
   function togglePlatform(platform: NmsPlatform) {
@@ -43,15 +46,16 @@ export function MemberProfilePanel({ member, onClose, onSaved }: Readonly<{
     setError("");
     setSaved(false);
     try {
-      const response = await fetch("/api/profile", {
-        method: "PATCH",
+      const response = await fetch(offlineMode ? "/api/admin/members" : "/api/profile", {
+        method: offlineMode ? "POST" : "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nmsName, nmsCode, platforms, specialty }),
+        body: JSON.stringify({ nmsName, nmsCode, platforms, specialty, ...(editOffline ? { action: "update", offlineId: member.publicId } : {}) }),
       });
       const body = await response.json();
       if (!response.ok) throw new Error(body.error ?? "Unable to save the profile.");
-      onSaved(body as Pick<AllianceMember, "nmsName" | "nmsCode" | "platforms" | "specialty">);
-      setSaved(true);
+      onSaved(body as AllianceMember);
+      if (offlineMode) onClose();
+      else setSaved(true);
     } catch (error_) {
       setError(error_ instanceof Error ? error_.message : t("errors.unable_to_save_the_profile"));
     } finally {
@@ -63,14 +67,15 @@ export function MemberProfilePanel({ member, onClose, onSaved }: Readonly<{
     <div className="dialog-backdrop">
       <dialog aria-labelledby="profile-title" aria-modal="true" className="mission-dialog profile-dialog" open>
         <div className="dialog-heading">
-          <div><span className="eyebrow">{t("profile.member_profile")}</span><h2 id="profile-title">{t("profile.my_nms_profile")}</h2></div>
+          <div><span className="eyebrow">{t("profile.member_profile")}</span><h2 id="profile-title">{createOffline ? t("members.add_offline_player") : editOffline ? t("members.edit_offline_player") : t("profile.my_nms_profile")}</h2></div>
           <button aria-label={t("common.close")} className="icon-button" onClick={onClose} type="button"><X size={18} /></button>
         </div>
         <form onSubmit={submit}>
-          <div className="profile-identity">
+          {!offlineMode && <div className="profile-identity">
             <span className="profile-google-avatar">{member.image ? <span style={{ backgroundImage: `url("${member.image}")` }} /> : member.name.slice(0, 1).toUpperCase()}</span>
             <span><strong>{member.email}</strong><small>{t("admin.role_assigned_by_administrator_role", { role: t(roleLabels[member.role]) })}</small></span>
-          </div>
+          </div>}
+          {offlineMode && <p className="form-hint">{t("members.offline_player_hint")}</p>}
           <label className="field full-field">
             <span>{t("common.in_game_name")}</span>
             <input autoComplete="nickname" maxLength={40} onChange={(event) => setNmsName(event.target.value)} placeholder={t("common.in_game_name")} required value={nmsName} />
@@ -83,10 +88,9 @@ export function MemberProfilePanel({ member, onClose, onSaved }: Readonly<{
               inputMode="text"
               maxLength={15}
               onChange={(event) => setNmsCode(normalizeNmsFriendCode(event.target.value).slice(0, 13))}
-              pattern="[A-Z0-9]{13}"
-              placeholder="JZKW-8HFP-6DCAG"
+              placeholder="BMPE-S0B9-RCDMT"
               required
-              value={nmsCode}
+              value={formatNmsFriendCode(nmsCode)}
             />
           </label>
           <fieldset className="platform-fieldset">
@@ -116,7 +120,7 @@ export function MemberProfilePanel({ member, onClose, onSaved }: Readonly<{
           <div className="dialog-actions">
             <span className="action-spacer" />
             <button className="quiet-button" onClick={onClose} type="button">{t("common.close")}</button>
-            <button className="primary-button" disabled={busy || !nmsName.trim() || !isValidNmsFriendCode(nmsCode) || platforms.length === 0 || !specialty} type="submit">{busy ? t("common.saving") : t("profile.save_profile")}</button>
+            <button className="primary-button" disabled={busy || !nmsName.trim() || !isValidNmsFriendCode(nmsCode) || !specialty} type="submit">{busy ? t("common.saving") : t("profile.save_profile")}</button>
           </div>
         </form>
       </dialog>

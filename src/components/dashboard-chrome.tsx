@@ -13,6 +13,7 @@ import {
   LogOut,
   UserRound,
   UsersRound,
+  UserRoundX,
 } from "lucide-react";
 import type { Mission } from "@/lib/missions";
 import type { MissionFilter } from "@/components/mission-table";
@@ -27,7 +28,7 @@ export function AllianceSidebar({ missionCount, stationCount, userCount, current
   userCount?: number;
   currentMember: AllianceMember;
   settings: AllianceSettings;
-  activeSection: "missioni" | "utenti" | "stazioni" | "messaggi";
+  activeSection: "missioni" | "utenti" | "offline" | "stazioni" | "messaggi";
 }>) {
   const { t } = useLocale();
   const resetSearch = useRequestSearchReset();
@@ -45,6 +46,7 @@ export function AllianceSidebar({ missionCount, stationCount, userCount, current
         <Link className={`nav-item ${activeSection === "missioni" ? "active" : ""}`} href="/" onClick={resetSearch}><Crosshair size={17} /><span>{t("missions.section_title")}</span><span className="nav-count">{missionCount}</span></Link>
         <Link className={`nav-item ${activeSection === "stazioni" ? "active" : ""}`} href="/stations" onClick={resetSearch}><Orbit size={17} /><span>{t("stations.stations")}</span><span className="nav-count">{stationCount}</span></Link>
         {(currentMember.role === "admin" || currentMember.role === "moderator") && <Link className={`nav-item ${activeSection === "utenti" ? "active" : ""}`} href="/users" onClick={resetSearch}><UsersRound size={17} /><span>{t("members.users")}</span><span className="nav-count">{userCount ?? 0}</span></Link>}
+        {(currentMember.role === "admin" || currentMember.role === "moderator") && <Link className={`nav-item ${activeSection === "offline" ? "active" : ""}`} href="/offline-players" onClick={resetSearch}><UserRoundX size={17} /><span>{t("members.offline_players")}</span></Link>}
         <Link className={`nav-item ${activeSection === "messaggi" ? "active" : ""}`} href="/messages" onClick={resetSearch}><Mail size={17} /><span>{t("messages.messages")}</span><span className="nav-beta">BETA</span></Link>
       </nav>
       <div className="sidebar-bottom">

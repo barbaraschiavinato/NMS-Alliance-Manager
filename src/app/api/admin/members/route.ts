@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import { getCurrentMember, hasRole } from "@/lib/authorization";
-import { deleteMember, readAccessData, memberRoles, updateMemberApproval, updateMemberRole } from "@/lib/access-store";
+import { linkOfflineMember } from "@/lib/offline-members";
+import { createOfflineMember, updateOfflineMember, isMemberProfileInput, deleteMember, readAccessData, memberRoles, updateMemberApproval, updateMemberRole } from "@/lib/access-store";
 import { membershipStatuses } from "@/lib/member-types";
 
+const profileConflictMessages = { name: "members.duplicate_in_game_name", code: "members.duplicate_friend_code" } as const;
 export async function GET() {
   const member = await getCurrentMember();
   if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
@@ -52,4 +54,32 @@ export async function DELETE(request: Request) {
   const removed = await deleteMember((input as { email: string }).email, member.role, member.email);
   if (!removed) return NextResponse.json({ error: "Membro non trovato o non eliminabile con il tuo ruolo." }, { status: 404 });
   return NextResponse.json({ ok: true });
+}
+export async function POST(request: Request) {
+  const member = await getCurrentMember();
+  if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
+  if (!hasRole(member, "moderator")) return NextResponse.json({ error: "Permesso moderator richiesto." }, { status: 403 });
+  const input: unknown = await request.json().catch(() => null);
+  if (!input || typeof input !== "object") return NextResponse.json({ error: "Dati non validi." }, { status: 400 });
+  const { action } = input as Record<string, unknown>;
+
+  if (action === "link") {
+    const { offlineId, targetId } = input as Record<string, unknown>;
+    if (typeof offlineId !== "string" || typeof targetId !== "string" || !(await linkOfflineMember(offlineId, targetId))) {
+      return NextResponse.json({ error: "Impossibile collegare il profilo." }, { status: 400 });
+    }
+    return NextResponse.json({ ok: true });
+  }
+
+  if (!isMemberProfileInput(input)) return NextResponse.json({ error: "Profilo non valido." }, { status: 400 });
+  if (action === "update") {
+    const { offlineId } = input as unknown as Record<string, unknown>;
+    const updated = typeof offlineId === "string" ? await updateOfflineMember(offlineId, input) : null;
+    if (!updated) return NextResponse.json({ error: "Giocatore offline non trovato." }, { status: 404 });
+    if (typeof updated === "string") return NextResponse.json({ error: profileConflictMessages[updated] }, { status: 409 });
+    return NextResponse.json(updated);
+  }
+  const created = await createOfflineMember(input, member.email);
+  if (typeof created === "string") return NextResponse.json({ error: profileConflictMessages[created] }, { status: 409 });
+  return NextResponse.json(created, { status: 201 });
 }

@@ -12,6 +12,11 @@ export function normalizeNmsFriendCode(value: string) {
   return value.toUpperCase().replace(/[\s-]/g, "");
 }
 
+export function formatNmsFriendCode(value: string) {
+  const code = normalizeNmsFriendCode(value).slice(0, 13);
+  return [code.slice(0, 4), code.slice(4, 8), code.slice(8)].filter(Boolean).join("-");
+}
+
 export function isValidNmsFriendCode(value: string) {
   return /^[A-Z0-9]{13}$/.test(normalizeNmsFriendCode(value));
 }
@@ -34,6 +39,7 @@ export type AllianceMember = {
   approvedBy: string;
   approvedAt: string;
   lastLogin: string;
+  offline?: boolean;
 };
 
 export type AllianceSettings = {

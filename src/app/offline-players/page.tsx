@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { GoogleLogin } from "@/components/google-login";
-import { MembersPage } from "@/components/members-page";
+import { OfflinePlayersPage } from "@/components/offline-players-page";
 import { PendingApproval } from "@/components/pending-approval";
 import { getCurrentMember } from "@/lib/authorization";
 import { readAccessData } from "@/lib/access-store";
@@ -10,7 +10,7 @@ import { readAllStationPortals } from "@/lib/stations-store";
 
 export const dynamic = "force-dynamic";
 
-export default async function UsersPage() {
+export default async function OfflinePlayersRoute() {
   const accessData = await readAccessData();
   const allianceName = accessData.alliance.name;
   const allianceLogoUrl = accessData.alliance.logoUrl;
@@ -27,7 +27,7 @@ export default async function UsersPage() {
   if (member.role !== "admin" && member.role !== "moderator") redirect("/");
 
   const [missions, stations] = await Promise.all([readMissions(), readAllStationPortals()]);
-  return <MembersPage
+  return <OfflinePlayersPage
     alliance={accessData.alliance}
     currentMember={member}
     missionCount={missions.length}

@@ -53,7 +53,7 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
   const [profileOpen, setProfileOpen] = useState(false);
   const searchInput = useRef<HTMLInputElement>(null);
   const canManage = member.role === "moderator" || member.role === "admin";
-  const profileComplete = Boolean(member.nmsName.trim() && isValidNmsFriendCode(member.nmsCode) && member.platforms.length > 0 && member.specialty);
+  const profileComplete = Boolean(member.nmsName.trim() && isValidNmsFriendCode(member.nmsCode) && member.specialty);
 
   useEffect(() => {
     fetch("/api/missions", { cache: "no-store" })

@@ -12,7 +12,7 @@ export function PendingApproval({ member }: Readonly<{ member: AllianceMember }>
   const { t } = useLocale();
   const [profile, setProfile] = useState(member);
   const [profileOpen, setProfileOpen] = useState(false);
-  const complete = Boolean(profile.nmsName && isValidNmsFriendCode(profile.nmsCode) && profile.platforms.length && profile.specialty);
+  const complete = Boolean(profile.nmsName && isValidNmsFriendCode(profile.nmsCode) && profile.specialty);
 
   return (
     <main className="login-screen">

@@ -16,6 +16,7 @@ type MemberCard = {
   email?: string;
   nmsCode?: string;
   role?: MemberRole;
+  offline?: boolean;
 };
 
 export type MemberMessageContext =
@@ -133,11 +134,11 @@ export function MemberCardDialog({ memberId, messageContext, onClose }: Readonly
             {profile.role && <div><dt>{t("members.role_label")}</dt><dd>{t(roleLabels[profile.role])}</dd></div>}
             {profile.email && <div><dt>{t("common.email")}</dt><dd>{profile.email}</dd></div>}
           </dl>
-          <button aria-label={t("profile.leave_a_message")} className="primary-button member-message-open" onClick={() => {
+          {!profile.offline && <button aria-label={t("profile.leave_a_message")} className="primary-button member-message-open" onClick={() => {
             setMessageSent(false);
             setMessageError("");
             setComposing(true);
-          }} type="button"><MessageSquareText size={15} />{t("profile.leave_a_message")}</button>
+          }} type="button"><MessageSquareText size={15} />{t("profile.leave_a_message")}</button>}
         </>}
         {profile && composing && (messageSent
           ? <div className="member-message-success">

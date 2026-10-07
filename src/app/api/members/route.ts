@@ -26,11 +26,12 @@ export async function GET(request: Request) {
       nmsName: isEmailAddress(profile.nmsName) ? "" : profile.nmsName,
       platforms: profile.platforms,
       specialty: profile.specialty,
+      offline: profile.offline === true,
       ...(hasRole(member, "moderator") ? { email: profile.email, nmsCode: profile.nmsCode, role: profile.role } : {}),
     });
   }
   if (!hasRole(member, "moderator")) return NextResponse.json({ error: "Permesso moderator richiesto." }, { status: 403 });
-  return NextResponse.json(data.members.filter((item) => item.membershipStatus === "approved" && item.nmsName && isValidNmsFriendCode(item.nmsCode) && item.platforms.length > 0 && item.specialty).map(({ publicId, email, name, image, nmsName, nmsCode, platforms, specialty, role }) => ({
+  return NextResponse.json(data.members.filter((item) => item.membershipStatus === "approved" && item.nmsName && isValidNmsFriendCode(item.nmsCode) && item.specialty).map(({ publicId, email, name, image, nmsName, nmsCode, platforms, specialty, role }) => ({
     publicId,
     email,
     name,
