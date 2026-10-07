@@ -20,9 +20,12 @@ export async function GET(request: Request) {
 
   try {
     const [messages, accessData] = await Promise.all([readPrivateMessages(), readAccessData()]);
-    const isModerator = hasRole(member, "moderator");
+    const wantsAll = params.get("scope") === "all";
+    if (wantsAll && !hasRole(member, "admin")) {
+      return NextResponse.json({ error: "messages.delete_not_allowed" }, { status: 403 });
+    }
     const visibleMessages = messages.filter((message) =>
-      isModerator ||
+      wantsAll ||
       message.senderMemberId === member.publicId ||
       message.recipientMemberId === member.publicId,
     );
@@ -236,7 +239,7 @@ export async function DELETE(request: Request) {
 
     const isParticipant = member.publicId === message.senderMemberId ||
       member.publicId === message.recipientMemberId;
-    if (!isParticipant && !hasRole(member, "moderator")) {
+    if (!isParticipant && !hasRole(member, "admin")) {
       return NextResponse.json({ error: "messages.delete_not_allowed" }, { status: 403 });
     }
 

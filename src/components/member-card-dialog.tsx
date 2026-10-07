@@ -49,6 +49,7 @@ export function MemberCardDialog({ memberId, messageContext, onClose }: Readonly
   const [messageError, setMessageError] = useState("");
   const [messageSent, setMessageSent] = useState(false);
   const [sending, setSending] = useState(false);
+  const [acknowledged, setAcknowledged] = useState(false);
   const [subjectLabel, setSubjectLabel] = useState(messageContext.subjectLabel);
 
   useEffect(() => {
@@ -105,6 +106,7 @@ export function MemberCardDialog({ memberId, messageContext, onClose }: Readonly
         throw new Error(typeof errorKey === "string" ? errorKey : "profile.message_unable_to_save");
       }
       setMessage("");
+      setAcknowledged(false);
       setMessageSent(true);
     } catch (error_: unknown) {
       setMessageError(error_ instanceof Error ? error_.message : "profile.message_unable_to_save");
@@ -155,13 +157,17 @@ export function MemberCardDialog({ memberId, messageContext, onClose }: Readonly
               <span>{t("profile.message_text")}</span>
               <textarea autoFocus maxLength={2000} onChange={(event) => setMessage(event.target.value)} required rows={5} value={message} />
             </label>
+            <label className="message-acknowledgement">
+              <input checked={acknowledged} onChange={(event) => setAcknowledged(event.target.checked)} required type="checkbox" />
+              <span>{t("profile.message_mission_only_notice")}</span>
+            </label>
             {messageError && <p className="form-error"><CircleAlert size={15} />{t(messageError)}</p>}
             <div className="dialog-actions">
               <button className="quiet-button" onClick={() => {
                 setComposing(false);
                 setMessageError("");
               }} type="button">{t("common.cancel")}</button>
-              <button className="primary-button" disabled={sending || !message.trim()} type="submit">{sending ? t("common.saving") : t("profile.send_message")}<Send size={14} /></button>
+              <button className="primary-button" disabled={sending || !message.trim() || !acknowledged} type="submit">{sending ? t("common.saving") : t("profile.send_message")}<Send size={14} /></button>
             </div>
           </form>)}
       </dialog>

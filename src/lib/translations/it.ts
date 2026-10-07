@@ -191,6 +191,9 @@ export const translations: TranslationCatalog = {
     "missions.complete_mission": "Completa missione",
   },
   messages: {
+    "messages.tab_received": "Ricevuti",
+    "messages.tab_sent": "Inviati",
+    "messages.tab_all": "Tutti i messaggi",
     "messages.messages": "Messaggi",
     "messages.page_description": "Messaggi inviati e ricevuti.",
     "messages.no_messages": "Non ci sono ancora messaggi.",
@@ -393,6 +396,7 @@ export const translations: TranslationCatalog = {
     "profile.specialty_label": "Specialità",
     "profile.no_specialty_specified": "Specializzazione non indicata",
     "profile.no_platforms_specified": "Nessuna piattaforma indicata",
+    "profile.message_mission_only_notice": "Confermo che questo messaggio riguarda solo la missione o il pianeta. Per tutte le altre comunicazioni userò Telegram o Discord.",
     "profile.friend_code_label": "Codice amico",
     "profile.platforms_label": "Piattaforme",
     "profile.my_profile": "Il mio profilo",

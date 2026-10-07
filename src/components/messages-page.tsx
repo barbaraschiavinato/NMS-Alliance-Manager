@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type ReactNode, type SubmitEvent } from "react";
 import Link from "next/link";
-import { ChevronDown, ChevronRight, ChevronsDown, ChevronsUp, CircleAlert, Compass, Crosshair, Reply, Send, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronRight, CircleAlert, Compass, Crosshair, Reply, Send, Trash2, X } from "lucide-react";
 import { AllianceSidebar, DashboardTopbar, MissionHero } from "@/components/dashboard-chrome";
 import { AdminPanel } from "@/components/admin-panel";
 import { MemberProfilePanel } from "@/components/member-profile-panel";
@@ -47,8 +47,11 @@ function buildMessageTree(messages: MessageEntry[]): MessageNode[] {
   return roots;
 }
 
-async function fetchMessages(signal?: AbortSignal): Promise<MessageEntry[]> {
-  const response = await fetch("/api/messages", { cache: "no-store", signal });
+type MessageScope = "mine" | "all";
+type MessageTab = "received" | "sent" | "all";
+
+async function fetchMessages(scope: MessageScope, signal?: AbortSignal): Promise<MessageEntry[]> {
+  const response = await fetch(scope === "all" ? "/api/messages?scope=all" : "/api/messages", { cache: "no-store", signal });
   const body: unknown = await response.json();
   if (!response.ok || !Array.isArray(body)) {
     const message = body && typeof body === "object" && "error" in body ? body.error : null;
@@ -66,23 +69,27 @@ export function MessagesPage({ currentMember, alliance, missionCount, stationCou
   offlineCount?: number;
 }>) {
   const { t, locale } = useLocale();
+
   const [member, setMember] = useState(currentMember);
   const [settings, setSettings] = useState(alliance);
   const [messages, setMessages] = useState<MessageEntry[]>([]);
+  const [tab, setTab] = useState<MessageTab>("received");
+  const fetchScope: MessageScope = currentMember.role === "admin" ? "all" : "mine";
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
-  const [collapsedMessageIds, setCollapsedMessageIds] = useState<Set<string>>(() => new Set());
+  const [expandedMessageIds, setExpandedMessageIds] = useState<Set<string>>(() => new Set());
   const [replyBody, setReplyBody] = useState("");
   const [replyError, setReplyError] = useState("");
   const [sendingReply, setSendingReply] = useState(false);
+  const [replyAcknowledged, setReplyAcknowledged] = useState(false);
   const [deletingMessageIds, setDeletingMessageIds] = useState<Set<string>>(() => new Set());
   const [adminOpen, setAdminOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
-    fetchMessages(controller.signal)
+    fetchMessages(fetchScope, controller.signal)
       .then(setMessages)
       .catch((error_: unknown) => {
         if (!controller.signal.aborted) {
@@ -93,7 +100,7 @@ export function MessagesPage({ currentMember, alliance, missionCount, stationCou
         if (!controller.signal.aborted) setLoading(false);
       });
     return () => controller.abort();
-  }, []);
+  }, [fetchScope]);
 
   async function sendReply(event: SubmitEvent<HTMLFormElement>, originalMessage: MessageEntry) {
     event.preventDefault();
@@ -110,8 +117,9 @@ export function MessagesPage({ currentMember, alliance, missionCount, stationCou
         const errorKey = body && typeof body === "object" && "error" in body ? body.error : null;
         throw new Error(typeof errorKey === "string" ? errorKey : "messages.error_unable_to_send_reply");
       }
-      setMessages(await fetchMessages());
+      setMessages(await fetchMessages(fetchScope));
       setReplyBody("");
+      setReplyAcknowledged(false);
       setReplyingTo(null);
     } catch (error_: unknown) {
       setReplyError(error_ instanceof Error ? error_.message : "messages.error_unable_to_send_reply");
@@ -135,10 +143,10 @@ export function MessagesPage({ currentMember, alliance, missionCount, stationCou
         const errorKey = body && typeof body === "object" && "error" in body ? body.error : null;
         throw new Error(typeof errorKey === "string" ? errorKey : "messages.error_unable_to_delete");
       }
-      const updatedMessages = await fetchMessages();
+      const updatedMessages = await fetchMessages(fetchScope);
       setMessages(updatedMessages);
       const remainingIds = new Set(updatedMessages.map((entry) => entry.id));
-      setCollapsedMessageIds((current) => new Set([...current].filter((id) => remainingIds.has(id))));
+      setExpandedMessageIds((current) => new Set([...current].filter((id) => remainingIds.has(id))));
     } catch (error_: unknown) {
       setError(error_ instanceof Error ? error_.message : "messages.error_unable_to_delete");
     } finally {
@@ -160,23 +168,17 @@ export function MessagesPage({ currentMember, alliance, missionCount, stationCou
       }).format(date);
   }
 
-  const isModerator = member.role === "admin" || member.role === "moderator";
-  const messageTree = buildMessageTree(messages);
-  const expandableMessageIds: string[] = [];
-  function collectExpandableMessageIds(nodes: MessageNode[]) {
-    for (const node of nodes) {
-      if (node.children.length > 0) expandableMessageIds.push(node.message.id);
-      collectExpandableMessageIds(node.children);
-    }
-  }
-  collectExpandableMessageIds(messageTree);
+  const isAdmin = member.role === "admin";
+  const receivedMessages = messages.filter((message) => message.recipientMemberId === member.publicId);
+  const sentMessages = messages.filter((message) => message.senderMemberId === member.publicId);
+  const messageTree = buildMessageTree(tab === "all" ? messages : tab === "sent" ? sentMessages : receivedMessages);
 
   function renderMessage(node: MessageNode): ReactNode {
     const { message } = node;
     const sentByCurrentMember = message.senderMemberId === member.publicId;
     const receivedByCurrentMember = message.recipientMemberId === member.publicId;
     const canReply = sentByCurrentMember || receivedByCurrentMember;
-    const isCollapsed = collapsedMessageIds.has(message.id);
+    const isCollapsed = !expandedMessageIds.has(message.id);
     const isReply = Boolean(message.replyToId);
     return <li className="message-tree-node" key={message.id}>
       <article className="message-card">
@@ -206,7 +208,7 @@ export function MessagesPage({ currentMember, alliance, missionCount, stationCou
           </div>
           <div className="message-card-tools">
             <time dateTime={message.createdAt}>{formatDate(message.createdAt)}</time>
-            {(canReply || isModerator) && <button
+            {(canReply || isAdmin) && <button
               aria-label={t("messages.delete_message")}
               className="member-icon-action delete-member"
               disabled={deletingMessageIds.has(message.id)}
@@ -220,33 +222,40 @@ export function MessagesPage({ currentMember, alliance, missionCount, stationCou
         <div className="message-card-actions">
           {node.children.length > 0 && <button
             aria-expanded={!isCollapsed}
-            className="quiet-button message-thread-toggle"
-            onClick={() => setCollapsedMessageIds((current) => {
+            aria-label={t(isCollapsed ? "messages.show_replies" : "messages.hide_replies", { count: node.children.length })}
+            className="member-icon-action message-thread-toggle"
+            title={t(isCollapsed ? "messages.show_replies" : "messages.hide_replies", { count: node.children.length })}
+            onClick={() => setExpandedMessageIds((current) => {
               const next = new Set(current);
               if (next.has(message.id)) next.delete(message.id);
               else next.add(message.id);
               return next;
             })}
             type="button"
-          >{isCollapsed ? <ChevronRight size={14} /> : <ChevronDown size={14} />}{t(isCollapsed ? "messages.show_replies" : "messages.hide_replies", { count: node.children.length })}</button>}
-          {canReply && replyingTo !== message.id && <button className="quiet-button message-reply-button" onClick={() => {
+          >{isCollapsed ? <ChevronRight size={14} /> : <ChevronDown size={14} />}<span className="thread-count">{node.children.length}</span></button>}
+          {canReply && replyingTo !== message.id && <button className="member-icon-action message-reply-button" onClick={() => {
             setReplyError("");
             setReplyBody("");
+            setReplyAcknowledged(false);
             setReplyingTo(message.id);
-          }} type="button"><Reply size={14} />{t("messages.reply")}</button>}
+          }} type="button" aria-label={t("messages.reply")} title={t("messages.reply")}><Reply size={14} /></button>}
         </div>
         {canReply && replyingTo === message.id && <form className="message-reply-form" onSubmit={(event) => void sendReply(event, message)}>
           <label className="field">
             <span>{t("messages.reply_to", { subject: message.subject || t("messages.no_subject") })}</span>
             <textarea autoFocus maxLength={2000} onChange={(event) => setReplyBody(event.target.value)} required rows={4} value={replyBody} />
           </label>
+          <label className="message-acknowledgement">
+            <input checked={replyAcknowledged} onChange={(event) => setReplyAcknowledged(event.target.checked)} required type="checkbox" />
+            <span>{t("profile.message_mission_only_notice")}</span>
+          </label>
           {replyError && <p className="form-error"><CircleAlert size={15} />{t(replyError)}</p>}
           <div className="message-reply-actions">
-            <button className="quiet-button" onClick={() => {
+            <button className="member-icon-action delete-member" onClick={() => {
               setReplyingTo(null);
               setReplyError("");
-            }} type="button">{t("common.cancel")}</button>
-            <button className="primary-button" disabled={sendingReply || !replyBody.trim()} type="submit">{sendingReply ? t("common.saving") : t("messages.send_reply")}<Send size={14} /></button>
+            }} type="button" aria-label={t("common.cancel")} title={t("common.cancel")}><X size={14} /></button>
+            <button className="member-icon-action reply-submit" disabled={sendingReply || !replyBody.trim() || !replyAcknowledged} type="submit" aria-label={t("messages.send_reply")} title={t("messages.send_reply")}><Send size={14} /></button>
           </div>
         </form>}
       </article>
@@ -260,16 +269,18 @@ export function MessagesPage({ currentMember, alliance, missionCount, stationCou
       <DashboardTopbar currentMember={member} onAdminOpen={() => setAdminOpen(true)} onProfileOpen={() => setProfileOpen(true)} sectionTitle="messages.messages" settings={settings} />
       <MissionHero description={t("messages.page_description")} settings={settings} title="messages.messages" />
       <main className="content-wrap messages-page">
+        <div aria-label={t("messages.messages")} className="member-filter-tabs" role="tablist">
+          {(["received", "sent", ...(isAdmin ? ["all" as const] : [])] as MessageTab[]).map((key) => <button aria-selected={tab === key} className={tab === key ? "member-filter-tab selected" : "member-filter-tab"} key={key} onClick={() => {
+            setTab(key);
+            setExpandedMessageIds(new Set());
+          }} role="tab" type="button">{t(`messages.tab_${key}`)}<span>{key === "all" ? messages.length : key === "sent" ? sentMessages.length : receivedMessages.length}</span></button>)}
+        </div>
         {error && <p className="form-error"><CircleAlert size={15} />{t(error)}</p>}
         {loading
           ? <div className="messages-loading"><LoadingSpinner /></div>
-          : messages.length === 0
+          : messageTree.length === 0
             ? <p className="messages-empty">{t("messages.no_messages")}</p>
             : <>
-              {expandableMessageIds.length > 0 && <div className="message-thread-controls">
-                <button className="quiet-button" onClick={() => setCollapsedMessageIds(new Set())} type="button"><ChevronsDown size={14} />{t("messages.expand_all_replies")}</button>
-                <button className="quiet-button" onClick={() => setCollapsedMessageIds(new Set(expandableMessageIds))} type="button"><ChevronsUp size={14} />{t("messages.collapse_all_replies")}</button>
-              </div>}
               <ul className="messages-list">{messageTree.map(renderMessage)}</ul>
             </>}
       </main>

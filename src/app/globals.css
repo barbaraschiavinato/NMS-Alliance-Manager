@@ -491,8 +491,8 @@ select { appearance: none; padding-right: 29px; background-image: linear-gradien
 .messages-loading { min-height: 120px; display: grid; place-items: center; }
 .messages-empty { margin: 0; padding: 22px; color: #a4adae; border: 1px solid #394548; border-radius: 4px; background: #171e21; font-size: 11px; }
 .message-thread-controls { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
-.message-thread-controls button, .message-thread-toggle { display: inline-flex; align-items: center; gap: 6px; min-height: 29px; padding: 0 9px; color: #a4adae; border: 1px solid #394548; border-radius: 3px; background: #1a2124; cursor: pointer; font-size: 9px; }
-.message-thread-controls button:hover, .message-thread-toggle:hover { color: var(--lime); border-color: var(--lime); }
+.message-thread-controls button { display: inline-flex; align-items: center; gap: 6px; min-height: 29px; padding: 0 9px; color: #a4adae; border: 1px solid #394548; border-radius: 3px; background: #1a2124; cursor: pointer; font-size: 9px; }
+.message-thread-controls button:hover { color: var(--lime); border-color: var(--lime); }
 .messages-list { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
 .message-tree-node { min-width: 0; }
 .message-card { min-width: 0; padding: 15px; border: 1px solid #394548; border-radius: 4px; background: #171e21; }
@@ -512,11 +512,14 @@ select { appearance: none; padding-right: 29px; background-image: linear-gradien
 .message-participants strong.current-member { color: var(--lime); }
 .message-body { margin: 12px 0 0; padding-top: 10px; color: #d4dad6; border-top: 1px solid #354044; font-size: 11px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
 .message-card-actions { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
-.message-reply-button { display: inline-flex; align-items: center; gap: 7px; height: 29px; padding: 0 9px; color: #a4adae; border: 1px solid #394548; border-radius: 3px; background: #1a2124; cursor: pointer; font-size: 9px; }
-.message-reply-button:hover { color: var(--lime); border-color: var(--lime); }
+.message-reply-button { margin-left: auto; }
 .message-reply-form { display: grid; gap: 10px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #354044; }
 .message-reply-form .field textarea { min-height: 82px; resize: vertical; }
-.message-reply-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.message-reply-form .field > span { color: #fff; }
+.member-icon-action:disabled { cursor: not-allowed; opacity: .5; }
+.reply-submit { color: var(--lime); }
+.reply-submit:hover:not(:disabled) { color: #ff9b33; }
+.message-reply-actions { display: flex; justify-content: space-between; gap: 8px; }
 .station-list-section { width: min(1180px, 100%); margin: 0 auto; }
 .station-dialog { width: min(560px, 100%); }
 .station-add-form .portal-field { margin-bottom: 0; }
@@ -907,3 +910,7 @@ select { appearance: none; padding-right: 29px; background-image: linear-gradien
 .member-icon-action.member-link-action:hover { color: var(--green); border-color: var(--green); background: #203835; }
 .member-icon-action.member-station-filter { color: #6cb4ff; border-color: #2f4c6b; background: #16222e; }
 .member-icon-action.member-station-filter:hover { color: #6cb4ff; border-color: #6cb4ff; background: #1c2d3f; }
+.message-acknowledgement { display: flex; align-items: flex-start; gap: 8px; color: var(--ink); font-size: 10px; line-height: 1.4; cursor: pointer; }
+.message-acknowledgement input { width: 14px; height: 14px; margin-top: 1px; flex: 0 0 14px; accent-color: var(--lime); }
+
+.message-thread-toggle { width: auto; min-width: 29px; display: inline-flex; gap: 4px; padding: 0 8px; font-size: 10px; }
