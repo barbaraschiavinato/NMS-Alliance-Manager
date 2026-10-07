@@ -511,7 +511,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
                 >{t(status === "all" ? "stations.filter_all" : status === "pending" ? "common.pending_status_label" : status === "in_progress" ? "stations.filter_in_mission" : status === "completed" ? "stations.filter_mission_completed" : "stations.filter_with_notes")}<span>{stationCounts[status]}</span></button>)}
               </div>
               <div className="station-list-heading-tools">
-                <label className="search-field station-search"><Search size={15} /><input aria-label={t("stations.search_stations_by_portal_owner_or_galaxy")} onChange={(event) => setSearch(event.target.value)} placeholder={t("stations.search_portal_username_or_galaxy")} value={search} /></label>
+                <label className="search-field station-search"><Search size={15} /><input aria-label={t("stations.search_stations_by_portal_owner_or_galaxy_or_notes")} onChange={(event) => setSearch(event.target.value)} placeholder={t("stations.search_portal_username_galaxy_or_notes")} value={search} /></label>
                 <div aria-label={t("stations.station_view")} className="view-toggle" role="group">
                   <button aria-label={t("navigation.list_view")} aria-pressed={viewMode === "list"} className={viewMode === "list" ? "selected" : ""} onClick={() => setViewOverride("list")} title={t("navigation.list_view")} type="button"><List size={15} /></button>
                   <button aria-label={t("navigation.card_view")} aria-pressed={viewMode === "cards"} className={viewMode === "cards" ? "selected" : ""} onClick={() => setViewOverride("cards")} title={t("navigation.card_view")} type="button"><LayoutGrid size={15} /></button>
