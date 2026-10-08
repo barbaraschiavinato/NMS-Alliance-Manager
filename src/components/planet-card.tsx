@@ -6,6 +6,7 @@ import { galaxyLabel } from "@/lib/galaxies";
 import { useLocale } from "@/components/locale-provider";
 
 type PlanetRecord = Record<string, unknown>;
+type PlanetEntry = Readonly<{ portal: string; planet: PlanetRecord }>;
 
 const systemAttributes = [
   ["Star", "star"],
@@ -131,33 +132,74 @@ export function PlanetCard({ portal, galaxy, title: cardTitle, contextLabel, mis
   onClose: () => void;
 }>) {
   const { t } = useLocale();
-  const [planet, setPlanet] = useState<PlanetRecord | null>(null);
+  const [planetEntries, setPlanetEntries] = useState<PlanetEntry[]>([]);
+  const [selectedPortal, setSelectedPortal] = useState(portal);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
     const controller = new AbortController();
-    const params = new URLSearchParams({ address: portal, galaxy: String(galaxy) });
-    fetch(`/api/missions/planet?${params}`, { signal: controller.signal, cache: "no-store" })
-      .then(async (response) => {
-        const body: unknown = await response.json();
-        if (!response.ok) {
-          const message = asRecord(body)?.error;
-          throw new Error(typeof message === "string" ? message : "Planet details are unavailable.");
+
+    async function loadSystemPlanets() {
+      try {
+        const { planetSeeds } = await import("@/lib/nms-core/system.js");
+        const attributes = planetSeeds(BigInt(`0x${portal}`), galaxy);
+        if (!Number.isInteger(attributes.planet_count) || attributes.planet_count < 1 || attributes.planet_count > 6) {
+          throw new Error("Invalid system planet count.");
         }
-        const result = asRecord(asRecord(body)?.planet);
-        if (!result) throw new Error("Invalid planet response.");
-        setPlanet(result);
-      })
-      .catch((error_: unknown) => {
-        if (!controller.signal.aborted) setError(error_ instanceof Error ? error_.message : "Planet details are unavailable.");
-      })
-      .finally(() => {
+        const planetIndexes = new Set(
+          Array.from({ length: attributes.planet_count }, (_, index) => (index + 1).toString(16).toUpperCase()),
+        );
+        if (portal[0] !== "0") planetIndexes.add(portal[0].toUpperCase());
+        const entries: PlanetEntry[] = [];
+        let lookupError = "";
+
+        for (const planetIndex of planetIndexes) {
+          if (controller.signal.aborted) return;
+          const address = `${planetIndex}${portal.slice(1).toUpperCase()}`;
+          const params = new URLSearchParams({ address, galaxy: String(galaxy) });
+          try {
+            const response = await fetch(`/api/missions/planet?${params}`, {
+              signal: controller.signal,
+              cache: "no-store",
+            });
+            const body: unknown = await response.json();
+            if (response.status === 404) continue;
+            if (!response.ok) {
+              const message = asRecord(body)?.error;
+              throw new Error(typeof message === "string" ? message : "planet.almanac_lookup_failed");
+            }
+            const result = asRecord(asRecord(body)?.planet);
+            if (!result) throw new Error("planet.almanac_lookup_failed");
+            entries.push({ portal: address, planet: result });
+            setPlanetEntries([...entries]);
+          } catch (error_: unknown) {
+            if (controller.signal.aborted) return;
+            lookupError = error_ instanceof Error ? error_.message : "planet.almanac_lookup_failed";
+          }
+        }
+
+        if (!controller.signal.aborted) {
+          setPlanetEntries(entries);
+          if (!entries.some((entry) => entry.portal === portal.toUpperCase()) && entries[0]) {
+            setSelectedPortal(entries[0].portal);
+          }
+          setError(lookupError);
+        }
+      } catch (error_: unknown) {
+        if (!controller.signal.aborted) {
+          setError(error_ instanceof Error ? error_.message : "planet.almanac_lookup_failed");
+        }
+      } finally {
         if (!controller.signal.aborted) setLoading(false);
-      });
+      }
+    }
+
+    void loadSystemPlanets();
     return () => controller.abort();
   }, [galaxy, portal]);
 
+  const planet = planetEntries.find((entry) => entry.portal === selectedPortal)?.planet ?? null;
   const lines = asRecord(planet?.lines);
   const band = asRecord(lines?.band);
   const headline = asRecord(lines?.headline);
@@ -183,9 +225,27 @@ export function PlanetCard({ portal, galaxy, title: cardTitle, contextLabel, mis
           <button aria-label={t("planet.close_planet_details")} className="icon-button" onClick={onClose} type="button"><X size={18} /></button>
         </div>
         <div className="planet-card-body">
-          <div className="planet-card-address"><GlyphStrip address={portal} large /><code>{portal}</code></div>
+          <div className="planet-card-address"><GlyphStrip address={selectedPortal} large /><code>{selectedPortal}</code></div>
           {loading && <p aria-live="polite" className="planet-card-message">{t("common.loading_archived_details")}</p>}
           {!loading && error && <p className="planet-card-message planet-card-error">{t(error)}</p>}
+          {planetEntries.length > 1 && <nav aria-label={t("planet.planets_in_system")} className="planet-system-tabs">
+            {planetEntries.map((entry, index) => {
+              const entryLines = asRecord(entry.planet.lines);
+              const entryHeadline = asRecord(entryLines?.headline);
+              const entryBand = asRecord(entryLines?.band);
+              const entryPlanetType = displayValue(entryBand?.type);
+              const entryName = typeof entryHeadline?.word === "string"
+                ? entryHeadline.word
+                : entryPlanetType ?? `${t("planet.planet_label")} ${index + 1}`;
+              return <button
+                aria-pressed={entry.portal === selectedPortal}
+                className={entry.portal === selectedPortal ? "selected" : ""}
+                key={entry.portal}
+                onClick={() => setSelectedPortal(entry.portal)}
+                type="button"
+              >{entryName}</button>;
+            })}
+          </nav>}
           {planet && (
             <>
               <section aria-labelledby="planet-intro-title" className="planet-card-intro">
@@ -194,7 +254,7 @@ export function PlanetCard({ portal, galaxy, title: cardTitle, contextLabel, mis
                   <h3 id="planet-intro-title">{title}</h3>
                   {contextLabel && <p>{contextLabel}</p>}
                   {planet.paradise === true && <span className="planet-paradise-flag">{t("planet.paradise")}</span>}
-                  <span className="planet-intro-code">{portal}</span>
+                  <span className="planet-intro-code">{selectedPortal}</span>
                 </div>
               </section>
               <section aria-labelledby="planet-conditions-title" className="planet-card-section">
@@ -211,7 +271,7 @@ export function PlanetCard({ portal, galaxy, title: cardTitle, contextLabel, mis
               <div className="planet-card-attribution">{t("common.data")} <a href="https://nmsalmanac.com" rel="noreferrer" target="_blank">NMS Almanac</a></div>
             </>
           )}
-          {!loading && !error && !planet && <p className="planet-card-message">{t("planet.no_almanac_details_are_archived_for_this_mission")}</p>}
+          {!loading && !planetEntries.length && !error && <p className="planet-card-message">{t("planet.no_almanac_details_are_archived_for_this_mission")}</p>}
         </div>
       </dialog>
     </div>

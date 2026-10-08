@@ -9,6 +9,7 @@ import { AdminPanel } from "@/components/admin-panel";
 import { MemberProfilePanel } from "@/components/member-profile-panel";
 import { GlyphStrip, SystemAddressField, type SystemAddressValidation } from "@/components/portal-address-field";
 import { MissionForm } from "@/components/mission-form";
+import { StationSystemCoreInfo } from "@/components/station-system-core-info";
 import { PlanetCard } from "@/components/planet-card";
 import { LoadingSpinner } from "@/components/loading-spinner";
 import { MemberCardDialog, type MemberMessageContext } from "@/components/member-card-dialog";
@@ -545,6 +546,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
                   <span className="station-card-title-copy">
                     <span>{galaxyLabel(station.galaxy)}</span>
                     <strong>{stationDisplayName}</strong>
+                    <StationSystemCoreInfo key={`${station.portal}:${station.galaxy}`} galaxy={station.galaxy} portal={station.portal} />
                   </span>
                 </button>}
                 {viewMode === "cards" && stationOwner && <div className="station-card-owner">{stationOwner}</div>}
@@ -655,6 +657,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
       {selectedStation && <PlanetCard
         contextLabel={galaxyLabel(selectedStation.galaxy)}
         galaxy={selectedStation.galaxy}
+        key={`${selectedStation.portal}:${selectedStation.galaxy}`}
         onClose={() => setSelectedStation(null)}
         portal={selectedStation.portal}
         title={t("stations.space_station")}

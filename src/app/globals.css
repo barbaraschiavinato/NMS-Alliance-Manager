@@ -537,6 +537,10 @@ select { appearance: none; padding-right: 29px; background-image: linear-gradien
 .station-card-title-copy { min-width: 0; display: grid; align-content: center; gap: 5px; }
 .station-card-title-copy > span { color: #a4adae; font-size: 8px; }
 .station-card-title-copy > strong { max-width: 100%; overflow: hidden; color: var(--lime); font-size: 14px; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
+.station-card-system-core { color: #a4adae; font-size: 8px; line-height: 1.4; }
+.planet-system-tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+.planet-system-tabs button { padding: 6px 9px; color: #c4ccca; border: 1px solid #354044; border-radius: 5px; background: #171d1f; cursor: pointer; font-size: 11px; }
+.planet-system-tabs button.selected { color: var(--lime); border-color: var(--lime); }
 .station-card-title:hover > strong { color: #ff8400; }
 .station-list-cards .station-card-owner { min-width: 0; grid-column: 2; grid-row: 1; justify-self: end; }
 .station-list-cards .station-card-owner .station-owner-card { justify-items: end; margin: 0; }
