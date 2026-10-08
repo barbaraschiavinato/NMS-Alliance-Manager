@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState, type SubmitEvent } from "react";
-import { CircleAlert, CirclePlus, Crosshair, FileText, Eye, EyeOff, LayoutGrid, List, Pencil, Plus, Search, Trash2, X } from "lucide-react";
+import { CircleAlert, CirclePlus, Crosshair, FileText, LayoutGrid, List, Pencil, Plus, Search, Trash2, X } from "lucide-react";
 import { AllianceSidebar, DashboardTopbar, MissionHero } from "@/components/dashboard-chrome";
 import { AdminPanel } from "@/components/admin-panel";
 import { MemberProfilePanel } from "@/components/member-profile-panel";
@@ -226,14 +226,14 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
   const canCreateMissions = canSeeAll;
   const canCreateOwnSpecialtyMission = !canSeeAll &&
     (pageMember.specialty === "explorer" || pageMember.specialty === "builder");
+  const canChooseStationView = canSeeAll || pageMember.displayRole === "moderator" ||
+    pageMember.specialty === "explorer" || pageMember.specialty === "builder";
   const missionStationRow = missionStation
     ? stations.find((station) => station.portal === missionStation.portal && station.galaxy === missionStation.galaxy)
     : undefined;
-  const [showAllStations, setShowAllStations] = useState(true);
+  const [activeStationTab, setActiveStationTab] = useState<"all" | "mine">("all");
   const viewMode = pageMember.simpleView ? "cards" : viewOverride ?? allianceSettings.defaultTableView;
-  const searchedStations = useMemo(() => stations.filter((station) =>
-    (canSeeAll || canCreateMissionFromStation(station, pageMember, canCreateMissions) || station.canOpenOwnSpecialtyMission) &&
-    (showAllStations || station.ownerId === pageMember.publicId) &&
+  const stationCandidates = useMemo(() => stations.filter((station) =>
     (!initialStation || (
       station.portal === initialStation.portal &&
       station.galaxy === initialStation.galaxy &&
@@ -241,19 +241,26 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
     )) &&
     (`${station.name ?? cachedPlanetType(station.planet)} ${station.note ?? ""} ${station.portal} ${station.ownerNmsName ?? ""} ${station.ownerName ?? ""} ${galaxyLabel(station.galaxy)}`.toLowerCase().includes(search.toLowerCase()) ||
       portalSearchMatches(station.portal, search)),
-  ), [canCreateMissions, canSeeAll, initialStation, pageMember, search, showAllStations, stations]);
+  ), [initialStation, search, stations]);
+  const searchableStations = stationCandidates.filter((station) =>
+    canSeeAll || canCreateMissionFromStation(station, pageMember, canCreateMissions) || station.canOpenOwnSpecialtyMission,
+  );
   const stationCounts: Record<StationFilter, number> = {
-    all: searchedStations.length,
-    pending: searchedStations.filter((station) => station.missionStatus === "none").length,
-    in_progress: searchedStations.filter((station) => station.missionStatus === "in_progress").length,
-    completed: searchedStations.filter((station) => station.missionStatus === "completed").length,
-    notes: searchedStations.filter((station) => Boolean(station.note?.trim())).length,
+    all: searchableStations.length,
+    pending: searchableStations.filter((station) => station.missionStatus === "none").length,
+    in_progress: searchableStations.filter((station) => station.missionStatus === "in_progress").length,
+    completed: searchableStations.filter((station) => station.missionStatus === "completed").length,
+    notes: searchableStations.filter((station) => Boolean(station.note?.trim())).length,
   };
-  const visibleStations = stationFilter === "all"
-    ? searchedStations
+  const visibleStationFilters = (["all", "pending", "in_progress", "completed", ...(canSeeAll ? ["notes" as const] : [])] as StationFilter[])
+    .filter((status) => status === "all" || status === stationFilter || stationCounts[status] > 0);
+  const statusFilteredStations = stationFilter === "all"
+    ? searchableStations
     : stationFilter === "notes"
-      ? canSeeAll ? searchedStations.filter((station) => Boolean(station.note?.trim())) : searchedStations
-      : searchedStations.filter((station) => station.missionStatus === (stationFilter === "pending" ? "none" : stationFilter));
+      ? canSeeAll ? searchableStations.filter((station) => Boolean(station.note?.trim())) : searchableStations
+      : searchableStations.filter((station) => station.missionStatus === (stationFilter === "pending" ? "none" : stationFilter));
+  const ownCreatedStations = stationCandidates.filter((station) => station.createdByMemberId === pageMember.publicId);
+  const visibleStations = activeStationTab === "mine" ? ownCreatedStations : statusFilteredStations;
 
   async function fetchStations() {
     const response = await fetch("/api/stations", { cache: "no-store" });
@@ -531,18 +538,39 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
 
           <section aria-label={t("stations.my_space_stations")} className="station-list-section">
             <div className="station-list-heading">
-              <div aria-label={t("stations.filter_stations_by_mission_status")} className="member-filter-tabs station-filter-tabs" role="tablist">
-                {(["all", "pending", "in_progress", "completed", ...(canSeeAll ? ["notes" as const] : [])] as StationFilter[]).filter((status) => status === "all" || status === stationFilter || stationCounts[status] > 0).map((status) => <button
-                  aria-selected={stationFilter === status}
-                  className={`member-filter-tab${stationFilter === status ? " selected" : ""}`}
-                  key={status}
-                  onClick={() => setStationFilter(status)}
-                  role="tab"
-                  type="button"
-                >{t(status === "all" ? "stations.filter_all" : status === "pending" ? "common.pending_status_label" : status === "in_progress" ? "stations.filter_in_mission" : status === "completed" ? "stations.filter_mission_completed" : "stations.filter_with_notes")}<span>{stationCounts[status]}</span></button>)}
+              <div className="station-tab-navigation">
+                <div aria-label={t("stations.filter_stations_by_mission_status")} className="member-filter-tabs station-filter-tabs" role="tablist">
+                  <button
+                    aria-selected={activeStationTab === "all" && stationFilter === "all"}
+                    className={`member-filter-tab${activeStationTab === "all" && stationFilter === "all" ? " selected" : ""}`}
+                    onClick={() => {
+                      setActiveStationTab("all");
+                      setStationFilter("all");
+                    }}
+                    role="tab"
+                    type="button"
+                  >{t("stations.filter_all")}<span>{stationCounts.all}</span></button>
+                  {canChooseStationView && <button
+                    aria-selected={activeStationTab === "mine"}
+                    className={`member-filter-tab${activeStationTab === "mine" ? " selected" : ""}`}
+                    onClick={() => setActiveStationTab("mine")}
+                    role="tab"
+                    type="button"
+                  >{t("stations.my_stations")}<span>{ownCreatedStations.length}</span></button>}
+                  {visibleStationFilters.filter((status) => status !== "all").map((status) => <button
+                    aria-selected={activeStationTab === "all" && stationFilter === status}
+                    className={`member-filter-tab${activeStationTab === "all" && stationFilter === status ? " selected" : ""}`}
+                    key={status}
+                    onClick={() => {
+                      setActiveStationTab("all");
+                      setStationFilter(status);
+                    }}
+                    role="tab"
+                    type="button"
+                  >{t(status === "pending" ? "common.pending_status_label" : status === "in_progress" ? "stations.filter_in_mission" : status === "completed" ? "stations.filter_mission_completed" : "stations.filter_with_notes")}<span>{stationCounts[status]}</span></button>)}
+                </div>
               </div>
               <div className="station-list-heading-tools">
-                {canSeeAll && <button aria-label={t(showAllStations ? "stations.showing_all" : "stations.showing_mine")} aria-pressed={showAllStations} className={showAllStations ? "member-icon-action scope-toggle selected" : "member-icon-action scope-toggle"} data-tooltip={t(showAllStations ? "stations.showing_all" : "stations.showing_mine")} onClick={() => setShowAllStations((current) => !current)} type="button">{showAllStations ? <Eye size={15} /> : <EyeOff size={15} />}</button>}
                 {!pageMember.simpleView && <label className="search-field station-search"><Search size={15} /><input aria-label={t("stations.search_stations_by_portal_owner_or_galaxy_or_notes")} onChange={(event) => setSearch(event.target.value)} placeholder={t("stations.search_portal_username_galaxy_or_notes")} value={search} /></label>}
                 {!pageMember.simpleView && <div aria-label={t("stations.station_view")} className="view-toggle" role="group">
                   <button aria-label={t("navigation.list_view")} aria-pressed={viewMode === "list"} className={viewMode === "list" ? "selected" : ""} onClick={() => setViewOverride("list")} title={t("navigation.list_view")} type="button"><List size={15} /></button>

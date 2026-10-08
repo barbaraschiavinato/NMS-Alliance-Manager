@@ -302,6 +302,7 @@ export const translations: TranslationCatalog = {
     "stations.user_stations": "Stazioni dell’utente",
     "stations.search_stations_by_portal_owner_or_galaxy_or_notes": "Cerca stazioni per portale, nome utente del proprietario, galassia o note",
     "stations.filter_stations_by_mission_status": "Filtra stazioni per stato missione",
+    "stations.station_scope": "Ambito delle stazioni",
     "stations.filter_all": "Tutte",
     "stations.filter_in_mission": "In missione",
     "stations.filter_mission_completed": "Missione completata",
