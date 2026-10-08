@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { isMissionInput, isMissionStatus, type MissionStatus } from "@/lib/missions";
+import { isDifferentPlanetInSameSystem, isMissionInput, isMissionStatus, type MissionStatus } from "@/lib/missions";
 import { readMissions, writeMissions } from "@/lib/store";
 import { getCurrentMember, hasRole } from "@/lib/authorization";
 import { isValidNmsFriendCode } from "@/lib/member-types";
-import { readStationPortals } from "@/lib/stations-store";
+import { readAllStationPortals, readStationPortals } from "@/lib/stations-store";
 import { readAccessData } from "@/lib/access-store";
 import { serializeMission } from "@/lib/mission-view";
 
@@ -23,6 +23,20 @@ export async function PATCH(request: Request, context: RouteContext) {
     if (hasRole(member, "moderator")) {
       if (!isMissionInput(input)) return NextResponse.json({ error: "Dati missione non validi." }, { status: 400 });
       const existingMission = missions[index];
+      const stations = await readAllStationPortals();
+      const conflictsWithRegisteredPlanet = [
+        ...missions.filter((mission) => mission.id !== id)
+          .map((mission) => ({ portal: mission.systemAddress, galaxy: mission.galaxy })),
+        ...stations.map((station) => ({ portal: station.portal, galaxy: station.galaxy })),
+      ].some((entry) => isDifferentPlanetInSameSystem(
+        input.systemAddress,
+        input.galaxy,
+        entry.portal,
+        entry.galaxy,
+      ));
+      if (conflictsWithRegisteredPlanet) {
+        return NextResponse.json({ error: "errors.another_planet_from_system_already_registered" }, { status: 409 });
+      }
       const access = await readAccessData();
       const assignedMemberId = input.assignedMemberId?.trim() || undefined;
       const assignedMember = assignedMemberId

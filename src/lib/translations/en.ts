@@ -544,6 +544,7 @@ export const translations: TranslationCatalog = {
     "system.system_column_heading": "SYSTEM",
   },
   errors: {
+    "errors.another_planet_from_system_already_registered": "Another planet from this system is already registered in this galaxy.",
     "errors.data_error": "Data error",
     "errors.upload_failed": "Upload failed.",
     "errors.save_failed": "Save failed.",

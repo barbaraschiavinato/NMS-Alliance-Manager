@@ -129,6 +129,23 @@ export function decodePortalAddress(address: string): PortalAddressDecode | null
   };
 }
 
+export function isDifferentPlanetInSameSystem(
+  firstAddress: string,
+  firstGalaxy: number,
+  secondAddress: string,
+  secondGalaxy: number,
+): boolean {
+  if (
+    firstGalaxy !== secondGalaxy ||
+    !/^[0-9A-F]{12}$/i.test(firstAddress) ||
+    !/^[0-9A-F]{12}$/i.test(secondAddress)
+  ) return false;
+
+  const first = firstAddress.toUpperCase();
+  const second = secondAddress.toUpperCase();
+  return first[0] !== second[0] && first.slice(1) === second.slice(1);
+}
+
 export function isMissionInput(value: unknown): value is MissionInput {
   if (!value || typeof value !== "object") return false;
   const mission = value as Record<string, unknown>;

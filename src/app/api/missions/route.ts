@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { canViewMission, isMissionInput, type Mission } from "@/lib/missions";
+import { canViewMission, isDifferentPlanetInSameSystem, isMissionInput, type Mission } from "@/lib/missions";
 import { readMissions, writeMissions } from "@/lib/store";
 import { getCurrentMember, hasRole } from "@/lib/authorization";
 import { readAccessData } from "@/lib/access-store";
-import { readStationPortals } from "@/lib/stations-store";
+import { readAllStationPortals, readStationPortals } from "@/lib/stations-store";
 import { isValidNmsFriendCode } from "@/lib/member-types";
 import { serializeMission } from "@/lib/mission-view";
 
@@ -36,7 +36,19 @@ export async function POST(request: Request) {
   }
 
   try {
-    const missions = await readMissions();
+    const [missions, stations] = await Promise.all([readMissions(), readAllStationPortals()]);
+    const conflictsWithRegisteredPlanet = [
+      ...missions.map((mission) => ({ portal: mission.systemAddress, galaxy: mission.galaxy })),
+      ...stations.map((station) => ({ portal: station.portal, galaxy: station.galaxy })),
+    ].some((entry) => isDifferentPlanetInSameSystem(
+      input.systemAddress,
+      input.galaxy,
+      entry.portal,
+      entry.galaxy,
+    ));
+    if (conflictsWithRegisteredPlanet) {
+      return NextResponse.json({ error: "errors.another_planet_from_system_already_registered" }, { status: 409 });
+    }
     const assignedMember = typeof input.assignedMemberId === "string"
       ? await findAssignableMember(input.assignedMemberId)
       : null;

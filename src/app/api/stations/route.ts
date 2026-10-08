@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentMember, hasRole } from "@/lib/authorization";
 import { readAccessData, type AllianceMember } from "@/lib/access-store";
 import { readAlmanacResponse, readAlmanacResponses, writeAlmanacResponse } from "@/lib/almanac-store";
-import { decodePortalAddress, missionSpecialties, type MissionSpecialty } from "@/lib/missions";
+import { decodePortalAddress, isDifferentPlanetInSameSystem, missionSpecialties, type MissionSpecialty } from "@/lib/missions";
 import { isEmailAddress } from "@/lib/member-types";
 import { addStationPortal, readAllStationPortals, readStationPortals, removeStationPortal, updateStationPortal } from "@/lib/stations-store";
 import { readMissions, writeMissions } from "@/lib/store";
@@ -55,8 +55,20 @@ export async function POST(request: Request) {
     if (!isModerator && ownerMember.publicId !== member.publicId) {
       return NextResponse.json({ error: "stations.error_cannot_create_stations_for_another_member" }, { status: 403 });
     }
-    if ((await readStationPortals(ownerMember.publicId)).some((station) => station.portal === portal && station.galaxy === galaxy)) {
+    const [ownerStations, stations, missions] = await Promise.all([
+      readStationPortals(ownerMember.publicId),
+      readAllStationPortals(),
+      readMissions(),
+    ]);
+    if (ownerStations.some((station) => station.portal === portal && station.galaxy === galaxy)) {
       return NextResponse.json({ error: "stations.this_portal_is_already_in_the_selected_owner_s_list" }, { status: 409 });
+    }
+    const conflictsWithRegisteredPlanet = [
+      ...missions.map((mission) => ({ portal: mission.systemAddress, galaxy: mission.galaxy })),
+      ...stations.map((station) => ({ portal: station.portal, galaxy: station.galaxy })),
+    ].some((entry) => isDifferentPlanetInSameSystem(portal, galaxy, entry.portal, entry.galaxy));
+    if (conflictsWithRegisteredPlanet) {
+      return NextResponse.json({ error: "errors.another_planet_from_system_already_registered" }, { status: 409 });
     }
     await addStationPortal(ownerMember.publicId, portal, galaxy, name, member.publicId, note);
     await cacheStationPlanet(portal, galaxy);
@@ -154,8 +166,9 @@ export async function PATCH(request: Request) {
     if (!isModerator && (currentOwner.publicId !== member.publicId || owner.publicId !== member.publicId)) {
       return NextResponse.json({ error: "stations.error_cannot_edit_another_member_s_station" }, { status: 403 });
     }
-    const [missions, currentStations, destinationStations] = await Promise.all([
+    const [missions, stations, currentStations, destinationStations] = await Promise.all([
       readMissions(),
+      readAllStationPortals(),
       readStationPortals(currentOwner.publicId),
       readStationPortals(owner.publicId),
     ]);
@@ -184,6 +197,16 @@ export async function PATCH(request: Request) {
       !(owner.publicId === currentOwner.publicId && portal === currentPortal && galaxy === currentGalaxy),
     )) {
       return NextResponse.json({ error: "stations.this_portal_is_already_in_the_selected_owner_s_list" }, { status: 409 });
+    }
+    const conflictsWithRegisteredPlanet = [
+      ...missions.map((mission) => ({ portal: mission.systemAddress, galaxy: mission.galaxy })),
+      ...stations
+        .filter((station) => !(station.ownerId === currentOwner.publicId &&
+          station.portal === currentPortal && station.galaxy === currentGalaxy))
+        .map((station) => ({ portal: station.portal, galaxy: station.galaxy })),
+    ].some((entry) => isDifferentPlanetInSameSystem(portal, galaxy, entry.portal, entry.galaxy));
+    if (conflictsWithRegisteredPlanet) {
+      return NextResponse.json({ error: "errors.another_planet_from_system_already_registered" }, { status: 409 });
     }
 
     const updated = await updateStationPortal(currentOwner.publicId, currentPortal, currentGalaxy, owner.publicId, portal, galaxy, name, note);
