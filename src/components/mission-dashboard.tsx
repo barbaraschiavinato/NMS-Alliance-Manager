@@ -10,7 +10,7 @@ import {
 } from "@/components/dashboard-chrome";
 import { MissionForm, type StationOwnerOption } from "@/components/mission-form";
 import { MissionTable, type MissionFilter } from "@/components/mission-table";
-import { canViewMission, type Mission, type MissionInput } from "@/lib/missions";
+import { canViewMission, portalSearchMatches, type Mission, type MissionInput } from "@/lib/missions";
 import type { AllianceMember, AllianceSettings } from "@/lib/access-store";
 import { AdminPanel } from "@/components/admin-panel";
 import { MemberProfilePanel } from "@/components/member-profile-panel";
@@ -146,9 +146,7 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
         missionTypeLabels[mission.targetSpecialty],
       ].filter(Boolean).join(" ").toLowerCase();
       const textMatches = searchableText.includes(searchText);
-      const normalizedSearch = search.replace(/[\s-]/g, "").toUpperCase();
-      const normalizedAddress = mission.systemAddress.replace(/[\s-]/g, "").toUpperCase();
-      return textMatches || normalizedAddress.includes(normalizedSearch);
+      return textMatches || portalSearchMatches(mission.systemAddress, search);
     })
     , [availableMissions, filter, search]);
 

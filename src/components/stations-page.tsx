@@ -16,7 +16,7 @@ import { MemberCardDialog, type MemberMessageContext } from "@/components/member
 import { MissionSystemProgress } from "@/components/mission-system-progress";
 import type { AllianceMember, AllianceSettings } from "@/lib/access-store";
 import { galaxyNames, galaxyLabel } from "@/lib/galaxies";
-import { decodePortalAddress, missionSpecialties, type Mission, type MissionInput, type MissionSpecialty } from "@/lib/missions";
+import { decodePortalAddress, missionSpecialties, portalSearchMatches, type Mission, type MissionInput, type MissionSpecialty } from "@/lib/missions";
 import { isMissionSystemStatus, planetSystemStatusKey, type MissionSystemStatus, type PlanetSystemStatuses } from "@/lib/planet-system-status";
 import { useLocale } from "@/components/locale-provider";
 import { useNavigationSearchState } from "@/components/navigation-search-reset";
@@ -221,7 +221,8 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
       station.galaxy === initialStation.galaxy &&
       station.ownerId === initialStation.ownerId
     )) &&
-    `${station.name ?? cachedPlanetType(station.planet)} ${station.note ?? ""} ${station.portal} ${station.ownerNmsName ?? ""} ${station.ownerName ?? ""} ${galaxyLabel(station.galaxy)}`.toLowerCase().includes(search.toLowerCase()),
+    (`${station.name ?? cachedPlanetType(station.planet)} ${station.note ?? ""} ${station.portal} ${station.ownerNmsName ?? ""} ${station.ownerName ?? ""} ${galaxyLabel(station.galaxy)}`.toLowerCase().includes(search.toLowerCase()) ||
+      portalSearchMatches(station.portal, search)),
   ), [initialStation, pageMember.publicId, search, showAllStations, stations]);
   const stationCounts: Record<StationFilter, number> = {
     all: searchedStations.length,

@@ -129,6 +129,16 @@ export function decodePortalAddress(address: string): PortalAddressDecode | null
   };
 }
 
+export function portalSearchMatches(address: string, search: string): boolean {
+  const normalizedAddress = address.replace(/[\s-]/g, "").toUpperCase();
+  const normalizedSearch = search.replace(/[\s-]/g, "").toUpperCase();
+  if (!normalizedSearch) return false;
+  if (normalizedAddress.includes(normalizedSearch)) return true;
+  return /^[0-9A-F]{12}$/.test(normalizedSearch) &&
+    /^[0-9A-F]{12}$/.test(normalizedAddress) &&
+    normalizedAddress.slice(1) === normalizedSearch.slice(1);
+}
+
 export function isDifferentPlanetInSameSystem(
   firstAddress: string,
   firstGalaxy: number,
