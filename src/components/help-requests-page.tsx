@@ -105,7 +105,8 @@ export function HelpRequestsPage({ currentMember, alliance, missionCount, statio
     return () => controller.abort();
   }, []);
 
-  async function deleteRequest(id: string) {
+  async function deleteRequest(id: string, isReply: boolean) {
+    if (!window.confirm(t(isReply ? "help.confirm_delete_reply" : "help.confirm_delete_request"))) return;
     setDeletingId(id);
     setError("");
     try {
@@ -175,7 +176,7 @@ export function HelpRequestsPage({ currentMember, alliance, missionCount, statio
                     aria-label={t("help.delete_request")}
                     className="member-icon-action delete-member"
                     disabled={deletingId === request.id}
-                    onClick={() => void deleteRequest(request.id)}
+                    onClick={() => void deleteRequest(request.id, false)}
                     title={t("help.delete_request")}
                     type="button"
                   ><Trash2 size={14} /></button>}
@@ -195,7 +196,7 @@ export function HelpRequestsPage({ currentMember, alliance, missionCount, statio
                           aria-label={t("help.delete_request")}
                           className="member-icon-action delete-member"
                           disabled={deletingId === reply.id}
-                          onClick={() => void deleteRequest(reply.id)}
+                          onClick={() => void deleteRequest(reply.id, true)}
                           title={t("help.delete_request")}
                           type="button"
                         ><Trash2 size={14} /></button>}

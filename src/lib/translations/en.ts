@@ -209,6 +209,8 @@ export const translations: TranslationCatalog = {
     "help.delete_request": "Delete request",
     "help.request_not_found": "Request not found.",
     "help.request_unable_to_delete": "Unable to delete the help request.",
+    "help.confirm_delete_request": "Delete this help request and all its replies? This cannot be undone.",
+    "help.confirm_delete_reply": "Delete this reply? This cannot be undone.",
     "messages.messages": "Messages",
     "messages.page_description": "Messages you sent and received.",
     "messages.no_messages": "No messages yet.",

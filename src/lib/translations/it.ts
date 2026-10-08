@@ -209,6 +209,8 @@ export const translations: TranslationCatalog = {
     "help.delete_request": "Elimina richiesta",
     "help.request_not_found": "Richiesta non trovata.",
     "help.request_unable_to_delete": "Impossibile eliminare la richiesta d'aiuto.",
+    "help.confirm_delete_request": "Eliminare questa richiesta d'aiuto e tutte le sue risposte? L’azione non può essere annullata.",
+    "help.confirm_delete_reply": "Eliminare questa risposta? L’azione non può essere annullata.",
     "messages.messages": "Messaggi",
     "messages.page_description": "Messaggi inviati e ricevuti.",
     "messages.no_messages": "Non ci sono ancora messaggi.",
