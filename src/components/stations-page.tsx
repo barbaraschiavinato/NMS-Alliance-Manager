@@ -696,7 +696,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
           systemAddress: missionStation.portal,
           galaxy: missionStation.galaxy,
           stationOwnerMemberId: missionStation.ownerMemberId,
-          targetSpecialty: (missionStationRow ? missionSpecialtiesFor(missionStationRow)[0] : undefined) ?? "builder",
+          targetSpecialty: (missionStationRow ? (missionSpecialtiesFor(missionStationRow).includes("explorer") ? "explorer" : missionSpecialtiesFor(missionStationRow)[0]) : undefined) ?? "builder",
         }}
         members={members}
         mission={null}
