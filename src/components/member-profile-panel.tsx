@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type SubmitEvent } from "react";
-import { Compass, Hammer, Search, Check, CircleAlert, X } from "lucide-react";
+import { Compass, Hammer, ShieldPlus, Check, CircleAlert, X } from "lucide-react";
 import { formatNmsFriendCode, isValidNmsFriendCode, memberSpecialties, normalizeNmsFriendCode, nmsPlatforms, type AllianceMember, type MemberRole, type MemberSpecialty, type NmsPlatform } from "@/lib/member-types";
 import { useLocale } from "@/components/locale-provider";
 
@@ -112,7 +112,7 @@ export function MemberProfilePanel({ member, onClose, onSaved, createOffline = f
             <legend>{t("common.how_do_you_play")} <small>{t("profile.choose_your_specialty")}</small></legend>
             <div className="specialty-options" role="radiogroup" aria-label={t("profile.nms_specialty")}>
               {memberSpecialties.map((item) => {
-                const Icon = item === "builder" ? Hammer : item === "ranger" ? Compass : Search;
+                const Icon = item === "builder" ? Hammer : item === "explorer" ? Compass : ShieldPlus;
                 return <label className={`specialty-option ${specialty === item ? "selected" : ""}`} key={item}>
                   <input checked={specialty === item} name="specialty" onChange={() => setSpecialty(item)} type="radio" value={item} />
                   <Icon size={18} />
