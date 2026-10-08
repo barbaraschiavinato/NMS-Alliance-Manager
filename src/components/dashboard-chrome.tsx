@@ -78,9 +78,10 @@ export function AllianceSidebar({ missionCount, stationCount, userCount, offline
     };
   }, []);
   const displayName = currentMember.nmsName || currentMember.name;
+  const displayRole = currentMember.displayRole ?? currentMember.role;
   let roleLabel = t("members.member_role_label");
-  if (currentMember.role === "admin") roleLabel = t("admin.administrator");
-  else if (currentMember.role === "moderator") roleLabel = t("common.moderator");
+  if (displayRole === "admin") roleLabel = t("admin.administrator");
+  else if (displayRole === "moderator") roleLabel = t("common.moderator");
   return (
     <aside className={currentMember.simpleView ? "sidebar sidebar-compact" : "sidebar"}>
       <Link className="brand" href="/">
@@ -131,9 +132,10 @@ export function DashboardTopbar({ currentMember, settings, sectionTitle = "Missi
     icon.removeAttribute("sizes");
   }, [settings.logoUrl, settings.name]);
 
+  const displayRole = currentMember.displayRole ?? currentMember.role;
   let roleLabel = t("members.member_role_label");
-  if (currentMember.role === "admin") roleLabel = t("admin.administrator");
-  else if (currentMember.role === "moderator") roleLabel = t("common.moderator");
+  if (displayRole === "admin") roleLabel = t("admin.administrator");
+  else if (displayRole === "moderator") roleLabel = t("common.moderator");
   return (
     <header className="topbar">
       <div className="breadcrumb"><strong>{t(sectionTitle)}</strong></div>

@@ -187,6 +187,8 @@ export const translations: TranslationCatalog = {
     "missions.five_part_progress": "Avanzamento dei cinque parametri",
     "missions.system_progress_current_of_total_complete": "Avanzamento sistema: {current} di {total} completati",
     "missions.mission_for": "Missione per",
+    "missions.mission_already_exists_for_specialty": "Esiste già una missione per questa specializzazione.",
+    "missions.only_create_and_assign_your_specialty": "Puoi creare e assegnare solo missioni per la tua specializzazione.",
     "missions.system_discoverer": "Scopritore del sistema",
     "missions.open_linked_station": "Apri la stazione collegata",
     "missions.mission_view": "Vista missioni",

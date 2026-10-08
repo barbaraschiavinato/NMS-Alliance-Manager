@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentMember, hasRole } from "@/lib/authorization";
 import { readAccessData, type AllianceMember } from "@/lib/access-store";
 import { readAlmanacResponse, readAlmanacResponses, writeAlmanacResponse } from "@/lib/almanac-store";
-import { decodePortalAddress, isDifferentPlanetInSameSystem, missionSpecialties, type MissionSpecialty } from "@/lib/missions";
+import { coveredSpecialties, decodePortalAddress, isDifferentPlanetInSameSystem, missionSpecialties, type MissionSpecialty } from "@/lib/missions";
 import { isEmailAddress } from "@/lib/member-types";
 import { addStationPortal, readAllStationPortals, readStationPortals, removeStationPortal, updateStationPortal } from "@/lib/stations-store";
 import { readMissions, writeMissions } from "@/lib/store";
@@ -231,7 +231,10 @@ export async function PATCH(request: Request) {
 }
 
 async function readStations(member: AllianceMember) {
-  const stations = hasRole(member, "moderator")
+  const canViewAllStations = hasRole(member, "moderator") ||
+    member.specialty === "explorer" ||
+    member.specialty === "builder";
+  const stations = canViewAllStations
     ? await readAllStationPortals()
     : (await readStationPortals(member.publicId)).map((station) => ({ ...station, ownerId: member.publicId }));
   const [almanacByPortal, missions, accessData] = await Promise.all([
@@ -246,6 +249,13 @@ async function readStations(member: AllianceMember) {
     const matchingMissions = missions.filter((mission) =>
       mission.systemAddress.toUpperCase() === station.portal && mission.galaxy === station.galaxy,
     );
+    const ownSpecialty = member.specialty;
+    const canOpenOwnSpecialtyMission = (ownSpecialty === "explorer" || ownSpecialty === "builder") &&
+      matchingMissions.some((mission) =>
+        coveredSpecialties(mission.targetSpecialty).includes(ownSpecialty) &&
+        ((mission.status === "pending" && !mission.assignedMemberId && !mission.assignedTo.trim()) ||
+          mission.assignedMemberId === member.publicId),
+      );
     const completedSpecialties = new Set<MissionSpecialty>();
     for (const mission of matchingMissions) {
       if (mission.targetSpecialty === "all") {
@@ -269,6 +279,7 @@ async function readStations(member: AllianceMember) {
       ...(owner?.image ? { ownerImage: owner.image } : {}),
       planet: almanacByPortal[station.portal]?.find((entry) => entry.galaxy === station.galaxy)?.response ?? null,
       hasMissions: matchingMissions.length > 0,
+      canOpenOwnSpecialtyMission,
       missionStatus: matchingMissions.length === 0
         ? "none"
         : matchingMissions.every((mission) => mission.status === "completed")

@@ -15,7 +15,9 @@ export async function getCurrentMember(options: Readonly<{ allowPending?: boolea
   if (member.membershipStatus === "blocked" && !options.allowBlocked) return null;
   if (member.membershipStatus === "pending" && !options.allowPending) return null;
   // La vista semplice limita admin e moderatori alle funzioni dell'utente normale, anche lato server.
-  return member.simpleView && member.role !== "user" ? { ...member, role: "user" } : member;
+  return member.simpleView && member.role !== "user"
+    ? { ...member, role: "user", displayRole: member.role }
+    : member;
 }
 
 const roleLevel: Record<MemberRole, number> = { user: 0, moderator: 1, admin: 2 };

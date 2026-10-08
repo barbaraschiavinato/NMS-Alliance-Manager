@@ -35,6 +35,7 @@ export type AllianceMember = {
   platforms: NmsPlatform[];
   specialty: MemberSpecialty | "";
   role: MemberRole;
+  displayRole?: MemberRole;
   membershipStatus: MembershipStatus;
   approvedBy: string;
   approvedAt: string;

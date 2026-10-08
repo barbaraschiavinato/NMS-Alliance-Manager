@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { canViewMission, isDifferentPlanetInSameSystem, isMissionInput, type Mission } from "@/lib/missions";
+import { canViewMission, isDifferentPlanetInSameSystem, isMissionInput, specialtyAlreadyCovered, type Mission } from "@/lib/missions";
 import { readMissions, writeMissions } from "@/lib/store";
 import { getCurrentMember, hasRole } from "@/lib/authorization";
 import { readAccessData } from "@/lib/access-store";
@@ -28,23 +28,38 @@ export async function POST(request: Request) {
   const member = await getCurrentMember();
   if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
   const isModerator = hasRole(member, "moderator");
-  if (!isModerator && member.specialty !== "ranger") {
+  const canCreateOwnSpecialtyMission = !isModerator &&
+    (member.specialty === "explorer" || member.specialty === "builder");
+  if (!isModerator && member.specialty !== "ranger" && !canCreateOwnSpecialtyMission) {
     return NextResponse.json({ error: "Permesso moderator richiesto." }, { status: 403 });
   }
   const input: unknown = await request.json().catch(() => null);
   if (!isMissionInput(input)) {
     return NextResponse.json({ error: "Dati missione non validi." }, { status: 400 });
   }
-  if (!isModerator && (
+  if (!isModerator && member.specialty === "ranger" && (
     input.stationOwnerMemberId !== member.publicId ||
     input.assignedMemberId ||
     !["explorer_builder", "explorer", "builder"].includes(input.targetSpecialty)
   )) {
     return NextResponse.json({ error: "I Ranger possono creare missioni solo per le proprie stazioni, per Esploratori e Costruttori." }, { status: 403 });
   }
+  if (canCreateOwnSpecialtyMission && (
+    input.targetSpecialty !== member.specialty ||
+    input.assignedMemberId !== member.publicId ||
+    !input.stationOwnerMemberId
+  )) {
+    return NextResponse.json({ error: "missions.only_create_and_assign_your_specialty" }, { status: 403 });
+  }
 
   try {
     const [missions, stations] = await Promise.all([readMissions(), readAllStationPortals()]);
+    if (
+      canCreateOwnSpecialtyMission &&
+      specialtyAlreadyCovered(input.targetSpecialty, missions, input.systemAddress, input.galaxy)
+    ) {
+      return NextResponse.json({ error: "missions.mission_already_exists_for_specialty" }, { status: 409 });
+    }
     const conflictsWithRegisteredPlanet = [
       ...missions.map((mission) => ({ portal: mission.systemAddress, galaxy: mission.galaxy })),
       ...stations.map((station) => ({ portal: station.portal, galaxy: station.galaxy })),

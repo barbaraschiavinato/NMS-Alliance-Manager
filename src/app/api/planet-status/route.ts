@@ -13,7 +13,7 @@ import {
   writePlanetSystemStatus,
 } from "@/lib/planet-system-status-store";
 import { readMissions } from "@/lib/store";
-import { readStationPortals } from "@/lib/stations-store";
+import { readAllStationPortals, readStationPortals } from "@/lib/stations-store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -45,10 +45,14 @@ export async function GET(request: Request) {
       !Number.isInteger(galaxy) || galaxy < 0 || galaxy > 255) {
       return NextResponse.json({ error: "Pianeta non valido." }, { status: 400 });
     }
-    const ownsStation = !hasRole(member, "moderator") && member.specialty === "ranger" &&
-      (await readStationPortals(member.publicId)).some((station) =>
-        station.portal === portal.toUpperCase() && station.galaxy === galaxy);
-    if (!hasRole(member, "moderator") && !ownsStation && !missions.some((mission) =>
+    const canViewAllStations = member.specialty === "explorer" || member.specialty === "builder";
+    const hasVisibleStation = canViewAllStations
+      ? (await readAllStationPortals()).some((station) =>
+        station.portal === portal.toUpperCase() && station.galaxy === galaxy)
+      : !hasRole(member, "moderator") && member.specialty === "ranger" &&
+        (await readStationPortals(member.publicId)).some((station) =>
+          station.portal === portal.toUpperCase() && station.galaxy === galaxy);
+    if (!hasRole(member, "moderator") && !hasVisibleStation && !missions.some((mission) =>
       mission.systemAddress.toUpperCase() === portal.toUpperCase() &&
       mission.galaxy === galaxy &&
       canViewMission(mission, member),

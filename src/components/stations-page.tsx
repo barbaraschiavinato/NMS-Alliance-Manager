@@ -36,10 +36,21 @@ type StationEntry = Readonly<{
   note?: string;
   planet: CachedPlanet | null;
   hasMissions: boolean;
+  canOpenOwnSpecialtyMission: boolean;
   missionStatus: StationMissionStatus;
   availableSpecialties: MissionSpecialty[];
 }>;
 type StationMissionSeed = Readonly<{ portal: string; galaxy: number; title: string; ownerMemberId: string }>;
+
+function canCreateMissionFromStation(station: StationEntry, member: AllianceMember, canManage: boolean) {
+  if (canManage) return station.availableSpecialties.length > 0;
+  if (member.specialty === "explorer" || member.specialty === "builder") {
+    return station.availableSpecialties.some((specialty) => specialty === member.specialty);
+  }
+  return member.specialty === "ranger" &&
+    station.ownerId === member.publicId &&
+    station.availableSpecialties.some((specialty) => ["explorer_builder", "explorer", "builder"].includes(specialty));
+}
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : null;
@@ -78,6 +89,7 @@ function parseStations(value: unknown): StationEntry[] {
       ...(typeof station.note === "string" ? { note: station.note } : {}),
       planet,
       hasMissions: station.hasMissions === true,
+      canOpenOwnSpecialtyMission: station.canOpenOwnSpecialtyMission === true,
       missionStatus: station.missionStatus === "in_progress" || station.missionStatus === "completed"
         ? station.missionStatus
         : "none",
@@ -212,13 +224,15 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
   const [profileOpen, setProfileOpen] = useState(false);
   const canSeeAll = pageMember.role === "moderator" || pageMember.role === "admin";
   const canCreateMissions = canSeeAll;
+  const canCreateOwnSpecialtyMission = !canSeeAll &&
+    (pageMember.specialty === "explorer" || pageMember.specialty === "builder");
   const missionStationRow = missionStation
     ? stations.find((station) => station.portal === missionStation.portal && station.galaxy === missionStation.galaxy)
     : undefined;
-  const isRanger = pageMember.specialty === "ranger";
   const [showAllStations, setShowAllStations] = useState(true);
   const viewMode = pageMember.simpleView ? "cards" : viewOverride ?? allianceSettings.defaultTableView;
   const searchedStations = useMemo(() => stations.filter((station) =>
+    (canSeeAll || canCreateMissionFromStation(station, pageMember, canCreateMissions) || station.canOpenOwnSpecialtyMission) &&
     (showAllStations || station.ownerId === pageMember.publicId) &&
     (!initialStation || (
       station.portal === initialStation.portal &&
@@ -227,7 +241,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
     )) &&
     (`${station.name ?? cachedPlanetType(station.planet)} ${station.note ?? ""} ${station.portal} ${station.ownerNmsName ?? ""} ${station.ownerName ?? ""} ${galaxyLabel(station.galaxy)}`.toLowerCase().includes(search.toLowerCase()) ||
       portalSearchMatches(station.portal, search)),
-  ), [initialStation, pageMember.publicId, search, showAllStations, stations]);
+  ), [canCreateMissions, canSeeAll, initialStation, pageMember, search, showAllStations, stations]);
   const stationCounts: Record<StationFilter, number> = {
     all: searchedStations.length,
     pending: searchedStations.filter((station) => station.missionStatus === "none").length,
@@ -470,9 +484,11 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
   }
 
   function missionSpecialtiesFor(station: StationEntry) {
-    return canCreateMissions
-      ? station.availableSpecialties
-      : station.availableSpecialties.filter((specialty) => ["explorer_builder", "explorer", "builder"].includes(specialty));
+    if (canCreateMissions) return station.availableSpecialties;
+    if (canCreateOwnSpecialtyMission) {
+      return station.availableSpecialties.filter((specialty) => specialty === pageMember.specialty);
+    }
+    return station.availableSpecialties.filter((specialty) => ["explorer_builder", "explorer", "builder"].includes(specialty));
   }
 
   async function createMissionFromStation(input: MissionInput) {
@@ -542,6 +558,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
               const statusKey = planetSystemStatusKey(station.portal, station.galaxy);
               const canEditStation = canSeeAll ||
                 (station.createdByMemberId ?? station.ownerId) === pageMember.publicId;
+              const canCreateMission = canCreateMissionFromStation(station, pageMember, canCreateMissions);
               const stationOwner = canSeeAll && <StationOwnerCell onOpenProfile={(memberId) => setProfileTarget({
                 memberId,
                 messageContext: {
@@ -581,9 +598,9 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
                     />
                   </div>}
                   <div className="station-actions">
-                  {(canCreateMissions || (isRanger && station.ownerId === pageMember.publicId)) && missionSpecialtiesFor(station).length > 0 && <button aria-label={t("stations.create_mission_from_portal", { portal: station.portal })} className="member-icon-action create-station-mission" data-tooltip={t("stations.create_mission_from_station")} onClick={() => setMissionStation({ portal: station.portal, galaxy: station.galaxy, title: cachedPlanetTitle(station.planet), ownerMemberId: station.ownerId })} type="button"><CirclePlus size={14} /></button>}
+                  {canCreateMission && <button aria-label={t("stations.create_mission_from_portal", { portal: station.portal })} className="member-icon-action create-station-mission" data-tooltip={t("stations.create_mission_from_station")} onClick={() => setMissionStation({ portal: station.portal, galaxy: station.galaxy, title: cachedPlanetTitle(station.planet), ownerMemberId: station.ownerId })} type="button"><CirclePlus size={14} /></button>}
                   {station.hasMissions
-                    ? canSeeAll
+                    ? canSeeAll || station.canOpenOwnSpecialtyMission
                       ? <Link aria-label={t("planet.open_missions_for_planet_portal", { portal: station.portal })} className="member-icon-action station-missions-link" data-tooltip={t("missions.open_associated_missions")} href={`/?search=${encodeURIComponent(station.portal)}`}><Crosshair size={14} /></Link>
                       : <span className="station-mission-lock">{t("missions.associated_mission")}</span>
                     : (canSeeAll || station.ownerId === pageMember.publicId) && <button aria-label={t("stations.remove_portal_portal_in_galaxy_from_owner_s_archive", { portal: station.portal, galaxy: galaxyLabel(station.galaxy), owner: stationOwnerName(station) })} className="member-icon-action delete-member" data-tooltip={t("stations.delete_station")} onClick={() => void removeStation(station.portal, station.galaxy, station.ownerId, stationOwnerName(station))} type="button"><Trash2 size={14} /></button>}
@@ -689,6 +706,8 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
       {missionStation && <MissionForm
         availableSpecialties={missionStationRow ? missionSpecialtiesFor(missionStationRow) : undefined}
         hideAddress
+        hideSpecialty={canCreateOwnSpecialtyMission}
+        hideSystemStatus={canCreateOwnSpecialtyMission}
         simplified={!canCreateMissions || pageMember.simpleView === true}
         simplifiedStatusRole={pageMember.specialty || "ranger"}
         initialValues={{
@@ -696,7 +715,13 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
           systemAddress: missionStation.portal,
           galaxy: missionStation.galaxy,
           stationOwnerMemberId: missionStation.ownerMemberId,
-          targetSpecialty: (missionStationRow ? (missionSpecialtiesFor(missionStationRow).includes("explorer") ? "explorer" : missionSpecialtiesFor(missionStationRow)[0]) : undefined) ?? "builder",
+          targetSpecialty: pageMember.specialty === "builder" || pageMember.specialty === "explorer"
+            ? pageMember.specialty
+            : (missionStationRow ? (missionSpecialtiesFor(missionStationRow).includes("explorer") ? "explorer" : missionSpecialtiesFor(missionStationRow)[0]) : undefined) ?? "builder",
+          ...(canCreateOwnSpecialtyMission ? {
+            assignedMemberId: pageMember.publicId,
+            assignedTo: pageMember.nmsName || pageMember.name,
+          } : {}),
         }}
         members={members}
         mission={null}

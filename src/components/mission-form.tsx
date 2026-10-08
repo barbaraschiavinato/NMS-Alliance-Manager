@@ -50,6 +50,8 @@ export function MissionForm({
   simplified = false,
   existingMissions = [],
   hideAddress = false,
+  hideSpecialty = false,
+  hideSystemStatus = false,
   minimal = false,
   simplifiedStatusRole = "ranger",
   onSystemStatusesSaved,
@@ -65,6 +67,8 @@ export function MissionForm({
   simplified?: boolean;
   existingMissions?: readonly Mission[];
   hideAddress?: boolean;
+  hideSpecialty?: boolean;
+  hideSystemStatus?: boolean;
   minimal?: boolean;
   simplifiedStatusRole?: string;
   onSystemStatusesSaved?: (portal: string, galaxy: number, statuses: MissionSystemStatus[]) => void;
@@ -105,7 +109,7 @@ export function MissionForm({
   useEffect(() => {
     const address = form.systemAddress;
     const galaxy = form.galaxy;
-    if (!/^[0-9a-f]{12}$/i.test(address) || !Number.isInteger(galaxy) || galaxy < 0 || galaxy > 255 ||
+    if (hideSystemStatus || !/^[0-9a-f]{12}$/i.test(address) || !Number.isInteger(galaxy) || galaxy < 0 || galaxy > 255 ||
       decodePortalAddress(address)?.errors.length !== 0) return;
     const controller = new AbortController();
     const params = new URLSearchParams({ portal: address, galaxy: String(galaxy) });
@@ -133,7 +137,7 @@ export function MissionForm({
         if (!controller.signal.aborted) setLoadedStatusKey(planetSystemStatusKey(address, galaxy));
       });
     return () => controller.abort();
-  }, [form.galaxy, form.systemAddress]);
+  }, [form.galaxy, form.systemAddress, hideSystemStatus]);
 
   async function updateSystemStatus(status: MissionSystemStatus, checked: boolean) {
     const nextStatuses = checked
@@ -264,12 +268,12 @@ export function MissionForm({
                 {galaxyNames.map((name, index) => <option key={index} value={index}>{name}</option>)}
               </select>
             </label>
-            <label className="field mission-for-field">
+            {!hideSpecialty && <label className="field mission-for-field">
               <span>{t("missions.mission_for")}</span>
               <select onChange={(event) => update("targetSpecialty", event.target.value as MissionSpecialty)} value={form.targetSpecialty}>
                 {(availableSpecialties ?? missionSpecialties).map((specialty) => <option disabled={(Boolean(mission) && (specialty === "all" || specialty === "explorer_builder")) || (form.systemAddress.length === 12 && specialty !== form.targetSpecialty && specialtyAlreadyCovered(specialty, existingMissions, form.systemAddress, form.galaxy, mission?.id))} key={specialty} value={specialty}>{t(targetNames[specialty])}</option>)}
               </select>
-            </label>
+            </label>}
             <label className="field">
               <span>{t("missions.system_discoverer")}</span>
               <select onChange={(event) => {
@@ -312,7 +316,7 @@ export function MissionForm({
                 <input max={100} min={0} onChange={(event) => update("progress", Number(event.target.value))} type="range" value={form.progress} />
               </label>
             )}
-            <fieldset className="system-status-fieldset system-status-visible">
+            {!hideSystemStatus && <fieldset className="system-status-fieldset system-status-visible">
               <legend>{t("planet.system_status_shared_by_planet")}</legend>
               {!currentPlanetKey && <p className="field-hint">{t("planet.enter_a_valid_portal_address_to_manage_planet_status")}</p>}
               {systemStatusesLoading && <p className="field-hint">{t("planet.loading_planet_status")}</p>}
@@ -332,7 +336,7 @@ export function MissionForm({
                   ))}
                 </div>
               )}
-            </fieldset>
+            </fieldset>}
           </div>
           <label className="field full-field mission-notes-field">
             <span>{t("missions.mission_notes")} <small>{t("missions.optional_max_1000_characters")}</small></span>
