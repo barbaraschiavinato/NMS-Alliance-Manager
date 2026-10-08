@@ -556,17 +556,12 @@ select { appearance: none; padding-right: 29px; background-image: linear-gradien
 .station-list-section { width: min(1180px, 100%); margin: 0 auto; }
 .station-dialog { width: min(560px, 100%); }
 .station-add-form .portal-field { margin-bottom: 0; }
-.station-list-heading { display: grid; grid-template-columns: minmax(0, 1fr) max-content; align-items: stretch; gap: 0 16px; margin-bottom: 8px; border-bottom: 1px solid #dfe4dc; }
-.station-list-heading h2 { margin: 0; color: var(--lime); font-size: 12px; font-weight: 650; }
-.station-list-heading-tools { display: flex; grid-column: 2; grid-row: 2; align-items: center; gap: 8px; }
-.station-tab-navigation { min-width: 0; grid-column: 1 / -1; grid-row: 1 / 3; display: flex; align-items: stretch; gap: 20px; overflow-x: auto; }
-.station-tab-navigation .member-filter-tabs { min-height: 43px; height: 43px; flex: 0 0 auto; margin: 0; border-bottom: 0; overflow: visible; }
-.station-filter-tabs { min-width: 0; }
-.station-scope-tabs { padding-left: 0; border-left: 0 !important; }
-.station-search { width: 194px; }
+.station-toolbar { margin-bottom: 0; }
+.members-toolbar.station-toolbar-simple { grid-template-columns: minmax(0, 1fr); }
+.members-toolbar.station-toolbar-simple .member-filter-tabs { grid-column: 1 / -1; }
 .station-list { margin: 0; padding: 0; list-style: none; }
 .station-list li { min-height: 48px; display: grid; grid-template-columns: minmax(215px, 235px) minmax(0, 1fr) minmax(30px, max-content); align-items: center; gap: 12px; padding: 10px 3px; border-bottom: 1px solid #e5e9e2; }
-.station-list-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; border-top: 0; }
+.station-list-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 12px; border-top: 0; }
 .station-list-cards li { min-height: 0; grid-template-columns: minmax(0, 1fr) max-content; align-items: start; gap: 10px; padding: 14px; color: #f1eee7; border: 1px solid #394548; border-radius: 4px; background: #171e21; }
 .station-card-title { min-width: 0; display: flex; grid-column: 1; grid-row: 1; align-items: center; gap: 10px; padding: 0; color: #f1eee7; border: 0; background: transparent; cursor: pointer; text-align: left; }
 .station-card-planet-image { width: 58px; height: 58px; flex: 0 0 58px; border: 1px solid #394548; border-radius: 3px; object-fit: cover; }
@@ -924,9 +919,6 @@ select { appearance: none; padding-right: 29px; background-image: linear-gradien
   .members-toolbar .member-search { width: 100%; grid-column: 1; grid-row: 2; }
   .members-toolbar .view-toggle { grid-column: 2; grid-row: 2; justify-self: end; }
   .member-card-grid { grid-template-columns: 1fr; }
-  .station-list-heading { align-items: flex-start; flex-direction: column; gap: 8px; }
-  .station-list-heading-tools { width: 100%; display: grid; grid-template-columns: max-content minmax(0, 1fr) 61px; gap: 8px; }
-  .station-list-heading-tools .station-search { width: 100%; min-width: 0; max-width: none; margin: 0; }
   .station-list li { grid-template-columns: minmax(0, 1fr) minmax(34px, max-content); align-items: start; gap: 8px; }
   .station-portal-code { grid-column: 1; grid-row: 1; }
   .station-planet-info-list { grid-column: 1; grid-row: 2; }
@@ -1090,10 +1082,6 @@ body:has(.sidebar-compact) .mission-notes-content, body:has(.sidebar-compact) .p
   .sidebar-compact ~ .main-panel .toolbar-actions { width: 100%; justify-content: flex-end; padding: 10px 0 2px; }
   .sidebar-compact ~ .main-panel .filter-tabs { width: 100%; justify-content: space-between; gap: 8px; overflow-x: auto; }
   .sidebar-compact ~ .main-panel .member-filter-tabs { height: 42px; overflow-x: auto; justify-content: flex-start; gap: 14px; }
-  .sidebar-compact ~ .main-panel .station-list-heading { grid-template-columns: minmax(0, 1fr); gap: 8px; }
-  .sidebar-compact ~ .main-panel .station-tab-navigation { width: 100%; grid-column: 1; grid-row: auto; }
-  .sidebar-compact ~ .main-panel .station-tab-navigation .member-filter-tabs { overflow: visible; }
-  .sidebar-compact ~ .main-panel .station-list-heading-tools { width: 100%; grid-column: 1; grid-row: auto; }
   .sidebar-compact ~ .main-panel .station-list-cards, .member-card-grid { grid-template-columns: 1fr; }
   .sidebar-compact ~ .main-panel .station-list-cards li { padding: 12px; }
   .sidebar-compact ~ .main-panel .station-system-status { flex-wrap: wrap; }

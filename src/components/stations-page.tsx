@@ -537,9 +537,8 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
           {(error || notice) && <p className={error ? "form-error" : "address-validation address-valid"}>{error ? <CircleAlert size={15} /> : null}{t(error || notice)}</p>}
 
           <section aria-label={t("stations.my_space_stations")} className="station-list-section">
-            <div className="station-list-heading">
-              <div className="station-tab-navigation">
-                <div aria-label={t("stations.filter_stations_by_mission_status")} className="member-filter-tabs station-filter-tabs" role="tablist">
+            <div className={`members-toolbar station-toolbar${pageMember.simpleView ? " station-toolbar-simple" : ""}`}>
+                <div aria-label={t("stations.filter_stations_by_mission_status")} className="member-filter-tabs" role="tablist">
                   <button
                     aria-selected={activeStationTab === "all" && stationFilter === "all"}
                     className={`member-filter-tab${activeStationTab === "all" && stationFilter === "all" ? " selected" : ""}`}
@@ -569,14 +568,11 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
                     type="button"
                   >{t(status === "pending" ? "common.pending_status_label" : status === "in_progress" ? "stations.filter_in_mission" : status === "completed" ? "stations.filter_mission_completed" : "stations.filter_with_notes")}<span>{stationCounts[status]}</span></button>)}
                 </div>
-              </div>
-              <div className="station-list-heading-tools">
-                {!pageMember.simpleView && <label className="search-field station-search"><Search size={15} /><input aria-label={t("stations.search_stations_by_portal_owner_or_galaxy_or_notes")} onChange={(event) => setSearch(event.target.value)} placeholder={t("stations.search_portal_username_galaxy_or_notes")} value={search} /></label>}
+                {!pageMember.simpleView && <label className="search-field member-search station-search"><Search size={15} /><input aria-label={t("stations.search_stations_by_portal_owner_or_galaxy_or_notes")} onChange={(event) => setSearch(event.target.value)} placeholder={t("stations.search_portal_username_galaxy_or_notes")} value={search} /></label>}
                 {!pageMember.simpleView && <div aria-label={t("stations.station_view")} className="view-toggle" role="group">
                   <button aria-label={t("navigation.list_view")} aria-pressed={viewMode === "list"} className={viewMode === "list" ? "selected" : ""} onClick={() => setViewOverride("list")} title={t("navigation.list_view")} type="button"><List size={15} /></button>
                   <button aria-label={t("navigation.card_view")} aria-pressed={viewMode === "cards"} className={viewMode === "cards" ? "selected" : ""} onClick={() => setViewOverride("cards")} title={t("navigation.card_view")} type="button"><LayoutGrid size={15} /></button>
                 </div>}
-              </div>
             </div>
             {loading && <div className="station-list-empty station-list-loading"><LoadingSpinner /></div>}
             {!loading && visibleStations.length === 0 && <p className={`station-list-empty${stations.length === 0 ? " station-list-empty-no-saved" : ""}`}>{t(stations.length === 0 ? "stations.no_saved_portals" : "stations.no_stations_found")}</p>}
