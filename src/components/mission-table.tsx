@@ -65,7 +65,7 @@ function MissionRowAction({ mission, currentMember, canManage, requestedSpecialt
   const { t } = useLocale();
   if (canManage) {
     return <span className="mission-row-actions">
-      {requestedSpecialty && onCreateRanger && <button aria-label={t(requestTooltipKeys[requestedSpecialty])} className={`row-action row-action-${requestedSpecialty}`} data-tooltip={t(requestTooltipKeys[requestedSpecialty])} onClick={() => onCreateRanger(mission)} type="button">{requestedSpecialty === "builder" ? <Hammer size={15} /> : requestedSpecialty === "explorer" ? <Compass size={15} /> : <ShieldPlus size={15} />}</button>}
+      {requestedSpecialty && onCreateRanger && <button aria-label={t(requestTooltipKeys[requestedSpecialty])} className={`row-action row-action-${requestedSpecialty}`} data-tooltip={t(requestTooltipKeys[requestedSpecialty])} onClick={() => onCreateRanger(mission)} type="button">{requestedSpecialty === "builder" ? <Hammer size={15} /> : requestedSpecialty === "ranger" ? <Compass size={15} /> : requestedSpecialty === "explorer" ? <Search size={15} /> : <ShieldPlus size={15} />}</button>}
       <button aria-label={`${t("common.edit")} ${mission.title}`} className="row-action" data-tooltip={t("missions.edit_mission")} onClick={() => onEdit(mission)} type="button"><Pencil size={15} /></button>
       <button aria-label={`${t("common.delete")} ${mission.title}`} className="row-action row-action-delete" data-tooltip={t("missions.delete_mission")} onClick={() => onDeleteMission(mission)} type="button"><Trash2 size={15} /></button>
     </span>;
