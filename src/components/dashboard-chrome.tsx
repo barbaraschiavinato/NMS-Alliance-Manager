@@ -23,6 +23,8 @@ import { useLocale } from "@/components/locale-provider";
 import { LanguageSelector } from "@/components/language-selector";
 import { useRequestSearchReset } from "@/components/navigation-search-reset";
 
+const counterRefreshMs = 2 * 60 * 1000;
+
 export function AllianceSidebar({ missionCount, stationCount, userCount, offlineCount, currentMember, settings, activeSection }: Readonly<{
   missionCount: number;
   stationCount: number;
@@ -59,9 +61,18 @@ export function AllianceSidebar({ missionCount, stationCount, userCount, offline
     void loadUnread();
     void loadHelpCount();
     window.addEventListener("help-requests-changed", loadHelpCount);
+    function refreshCounters() {
+      if (document.visibilityState !== "visible") return;
+      void loadUnread();
+      void loadHelpCount();
+    }
+    const interval = window.setInterval(refreshCounters, counterRefreshMs);
+    document.addEventListener("visibilitychange", refreshCounters);
     window.addEventListener("messages-unread-changed", loadUnread);
     return () => {
       controller.abort();
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", refreshCounters);
       window.removeEventListener("messages-unread-changed", loadUnread);
       window.removeEventListener("help-requests-changed", loadHelpCount);
     };
@@ -81,7 +92,7 @@ export function AllianceSidebar({ missionCount, stationCount, userCount, offline
         <Link className={`nav-item ${activeSection === "stazioni" ? "active" : ""}`} href="/stations" onClick={resetSearch}><Orbit size={17} /><span>{t("stations.stations")}</span><span className="nav-count">{stationCount}</span></Link>
         {(currentMember.role === "admin" || currentMember.role === "moderator") && <Link className={`nav-item ${activeSection === "utenti" ? "active" : ""}`} href="/users" onClick={resetSearch}><UsersRound size={17} /><span>{t("members.users")}</span><span className="nav-count">{userCount ?? 0}</span></Link>}
         {(currentMember.role === "admin" || currentMember.role === "moderator") && <Link className={`nav-item ${activeSection === "offline" ? "active" : ""}`} href="/offline-players" onClick={resetSearch}><UserRoundX size={17} /><span>{t("members.offline_players")}</span><span className="nav-count">{offlineCount ?? 0}</span></Link>}
-        <Link className={`nav-item ${activeSection === "aiuto" ? "active" : ""}`} href="/help-requests" onClick={resetSearch}><Siren size={17} /><span>{t("help.help_requests")}</span><span className="nav-count">{helpCount}</span></Link>
+        <Link className={`nav-item ${activeSection === "aiuto" ? "active" : ""}`} href="/help-requests" onClick={resetSearch}><Siren size={17} /><span>{t("help.help_requests")}</span><span className={helpCount > 0 ? "nav-count nav-unread nav-unread-active" : "nav-count nav-unread"}>{helpCount}</span></Link>
         <Link className={`nav-item ${activeSection === "messaggi" ? "active" : ""}`} href="/messages" onClick={resetSearch}><Mail size={17} /><span>{t("messages.messages")}</span><span aria-label={t("messages.unread_count", { count: unreadCount })} className={unreadCount > 0 ? "nav-count nav-unread nav-unread-active" : "nav-count nav-unread"} title={t("messages.unread_count", { count: unreadCount })}>{unreadCount}</span></Link>
       </nav>
       <div className="sidebar-bottom">
