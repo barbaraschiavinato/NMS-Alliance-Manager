@@ -111,7 +111,7 @@ export function OfflinePlayersPage({ memberActivity, currentMember, alliance, mi
             </div>
             {error && <p className="form-error"><CircleAlert size={15} />{t(error)}</p>}
             {notice && <p className="address-validation address-valid"><Check size={14} />{t(notice)}</p>}
-            {loading ? <LoadingSpinner /> : <div className="members-table-wrap">
+            {loading ? <LoadingSpinner /> : offline.length === 0 ? <p className="messages-empty">{t("members.no_offline_players")}</p> : <div className="members-table-wrap">
               <table className="members-table offline-table">
                 <thead><tr><th>{t("members.member_column_heading")}</th><th>{t("profile.friend_code_column_heading")}</th><th>{t("profile.platforms_column_heading")}</th><th>{t("profile.specialty_column_heading")}</th><th>{t("common.actions_column_heading")}</th></tr></thead>
                 <tbody>
@@ -135,7 +135,6 @@ export function OfflinePlayersPage({ memberActivity, currentMember, alliance, mi
                       <button aria-label={t("common.delete_email", { email: player.nmsName })} className="member-icon-action delete-member" data-tooltip={t("members.delete_user")} onClick={() => void remove(player)} type="button"><Trash2 size={14} /></button>
                     </div></td>
                   </tr>)}
-                  {offline.length === 0 && <tr><td className="members-empty" colSpan={5}>{t("members.no_offline_players")}</td></tr>}
                 </tbody>
               </table>
             </div>}

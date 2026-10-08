@@ -185,7 +185,7 @@ export function MembersPage({ memberActivity, currentMember, alliance, missionCo
         {error && <p className="form-error"><CircleAlert size={15} />{t(error)}</p>}
         {notice && <p className="address-validation address-valid"><Check size={14} />{t(notice)}</p>}
 
-        {loadingMembers ? <LoadingSpinner /> : viewMode === "list" ? <div className="members-table-wrap">
+        {loadingMembers ? <LoadingSpinner /> : visibleMembers.length === 0 ? <p className="messages-empty">{emptyMessage}</p> : viewMode === "list" ? <div className="members-table-wrap">
           <table className="members-table">
             <thead><tr><th>{t("members.member_column_heading")}</th><th>{t("profile.friend_code_column_heading")}</th><th>{t("profile.platforms_column_heading")}</th><th>{t("profile.specialty_column_heading")}</th><th>{t("common.status_column_heading")}</th><th>{t("members.role_column_heading")}</th><th>{t("common.actions_column_heading")}</th></tr></thead>
             <tbody>
@@ -200,7 +200,6 @@ export function MembersPage({ memberActivity, currentMember, alliance, missionCo
                 <td>{t(roleLabels[member.role])}</td>
                 <td><MemberActions canChangeRole={canChangeRole} currentMemberEmail={pageMember.email} member={member} onDelete={(target) => void deleteMember(target)} onRole={(email, role) => void patchMember(email, { role })} onStatus={(email, membershipStatus) => void patchMember(email, { membershipStatus })} /></td>
               </tr>)}
-              {visibleMembers.length === 0 && <tr><td className="members-empty" colSpan={7}>{emptyMessage}</td></tr>}
             </tbody>
           </table>
         </div> : <div className="member-card-grid">
@@ -228,7 +227,6 @@ export function MembersPage({ memberActivity, currentMember, alliance, missionCo
               <MemberActions canChangeRole={canChangeRole} currentMemberEmail={pageMember.email} member={member} onDelete={(target) => void deleteMember(target)} onRole={(email, role) => void patchMember(email, { role })} onStatus={(email, membershipStatus) => void patchMember(email, { membershipStatus })} />
             </div>
           </article>)}
-          {visibleMembers.length === 0 && <p className="member-cards-empty">{emptyMessage}</p>}
         </div>}
         {!pageMember.simpleView && <footer className="members-list-footer">{loadingMembers ? t("members.loading_users") : t("members.showing_visible_of_total_users", { visible: visibleMembers.length, total: counts.all })}</footer>}
       </section>
