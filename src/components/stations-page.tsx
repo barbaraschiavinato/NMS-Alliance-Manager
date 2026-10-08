@@ -520,11 +520,11 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
         <DashboardTopbar currentMember={pageMember} onAdminOpen={() => setAdminOpen(true)} onProfileOpen={() => setProfileOpen(true)} sectionTitle={t("stations.stations")} settings={allianceSettings} />
         <MissionHero
           actionLabel={t("stations.add_station")}
-          description={t(canSeeAll ? "admin.browse_alliance_registered_portals_and_their_planets" : "stations.register_portals_for_systems_you_have_discovered")}
+          description={t(canSeeAll || canCreateOwnSpecialtyMission ? "admin.browse_alliance_registered_portals_and_their_planets" : "stations.register_portals_for_systems_you_have_discovered")}
           onCreate={openAddStation}
           settings={allianceSettings}
           showCreate
-          title={t(canSeeAll ? "stations.space_stations" : "stations.my_stations")}
+          title={t(canSeeAll || canCreateOwnSpecialtyMission ? "stations.space_stations" : "stations.my_stations")}
         />
         <main className="content-wrap stations-page">
           {(error || notice) && <p className={error ? "form-error" : "address-validation address-valid"}>{error ? <CircleAlert size={15} /> : null}{t(error || notice)}</p>}
