@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentMember, hasRole } from "@/lib/authorization";
 import { linkOfflineMember } from "@/lib/offline-members";
 import { createOfflineMember, updateOfflineMember, isMemberProfileInput, deleteMember, readAccessData, memberRoles, updateMemberApproval, updateMemberRole } from "@/lib/access-store";
+import { readMissions, writeMissions } from "@/lib/store";
 import { membershipStatuses } from "@/lib/member-types";
 
 const profileConflictMessages = { name: "members.duplicate_in_game_name", code: "members.duplicate_friend_code" } as const;
@@ -51,8 +52,20 @@ export async function DELETE(request: Request) {
   if (!input || typeof input !== "object" || typeof (input as Record<string, unknown>).email !== "string") {
     return NextResponse.json({ error: "Email membro non valida." }, { status: 400 });
   }
+  const removedEmail = (input as { email: string }).email.trim().toLowerCase();
+  const access = await readAccessData();
+  const removedMember = access.members.find((candidate) => candidate.email === removedEmail);
+  const adminMember = access.members.find((candidate) => candidate.email === process.env.ALLIANCE_ADMIN_EMAIL?.trim().toLowerCase());
   const removed = await deleteMember((input as { email: string }).email, member.role, member.email);
   if (!removed) return NextResponse.json({ error: "Membro non trovato o non eliminabile con il tuo ruolo." }, { status: 404 });
+  if (removedMember && adminMember) {
+    const missions = await readMissions();
+    if (missions.some((mission) => mission.stationOwnerMemberId === removedMember.publicId)) {
+      await writeMissions(missions.map((mission) => mission.stationOwnerMemberId === removedMember.publicId
+        ? { ...mission, stationOwnerMemberId: adminMember.publicId, stationOwnerName: adminMember.nmsName || adminMember.name }
+        : mission));
+    }
+  }
   return NextResponse.json({ ok: true });
 }
 export async function POST(request: Request) {

@@ -53,7 +53,7 @@ export async function PATCH(request: Request, context: RouteContext) {
       const stationOwner = input.stationOwnerMemberId
         ? await findStationOwner(input.stationOwnerMemberId, input.systemAddress, input.galaxy)
         : null;
-      if (input.stationOwnerMemberId && !stationOwner) {
+      if (input.stationOwnerMemberId && !stationOwner && input.stationOwnerMemberId !== existingMission.stationOwnerMemberId) {
         return NextResponse.json({ error: "Lo scopritore selezionato non risulta proprietario della stazione." }, { status: 400 });
       }
       updated = {

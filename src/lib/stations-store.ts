@@ -43,14 +43,16 @@ function normalizeStationIndex(value: unknown, members: Awaited<ReturnType<typeo
   if (!value || typeof value !== "object" || Array.isArray(value)) return { index: {}, migrated: false };
 
   const index: StationIndex = {};
+  const adminEmail = process.env.ALLIANCE_ADMIN_EMAIL?.trim().toLowerCase();
   let migrated = false;
   for (const [storedOwner, entries] of Object.entries(value)) {
     if (!Array.isArray(entries)) continue;
     const owner = members.find((candidate) =>
       candidate.publicId === storedOwner || candidate.email.toLowerCase() === storedOwner.trim().toLowerCase(),
     );
-    if (!owner) throw new Error("Stored station archive owner could not be resolved to a member.");
-    if (storedOwner !== owner.publicId) migrated = true;
+    const fallbackOwner = owner ?? members.find((candidate) => candidate.email.toLowerCase() === adminEmail);
+    const ownerKey = fallbackOwner?.publicId ?? storedOwner;
+    if (fallbackOwner && storedOwner !== fallbackOwner.publicId) migrated = true;
     const stations = normalizeStationEntries(entries).map((station) => {
       const creator = station.createdByEmail
         ? members.find((candidate) => candidate.email.toLowerCase() === station.createdByEmail?.toLowerCase())
@@ -65,8 +67,8 @@ function normalizeStationIndex(value: unknown, members: Awaited<ReturnType<typeo
         ...(legacyCreatorMemberId ? { createdByMemberId: legacyCreatorMemberId } : {}),
       };
     });
-    index[owner.publicId] = [...new Map(
-      [...(index[owner.publicId] ?? []), ...stations]
+    index[ownerKey] = [...new Map(
+      [...(index[ownerKey] ?? []), ...stations]
         .map((station) => [`${station.portal}:${station.galaxy}`, station] as const),
     ).values()];
   }
