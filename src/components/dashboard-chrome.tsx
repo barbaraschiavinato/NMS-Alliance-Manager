@@ -5,6 +5,7 @@ import Link from "next/link";
 import {
   CirclePlus,
   Crosshair,
+  Siren,
   Mail,
   MessageCircle,
   Orbit,
@@ -29,11 +30,12 @@ export function AllianceSidebar({ missionCount, stationCount, userCount, offline
   offlineCount?: number;
   currentMember: AllianceMember;
   settings: AllianceSettings;
-  activeSection: "missioni" | "utenti" | "offline" | "stazioni" | "messaggi";
+  activeSection: "missioni" | "utenti" | "offline" | "stazioni" | "messaggi" | "aiuto";
 }>) {
   const { t } = useLocale();
   const resetSearch = useRequestSearchReset();
   const [unreadCount, setUnreadCount] = useState(0);
+  const [helpCount, setHelpCount] = useState(0);
   useEffect(() => {
     const controller = new AbortController();
     async function loadUnread() {
@@ -45,11 +47,23 @@ export function AllianceSidebar({ missionCount, stationCount, userCount, offline
         // Il contatore è solo informativo.
       }
     }
+    async function loadHelpCount() {
+      try {
+        const response = await fetch("/api/help-requests?count=1", { cache: "no-store", signal: controller.signal });
+        const body: unknown = await response.json();
+        if (response.ok && body && typeof body === "object" && "count" in body && typeof body.count === "number") setHelpCount(body.count);
+      } catch {
+        // Il contatore è solo informativo.
+      }
+    }
     void loadUnread();
+    void loadHelpCount();
+    window.addEventListener("help-requests-changed", loadHelpCount);
     window.addEventListener("messages-unread-changed", loadUnread);
     return () => {
       controller.abort();
       window.removeEventListener("messages-unread-changed", loadUnread);
+      window.removeEventListener("help-requests-changed", loadHelpCount);
     };
   }, []);
   const displayName = currentMember.nmsName || currentMember.name;
@@ -67,6 +81,7 @@ export function AllianceSidebar({ missionCount, stationCount, userCount, offline
         <Link className={`nav-item ${activeSection === "stazioni" ? "active" : ""}`} href="/stations" onClick={resetSearch}><Orbit size={17} /><span>{t("stations.stations")}</span><span className="nav-count">{stationCount}</span></Link>
         {(currentMember.role === "admin" || currentMember.role === "moderator") && <Link className={`nav-item ${activeSection === "utenti" ? "active" : ""}`} href="/users" onClick={resetSearch}><UsersRound size={17} /><span>{t("members.users")}</span><span className="nav-count">{userCount ?? 0}</span></Link>}
         {(currentMember.role === "admin" || currentMember.role === "moderator") && <Link className={`nav-item ${activeSection === "offline" ? "active" : ""}`} href="/offline-players" onClick={resetSearch}><UserRoundX size={17} /><span>{t("members.offline_players")}</span><span className="nav-count">{offlineCount ?? 0}</span></Link>}
+        <Link className={`nav-item ${activeSection === "aiuto" ? "active" : ""}`} href="/help-requests" onClick={resetSearch}><Siren size={17} /><span>{t("help.help_requests")}</span><span className="nav-count">{helpCount}</span></Link>
         <Link className={`nav-item ${activeSection === "messaggi" ? "active" : ""}`} href="/messages" onClick={resetSearch}><Mail size={17} /><span>{t("messages.messages")}</span><span aria-label={t("messages.unread_count", { count: unreadCount })} className={unreadCount > 0 ? "nav-count nav-unread nav-unread-active" : "nav-count nav-unread"} title={t("messages.unread_count", { count: unreadCount })}>{unreadCount}</span></Link>
       </nav>
       <div className="sidebar-bottom">

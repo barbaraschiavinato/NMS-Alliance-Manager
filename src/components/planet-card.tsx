@@ -1,6 +1,6 @@
 import Image from "next/image";
-import { useEffect, useState } from "react";
-import { X } from "lucide-react";
+import { useEffect, useState, type SubmitEvent } from "react";
+import { Siren, X } from "lucide-react";
 import { GlyphStrip } from "@/components/portal-address-field";
 import { galaxyLabel } from "@/lib/galaxies";
 import { useLocale } from "@/components/locale-provider";
@@ -136,6 +136,12 @@ export function PlanetCard({ portal, galaxy, title: cardTitle, contextLabel, mis
   const [selectedPortal, setSelectedPortal] = useState(portal);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [helpOpen, setHelpOpen] = useState(false);
+  const [helpBody, setHelpBody] = useState("");
+  const [helpError, setHelpError] = useState("");
+  const [helpAcknowledged, setHelpAcknowledged] = useState(false);
+  const [helpSending, setHelpSending] = useState(false);
+  const [helpSent, setHelpSent] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -199,6 +205,33 @@ export function PlanetCard({ portal, galaxy, title: cardTitle, contextLabel, mis
     return () => controller.abort();
   }, [galaxy, portal]);
 
+  async function sendHelpRequest(event: SubmitEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setHelpSending(true);
+    setHelpError("");
+    try {
+      const response = await fetch("/api/help-requests", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: helpBody, subject: title, portal: selectedPortal, galaxy }),
+      });
+      const result: unknown = await response.json().catch(() => null);
+      if (!response.ok) {
+        const key = result && typeof result === "object" && "error" in result ? result.error : null;
+        throw new Error(typeof key === "string" ? key : "help.request_unable_to_save");
+      }
+      setHelpSent(true);
+      setHelpOpen(false);
+      setHelpBody("");
+      setHelpAcknowledged(false);
+      window.dispatchEvent(new Event("help-requests-changed"));
+    } catch (error_: unknown) {
+      setHelpError(error_ instanceof Error ? error_.message : "help.request_unable_to_save");
+    } finally {
+      setHelpSending(false);
+    }
+  }
+
   const planet = planetEntries.find((entry) => entry.portal === selectedPortal)?.planet ?? null;
   const lines = asRecord(planet?.lines);
   const band = asRecord(lines?.band);
@@ -251,7 +284,33 @@ export function PlanetCard({ portal, galaxy, title: cardTitle, contextLabel, mis
               <section aria-labelledby="planet-intro-title" className="planet-card-intro">
                 {imageUrl && <Image alt="" className="planet-card-image" height={256} src={imageUrl} unoptimized width={256} />}
                 <div>
-                  <h3 id="planet-intro-title">{title}</h3>
+                  <h3 id="planet-intro-title">{title}
+                    <button
+                      aria-label={t("help.request_help")}
+                      className="member-icon-action planet-help-button"
+                      onClick={() => {
+                        setHelpSent(false);
+                        setHelpError("");
+                        setHelpAcknowledged(false);
+                        setHelpOpen((open) => !open);
+                      }}
+                      title={t("help.request_help")}
+                      type="button"
+                    ><Siren size={15} /></button>
+                  </h3>
+                  {helpSent && <p className="address-validation address-valid">{t("help.request_sent")}</p>}
+                  {helpOpen && <form className="planet-help-form" onSubmit={(event) => void sendHelpRequest(event)}>
+                    <label className="field">
+                      <span>{t("help.request_help_for", { subject: title })}</span>
+                      <textarea autoFocus maxLength={2000} onChange={(event) => setHelpBody(event.target.value)} required rows={3} value={helpBody} />
+                    </label>
+                    <label className="message-acknowledgement">
+                  <input checked={helpAcknowledged} onChange={(event) => setHelpAcknowledged(event.target.checked)} required type="checkbox" />
+                  <span>{t("profile.message_mission_only_notice")}</span>
+                </label>
+                    {helpError && <p className="form-error">{t(helpError)}</p>}
+                    <button className="primary-button" disabled={helpSending || !helpBody.trim() || !helpAcknowledged} type="submit">{t("help.send_request")}</button>
+                  </form>}
                   {contextLabel && <p>{contextLabel}</p>}
                   {planet.paradise === true && <span className="planet-paradise-flag">{t("planet.paradise")}</span>}
                   <span className="planet-intro-code">{selectedPortal}</span>

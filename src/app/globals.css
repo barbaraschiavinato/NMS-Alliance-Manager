@@ -915,6 +915,8 @@ select { appearance: none; padding-right: 29px; background-image: linear-gradien
 .member-icon-action.member-link-action:hover { color: var(--green); border-color: var(--green); background: #203835; }
 .member-icon-action.member-station-filter { color: #6cb4ff; border-color: #2f4c6b; background: #16222e; }
 .member-icon-action.member-station-filter:hover { color: #6cb4ff; border-color: #6cb4ff; background: #1c2d3f; }
+.member-icon-action.member-planet-action { color: #b48cf2; border-color: #4f3d73; background: #221b30; }
+.member-icon-action.member-planet-action:hover { color: #b48cf2; border-color: #b48cf2; background: #2c2340; }
 .message-acknowledgement { display: flex; align-items: flex-start; gap: 8px; color: var(--ink); font-size: 10px; line-height: 1.4; cursor: pointer; }
 .message-acknowledgement input { width: 14px; height: 14px; margin-top: 1px; flex: 0 0 14px; accent-color: var(--lime); }
 
@@ -1054,3 +1056,9 @@ body:has(.sidebar-compact) .dialog-heading .icon-button svg { width: 26px; heigh
 @media (max-width: 820px) {
   .nav-item > span.nav-unread-active { min-width: 17px; height: 17px; position: absolute; top: 3px; right: 3px; display: grid; margin: 0; padding: 0 4px; place-items: center; color: #111719; border-radius: 9px; background: var(--lime); font-size: 10px; font-weight: 700; line-height: 1; }
 }
+
+#planet-intro-title { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.planet-help-button { width: 36px; height: 36px; flex: none; margin-left: auto; color: #f5c518; border-color: #f5c518; }
+.planet-help-button svg { width: 20px; height: 20px; }
+.planet-help-button:hover { color: #ffdd55; border-color: #ffdd55; }
+.planet-help-form { display: grid; gap: 8px; margin-top: 10px; }

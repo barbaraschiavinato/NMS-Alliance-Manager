@@ -13,7 +13,7 @@ export type PrivateMessage = Readonly<{
   recipientMemberId?: string;
   body: string;
   subject?: string;
-  subjectType?: "planet" | "mission";
+  subjectType?: "planet" | "mission" | "help";
   portal?: string;
   galaxy?: number;
   planetNumber?: number;
@@ -46,10 +46,10 @@ function parseMessages(value: unknown): StoredPrivateMessage[] {
       (message.senderEmail !== undefined && typeof message.senderEmail !== "string") ||
       (message.recipientEmail !== undefined && typeof message.recipientEmail !== "string") ||
       (!message.senderMemberId && !message.senderEmail) ||
-      (!message.recipientMemberId && !message.recipientEmail) ||
+      (!message.recipientMemberId && !message.recipientEmail && message.subjectType !== "help") ||
       typeof message.body !== "string" ||
       (message.subject !== undefined && (typeof message.subject !== "string" || message.subject.length > 160)) ||
-      (message.subjectType !== undefined && message.subjectType !== "planet" && message.subjectType !== "mission") ||
+      (message.subjectType !== undefined && message.subjectType !== "planet" && message.subjectType !== "mission" && message.subjectType !== "help") ||
       (message.portal !== undefined && (typeof message.portal !== "string" || !/^[0-9A-F]{12}$/i.test(message.portal))) ||
       (message.galaxy !== undefined && (typeof message.galaxy !== "number" || !Number.isInteger(message.galaxy) || message.galaxy < 0 || message.galaxy > 255)) ||
       (message.planetNumber !== undefined && (typeof message.planetNumber !== "number" || !Number.isInteger(message.planetNumber) || message.planetNumber < 0 || message.planetNumber > 6)) ||
@@ -100,6 +100,37 @@ async function readMessages(): Promise<PrivateMessage[]> {
 
 export async function readPrivateMessages(): Promise<PrivateMessage[]> {
   return readMessages();
+}
+
+export async function readHelpRequests(): Promise<PrivateMessage[]> {
+  return (await readMessages()).filter((message) => message.subjectType === "help");
+}
+
+export async function deleteHelpRequest(requestId: string): Promise<boolean> {
+  const messages = await readMessages();
+  const retained = messages.filter((message) =>
+    !(message.subjectType === "help" && (message.id === requestId || message.threadId === requestId)),
+  );
+  if (retained.length === messages.length) return false;
+  await writeMessages(retained);
+  return true;
+}
+
+export async function saveHelpReply(senderMemberId: string, body: string, requestId: string): Promise<boolean> {
+  const messages = await readMessages();
+  const request = messages.find((message) => message.id === requestId && message.subjectType === "help" && !message.replyToId);
+  if (!request) return false;
+  messages.push({
+    id: randomUUID(),
+    threadId: request.id,
+    replyToId: request.id,
+    senderMemberId: senderMemberId.trim(),
+    body,
+    subjectType: "help",
+    createdAt: new Date().toISOString(),
+  });
+  await writeMessages(messages);
+  return true;
 }
 
 export async function deletePrivateMessageBranch(messageId: string): Promise<number> {
@@ -162,6 +193,27 @@ export async function savePrivateMessage(
     body,
     ...context,
     unread: true,
+    createdAt: new Date().toISOString(),
+  });
+  await writeMessages(messages);
+}
+
+export async function saveHelpRequest(
+  senderMemberId: string,
+  body: string,
+  context: Readonly<{ subject: string; portal: string; galaxy: number }>,
+): Promise<void> {
+  const messages = await readMessages();
+  const id = randomUUID();
+  messages.push({
+    id,
+    threadId: id,
+    senderMemberId: senderMemberId.trim(),
+    body,
+    subjectType: "help",
+    subject: context.subject,
+    portal: context.portal,
+    galaxy: context.galaxy,
     createdAt: new Date().toISOString(),
   });
   await writeMessages(messages);

@@ -35,6 +35,11 @@ export function MemberProfilePanel({ member, onClose, onSaved, createOffline = f
   const offlineMode = createOffline || editOffline;
   const [saved, setSaved] = useState(false);
 
+  function close() {
+    if (saved) window.location.reload();
+    else onClose();
+  }
+
   function togglePlatform(platform: NmsPlatform) {
     setPlatforms((current) => current.includes(platform)
       ? current.filter((item) => item !== platform)
@@ -69,7 +74,7 @@ export function MemberProfilePanel({ member, onClose, onSaved, createOffline = f
       <dialog aria-labelledby="profile-title" aria-modal="true" className="mission-dialog profile-dialog" open>
         <div className="dialog-heading">
           <div><span className="eyebrow">{t("profile.member_profile")}</span><h2 id="profile-title">{createOffline ? t("members.add_offline_player") : editOffline ? t("members.edit_offline_player") : t("profile.my_nms_profile")}</h2></div>
-          <button aria-label={t("common.close")} className="icon-button" onClick={onClose} type="button"><X size={18} /></button>
+          <button aria-label={t("common.close")} className="icon-button" onClick={close} type="button"><X size={18} /></button>
         </div>
         <form onSubmit={submit}>
           {!offlineMode && <div className="profile-identity">
@@ -124,7 +129,7 @@ export function MemberProfilePanel({ member, onClose, onSaved, createOffline = f
           {saved && <p className="address-validation address-valid"><Check size={14} />{t("profile.profile_saved")}</p>}
           <div className="dialog-actions">
             <span className="action-spacer" />
-            <button className="quiet-button" onClick={onClose} type="button">{t("common.close")}</button>
+            <button className="quiet-button" onClick={close} type="button">{t("common.close")}</button>
             <button className="primary-button" disabled={busy || !nmsName.trim() || !isValidNmsFriendCode(nmsCode) || !specialty} type="submit">{busy ? t("common.saving") : t("profile.save_profile")}</button>
           </div>
         </form>

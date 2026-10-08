@@ -35,9 +35,10 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "messages.delete_not_allowed" }, { status: 403 });
     }
     const visibleMessages = messages.filter((message) =>
+      message.subjectType !== "help" && (
       wantsAll ||
       message.senderMemberId === member.publicId ||
-      message.recipientMemberId === member.publicId,
+      message.recipientMemberId === member.publicId),
     );
     const membersById = new Map(accessData.members.map((profile) => [profile.publicId, profile]));
     const responseMessages = visibleMessages
