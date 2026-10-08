@@ -12,13 +12,13 @@ import {
 import { SystemAddressField, type SystemAddressLookup, type SystemAddressValidation } from "@/components/portal-address-field";
 import type { AllianceMember } from "@/lib/access-store";
 import type { MemberSpecialty } from "@/lib/member-types";
-import { missionSpecialties, type MissionSpecialty } from "@/lib/missions";
+import { missionSpecialties, specialtyAlreadyCovered, type MissionSpecialty } from "@/lib/missions";
 import { galaxyNames, galaxyLabel } from "@/lib/galaxies";
-import { isMissionSystemStatus, missionSystemStatuses, planetSystemStatusKey, type MissionSystemStatus } from "@/lib/planet-system-status";
+import { isMissionSystemStatus, missionSystemStatuses, missionSystemStatusRoles, planetSystemStatusKey, type MissionSystemStatus } from "@/lib/planet-system-status";
 import { useLocale } from "@/components/locale-provider";
 
 const specialtyNames: Record<MemberSpecialty, string> = { builder: "common.builder", ranger: "common.ranger", explorer: "common.explorer" };
-const targetNames: Record<MissionSpecialty, string> = { all: "common.all", builder: "common.builders", ranger: "common.ranger", explorer: "common.explorers", other: "common.other" };
+const targetNames: Record<MissionSpecialty, string> = { all: "common.all", explorer_builder: "common.explorers_and_builders", builder: "common.builders", ranger: "common.ranger", explorer: "common.explorers", other: "common.other" };
 export type StationOwnerOption = Readonly<{ portal: string; galaxy: number; ownerId: string; ownerName: string }>;
 
 const emptyMission: MissionInput = {
@@ -31,7 +31,7 @@ const emptyMission: MissionInput = {
   systemVerified: false,
   systemLabelFromAlmanac: false,
   assignedTo: "",
-  targetSpecialty: "all",
+  targetSpecialty: "explorer",
   dueDate: new Date().toISOString().slice(0, 10),
   status: "pending",
   priority: "normal",
@@ -47,6 +47,11 @@ export function MissionForm({
   stationOwners,
   initialValues,
   availableSpecialties,
+  simplified = false,
+  existingMissions = [],
+  hideAddress = false,
+  minimal = false,
+  simplifiedStatusRole = "ranger",
   onSystemStatusesSaved,
 }: Readonly<{
   mission: Mission | null;
@@ -57,6 +62,11 @@ export function MissionForm({
   stationOwners: StationOwnerOption[];
   initialValues?: Partial<MissionInput>;
   availableSpecialties?: MissionSpecialty[];
+  simplified?: boolean;
+  existingMissions?: readonly Mission[];
+  hideAddress?: boolean;
+  minimal?: boolean;
+  simplifiedStatusRole?: string;
   onSystemStatusesSaved?: (portal: string, galaxy: number, statuses: MissionSystemStatus[]) => void;
 }>) {
   const { t } = useLocale();
@@ -186,7 +196,8 @@ export function MissionForm({
     setSaving(true);
     setError("");
     try {
-      await onSave(form);
+      const hasProgress = form.targetSpecialty === "ranger" || form.targetSpecialty === "explorer" || form.targetSpecialty === "builder";
+      await onSave(hasProgress ? form : { ...form, progress: 0 });
       onClose();
     } catch (error_) {
       setError(error_ instanceof Error ? error_.message : t("errors.save_failed"));
@@ -217,12 +228,12 @@ export function MissionForm({
           </div>
           <button aria-label={t("common.close")} className="icon-button" onClick={onClose} type="button"><X size={18} /></button>
         </div>
-        <form onSubmit={submit}>
+        <form className={[simplified && "mission-form-simplified", hideAddress && "mission-form-hide-address", minimal && "mission-form-minimal"].filter(Boolean).join(" ") || undefined} onSubmit={submit}>
           <label className="field full-field">
             <span>{t("missions.mission_name")}</span>
             <input autoFocus maxLength={120} onChange={(event) => update("title", event.target.value)} placeholder={t("common.e_g_map_the_sector")} required value={form.title} />
           </label>
-          <label className="field full-field">
+          <label className="field full-field mission-objective-field">
             <span>{t("common.objective")}</span>
             <textarea onChange={(event) => update("description", event.target.value)} placeholder={t("common.details_and_completion_criteria")} rows={3} value={form.description} />
           </label>
@@ -241,7 +252,7 @@ export function MissionForm({
                 update("systemLabelFromAlmanac", false);
               }} placeholder={t("common.a_label_to_identify_it")} value={form.system} />
             </label>
-            <label className="field">
+            <label className="field mission-galaxy-field">
               <span>{t("stations.galaxy")} <b>{galaxyLabel(form.galaxy)}</b></span>
               <select aria-label={t("stations.galaxy")} onChange={(event) => {
                 update("galaxy", Number(event.target.value));
@@ -253,10 +264,10 @@ export function MissionForm({
                 {galaxyNames.map((name, index) => <option key={index} value={index}>{name}</option>)}
               </select>
             </label>
-            <label className="field">
+            <label className="field mission-for-field">
               <span>{t("missions.mission_for")}</span>
               <select onChange={(event) => update("targetSpecialty", event.target.value as MissionSpecialty)} value={form.targetSpecialty}>
-                {(availableSpecialties ?? missionSpecialties).map((specialty) => <option disabled={Boolean(mission) && specialty === "all"} key={specialty} value={specialty}>{t(targetNames[specialty])}</option>)}
+                {(availableSpecialties ?? missionSpecialties).map((specialty) => <option disabled={(Boolean(mission) && (specialty === "all" || specialty === "explorer_builder")) || (form.systemAddress.length === 12 && specialty !== form.targetSpecialty && specialtyAlreadyCovered(specialty, existingMissions, form.systemAddress, form.galaxy, mission?.id))} key={specialty} value={specialty}>{t(targetNames[specialty])}</option>)}
               </select>
             </label>
             <label className="field">
@@ -289,25 +300,27 @@ export function MissionForm({
                 {missionPriorities.map((priority) => <option key={priority} value={priority}>{t(`common.${priority}`)}</option>)}
               </select>
             </label>
-            <label className="field">
+            <label className="field mission-status-field">
               <span>{t("common.status_field_label")}</span>
               <select onChange={(event) => update("status", event.target.value as MissionStatus)} value={form.status}>
                 {missionStatuses.map((status) => <option key={status} value={status}>{t(`missions.status_${status}`)}</option>)}
               </select>
             </label>
-            <label className="field mission-progress-field">
-              <span>{t("missions.progress_field_label")} <b>{form.progress}%</b></span>
-              <input max={100} min={0} onChange={(event) => update("progress", Number(event.target.value))} type="range" value={form.progress} />
-            </label>
-            <fieldset className="system-status-fieldset">
+            {(form.targetSpecialty === "ranger" || form.targetSpecialty === "explorer" || form.targetSpecialty === "builder") && (
+              <label className={`field mission-progress-field mission-role-progress-${form.targetSpecialty}`}>
+                <span>{t("missions.progress_field_label")} {t(`common.${form.targetSpecialty}`)} <b>{form.progress}%</b></span>
+                <input max={100} min={0} onChange={(event) => update("progress", Number(event.target.value))} type="range" value={form.progress} />
+              </label>
+            )}
+            <fieldset className="system-status-fieldset system-status-visible">
               <legend>{t("planet.system_status_shared_by_planet")}</legend>
               {!currentPlanetKey && <p className="field-hint">{t("planet.enter_a_valid_portal_address_to_manage_planet_status")}</p>}
               {systemStatusesLoading && <p className="field-hint">{t("planet.loading_planet_status")}</p>}
               {systemStatusesError && <p className="form-error"><CircleAlert size={14} />{t(systemStatusesError)}</p>}
               {currentPlanetKey && !systemStatusesLoading && loadedStatusErrorKey !== currentPlanetKey && (
                 <div className="system-status-options">
-                  {missionSystemStatuses.map((status) => (
-                    <label className="system-status-option" key={status}>
+                  {missionSystemStatuses.filter((status) => !simplified || missionSystemStatusRoles[status] === simplifiedStatusRole).map((status) => (
+                    <label className={`system-status-option system-status-option-${status === "data_error" ? "error" : missionSystemStatusRoles[status]}`} key={status}>
                       <input
                         checked={loadedStatusKey === currentPlanetKey && systemStatuses.includes(status)}
                         disabled={systemStatusesSaving || !addressComplete}

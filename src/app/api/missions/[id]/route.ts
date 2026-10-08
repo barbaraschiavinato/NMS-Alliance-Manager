@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { isDifferentPlanetInSameSystem, isMissionInput, isMissionStatus, type MissionStatus } from "@/lib/missions";
+import { isDifferentPlanetInSameSystem, isMissionInput, isMissionStatus, specialtyAlreadyCovered, type MissionStatus } from "@/lib/missions";
 import { readMissions, writeMissions } from "@/lib/store";
 import { getCurrentMember, hasRole } from "@/lib/authorization";
 import { isValidNmsFriendCode } from "@/lib/member-types";
@@ -34,6 +34,9 @@ export async function PATCH(request: Request, context: RouteContext) {
         entry.portal,
         entry.galaxy,
       ));
+      if (input.targetSpecialty !== existingMission.targetSpecialty && specialtyAlreadyCovered(input.targetSpecialty, missions, input.systemAddress, input.galaxy, id)) {
+        return NextResponse.json({ error: "Esiste già una missione di questo tipo per la stazione." }, { status: 409 });
+      }
       if (conflictsWithRegisteredPlanet) {
         return NextResponse.json({ error: "errors.another_planet_from_system_already_registered" }, { status: 409 });
       }

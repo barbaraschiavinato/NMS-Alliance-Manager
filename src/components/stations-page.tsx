@@ -17,7 +17,7 @@ import { MissionSystemProgress } from "@/components/mission-system-progress";
 import type { AllianceMember, AllianceSettings } from "@/lib/access-store";
 import { galaxyNames, galaxyLabel } from "@/lib/galaxies";
 import { decodePortalAddress, missionSpecialties, portalSearchMatches, type Mission, type MissionInput, type MissionSpecialty } from "@/lib/missions";
-import { isMissionSystemStatus, planetSystemStatusKey, type MissionSystemStatus, type PlanetSystemStatuses } from "@/lib/planet-system-status";
+import { editableSystemStatusRoles, isMissionSystemStatus, planetSystemStatusKey, type MissionSystemStatus, type PlanetSystemStatuses } from "@/lib/planet-system-status";
 import { useLocale } from "@/components/locale-provider";
 import { useNavigationSearchState } from "@/components/navigation-search-reset";
 
@@ -212,6 +212,10 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
   const [profileOpen, setProfileOpen] = useState(false);
   const canSeeAll = pageMember.role === "moderator" || pageMember.role === "admin";
   const canCreateMissions = canSeeAll;
+  const missionStationRow = missionStation
+    ? stations.find((station) => station.portal === missionStation.portal && station.galaxy === missionStation.galaxy)
+    : undefined;
+  const isRanger = pageMember.specialty === "ranger";
   const [showAllStations, setShowAllStations] = useState(true);
   const viewMode = pageMember.simpleView ? "cards" : viewOverride ?? allianceSettings.defaultTableView;
   const searchedStations = useMemo(() => stations.filter((station) =>
@@ -465,6 +469,12 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
     }
   }
 
+  function missionSpecialtiesFor(station: StationEntry) {
+    return canCreateMissions
+      ? station.availableSpecialties
+      : station.availableSpecialties.filter((specialty) => ["explorer_builder", "explorer", "builder"].includes(specialty));
+  }
+
   async function createMissionFromStation(input: MissionInput) {
     const response = await fetch("/api/missions", {
       method: "POST",
@@ -565,12 +575,13 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
                     <MissionSystemProgress
                       disabled={savingStatusKeys.includes(statusKey)}
                       editable
+                      editableRoles={editableSystemStatusRoles(pageMember)}
                       onToggle={(status, checked) => void toggleStationSystemStatus(station.portal, station.galaxy, status, checked)}
                       statuses={planetStatuses[statusKey] ?? []}
                     />
                   </div>}
                   <div className="station-actions">
-                  {canCreateMissions && station.availableSpecialties.length > 0 && <button aria-label={t("stations.create_mission_from_portal", { portal: station.portal })} className="member-icon-action create-station-mission" data-tooltip={t("stations.create_mission_from_station")} onClick={() => setMissionStation({ portal: station.portal, galaxy: station.galaxy, title: cachedPlanetTitle(station.planet), ownerMemberId: station.ownerId })} type="button"><CirclePlus size={14} /></button>}
+                  {(canCreateMissions || (isRanger && station.ownerId === pageMember.publicId)) && missionSpecialtiesFor(station).length > 0 && <button aria-label={t("stations.create_mission_from_portal", { portal: station.portal })} className="member-icon-action create-station-mission" data-tooltip={t("stations.create_mission_from_station")} onClick={() => setMissionStation({ portal: station.portal, galaxy: station.galaxy, title: cachedPlanetTitle(station.planet), ownerMemberId: station.ownerId })} type="button"><CirclePlus size={14} /></button>}
                   {station.hasMissions
                     ? canSeeAll
                       ? <Link aria-label={t("planet.open_missions_for_planet_portal", { portal: station.portal })} className="member-icon-action station-missions-link" data-tooltip={t("missions.open_associated_missions")} href={`/?search=${encodeURIComponent(station.portal)}`}><Crosshair size={14} /></Link>
@@ -676,13 +687,16 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
       {adminOpen && pageMember.role === "admin" && <AdminPanel onClose={() => setAdminOpen(false)} onSaved={setAllianceSettings} />}
       {profileOpen && <MemberProfilePanel member={pageMember} onClose={() => setProfileOpen(false)} onSaved={(profile) => setPageMember((current) => ({ ...current, ...profile }))} />}
       {missionStation && <MissionForm
-        availableSpecialties={stations.find((station) => station.portal === missionStation.portal && station.galaxy === missionStation.galaxy)?.availableSpecialties}
+        availableSpecialties={missionStationRow ? missionSpecialtiesFor(missionStationRow) : undefined}
+        hideAddress
+        simplified={!canCreateMissions || pageMember.simpleView === true}
+        simplifiedStatusRole={pageMember.specialty || "ranger"}
         initialValues={{
           title: missionStation.title,
           systemAddress: missionStation.portal,
           galaxy: missionStation.galaxy,
           stationOwnerMemberId: missionStation.ownerMemberId,
-          targetSpecialty: stations.find((station) => station.portal === missionStation.portal && station.galaxy === missionStation.galaxy)?.availableSpecialties[0] ?? "builder",
+          targetSpecialty: (missionStationRow ? missionSpecialtiesFor(missionStationRow)[0] : undefined) ?? "builder",
         }}
         members={members}
         mission={null}

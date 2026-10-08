@@ -188,7 +188,8 @@ kbd { display: inline-flex; align-items: center; gap: 2px; padding: 2px 4px; col
 .mission-card-progress .progress-cell { min-width: 100px; flex: 1; justify-content: flex-end; }
 .mission-card-actions { display: flex; align-items: center; justify-content: space-between; padding-top: 10px; border-top: 1px solid #354044; }
 .mission-card-action-buttons { display: flex; align-items: center; gap: 5px; margin-left: auto; }
-.mission-system-progress { display: inline-flex; align-items: center; gap: 2px; }
+.mission-system-progress { display: inline-flex; align-items: center; gap: 10px; }
+.mission-system-progress-group { display: inline-flex; align-items: center; gap: 2px; }
 .mission-system-progress-item { width: 20px; height: 24px; position: relative; z-index: 0; display: grid; flex: 0 0 20px; place-items: center; cursor: default; outline: none; }
 .mission-system-progress-item-editable { cursor: pointer; }
 .mission-system-progress-item input { position: absolute; z-index: 2; inset: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; opacity: 0; }
@@ -200,6 +201,12 @@ kbd { display: inline-flex; align-items: center; gap: 2px; padding: 2px 4px; col
 .mission-system-progress-item:focus-visible .mission-system-progress-square,
 .mission-system-progress-item:has(input:focus-visible) .mission-system-progress-square { outline: 1px solid #72d1c4; outline-offset: 2px; }
 .mission-system-progress-square-done { border-color: #72d1c4; background: #72d1c4; box-shadow: 0 0 5px #72d1c455; }
+.mission-system-progress-square-builder { border-color: #6a4a28; }
+.mission-system-progress-square-ranger { border-color: #2f6a43; }
+.mission-system-progress-square-explorer { border-color: #2b538c; }
+.mission-system-progress-square-builder.mission-system-progress-square-done { border-color: #ffb45d; background: #ffb45d; box-shadow: 0 0 5px #ffb45d55; }
+.mission-system-progress-square-ranger.mission-system-progress-square-done { border-color: #5fd68a; background: #5fd68a; box-shadow: 0 0 5px #5fd68a55; }
+.mission-system-progress-square-explorer.mission-system-progress-square-done { border-color: #4d9bff; background: #4d9bff; box-shadow: 0 0 5px #4d9bff55; }
 .mission-system-progress-square-error { border-color: #ef8067; background: #ef8067; box-shadow: 0 0 5px #ef806755; }
 .mission-cards-empty { grid-column: 1 / -1; padding: 22px 0; color: #748075; text-align: center; font-size: 10px; }
 .mission-table { width: 100%; min-width: 1160px; border-collapse: collapse; text-align: left; }
@@ -233,8 +240,8 @@ kbd { display: inline-flex; align-items: center; gap: 2px; padding: 2px 4px; col
 .badge { display: inline-flex; align-items: center; padding: 4px 6px; border: 1px solid #354044; border-radius: 3px; background: #1a2124; font-size: 8px; line-height: 1.2; white-space: nowrap; }
 .badge--specialty { color: #a4adae; }
 .badge--specialty-builder { color: #ffb45d; border-color: #6a4a28; background: #2b2115; }
-.badge--specialty-ranger { color: #72d1c4; border-color: #315b55; background: #192a29; }
-.badge--specialty-explorer { color: #91bce0; border-color: #3d566b; background: #1c2731; }
+.badge--specialty-ranger { color: #5fd68a; border-color: #2f6a43; background: #17291e; }
+.badge--specialty-explorer { color: #4d9bff; border-color: #2b538c; background: #16233a; }
 .sector-cell, .assignee-cell { display: inline-flex; align-items: center; gap: 7px; }
 .sector-dot { width: 6px; height: 6px; border-radius: 50%; background: #d4a767; }
 .system-cell { display: grid; gap: 5px; justify-items: start; }
@@ -279,6 +286,12 @@ kbd { display: inline-flex; align-items: center; gap: 2px; padding: 2px 4px; col
 .progress-track { width: 68px; height: 4px; overflow: hidden; background: #26312f; }
 .progress-track > span { height: 100%; display: block; background: #72d1c4; }
 .progress-cell-editable input[type="range"] { width: 68px; height: 14px; margin: 0; accent-color: #72d1c4; cursor: pointer; }
+.progress-cell-ranger .progress-track > span { background: #5fd68a; }
+.progress-cell-ranger input[type="range"] { accent-color: #5fd68a; }
+.progress-cell-explorer .progress-track > span { background: #4d9bff; }
+.progress-cell-explorer input[type="range"] { accent-color: #4d9bff; }
+.progress-cell-builder .progress-track > span { background: #ffb45d; }
+.progress-cell-builder input[type="range"] { accent-color: #ffb45d; }
 .mission-card-progress .progress-cell-editable input[type="range"] { width: min(120px, 100%); }
 .mission-notes-button { width: 29px; height: 29px; display: grid; flex: 0 0 29px; place-items: center; padding: 0; color: #e4b478; border: 1px solid #394548; border-radius: 3px; background: #1a2124; cursor: pointer; }
 .mission-notes-button { position: relative; }
@@ -297,6 +310,7 @@ kbd { display: inline-flex; align-items: center; gap: 2px; padding: 2px 4px; col
 .mission-station-link[data-tooltip]::after { position: absolute; z-index: 30; right: 0; bottom: calc(100% + 7px); padding: 6px 8px; color: #f1eee7; border: 1px solid #394548; border-radius: 3px; background: #111719; box-shadow: 0 4px 14px #0008; content: attr(data-tooltip); font-size: 9px; font-weight: 500; line-height: 1.2; opacity: 0; pointer-events: none; text-transform: none; transform: translateY(3px); transition: opacity .12s, transform .12s; white-space: nowrap; }
 .mission-station-link[data-tooltip]:hover::after,
 .mission-station-link[data-tooltip]:focus-visible::after { opacity: 1; transform: translateY(0); }
+.row-action-ranger { color: #5fd68a; }
 .row-action-delete { color: #a34f43; }
 .row-action-delete:hover, .delete-member:hover { color: #ef8067; }
 .claim-button { min-height: 27px; padding: 0 9px; color: #355b43; border: 1px solid #cbd9c6; background: #eef4e9; cursor: pointer; font-size: 9px; font-weight: 700; }
@@ -328,8 +342,24 @@ select { appearance: none; padding-right: 29px; background-image: linear-gradien
 .field input::placeholder, .field textarea::placeholder { color: #a4ada5; }
 .full-field { margin-bottom: 14px; }
 .field input[type="range"] { width: 100%; accent-color: #71925f; }
-.mission-dialog .mission-progress-field input[type="range"] { accent-color: #72d1c4; color-scheme: dark; }
-.mission-dialog .mission-progress-field > span b { color: #72d1c4; }
+.mission-form-simplified .form-grid > :not(.mission-for-field, .system-status-visible),
+.mission-form-simplified .mission-notes-field,
+.mission-form-simplified .portal-field,
+.mission-form-minimal .mission-for-field,
+.mission-form-minimal .mission-status-field,
+.mission-form-minimal .system-status-fieldset { display: none; }
+.mission-form-hide-address .portal-field,
+.mission-form-hide-address .mission-galaxy-field,
+.mission-form-hide-address .mission-progress-field { display: none; }
+.mission-role-progress { display: grid; gap: 4px; }
+.mission-role-progress-ranger > span b { color: #5fd68a; }
+.mission-role-progress-ranger input[type="range"] { accent-color: #5fd68a; }
+.mission-role-progress-explorer > span b { color: #4d9bff; }
+.mission-role-progress-explorer input[type="range"] { accent-color: #4d9bff; }
+.mission-role-progress-builder > span b { color: #ffb45d; }
+.mission-role-progress-builder input[type="range"] { accent-color: #ffb45d; }
+.mission-dialog .mission-progress-field input[type="range"] {  color-scheme: dark; }
+
 .portal-field { display: grid; gap: 8px; }
 .portal-field-heading { display: flex; align-items: center; justify-content: space-between; color: #647268; font-family: "SFMono-Regular", Consolas, monospace; font-size: 8px; letter-spacing: .5px; }
 .portal-field-heading > span:last-child { color: #89948a; font-size: 7px; }
@@ -666,6 +696,18 @@ select { appearance: none; padding-right: 29px; background-image: linear-gradien
 .system-status-option:has(input:checked) { border-color: #315b55; background: #192a29; }
 .system-status-option input { width: 14px; height: 14px; flex: 0 0 14px; margin: 0; accent-color: #72d1c4; }
 .system-status-option:focus-within { outline: 1px solid #72d1c4; outline-offset: 1px; }
+.system-status-option-ranger { border-color: #2f6a43; }
+.system-status-option-ranger:has(input:checked) { border-color: #5fd68a; background: #17291e; }
+.system-status-option-ranger input { accent-color: #5fd68a; }
+.system-status-option-explorer { border-color: #2b538c; }
+.system-status-option-explorer:has(input:checked) { border-color: #4d9bff; background: #16233a; }
+.system-status-option-explorer input { accent-color: #4d9bff; }
+.system-status-option-error { border-color: #7a3a2f; }
+.system-status-option-error:has(input:checked) { border-color: #ef8067; background: #2d1a17; }
+.system-status-option-error input { accent-color: #ef8067; }
+.system-status-option-builder { border-color: #6a4a28; }
+.system-status-option-builder:has(input:checked) { border-color: #ffb45d; background: #2b2115; }
+.system-status-option-builder input { accent-color: #ffb45d; }
 .system-status-option input:disabled { cursor: not-allowed; }
 .system-status-fieldset .form-error { grid-column: 1 / -1; }
 .mission-dialog .dialog-heading .eyebrow,
@@ -944,7 +986,8 @@ select { appearance: none; padding-right: 29px; background-image: linear-gradien
 .sidebar-compact ~ .main-panel .mission-card-system .glyph-strip { min-height: 30px; gap: 4px; }
 .sidebar-compact ~ .main-panel .mission-card-system .glyph-slot { width: 28px; height: 30px; flex-basis: 28px; }
 .sidebar-compact ~ .main-panel .mission-card-system .glyph-strip img { width: 28px; height: 28px; }
-.sidebar-compact ~ .main-panel .mission-system-progress { gap: 4px; }
+.sidebar-compact ~ .main-panel .mission-system-progress { gap: 12px; }
+.sidebar-compact ~ .main-panel .mission-system-progress-group { gap: 4px; }
 .sidebar-compact ~ .main-panel .mission-system-progress-item { width: 30px; height: 34px; flex-basis: 30px; }
 .sidebar-compact ~ .main-panel .mission-system-progress-square { width: 18px; height: 18px; border-radius: 2px; }
 body:has(.sidebar-compact) .planet-dialog { width: 100%; height: calc(100vh - 44px); max-height: none; padding: 32px; }

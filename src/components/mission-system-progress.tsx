@@ -1,13 +1,18 @@
 "use client";
 
 import { useLocale } from "@/components/locale-provider";
-import { missionSystemStatuses, type MissionSystemStatus } from "@/lib/planet-system-status";
+import { missionSystemStatuses, missionSystemStatusRoles, type MissionSystemStatus } from "@/lib/planet-system-status";
 
 const progressStatuses = missionSystemStatuses.filter((status) => status !== "data_error");
 
-export function MissionSystemProgress({ statuses, editable, disabled = false, onToggle }: Readonly<{
+const statusRoles = missionSystemStatusRoles;
+
+export const roleOrder = ["ranger", "explorer", "builder"];
+
+export function MissionSystemProgress({ statuses, editable, editableRoles = null, disabled = false, onToggle }: Readonly<{
   statuses: MissionSystemStatus[];
   editable: boolean;
+  editableRoles?: readonly string[] | null;
   disabled?: boolean;
   onToggle: (status: MissionSystemStatus, checked: boolean) => void;
 }>) {
@@ -23,10 +28,12 @@ export function MissionSystemProgress({ statuses, editable, disabled = false, on
     className="mission-system-progress"
     role="group"
   >
-    {progressStatuses.map((status) => {
+    {roleOrder.map((role) => <span className="mission-system-progress-group" key={role}>
+    {progressStatuses.filter((status) => statusRoles[status] === role).map((status) => {
+      const itemEditable = editable && (!editableRoles || editableRoles.includes(statusRoles[status]));
       const tooltip = t(hasDataError ? "system.data_error" : status);
-      return <label aria-label={tooltip} className={`mission-system-progress-item${editable ? " mission-system-progress-item-editable" : ""}`} key={status} title={tooltip}>
-        {editable && <input
+      return <label aria-label={tooltip} className={`mission-system-progress-item${itemEditable ? " mission-system-progress-item-editable" : ""}`} key={status} title={tooltip}>
+        {itemEditable && <input
           aria-label={tooltip}
           checked={statuses.includes(status)}
           disabled={disabled}
@@ -37,10 +44,11 @@ export function MissionSystemProgress({ statuses, editable, disabled = false, on
           aria-hidden="true"
           className={hasDataError
             ? "mission-system-progress-square mission-system-progress-square-error"
-            : `mission-system-progress-square${statuses.includes(status) ? " mission-system-progress-square-done" : ""}`}
+            : `mission-system-progress-square mission-system-progress-square-${statusRoles[status]}${statuses.includes(status) ? " mission-system-progress-square-done" : ""}`}
         />
         <span aria-hidden="true" className="mission-system-progress-tooltip">{tooltip}</span>
       </label>;
     })}
+    </span>)}
   </span>;
 }

@@ -3,6 +3,7 @@ import { getCurrentMember, hasRole } from "@/lib/authorization";
 import { canViewMission, decodePortalAddress } from "@/lib/missions";
 import {
   isMissionSystemStatus,
+  missionSystemStatusRoles,
   missionSystemStatuses,
   type MissionSystemStatus,
 } from "@/lib/planet-system-status";
@@ -12,6 +13,7 @@ import {
   writePlanetSystemStatus,
 } from "@/lib/planet-system-status-store";
 import { readMissions } from "@/lib/store";
+import { readStationPortals } from "@/lib/stations-store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -43,7 +45,10 @@ export async function GET(request: Request) {
       !Number.isInteger(galaxy) || galaxy < 0 || galaxy > 255) {
       return NextResponse.json({ error: "Pianeta non valido." }, { status: 400 });
     }
-    if (!hasRole(member, "moderator") && !missions.some((mission) =>
+    const ownsStation = !hasRole(member, "moderator") && member.specialty === "ranger" &&
+      (await readStationPortals(member.publicId)).some((station) =>
+        station.portal === portal.toUpperCase() && station.galaxy === galaxy);
+    if (!hasRole(member, "moderator") && !ownsStation && !missions.some((mission) =>
       mission.systemAddress.toUpperCase() === portal.toUpperCase() &&
       mission.galaxy === galaxy &&
       canViewMission(mission, member),
@@ -73,8 +78,21 @@ export async function PATCH(request: Request) {
         mission.systemAddress.toUpperCase() === input.portal.toUpperCase() &&
         mission.galaxy === input.galaxy,
       );
-      if (!assignedToMember) {
+      const ownsStation = !assignedToMember && member.specialty === "ranger" &&
+        (await readStationPortals(member.publicId)).some((station) =>
+          station.portal === input.portal.toUpperCase() && station.galaxy === input.galaxy);
+      if (!assignedToMember && !ownsStation) {
         return NextResponse.json({ error: "Puoi aggiornare lo stato solo di un pianeta con una missione assegnata a te." }, { status: 403 });
+      }
+    }
+    if (!hasRole(member, "moderator")) {
+      const current = await readPlanetSystemStatus(input.portal, input.galaxy);
+      const changed = [
+        ...input.systemStatuses.filter((status) => !current.includes(status)),
+        ...current.filter((status) => !input.systemStatuses.includes(status)),
+      ];
+      if (changed.some((status) => missionSystemStatusRoles[status] !== member.specialty)) {
+        return NextResponse.json({ error: "Puoi aggiornare solo gli stati del tuo gruppo." }, { status: 403 });
       }
     }
     const systemStatuses = await writePlanetSystemStatus(input.portal, input.galaxy, input.systemStatuses);

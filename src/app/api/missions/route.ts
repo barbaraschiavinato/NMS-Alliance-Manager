@@ -27,12 +27,20 @@ export async function GET() {
 export async function POST(request: Request) {
   const member = await getCurrentMember();
   if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
-  if (!hasRole(member, "moderator")) {
+  const isModerator = hasRole(member, "moderator");
+  if (!isModerator && member.specialty !== "ranger") {
     return NextResponse.json({ error: "Permesso moderator richiesto." }, { status: 403 });
   }
   const input: unknown = await request.json().catch(() => null);
   if (!isMissionInput(input)) {
     return NextResponse.json({ error: "Dati missione non validi." }, { status: 400 });
+  }
+  if (!isModerator && (
+    input.stationOwnerMemberId !== member.publicId ||
+    input.assignedMemberId ||
+    !["explorer_builder", "explorer", "builder"].includes(input.targetSpecialty)
+  )) {
+    return NextResponse.json({ error: "I Ranger possono creare missioni solo per le proprie stazioni, per Esploratori e Costruttori." }, { status: 403 });
   }
 
   try {
@@ -63,9 +71,11 @@ export async function POST(request: Request) {
     }
     const targetSpecialties = input.targetSpecialty === "all"
       ? ["builder", "ranger", "explorer"] as const
-      : [input.targetSpecialty];
+      : input.targetSpecialty === "explorer_builder"
+        ? ["builder", "explorer"] as const
+        : [input.targetSpecialty];
     const createdMissions: Mission[] = targetSpecialties.map((targetSpecialty) => {
-      const assignedMemberMatches = input.targetSpecialty !== "all" || assignedMember?.specialty === targetSpecialty;
+      const assignedMemberMatches = input.targetSpecialty !== "all" && input.targetSpecialty !== "explorer_builder" || assignedMember?.specialty === targetSpecialty;
       const assignee = assignedMemberMatches ? assignedMember : null;
       return {
         ...input,

@@ -1,6 +1,6 @@
 export const missionStatuses = ["in_progress", "pending", "completed"] as const;
 export const missionPriorities = ["urgent", "high", "normal"] as const;
-export const missionSpecialties = ["all", "builder", "ranger", "explorer", "other"] as const;
+export const missionSpecialties = ["all", "explorer_builder", "builder", "ranger", "explorer", "other"] as const;
 
 export type MissionStatus = (typeof missionStatuses)[number];
 export type MissionPriority = (typeof missionPriorities)[number];
@@ -66,6 +66,26 @@ export type Mission = {
   priority: MissionPriority;
   progress: number;
 };
+
+export function coveredSpecialties(specialty: MissionSpecialty): MissionSpecialty[] {
+  if (specialty === "all") return ["builder", "ranger", "explorer"];
+  if (specialty === "explorer_builder") return ["builder", "explorer"];
+  return [specialty];
+}
+
+export function specialtyAlreadyCovered(
+  specialty: MissionSpecialty,
+  missions: readonly Mission[],
+  systemAddress: string,
+  galaxy: number,
+  excludeId?: string,
+) {
+  const taken = new Set(missions
+    .filter((mission) => mission.id !== excludeId &&
+      mission.systemAddress.toUpperCase() === systemAddress.toUpperCase() && mission.galaxy === galaxy)
+    .flatMap((mission) => coveredSpecialties(mission.targetSpecialty)));
+  return coveredSpecialties(specialty).some((covered) => taken.has(covered));
+}
 
 export type MissionInput = Omit<Mission, "id">;
 

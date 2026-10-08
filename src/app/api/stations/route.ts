@@ -258,7 +258,7 @@ async function readStations(member: AllianceMember) {
     }
     const availableSpecialties = completedSpecialties.size === 0
       ? [...missionSpecialties]
-      : missionSpecialties.filter((specialty) => specialty !== "all" && !completedSpecialties.has(specialty));
+      : missionSpecialties.filter((specialty) => specialty !== "all" && specialty !== "explorer_builder" && !completedSpecialties.has(specialty));
 
     return {
       ...station,

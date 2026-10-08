@@ -10,18 +10,19 @@ import {
 } from "@/components/dashboard-chrome";
 import { MissionForm, type StationOwnerOption } from "@/components/mission-form";
 import { MissionTable, type MissionFilter } from "@/components/mission-table";
-import { canViewMission, portalSearchMatches, type Mission, type MissionInput } from "@/lib/missions";
+import { canViewMission, portalSearchMatches, specialtyAlreadyCovered, type Mission, type MissionInput } from "@/lib/missions";
 import type { AllianceMember, AllianceSettings } from "@/lib/access-store";
 import { AdminPanel } from "@/components/admin-panel";
 import { MemberProfilePanel } from "@/components/member-profile-panel";
 import { PlanetCard } from "@/components/planet-card";
 import { isValidNmsFriendCode } from "@/lib/member-types";
-import { planetSystemStatusKey, type MissionSystemStatus, type PlanetSystemStatuses } from "@/lib/planet-system-status";
+import { missionSystemStatuses, missionSystemStatusRoles, planetSystemStatusKey, type MissionSystemStatus, type PlanetSystemStatuses } from "@/lib/planet-system-status";
 import { useLocale } from "@/components/locale-provider";
 import { useNavigationSearchState } from "@/components/navigation-search-reset";
 
 const missionTypeLabels: Record<Mission["targetSpecialty"], string> = {
   all: "Tutti",
+  explorer_builder: "Esploratori e Costruttori",
   builder: "Costruttori",
   ranger: "Ranger",
   explorer: "Esploratori",
@@ -44,6 +45,7 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
   const [filter, setFilter] = useState<MissionFilter>("all");
   const [search, setSearch] = useNavigationSearchState(initialSearch);
   const [dialogMission, setDialogMission] = useState<Mission | null>(null);
+  const [dialogInitialValues, setDialogInitialValues] = useState<Partial<MissionInput> | undefined>();
   const [planetMission, setPlanetMission] = useState<Mission | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [notice, setNotice] = useState("");
@@ -238,7 +240,32 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
     setPlanetStatuses((current) => ({ ...current, [key]: savedStatuses }));
   }
 
-  function openMission(mission: Mission | null) {
+  function canCreateRangerMission(mission: Mission) {
+    if (!canManage || mission.targetSpecialty === "ranger") return false;
+    if (specialtyAlreadyCovered("ranger", missions, mission.systemAddress, mission.galaxy)) return false;
+    const statuses = planetStatuses[planetSystemStatusKey(mission.systemAddress, mission.galaxy)] ?? [];
+    const required = missionSystemStatuses.filter((status) => status !== "data_error" && missionSystemStatusRoles[status] !== "ranger");
+    return required.every((status) => statuses.includes(status));
+  }
+
+  function createRangerMission(mission: Mission) {
+    setDialogInitialValues({
+      title: mission.title,
+      system: mission.system,
+      systemAddress: mission.systemAddress,
+      galaxy: mission.galaxy,
+      systemVerified: mission.systemVerified,
+      systemLabelFromAlmanac: mission.systemLabelFromAlmanac,
+      stationOwnerMemberId: mission.stationOwnerMemberId,
+      stationOwnerName: mission.stationOwnerName,
+      targetSpecialty: "ranger",
+      status: "pending",
+    });
+    openMission(null, true);
+  }
+
+  function openMission(mission: Mission | null, keepInitialValues = false) {
+    if (!keepInitialValues) setDialogInitialValues(undefined);
     setDialogMission(mission);
     setDialogOpen(true);
   }
@@ -261,6 +288,8 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
             members={members}
             defaultView={alliance.defaultTableView}
             planetStatuses={planetStatuses}
+            canCreateRangerMission={canCreateRangerMission}
+            onCreateRangerMission={createRangerMission}
             onClaim={(mission) => void claimMission(mission).catch((error: unknown) => setNotice(error instanceof Error ? error.message : t("errors.request_failed")))}
             onComplete={(mission) => void completeMission(mission).catch((error: unknown) => setNotice(error instanceof Error ? error.message : t("errors.request_failed")))}
             onUpdateProgress={async (mission, progress) => {
@@ -290,6 +319,12 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
       </section>
       {notice && <output className="toast" aria-live="polite"><Check size={15} />{t(notice)}<button aria-label={t("common.close_notification")} onClick={() => setNotice("")} type="button"><X size={14} /></button></output>}
       {dialogOpen && <MissionForm
+        existingMissions={missions}
+        hideAddress={Boolean(dialogInitialValues)}
+        minimal={Boolean(dialogInitialValues)}
+        initialValues={dialogInitialValues}
+        simplified={Boolean(dialogInitialValues) && member.simpleView === true}
+        simplifiedStatusRole="ranger"
         members={members}
         mission={dialogMission}
         onClose={() => setDialogOpen(false)}
