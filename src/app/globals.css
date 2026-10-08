@@ -857,8 +857,8 @@ select { appearance: none; padding-right: 29px; background-image: linear-gradien
   .mission-dialog { max-height: calc(100vh - 20px); padding: 18px; }
   .planet-card-address { align-items: flex-start; flex-direction: column; gap: 7px; }
   .planet-card-address .glyph-strip-large { max-width: 100%; }
-  .planet-card-intro { grid-template-columns: 104px minmax(0, 1fr); gap: 12px; }
-  .planet-card-image { width: 104px; height: 104px; }
+  .planet-card-intro { grid-template-columns: 80px minmax(0, 1fr); gap: 12px; }
+  .planet-card-image { width: 80px; height: 80px; }
   .planet-card-intro h3 { font-size: 16px; }
   .planet-fact-row, .planet-sky-row { grid-template-columns: 92px minmax(0, 1fr); gap: 8px; }
   .planet-resource-groups { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -953,6 +953,11 @@ body:has(.sidebar-compact) .planet-card-address code { font-size: 14px; }
 body:has(.sidebar-compact) .planet-card-image { width: 200px; height: 200px; }
 body:has(.sidebar-compact) .planet-card-intro { grid-template-columns: 200px minmax(0, 1fr); }
 body:has(.sidebar-compact) .planet-card-intro h3 { font-size: 30px; }
+@media (max-width: 540px) {
+  body:has(.sidebar-compact) .planet-card-image { width: 96px; height: 96px; }
+  body:has(.sidebar-compact) .planet-card-intro { grid-template-columns: 96px minmax(0, 1fr); }
+  body:has(.sidebar-compact) .planet-card-intro h3 { font-size: 20px; }
+}
 body:has(.sidebar-compact) .planet-card-intro p, body:has(.sidebar-compact) .planet-card-summary, body:has(.sidebar-compact) .planet-dialog-mission-description { font-size: 15px; }
 body:has(.sidebar-compact) .planet-card-section h4, body:has(.sidebar-compact) .planet-resources-section h4 { font-size: 12px; }
 body:has(.sidebar-compact) .planet-fact-row { min-height: 40px; grid-template-columns: 180px minmax(0, 1fr); }
