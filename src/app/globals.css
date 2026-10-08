@@ -178,7 +178,8 @@ kbd { display: inline-flex; align-items: center; gap: 2px; padding: 2px 4px; col
 .mission-card-planet-fallback { color: #d0d4d0; }
 .mission-card-planet-fallback.mission-card-planet-thumb-done { color: var(--lime); background: #252d30; }
 .mission-card .mission-title { font-size: 14px; }
-.mission-card-system { display: flex; align-items: center; gap: 10px; min-height: 30px; padding-bottom: 10px; color: #c0c8c6; border-bottom: 1px solid #344043; font-size: 9px; }
+.mission-card-system .station-card-system-core { flex-basis: 100%; }
+.mission-card-system { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; min-height: 30px; padding-bottom: 10px; color: #c0c8c6; border-bottom: 1px solid #344043; font-size: 9px; }
 .mission-card-people { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .mission-card-people > div { min-width: 0; display: grid; align-content: start; gap: 6px; }
 .mission-card-people > div > small { color: #aab4b4; font-family: "SFMono-Regular", Consolas, monospace; font-size: 7px; letter-spacing: .5px; }

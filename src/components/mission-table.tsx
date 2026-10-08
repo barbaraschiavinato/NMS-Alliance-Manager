@@ -10,6 +10,7 @@ import { useEffect, useRef, useState } from "react";
 import { MemberCardDialog, type MemberMessageContext } from "@/components/member-card-dialog";
 import { LoadingSpinner } from "@/components/loading-spinner";
 import { useLocale } from "@/components/locale-provider";
+import { StationSystemCoreInfo } from "@/components/station-system-core-info";
 import { MissionSystemProgress } from "@/components/mission-system-progress";
 
 export type MissionFilter = "all" | MissionStatus | "pending_assigned" | "pending_unassigned";
@@ -334,6 +335,7 @@ function MissionCard({ mission, systemStatuses, currentMember, canManage, member
     <div className="mission-card-system">
       <GlyphStrip address={mission.systemAddress ?? ""} />
       <span className="mission-card-system-text">{mission.system || t("system.system_label")} · {galaxyLabel(mission.galaxy ?? 0)}</span>
+      <StationSystemCoreInfo key={`${mission.systemAddress}:${mission.galaxy}`} galaxy={mission.galaxy ?? 0} portal={mission.systemAddress ?? ""} />
     </div>
     <div className="mission-card-people">
       <div><small>{t("missions.discoverer_column_heading")}</small><DiscovererCell memberId={mission.stationOwnerMemberId} galaxy={mission.galaxy} image={getDiscovererImage(mission.stationOwnerMemberId)} name={mission.stationOwnerName} onOpenProfile={onOpenProfile} portal={mission.systemAddress} /></div>
