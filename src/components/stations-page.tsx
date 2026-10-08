@@ -259,8 +259,8 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
     : stationFilter === "notes"
       ? canSeeAll ? searchableStations.filter((station) => Boolean(station.note?.trim())) : searchableStations
       : searchableStations.filter((station) => station.missionStatus === (stationFilter === "pending" ? "none" : stationFilter));
-  const ownCreatedStations = stationCandidates.filter((station) => station.createdByMemberId === pageMember.publicId);
-  const visibleStations = activeStationTab === "mine" ? ownCreatedStations : statusFilteredStations;
+  const ownDiscoveredStations = stationCandidates.filter((station) => station.ownerId === pageMember.publicId);
+  const visibleStations = activeStationTab === "mine" ? ownDiscoveredStations : statusFilteredStations;
 
   async function fetchStations() {
     const response = await fetch("/api/stations", { cache: "no-store" });
@@ -555,7 +555,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
                     onClick={() => setActiveStationTab("mine")}
                     role="tab"
                     type="button"
-                  >{t("stations.my_stations")}<span>{ownCreatedStations.length}</span></button>}
+                  >{t("stations.my_stations")}<span>{ownDiscoveredStations.length}</span></button>}
                   {visibleStationFilters.filter((status) => status !== "all").map((status) => <button
                     aria-selected={activeStationTab === "all" && stationFilter === status}
                     className={`member-filter-tab${activeStationTab === "all" && stationFilter === status ? " selected" : ""}`}
