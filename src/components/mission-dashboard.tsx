@@ -10,7 +10,7 @@ import {
 } from "@/components/dashboard-chrome";
 import { MissionForm, type StationOwnerOption } from "@/components/mission-form";
 import { MissionTable, type MissionFilter } from "@/components/mission-table";
-import { canViewMission, portalSearchMatches, specialtyAlreadyCovered, type Mission, type MissionInput } from "@/lib/missions";
+import { canViewMission, portalSearchMatches, specialtyAlreadyCovered, type Mission, type MissionInput, type MissionSpecialty } from "@/lib/missions";
 import type { AllianceMember, AllianceSettings } from "@/lib/access-store";
 import { AdminPanel } from "@/components/admin-panel";
 import { MemberProfilePanel } from "@/components/member-profile-panel";
@@ -240,15 +240,23 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
     setPlanetStatuses((current) => ({ ...current, [key]: savedStatuses }));
   }
 
-  function canCreateRangerMission(mission: Mission) {
-    if (!canManage || mission.targetSpecialty === "ranger") return false;
-    if (specialtyAlreadyCovered("ranger", missions, mission.systemAddress, mission.galaxy)) return false;
+  function requestedSpecialty(mission: Mission): MissionSpecialty | null {
+    if (!canManage) return null;
     const statuses = planetStatuses[planetSystemStatusKey(mission.systemAddress, mission.galaxy)] ?? [];
-    const required = missionSystemStatuses.filter((status) => status !== "data_error" && missionSystemStatusRoles[status] !== "ranger");
-    return required.every((status) => statuses.includes(status));
+    const done = (role: "explorer" | "builder") => missionSystemStatuses
+      .filter((status) => status !== "data_error" && missionSystemStatusRoles[status] === role)
+      .every((status) => statuses.includes(status));
+    const explorersDone = done("explorer");
+    const buildersDone = done("builder");
+    const target: MissionSpecialty | null = explorersDone && buildersDone ? "ranger" : explorersDone ? "builder" : buildersDone ? "explorer" : null;
+    if (!target || mission.targetSpecialty === target) return null;
+    if (specialtyAlreadyCovered(target, missions, mission.systemAddress, mission.galaxy)) return null;
+    return target;
   }
 
   function createRangerMission(mission: Mission) {
+    const target = requestedSpecialty(mission);
+    if (!target) return;
     setDialogInitialValues({
       title: mission.title,
       system: mission.system,
@@ -258,7 +266,7 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
       systemLabelFromAlmanac: mission.systemLabelFromAlmanac,
       stationOwnerMemberId: mission.stationOwnerMemberId,
       stationOwnerName: mission.stationOwnerName,
-      targetSpecialty: "ranger",
+      targetSpecialty: target,
       status: "pending",
     });
     openMission(null, true);
@@ -288,7 +296,7 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
             members={members}
             defaultView={alliance.defaultTableView}
             planetStatuses={planetStatuses}
-            canCreateRangerMission={canCreateRangerMission}
+            requestedSpecialty={requestedSpecialty}
             onCreateRangerMission={createRangerMission}
             onClaim={(mission) => void claimMission(mission).catch((error: unknown) => setNotice(error instanceof Error ? error.message : t("errors.request_failed")))}
             onComplete={(mission) => void completeMission(mission).catch((error: unknown) => setNotice(error instanceof Error ? error.message : t("errors.request_failed")))}

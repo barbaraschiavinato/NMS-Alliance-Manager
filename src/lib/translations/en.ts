@@ -5,6 +5,8 @@ export const translations: TranslationCatalog = {
     "common.moderator": "Moderator",
     "common.operations": "Operations",
     "missions.create_ranger_mission": "Request Ranger intervention",
+    "missions.create_explorer_mission": "Request Explorer intervention",
+    "missions.create_builder_mission": "Request Builder intervention",
     "common.all": "All",
     "common.explorers_and_builders": "Explorers and Builders",
     "common.blocked_status_label": "Blocked",
