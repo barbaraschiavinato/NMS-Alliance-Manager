@@ -487,7 +487,7 @@ export const translations: TranslationCatalog = {
     "planet.resources": "Resources",
     "planet.minerals": "Minerals",
     "planet.other_resources": "Other resources",
-    "planet.no_almanac_details_are_archived_for_this_mission": "No Almanac details are archived for this mission.",
+    "planet.no_almanac_details_are_archived_for_this_mission": "No Almanac details are archived for this system.",
     "planet.details_context_eyebrow": "SYSTEM DETAILS ·",
     "planet.open_missions_for_planet_portal": "Open missions for planet {portal}",
     "planet.search_missions_planets_users_or_mission_type": "Search missions, planets, users, or mission type",
