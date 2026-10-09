@@ -285,6 +285,7 @@ export const translations: TranslationCatalog = {
     "stations.error_station_associated_with_mission_title_only": "The portal and galaxy cannot be changed while the station is associated with a mission.",
     "stations.error_station_missing_or_portal_already_saved": "Station not found or portal already saved.",
     "stations.error_unable_to_update_station": "Unable to update the space station.",
+    "stations.mission_in_progress": "{specialty} mission in progress",
     "stations.create_mission_from_station": "Create mission from station",
     "stations.delete_station": "Delete station",
     "stations.the_selected_discoverer_is_not_the_station_owner": "The selected discoverer is not the station owner.",

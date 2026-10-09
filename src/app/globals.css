@@ -1184,3 +1184,10 @@ body:has(.sidebar-compact) .dialog-heading .icon-button svg { width: 26px; heigh
   .nav-item[data-tooltip]::after { position: absolute; z-index: 60; top: 50%; left: calc(100% + 10px); padding: 6px 9px; color: #f1eee7; border: 1px solid #394548; border-radius: 3px; background: #111719; box-shadow: 0 4px 14px #0008; content: attr(data-tooltip); font-family: "Raleway", sans-serif; font-size: 12px; font-weight: 600; letter-spacing: 0; line-height: 1.2; opacity: 0; pointer-events: none; text-transform: none; transform: translate(-3px, -50%); transition: opacity .12s, transform .12s; white-space: nowrap; }
   .nav-item[data-tooltip]:hover::after, .nav-item[data-tooltip]:focus-visible::after { opacity: 1; transform: translate(0, -50%); }
 }
+
+.station-mission-disabled { position: relative; color: #4f6f6a; cursor: default; }
+.station-mission-disabled::before { content: ""; position: absolute; left: 4px; right: 4px; top: 50%; height: 2px; background: currentColor; transform: rotate(-45deg); z-index: 1; }
+.station-mission-disabled:hover { color: #4f6f6a; border-color: #394548; background: #1a2124; }
+.station-card-footer:not(:has(.member-icon-action, .station-system-status)) { margin-top: 0; padding-top: 0; border-top: 0; }
+.station-list-cards li { grid-template-rows: auto auto 1fr auto; }
+.station-list-cards .station-card-footer { align-self: end; }

@@ -285,6 +285,7 @@ export const translations: TranslationCatalog = {
     "stations.error_station_associated_with_mission_title_only": "Quando è associata a una missione, non puoi modificare il portale o la galassia.",
     "stations.error_station_missing_or_portal_already_saved": "Stazione non trovata o portale già presente.",
     "stations.error_unable_to_update_station": "Impossibile aggiornare la stazione spaziale.",
+    "stations.mission_in_progress": "Missione {specialty} in corso",
     "stations.create_mission_from_station": "Crea missione da stazione",
     "stations.delete_station": "Cancella stazione",
     "stations.the_selected_discoverer_is_not_the_station_owner": "Lo scopritore selezionato non risulta proprietario della stazione.",
