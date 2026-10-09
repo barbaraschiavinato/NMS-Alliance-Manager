@@ -7,9 +7,9 @@ import { readAccessData } from "@/lib/access-store";
 import { canViewMission, isDifferentPlanetInSameSystem } from "@/lib/missions";
 import { serializeMission } from "@/lib/mission-view";
 import { getSystemPlanetAddresses } from "@/lib/planet-addresses";
-import { lookupAlmanacPlanets } from "@/lib/almanac-lookup";
+import { almanacSystemLabel, lookupAlmanacPlanets } from "@/lib/almanac-lookup";
 import { readAllStationPortals, readStationPortals } from "@/lib/stations-store";
-import { readMissions } from "@/lib/store";
+import { readMissions, writeMissions } from "@/lib/store";
 
 export const dynamic = "force-dynamic";
 
@@ -59,6 +59,24 @@ function almanacSearchValues(value: unknown, parentKey = ""): string[] {
     });
   }
   return [];
+}
+
+// Completa le etichette sistema rimaste vuote perché Almanac non era raggiungibile al momento della creazione.
+async function fillEmptyMissionSystemLabels(results: Awaited<ReturnType<typeof lookupAlmanacPlanets>>) {
+  const labelFor = (mission: { systemAddress: string; galaxy: number }) => {
+    const planet = results.get(`${mission.systemAddress.toUpperCase()}:${mission.galaxy}`)?.planet;
+    return planet ? almanacSystemLabel(planet) : null;
+  };
+  try {
+    const current = await readMissions();
+    if (!current.some((mission) => !mission.system.trim() && labelFor(mission))) return;
+    await writeMissions((await readMissions()).map((mission) => {
+      const label = mission.system.trim() ? null : labelFor(mission);
+      return label ? { ...mission, system: label, systemLabelFromAlmanac: true } : mission;
+    }));
+  } catch (error) {
+    console.error("Unable to reconcile mission system labels", error);
+  }
 }
 
 export default async function PlanetsRoute() {
@@ -159,6 +177,7 @@ export default async function PlanetsRoute() {
     failed: boolean;
   }[] = [];
   const almanacResults = await lookupAlmanacPlanets(planetCandidates.map((planet) => ({ portal: planet.planetPortal, galaxy: planet.galaxy })));
+  await fillEmptyMissionSystemLabels(almanacResults);
   {
     const batch = planetCandidates.map((planet) => {
       try {

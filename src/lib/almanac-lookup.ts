@@ -67,3 +67,17 @@ export async function lookupAlmanacPlanets(
   }
   return results;
 }
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value && typeof value === "object" && !Array.isArray(value));
+}
+
+export function almanacSystemLabel(response: Record<string, unknown>): string | null {
+  const lines = isRecord(response.lines) ? response.lines : null;
+  const band = lines && isRecord(lines.band) ? lines.band : null;
+  const words = ["star", "economy", "conflict", "race"].flatMap((key) => {
+    const attribute = band && isRecord(band[key]) ? band[key] : null;
+    return attribute && typeof attribute.word === "string" && attribute.word.trim() ? [attribute.word.trim()] : [];
+  });
+  return words.length > 0 ? words.join(" · ") : null;
+}

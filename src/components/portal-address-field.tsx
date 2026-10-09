@@ -56,8 +56,7 @@ function PortalBreakdown({ address, decoded, lookup }: Readonly<{
     Z: "Z coordinate ",
     X: "X coordinate ",
   };
-  const almanacError = lookup?.address === address &&
-    (lookup.status === "not-found" || lookup.status === "unavailable");
+  const almanacError = lookup?.address === address && lookup.status === "not-found";
 
   return (
     <div aria-label={t("missions.five_part_progress")} className="portal-decode" role="group">
@@ -114,7 +113,7 @@ function PortalValidation({ address, decoded, lookup }: Readonly<{
     statusIcon = <CircleAlert size={13} />;
     statusText += ` · ${t("planet.no_planet_registered_with_nms_almanac_it_may_still_exist_in_the_game")}`;
   } else if (currentLookup?.status === "unavailable") {
-    statusClass = "address-invalid";
+    statusClass = "address-incomplete";
     statusIcon = <CircleAlert size={13} />;
     statusText += ` · ${t("errors.nms_almanac_error_service_unavailable_or_request_limit_reached")}`;
   }
