@@ -503,6 +503,7 @@ export const translations: TranslationCatalog = {
     "planet.all_races": "All races",
     "planet.filter_planet_type": "Filter by planet type",
     "planet.dissonant": "Dissonant",
+    "planet.filter_paradise": "Filter by paradise",
     "planet.filter_dissonant": "Filter by dissonant",
     "planet.all_dissonant": "Any",
     "planet.dissonant_yes": "Yes",

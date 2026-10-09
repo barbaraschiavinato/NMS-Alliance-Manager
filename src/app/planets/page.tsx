@@ -186,6 +186,7 @@ export default async function PlanetsRoute() {
       minerals: string[];
       valuables: string[];
       dissonant: boolean;
+      paradise: boolean;
     }) | null;
     failed: boolean;
   }[] = [];
@@ -235,6 +236,7 @@ export default async function PlanetsRoute() {
             minerals: almanacResourceNames(carries, ["mineral"]),
             valuables: almanacResourceNames(carries, ["tradeable"]),
             dissonant: hasDissonantResources(carries),
+            paradise: almanac?.paradise === true,
           } : null,
           failed: false,
         };

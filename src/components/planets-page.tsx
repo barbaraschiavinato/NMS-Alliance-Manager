@@ -36,6 +36,7 @@ type PlanetDestination = Readonly<{
   minerals: string[];
   valuables: string[];
   dissonant: boolean;
+  paradise: boolean;
   station?: Readonly<{
     id: string;
     portal: string;
@@ -108,6 +109,7 @@ export function PlanetsPage({ alliance, currentMember, planets, almanacLookupFai
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [size, setSize] = useState("");
   const [dissonant, setDissonant] = useState("");
+  const [paradise, setParadise] = useState("");
   const [water, setWater] = useState("");
   const [weather, setWeather] = useState("");
   const [sentinels, setSentinels] = useState("");
@@ -170,6 +172,7 @@ export function PlanetsPage({ alliance, currentMember, planets, almanacLookupFai
       (!planetType || planet.planetType === planetType) &&
       (!size || sizeValue(planet) === size) &&
       (!dissonant || planet.dissonant === (dissonant === "yes")) &&
+      (!paradise || planet.paradise === (paradise === "yes")) &&
       (!water || waterValue(planet) === water) &&
       (!weather || weatherValue(planet) === weather) &&
       (!conflict || systemFactValue(planet, "common.conflict") === conflict) &&
@@ -179,7 +182,7 @@ export function PlanetsPage({ alliance, currentMember, planets, almanacLookupFai
       (!valuable || planet.valuables.includes(valuable)),
     );
     return matchingPlanets.length > 0 ? [{ ...group, planets: matchingPlanets }] : [];
-  }), [economy, economyStars, mineral, plant, planetGroups, planetType, race, star, valuable, size, dissonant, water, weather, sentinels, conflict]);
+  }), [economy, economyStars, mineral, plant, planetGroups, planetType, race, star, valuable, size, dissonant, paradise, water, weather, sentinels, conflict]);
   const visiblePlanetGroups = useMemo(() => {
     if (!searchQuery) return filteredPlanetGroups;
     return filteredPlanetGroups.flatMap((group) => {
@@ -189,7 +192,7 @@ export function PlanetsPage({ alliance, currentMember, planets, almanacLookupFai
     });
   }, [filteredPlanetGroups, searchQuery]);
   const filteredPlanets = visiblePlanetGroups.flatMap((group) => group.planets);
-  const hasActiveFilters = Boolean(economy || economyStars !== null || star || race || planetType || size || dissonant || water || weather || sentinels || conflict || plant || mineral || valuable);
+  const hasActiveFilters = Boolean(economy || economyStars !== null || star || race || planetType || size || dissonant || paradise || water || weather || sentinels || conflict || plant || mineral || valuable);
   const activeFilterTags = [
     economy && { key: "economy", label: `${t("common.economy")}: ${tv(economy)}`, clear: () => setEconomy("") },
     economyStars !== null && { key: "economyStars", label: `${t("planet.economy_stars")}: ${"★".repeat(economyStars)}${"☆".repeat(3 - economyStars)}`, clear: () => setEconomyStars(null) },
@@ -198,6 +201,7 @@ export function PlanetsPage({ alliance, currentMember, planets, almanacLookupFai
     planetType && { key: "planetType", label: `${t("planet.planet_type")}: ${tv(planetType)}`, clear: () => setPlanetType("") },
     size && { key: "size", label: `${t("planet.size")}: ${tv(size)}`, clear: () => setSize("") },
     dissonant && { key: "dissonant", label: `${t("planet.dissonant")}: ${t(dissonant === "yes" ? "planet.dissonant_yes" : "planet.dissonant_no")}`, clear: () => setDissonant("") },
+    paradise && { key: "paradise", label: `${t("planet.paradise")}: ${t(paradise === "yes" ? "planet.dissonant_yes" : "planet.dissonant_no")}`, clear: () => setParadise("") },
     water && { key: "water", label: `${t("planet.water")}: ${tv(water)}`, clear: () => setWater("") },
     weather && { key: "weather", label: `${t("planet.weather")}: ${tv(weather)}`, clear: () => setWeather("") },
     conflict && { key: "conflict", label: `${t("common.conflict")}: ${tv(conflict)}`, clear: () => setConflict("") },
@@ -214,6 +218,7 @@ export function PlanetsPage({ alliance, currentMember, planets, almanacLookupFai
     setPlanetType("");
     setSize("");
     setDissonant("");
+    setParadise("");
     setWater("");
     setWeather("");
     setSentinels("");
@@ -321,6 +326,14 @@ export function PlanetsPage({ alliance, currentMember, planets, almanacLookupFai
               </select>
             </label>
             <label className="planet-filter">
+              <span>{t("planet.paradise")}</span>
+              <select aria-label={t("planet.filter_paradise")} onChange={(event) => setParadise(event.target.value)} value={paradise}>
+                <option value="">{t("planet.all_dissonant")}</option>
+                <option value="yes">{t("planet.dissonant_yes")}</option>
+                <option value="no">{t("planet.dissonant_no")}</option>
+              </select>
+            </label>
+            <label className="planet-filter">
               <span>{t("planet.water")}</span>
               <select aria-label={t("planet.filter_water")} onChange={(event) => setWater(event.target.value)} value={water}>
                 <option value="">{t("planet.all_water")}</option>
@@ -403,6 +416,7 @@ export function PlanetsPage({ alliance, currentMember, planets, almanacLookupFai
               </div>
               <ul className="planet-mission-list">{groupPlanets.map((planet) => <li key={planet.id}>
                 {planet.dissonant && <span className="planet-ribbon-clip"><span className="planet-dissonant-ribbon">{t("planet.dissonant")}</span></span>}
+                {planet.paradise && <span className="planet-ribbon-clip planet-ribbon-clip-left"><span className="planet-paradise-ribbon">{t("planet.paradise")}</span></span>}
                 <button className="planet-mission-card" onClick={() => setSelectedPlanet(planet)} type="button">
                   {planet.imageUrl
                     ? <Image alt="" className="planet-mission-image" height={96} src={planet.imageUrl} unoptimized width={96} />
