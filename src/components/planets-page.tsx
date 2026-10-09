@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { sortByCreatedAtDescending } from "@/lib/created-at";
 import Image from "next/image";
 import Link from "next/link";
-import { AlertTriangle, Globe2, Skull, Orbit, RotateCcw, Search, SlidersHorizontal, X } from "lucide-react";
+import { AlertTriangle, Droplet, Globe2, Moon, Skull, Orbit, RotateCcw, Search, SlidersHorizontal, X } from "lucide-react";
 import { AllianceSidebar, DashboardTopbar, MissionHero, storePlanetCount } from "@/components/dashboard-chrome";
 import { AdminPanel } from "@/components/admin-panel";
 import { MemberProfilePanel } from "@/components/member-profile-panel";
@@ -76,6 +76,30 @@ function sentinelsValue(planet: PlanetDestination) {
 
 function systemFactValue(planet: PlanetDestination, label: string) {
   return planet.systemFacts.find((fact) => fact.label === label)?.value;
+}
+
+const planetSizeLevels: Record<string, number> = { Small: 1, Medium: 2, Large: 3, Huge: 3 };
+
+function PlanetSizeIndicator({ size, label }: Readonly<{ size?: string; label: (value: string) => string }>) {
+  if (!size) return null;
+  if (size === "Moon") {
+    return <span aria-label={label(size)} className="planet-size-indicator" data-tooltip={label(size)} role="img"><Moon aria-hidden="true" size={14} /></span>;
+  }
+  const level = planetSizeLevels[size];
+  if (!level) return null;
+  return <span aria-label={label(size)} className="planet-size-indicator" data-tooltip={label(size)} role="img">
+    {[1, 2, 3].map((step) => <i className={step === level ? "active" : undefined} data-step={step} key={step} />)}
+  </span>;
+}
+
+const raceIcons: Record<string, string> = { Gek: "/icons/nms-gek.svg", Korvax: "/icons/nms-korvax.svg", "Vy’keen": "/icons/nms-vykeen.svg" };
+
+const conflictLevels: Record<string, number> = { None: 0, Low: 1, Medium: 2, High: 3, Outlaw: 3 };
+
+function PlanetWaterIndicator({ water, label }: Readonly<{ water?: string; label: (value: string) => string }>) {
+  if (!water) return null;
+  const hasWater = water !== "None";
+  return <span aria-label={label(water)} className={`planet-water-indicator${hasWater ? " has-water" : ""}`} data-tooltip={label(water)} role="img"><Droplet aria-hidden="true" size={14} /></span>;
 }
 
 export function PlanetsPage({ alliance, currentMember, planets, almanacLookupFailed, missionCount, stationCount, offlineCount, userCount }: Readonly<{
@@ -417,7 +441,7 @@ export function PlanetsPage({ alliance, currentMember, planets, almanacLookupFai
                   <h2>{station?.name || groupPlanets.find((planet) => planet.planetPortal === station?.portal)?.almanacName || t(station ? "stations.space_station" : "planet.no_associated_station")}{groupPlanets.some((planet) => planet.blackMarket) && <span aria-label={t("planet.black_market")} className="planet-station-black-market" data-tooltip={t("planet.black_market")} role="img" tabIndex={0}><Skull aria-hidden="true" size={15} /></span>}{isNewStation(station) && <span className="planet-station-new">{t("stations.new_badge")}</span>}</h2>
                   {station && <p className="planet-station-address"><span className={station.galaxy !== 0 ? "mission-galaxy-alert" : undefined} data-tooltip={station.galaxy !== 0 ? t("missions.galaxy_portals_warning") : undefined} tabIndex={station.galaxy !== 0 ? 0 : undefined}>{station.galaxy !== 0 && <AlertTriangle size={9} />}{galaxyLabel(station.galaxy)}</span> · {station.portal}</p>}
                   {groupPlanets[0]?.systemFacts.length > 0 && <div className="planet-station-facts">
-                    {groupPlanets[0].systemFacts.map((fact) => <span key={fact.label}><b>{t(fact.label)}</b> {tv(fact.value)}</span>)}
+                    {groupPlanets[0].systemFacts.map((fact) => <span key={fact.label}><b>{t(fact.label)}</b>{fact.label === "common.race" && raceIcons[fact.value] && <span aria-label={tv(fact.value)} className="planet-race-icon" data-tooltip={tv(fact.value)} role="img" style={{ "--race-icon": `url(${raceIcons[fact.value]})` } as CSSProperties} />}{fact.label === "common.race" && !raceIcons[fact.value] && <span aria-label={tv(fact.value)} className="planet-race-unknown" data-tooltip={tv(fact.value)} role="img">-</span>}{fact.label !== "common.conflict" && fact.label !== "common.race" && <> {tv(fact.value)}</>}{fact.label === "common.economy" && groupPlanets[0].economyStars !== undefined && <span aria-label={`${groupPlanets[0].economyStars}/3`} className="planet-economy-stars">{" "}{"★".repeat(groupPlanets[0].economyStars)}{"☆".repeat(3 - groupPlanets[0].economyStars)}</span>}{fact.label === "common.conflict" && conflictLevels[fact.value] !== undefined && <span aria-label={tv(fact.value)} className="planet-conflict-dots" data-tooltip={tv(fact.value)} role="img">{[1, 2, 3].map((step) => <i className={step <= conflictLevels[fact.value] ? "filled" : undefined} key={step} />)}</span>}</span>)}
                   </div>}
                 </div>
                 {station && <Link
@@ -438,10 +462,12 @@ export function PlanetsPage({ alliance, currentMember, planets, almanacLookupFai
                     <strong>{planet.almanacName || t("planet.planet_number", { number: planet.planetNumber })}</strong>
                     <GlyphStrip address={planet.planetPortal} />
                     <code>{planet.planetPortal}</code>
-                    {planet.almanacFacts.length > 0 && <span className="planet-mission-facts">{planet.almanacFacts.map((fact) =>
+                    {planet.almanacFacts.some((fact) => !["planet.size", "planet.water"].includes(fact.label)) && <span className="planet-mission-facts">{planet.almanacFacts.filter((fact) => !["planet.size", "planet.water"].includes(fact.label)).map((fact) =>
                       <span key={fact.label}><b>{t(fact.label)}</b> {tv(fact.value)}</span>,
                     )}</span>}
                   </span>
+                  <PlanetWaterIndicator label={tv} water={planet.almanacFacts.find((fact) => fact.label === "planet.water")?.value} />
+                  <PlanetSizeIndicator size={planet.almanacFacts.find((fact) => fact.label === "planet.size")?.value} label={tv} />
                 </button>
               </li>)}</ul>
             </section>)}</div>}

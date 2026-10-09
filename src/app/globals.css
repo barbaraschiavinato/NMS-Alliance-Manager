@@ -609,7 +609,7 @@ select { appearance: none; padding-right: 29px; background-image: linear-gradien
 .planet-station-link[data-tooltip]:hover::after, .planet-station-link[data-tooltip]:focus-visible::after { opacity: 1; transform: translateY(0); }
 .planet-mission-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 0; padding: 0; list-style: none; }
 .planet-mission-list > li { position: relative; display: flex; min-width: 0; }
-.planet-mission-card { flex: 1; width: 100%; min-width: 0; min-height: 96px; display: flex; align-items: center; gap: 12px; padding: 10px; color: var(--lime); border: 1px solid #394548; border-radius: 4px; background: #171e21; cursor: pointer; text-align: left; }
+.planet-mission-card { position: relative; flex: 1; width: 100%; min-width: 0; min-height: 96px; display: flex; align-items: center; gap: 12px; padding: 10px; color: var(--lime); border: 1px solid #394548; border-radius: 4px; background: #171e21; cursor: pointer; text-align: left; }
 .planet-mission-card:hover { border-color: var(--lime); background: #1d2527; }
 .planet-mission-image { width: 76px; height: 76px; flex: 0 0 76px; border: 1px solid #394548; border-radius: 3px; object-fit: cover; }
 .planet-mission-icon { flex: 0 0 auto; margin: 0 28px; }
@@ -1214,3 +1214,37 @@ body:has(.sidebar-compact) .dialog-heading .icon-button svg { width: 26px; heigh
 .sidebar-compact ~ .main-panel .planet-station-black-market svg { width: 19px; height: 19px; }
 .planet-station-black-market[data-tooltip]::after { position: absolute; z-index: 30; left: 0; bottom: calc(100% + 7px); padding: 6px 8px; color: #f1eee7; border: 1px solid #394548; border-radius: 3px; background: #111719; box-shadow: 0 4px 14px #0008; content: attr(data-tooltip); font-size: 9px; font-weight: 500; line-height: 1.2; opacity: 0; pointer-events: none; transform: translateY(3px); transition: opacity .12s, transform .12s; white-space: nowrap; }
 .planet-station-black-market[data-tooltip]:hover::after, .planet-station-black-market[data-tooltip]:focus-visible::after { opacity: 1; transform: translateY(0); }
+
+.planet-size-indicator { position: absolute; right: 5px; bottom: 5px; display: flex; align-items: flex-end; line-height: 0; gap: 4px; color: #75847a; }
+.planet-size-indicator > i { box-sizing: border-box; flex: 0 0 auto; display: block; border: 1px solid #566063; border-radius: 50%; }
+.planet-size-indicator > i[data-step="1"] { width: 6px; height: 6px; }
+.planet-size-indicator > i[data-step="2"] { width: 10px; height: 10px; }
+.planet-size-indicator > i[data-step="3"] { width: 14px; height: 14px; }
+.planet-size-indicator > i.active { border-color: var(--lime); background: var(--lime); }
+.planet-size-indicator[data-tooltip]::after { position: absolute; z-index: 30; right: 0; bottom: calc(100% + 7px); padding: 6px 8px; color: #f1eee7; border: 1px solid #394548; border-radius: 3px; background: #111719; box-shadow: 0 4px 14px #0008; content: attr(data-tooltip); font-size: 9px; font-weight: 500; line-height: 1.2; opacity: 0; pointer-events: none; transform: translateY(3px); transition: opacity .12s, transform .12s; white-space: nowrap; }
+.planet-size-indicator[data-tooltip]:hover::after { opacity: 1; transform: translateY(0); }
+.sidebar-compact ~ .main-panel .planet-size-indicator > i[data-step="1"] { width: 8px; height: 8px; }
+.sidebar-compact ~ .main-panel .planet-size-indicator > i[data-step="2"] { width: 13px; height: 13px; }
+.sidebar-compact ~ .main-panel .planet-size-indicator > i[data-step="3"] { width: 18px; height: 18px; }
+.sidebar-compact ~ .main-panel .planet-size-indicator svg { width: 18px; height: 18px; }
+.planet-size-indicator > svg { color: var(--lime); fill: var(--lime); stroke: var(--lime); }
+.planet-mission-card-copy .planet-mission-facts { padding-right: 56px; }
+.sidebar-compact ~ .main-panel .planet-mission-card-copy .planet-mission-facts { padding-right: 70px; }
+
+.planet-water-indicator { position: absolute; z-index: 3; top: 5px; right: 5px; display: inline-flex; color: #75847a; line-height: 0; }
+.planet-water-indicator.has-water { color: #4fc3f7; }
+.planet-water-indicator.has-water svg { fill: #4fc3f7; stroke: #4fc3f7; }
+.planet-water-indicator[data-tooltip]::after { position: absolute; z-index: 30; right: 0; top: calc(100% + 7px); padding: 6px 8px; color: #f1eee7; border: 1px solid #394548; border-radius: 3px; background: #111719; box-shadow: 0 4px 14px #0008; content: attr(data-tooltip); font-size: 9px; font-weight: 500; line-height: 1.2; opacity: 0; pointer-events: none; transform: translateY(-3px); transition: opacity .12s, transform .12s; white-space: nowrap; }
+.planet-water-indicator[data-tooltip]:hover::after { opacity: 1; transform: translateY(0); }
+.sidebar-compact ~ .main-panel .planet-water-indicator svg { width: 18px; height: 18px; }
+.planet-economy-stars { color: var(--lime); letter-spacing: 1px; }
+.planet-conflict-dots { display: inline-flex; align-items: center; gap: 3px; margin-left: 5px; vertical-align: middle; }
+.planet-conflict-dots > i { width: 7px; height: 7px; box-sizing: border-box; border: 1px solid var(--lime); border-radius: 50%; }
+.planet-conflict-dots > i.filled { background: var(--lime); }
+.sidebar-compact ~ .main-panel .planet-conflict-dots > i { width: 9px; height: 9px; }
+.planet-conflict-dots { position: relative; }
+.planet-conflict-dots[data-tooltip]::after { position: absolute; z-index: 30; left: 0; bottom: calc(100% + 7px); padding: 6px 8px; color: #f1eee7; border: 1px solid #394548; border-radius: 3px; background: #111719; box-shadow: 0 4px 14px #0008; content: attr(data-tooltip); font-size: 9px; font-weight: 500; line-height: 1.2; opacity: 0; pointer-events: none; transform: translateY(3px); transition: opacity .12s, transform .12s; white-space: nowrap; }
+.planet-conflict-dots[data-tooltip]:hover::after { opacity: 1; transform: translateY(0); }
+.planet-race-icon { display: inline-block; width: 12px; height: 11px; margin: 0 4px 0 2px; vertical-align: -2px; background: var(--lime); -webkit-mask: var(--race-icon) center / contain no-repeat; mask: var(--race-icon) center / contain no-repeat; }
+.sidebar-compact ~ .main-panel .planet-race-icon { width: 15px; height: 14px; }
+.planet-race-unknown { margin: 0 4px 0 2px; color: var(--lime); font-weight: 700; }
