@@ -1,4 +1,5 @@
 import { translations as englishTranslations } from "@/lib/translations/en";
+import { almanacValueTranslations } from "@/lib/translations/almanac-values";
 import { aliases as italianAliases, translations as italianTranslations } from "@/lib/translations/it";
 
 export type Locale = "it" | "en";
@@ -48,6 +49,10 @@ const legacyAliases = new Map<string, string>([
   ["data_uploaded", "system.data_uploaded"],
   ["data_error", "system.data_error"],
 ]);
+
+export function translateAlmanacValue(locale: Locale, value: string) {
+  return Object.hasOwn(almanacValueTranslations[locale], value) ? almanacValueTranslations[locale][value] : value;
+}
 
 export function translate(locale: Locale, message: string, values?: Readonly<Record<string, string | number>>) {
   const canonicalKey = translationIds.has(message) ? message : legacyAliases.get(message) ?? message;

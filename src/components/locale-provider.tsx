@@ -1,12 +1,13 @@
 "use client";
 
 import { createContext, useContext, useEffect, useMemo, useSyncExternalStore, type ReactNode } from "react";
-import { translate, type Locale } from "@/lib/translations";
+import { translate, translateAlmanacValue, type Locale } from "@/lib/translations";
 
 type LocaleContextValue = Readonly<{
   locale: Locale;
   setLocale: (locale: Locale) => void;
   t: (message: string, values?: Readonly<Record<string, string | number>>) => string;
+  tv: (value: string) => string;
 }>;
 
 const preferenceKey = "nms-alliance-locale";
@@ -52,6 +53,7 @@ export function LocaleProvider({ children }: Readonly<{ children: ReactNode }>) 
     locale,
     setLocale,
     t: (message, values) => translate(locale, message, values),
+    tv: (value) => translateAlmanacValue(locale, value),
   }), [locale]);
 
   return <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>;

@@ -74,7 +74,7 @@ export function PlanetsPage({ alliance, currentMember, planets, almanacLookupFai
   offlineCount?: number;
   userCount?: number;
 }>) {
-  const { t } = useLocale();
+  const { t, tv } = useLocale();
   useEffect(() => {
     if (!almanacLookupFailed) storePlanetCount(planets.length);
   }, [almanacLookupFailed, planets.length]);
@@ -163,18 +163,18 @@ export function PlanetsPage({ alliance, currentMember, planets, almanacLookupFai
   const filteredPlanets = visiblePlanetGroups.flatMap((group) => group.planets);
   const hasActiveFilters = Boolean(economy || economyStars !== null || star || race || planetType || water || weather || sentinels || conflict || plant || mineral || valuable);
   const activeFilterTags = [
-    economy && { key: "economy", label: `${t("common.economy")}: ${economy}`, clear: () => setEconomy("") },
+    economy && { key: "economy", label: `${t("common.economy")}: ${tv(economy)}`, clear: () => setEconomy("") },
     economyStars !== null && { key: "economyStars", label: `${t("planet.economy_stars")}: ${"★".repeat(economyStars)}${"☆".repeat(3 - economyStars)}`, clear: () => setEconomyStars(null) },
-    star && { key: "star", label: `${t("planet.star_type")}: ${star}`, clear: () => setStar("") },
-    race && { key: "race", label: `${t("common.race")}: ${race}`, clear: () => setRace("") },
-    planetType && { key: "planetType", label: `${t("planet.planet_type")}: ${planetType}`, clear: () => setPlanetType("") },
-    water && { key: "water", label: `${t("planet.water")}: ${water}`, clear: () => setWater("") },
-    weather && { key: "weather", label: `${t("planet.weather")}: ${weather}`, clear: () => setWeather("") },
-    conflict && { key: "conflict", label: `${t("common.conflict")}: ${conflict}`, clear: () => setConflict("") },
-    sentinels && { key: "sentinels", label: `${t("planet.sentinels")}: ${sentinels}`, clear: () => setSentinels("") },
-    plant && { key: "plant", label: `${t("common.plants")}: ${plant}`, clear: () => setPlant("") },
-    mineral && { key: "mineral", label: `${t("common.minerals")}: ${mineral}`, clear: () => setMineral("") },
-    valuable && { key: "valuable", label: `${t("common.valuables")}: ${valuable}`, clear: () => setValuable("") },
+    star && { key: "star", label: `${t("planet.star_type")}: ${tv(star)}`, clear: () => setStar("") },
+    race && { key: "race", label: `${t("common.race")}: ${tv(race)}`, clear: () => setRace("") },
+    planetType && { key: "planetType", label: `${t("planet.planet_type")}: ${tv(planetType)}`, clear: () => setPlanetType("") },
+    water && { key: "water", label: `${t("planet.water")}: ${tv(water)}`, clear: () => setWater("") },
+    weather && { key: "weather", label: `${t("planet.weather")}: ${tv(weather)}`, clear: () => setWeather("") },
+    conflict && { key: "conflict", label: `${t("common.conflict")}: ${tv(conflict)}`, clear: () => setConflict("") },
+    sentinels && { key: "sentinels", label: `${t("planet.sentinels")}: ${tv(sentinels)}`, clear: () => setSentinels("") },
+    plant && { key: "plant", label: `${t("common.plants")}: ${tv(plant)}`, clear: () => setPlant("") },
+    mineral && { key: "mineral", label: `${t("common.minerals")}: ${tv(mineral)}`, clear: () => setMineral("") },
+    valuable && { key: "valuable", label: `${t("common.valuables")}: ${tv(valuable)}`, clear: () => setValuable("") },
   ].filter((tag): tag is { key: string; label: string; clear: () => void } => Boolean(tag));
   const resetFilters = () => {
     setEconomy("");
@@ -236,21 +236,21 @@ export function PlanetsPage({ alliance, currentMember, planets, almanacLookupFai
               <span>{t("planet.planet_type")}</span>
               <select aria-label={t("planet.filter_planet_type")} onChange={(event) => setPlanetType(event.target.value)} value={planetType}>
                 <option value="">{t("planet.all_planet_types")}</option>
-                {filterOptions.planetType.map((value) => <option key={value} value={value}>{value}</option>)}
+                {filterOptions.planetType.map((value) => <option key={value} value={value}>{tv(value)}</option>)}
               </select>
             </label>
             <label className="planet-filter">
               <span>{t("planet.star_type")}</span>
               <select aria-label={t("planet.filter_star")} onChange={(event) => setStar(event.target.value)} value={star}>
                 <option value="">{t("planet.all_stars")}</option>
-                {filterOptions.star.map((value) => <option key={value} value={value}>{value}</option>)}
+                {filterOptions.star.map((value) => <option key={value} value={value}>{tv(value)}</option>)}
               </select>
             </label>
             <label className="planet-filter">
               <span>{t("common.economy")}</span>
               <select aria-label={t("planet.filter_economy")} onChange={(event) => setEconomy(event.target.value)} value={economy}>
                 <option value="">{t("planet.all_economies")}</option>
-                {filterOptions.economy.map((value) => <option key={value} value={value}>{value}</option>)}
+                {filterOptions.economy.map((value) => <option key={value} value={value}>{tv(value)}</option>)}
               </select>
             </label>
             <label className="planet-filter">
@@ -270,56 +270,56 @@ export function PlanetsPage({ alliance, currentMember, planets, almanacLookupFai
               <span>{t("common.race")}</span>
               <select aria-label={t("planet.filter_race")} onChange={(event) => setRace(event.target.value)} value={race}>
                 <option value="">{t("planet.all_races")}</option>
-                {filterOptions.race.map((value) => <option key={value} value={value}>{value}</option>)}
+                {filterOptions.race.map((value) => <option key={value} value={value}>{tv(value)}</option>)}
               </select>
             </label>
             <label className="planet-filter">
               <span>{t("planet.water")}</span>
               <select aria-label={t("planet.filter_water")} onChange={(event) => setWater(event.target.value)} value={water}>
                 <option value="">{t("planet.all_water")}</option>
-                {filterOptions.water.map((value) => <option key={value} value={value}>{value}</option>)}
+                {filterOptions.water.map((value) => <option key={value} value={value}>{tv(value)}</option>)}
               </select>
             </label>
             <label className="planet-filter">
               <span>{t("planet.weather")}</span>
               <select aria-label={t("planet.filter_weather")} onChange={(event) => setWeather(event.target.value)} value={weather}>
                 <option value="">{t("planet.all_weather")}</option>
-                {filterOptions.weather.map((value) => <option key={value} value={value}>{value}</option>)}
+                {filterOptions.weather.map((value) => <option key={value} value={value}>{tv(value)}</option>)}
               </select>
             </label>
             <label className="planet-filter">
               <span>{t("common.conflict")}</span>
               <select aria-label={t("planet.filter_conflict")} onChange={(event) => setConflict(event.target.value)} value={conflict}>
                 <option value="">{t("planet.all_conflicts")}</option>
-                {filterOptions.conflict.map((value) => <option key={value} value={value}>{value}</option>)}
+                {filterOptions.conflict.map((value) => <option key={value} value={value}>{tv(value)}</option>)}
               </select>
             </label>
             <label className="planet-filter">
               <span>{t("planet.sentinels")}</span>
               <select aria-label={t("planet.filter_sentinels")} onChange={(event) => setSentinels(event.target.value)} value={sentinels}>
                 <option value="">{t("planet.all_sentinels")}</option>
-                {filterOptions.sentinels.map((value) => <option key={value} value={value}>{value}</option>)}
+                {filterOptions.sentinels.map((value) => <option key={value} value={value}>{tv(value)}</option>)}
               </select>
             </label>
             <label className="planet-filter">
               <span>{t("common.plants")}</span>
               <select aria-label={t("planet.filter_plants")} onChange={(event) => setPlant(event.target.value)} value={plant}>
                 <option value="">{t("planet.all_plants")}</option>
-                {filterOptions.plants.map((value) => <option key={value} value={value}>{value}</option>)}
+                {filterOptions.plants.map((value) => <option key={value} value={value}>{tv(value)}</option>)}
               </select>
             </label>
             <label className="planet-filter">
               <span>{t("common.minerals")}</span>
               <select aria-label={t("planet.filter_minerals")} onChange={(event) => setMineral(event.target.value)} value={mineral}>
                 <option value="">{t("planet.all_minerals")}</option>
-                {filterOptions.minerals.map((value) => <option key={value} value={value}>{value}</option>)}
+                {filterOptions.minerals.map((value) => <option key={value} value={value}>{tv(value)}</option>)}
               </select>
             </label>
             <label className="planet-filter">
               <span>{t("common.valuables")}</span>
               <select aria-label={t("planet.filter_valuables")} onChange={(event) => setValuable(event.target.value)} value={valuable}>
                 <option value="">{t("planet.all_valuables")}</option>
-                {filterOptions.valuables.map((value) => <option key={value} value={value}>{value}</option>)}
+                {filterOptions.valuables.map((value) => <option key={value} value={value}>{tv(value)}</option>)}
               </select>
             </label>
           </div>}
@@ -344,7 +344,7 @@ export function PlanetsPage({ alliance, currentMember, planets, almanacLookupFai
                   <h2>{station?.name || t(station ? "stations.space_station" : "planet.no_associated_station")}</h2>
                   {station && <p className="planet-station-address">{galaxyLabel(station.galaxy)} · {station.portal}</p>}
                   {groupPlanets[0]?.systemFacts.length > 0 && <div className="planet-station-facts">
-                    {groupPlanets[0].systemFacts.map((fact) => <span key={fact.label}><b>{t(fact.label)}</b> {fact.value}</span>)}
+                    {groupPlanets[0].systemFacts.map((fact) => <span key={fact.label}><b>{t(fact.label)}</b> {tv(fact.value)}</span>)}
                   </div>}
                 </div>
                 {station && <Link
@@ -364,7 +364,7 @@ export function PlanetsPage({ alliance, currentMember, planets, almanacLookupFai
                     <GlyphStrip address={planet.planetPortal} />
                     <code>{planet.planetPortal}</code>
                     {planet.almanacFacts.length > 0 && <span className="planet-mission-facts">{planet.almanacFacts.map((fact) =>
-                      <span key={fact.label}><b>{t(fact.label)}</b> {fact.value}</span>,
+                      <span key={fact.label}><b>{t(fact.label)}</b> {tv(fact.value)}</span>,
                     )}</span>}
                   </span>
                 </button>
