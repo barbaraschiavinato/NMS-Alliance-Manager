@@ -136,9 +136,9 @@ export async function GET() {
       "Stella",
       "Economia",
       "Razza",
-      "Proprietario",
-      "Nome NMS proprietario",
       "Scopritore",
+      "Nome NMS scopritore",
+      "Registrata da",
       "Note dello scopritore",
       "Data registrazione",
       "Missioni presenti",
@@ -148,7 +148,9 @@ export async function GET() {
     ];
     const rows = stations.map((station) => {
       const owner = accessData.members.find((candidate) => candidate.publicId === station.ownerId);
-      const discoverer = accessData.members.find((candidate) => candidate.publicId === station.createdByMemberId);
+      const creator = accessData.members.find((candidate) =>
+        candidate.publicId === (station.createdByMemberId ?? station.ownerId),
+      );
       const planet = almanacByPortal[station.portal]?.find((entry) => entry.galaxy === station.galaxy)?.response;
       const stationMissions = missionsByStation.get(`${station.portal}:${station.galaxy}`) ?? [];
       return [
@@ -164,7 +166,7 @@ export async function GET() {
         planetWord(planet, "race"),
         memberDisplayName(owner),
         owner?.nmsName && !isEmailAddress(owner.nmsName) ? owner.nmsName : "",
-        memberDisplayName(discoverer),
+        memberDisplayName(creator),
         station.note ?? "",
         station.createdAt ?? "",
         stationMissions.length > 0 ? "Sì" : "No",

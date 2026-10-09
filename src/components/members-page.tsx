@@ -171,15 +171,17 @@ export function MembersPage({ memberActivity, currentMember, alliance, missionCo
         </section>}
         <main className="content-wrap">
       <section className="members-list-section">
-        <div className="members-toolbar">
-          <div className="member-filter-tabs" role="tablist" aria-label={t("members.filter_users_by_status")}>
-            {(["pending", "approved", "blocked", "all"] as MemberFilter[]).filter((status) => status === "all" || status === filter || counts[status] > 0).map((status) => <button aria-selected={filter === status} className={filter === status ? "member-filter-tab selected" : "member-filter-tab"} key={status} onClick={() => setFilter(status)} role="tab" type="button">{t(status === "all" ? "common.all" : statusLabels[status])}<span>{counts[status]}</span></button>)}
+        <div className="toolbar members-toolbar">
+          <div className="filter-tabs member-filter-tabs" role="tablist" aria-label={t("members.filter_users_by_status")}>
+            {(["pending", "approved", "blocked", "all"] as MemberFilter[]).filter((status) => status === "all" || status === filter || counts[status] > 0).map((status) => <button aria-selected={filter === status} className={filter === status ? "filter-tab selected" : "filter-tab"} key={status} onClick={() => setFilter(status)} role="tab" type="button">{t(status === "all" ? "common.all" : statusLabels[status])}<span>{counts[status]}</span></button>)}
           </div>
-          <label className="search-field member-search"><Search size={15} /><input aria-label={t("members.search_users")} onChange={(event) => setSearch(event.target.value)} placeholder={t("common.search_name_email_or_code")} value={search} /></label>
-          {!pageMember.simpleView && <div aria-label={t("members.user_view")} className="view-toggle" role="group">
-            <button aria-label={t("navigation.list_view")} aria-pressed={viewMode === "list"} className={viewMode === "list" ? "selected" : ""} onClick={() => setViewOverride("list")} title={t("navigation.list_view")} type="button"><List size={15} /></button>
-            <button aria-label={t("navigation.card_view")} aria-pressed={viewMode === "cards"} className={viewMode === "cards" ? "selected" : ""} onClick={() => setViewOverride("cards")} title={t("navigation.card_view")} type="button"><LayoutGrid size={15} /></button>
-          </div>}
+          <div className="toolbar-actions member-toolbar-actions">
+            <label className="search-field member-search"><Search size={15} /><input aria-label={t("members.search_users")} onChange={(event) => setSearch(event.target.value)} placeholder={t("common.search_name_email_or_code")} value={search} /></label>
+            {!pageMember.simpleView && <div aria-label={t("members.user_view")} className="view-toggle" role="group">
+              <button aria-label={t("navigation.list_view")} aria-pressed={viewMode === "list"} className={viewMode === "list" ? "selected" : ""} onClick={() => setViewOverride("list")} title={t("navigation.list_view")} type="button"><List size={15} /></button>
+              <button aria-label={t("navigation.card_view")} aria-pressed={viewMode === "cards"} className={viewMode === "cards" ? "selected" : ""} onClick={() => setViewOverride("cards")} title={t("navigation.card_view")} type="button"><LayoutGrid size={15} /></button>
+            </div>}
+          </div>
         </div>
 
         {error && <p className="form-error"><CircleAlert size={15} />{t(error)}</p>}

@@ -143,10 +143,10 @@ kbd { display: inline-flex; align-items: center; gap: 2px; padding: 2px 4px; col
 .filter-tabs, .toolbar-actions { display: flex; align-items: center; }
 .filter-tabs { gap: 19px; }
 .filter-tab { height: 47px; position: relative; display: flex; align-items: center; gap: 7px; padding: 0; color: #858e87; border: 0; background: transparent; cursor: pointer; font-size: 10px; white-space: nowrap; }
-.filter-tab > span, .member-filter-tab > span { min-width: 17px; padding: 2px 4px; color: #849088; border: 1px solid #354044; background: #111719; font-family: "SFMono-Regular", Consolas, monospace; font-size: 8px; text-align: center; }
+.filter-tab > span { min-width: 17px; padding: 2px 4px; color: #849088; border: 1px solid #354044; background: #111719; font-family: "SFMono-Regular", Consolas, monospace; font-size: 8px; text-align: center; }
 .filter-tab.selected { color: var(--lime); font-weight: 700; }
 .filter-tab.selected::after { height: 2px; position: absolute; right: 0; bottom: -1px; left: 0; background: var(--lime); content: ""; }
-.filter-tab.selected > span, .member-filter-tab.selected > span { color: var(--lime); border-color: var(--lime); background: #352719; }
+.filter-tab.selected > span { color: var(--lime); border-color: var(--lime); background: #352719; }
 .toolbar-actions { gap: 7px; }
 .view-toggle:not(.admin-view-toggle) { display: inline-flex; height: 29px; padding: 2px; border: 1px solid #394548; border-radius: 3px; background: #1a2124; }
 .view-toggle:not(.admin-view-toggle) button { width: 27px; display: grid; place-items: center; color: #d0d4d0; border: 1px solid transparent; border-radius: 2px; background: transparent; cursor: pointer; transition: color .15s, border-color .15s, background-color .15s; }
@@ -561,11 +561,8 @@ select { appearance: none; padding-right: 29px; background-image: linear-gradien
 .station-list-section { width: min(1180px, 100%); margin: 0 auto; }
 .station-dialog { width: min(560px, 100%); }
 .station-add-form .portal-field { margin-bottom: 0; }
-.station-toolbar { margin-bottom: 0; }
-.members-toolbar.station-toolbar { grid-template-columns: minmax(0, 1fr) minmax(150px, 290px) auto; }
-.members-toolbar.station-toolbar-simple { grid-template-columns: minmax(0, 1fr); }
-.members-toolbar.station-toolbar-simple .member-filter-tabs { grid-column: 1 / -1; }
-.station-toolbar-actions { grid-column: 3; display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+.station-toolbar-actions { min-width: 0; gap: 8px; }
+.station-toolbar .member-search { min-width: 0; flex: 1; }
 .station-toolbar-actions .station-export-button { width: 32px; height: 32px; position: relative; display: grid; place-items: center; padding: 0; color: #cbd6ce; border: 1px solid #394548; border-radius: 3px; background: #171e21; cursor: pointer; }
 .station-export-button:hover:not(:disabled) { color: var(--lime); border-color: var(--lime); }
 .station-export-button:disabled { cursor: wait; opacity: .65; }
@@ -688,14 +685,9 @@ select { appearance: none; padding-right: 29px; background-image: linear-gradien
 .station-list-section > p.station-list-empty { border-top: 0; border-bottom: 0; }
 .station-list-empty-no-saved { padding-bottom: 0; }
 .members-list-section { width: min(1180px, 100%); margin: 0 auto; }
-.members-toolbar { min-height: 54px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(190px, 290px) 61px; align-items: center; gap: 12px; border-bottom: 1px solid #dfe4dc; }
-.member-filter-tabs { min-width: 0; height: 54px; display: flex; align-items: stretch; gap: 20px; }
-.members-toolbar .member-filter-tabs { grid-column: 1; }
-.member-filter-tab { position: relative; display: flex; align-items: center; gap: 7px; padding: 0; color: #647168; border: 0; background: none; cursor: pointer; font-size: 10px; white-space: nowrap; }
-.member-filter-tab.selected { color: var(--lime); font-weight: 700; }
-.member-filter-tab.selected::after { height: 2px; position: absolute; right: 0; bottom: -1px; left: 0; background: var(--lime); content: ""; }
-.members-toolbar .member-search { width: 100%; min-width: 0; max-width: none; grid-column: 2; margin: 0; }
-.members-toolbar .view-toggle { grid-column: 3; justify-self: end; }
+.members-toolbar { min-width: 0; }
+.member-filter-tabs { min-width: 0; }
+.member-toolbar-actions { min-width: 0; }
 .members-table-wrap { overflow-x: auto; }
 .member-card-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 12px; }
 .member-card { min-width: 0; display: grid; align-content: start; gap: 13px; padding: 14px; color: #f1eee7; border: 1px solid #394548; border-radius: 4px; background: #171e21; }
@@ -950,7 +942,7 @@ select { appearance: none; padding-right: 29px; background-image: linear-gradien
   .section-heading h2 { font-size: 17px; }
   .filter-tabs { gap: 4px; }
   .filter-tab { gap: 4px; font-size: 8px; }
-  .filter-tab > span, .member-filter-tab > span { min-width: 15px; padding: 2px 3px; font-size: 7px; }
+  .filter-tab > span { min-width: 15px; padding: 2px 3px; font-size: 7px; }
   .dialog-backdrop { padding: 10px; }
   .mission-dialog { max-height: calc(100vh - 20px); padding: 18px; }
   .planet-card-address { align-items: flex-start; flex-direction: column; gap: 7px; }
@@ -970,10 +962,6 @@ select { appearance: none; padding-right: 29px; background-image: linear-gradien
   .specialty-options { gap: 5px; }
   .specialty-option { min-height: 69px; font-size: 9px; }
   .members-page { padding: 20px 14px 32px; }
-  .members-toolbar { grid-template-columns: minmax(0, 1fr) 61px; gap: 8px; padding: 7px 0; }
-  .member-filter-tabs { height: 42px; grid-column: 1 / -1; grid-row: 1; overflow-x: auto; justify-content: flex-start; gap: 14px; }
-  .members-toolbar .member-search { width: 100%; grid-column: 1; grid-row: 2; }
-  .members-toolbar .view-toggle { grid-column: 2; grid-row: 2; justify-self: end; }
   .member-card-grid { grid-template-columns: 1fr; }
   .station-list li { grid-template-columns: minmax(0, 1fr) minmax(34px, max-content); align-items: start; gap: 8px; }
   .station-portal-code { grid-column: 1; grid-row: 1; }
@@ -991,10 +979,6 @@ select { appearance: none; padding-right: 29px; background-image: linear-gradien
   .member-counts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .member-counts > div:nth-child(2) { border-right: 0; }
   .member-counts > div:nth-child(-n+2) { border-bottom: 1px solid #e5e8e1; }
-  .members-toolbar { align-items: stretch; flex-direction: column; gap: 7px; padding-top: 7px; }
-  .member-filter-tabs { height: 43px; justify-content: space-between; gap: 6px; }
-  .member-filter-tab { gap: 4px; font-size: 8px; }
-  .member-search { width: 100%; margin-bottom: 9px; }
   .form-grid { gap: 12px 8px; }
   .field { font-size: 9px; }
   .glyph-strip-large { min-height: 31px; gap: 2px; padding: 3px 5px; }
@@ -1074,8 +1058,8 @@ body:has(.sidebar-compact) .member-card-dialog .profile-identity { font-size: 17
 body:has(.sidebar-compact) .member-card-dialog .member-message-subject, body:has(.sidebar-compact) .member-card-dialog .message-acknowledgement, body:has(.sidebar-compact) .member-card-dialog .field span { font-size: 15px; }
 body:has(.sidebar-compact) .member-card-dialog textarea, body:has(.sidebar-compact) .member-card-dialog input { font-size: 16px; }
 body:has(.sidebar-compact) .member-card-dialog .primary-button, body:has(.sidebar-compact) .member-card-dialog .quiet-button { min-height: 44px; font-size: 15px; }
-.sidebar-compact ~ .main-panel .filter-tab, .sidebar-compact ~ .main-panel .member-filter-tab { font-size: 14px; }
-.sidebar-compact ~ .main-panel .filter-tab > span, .sidebar-compact ~ .main-panel .member-filter-tab > span { font-size: 11px; }
+.sidebar-compact ~ .main-panel .filter-tab { font-size: 14px; }
+.sidebar-compact ~ .main-panel .filter-tab > span { font-size: 11px; }
 .sidebar-compact ~ .main-panel .station-card-planet-image { width: 84px; height: 84px; flex-basis: 84px; }
 .sidebar-compact ~ .main-panel .station-portal-code > code { display: none; }
 .sidebar-compact ~ .main-panel .station-portal-code .glyph-strip { min-height: 30px; gap: 4px; }
@@ -1152,7 +1136,6 @@ body:has(.sidebar-compact) .mission-notes-content, body:has(.sidebar-compact) .p
   .sidebar-compact ~ .main-panel .toolbar { align-items: flex-start; flex-direction: column-reverse; gap: 2px; }
   .sidebar-compact ~ .main-panel .toolbar-actions { width: 100%; justify-content: flex-end; padding: 10px 0 2px; }
   .sidebar-compact ~ .main-panel .filter-tabs { width: 100%; justify-content: space-between; gap: 8px; overflow-x: auto; }
-  .sidebar-compact ~ .main-panel .member-filter-tabs { height: 42px; overflow-x: auto; justify-content: flex-start; gap: 14px; }
   .planet-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .sidebar-compact ~ .main-panel .station-list-cards, .member-card-grid { grid-template-columns: 1fr; }
   .planet-mission-list { grid-template-columns: 1fr; }

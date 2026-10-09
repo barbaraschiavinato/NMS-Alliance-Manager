@@ -595,11 +595,11 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
           {(error || notice) && <p className={error ? "form-error" : "address-validation address-valid"}>{error ? <CircleAlert size={15} /> : null}{t(error || notice)}</p>}
 
           <section aria-label={t("stations.my_space_stations")} className="station-list-section">
-            <div className={`members-toolbar station-toolbar${pageMember.simpleView ? " station-toolbar-simple" : ""}`}>
-                <div aria-label={t("stations.filter_stations_by_mission_status")} className="member-filter-tabs" role="tablist">
+            <div className="toolbar members-toolbar station-toolbar">
+                <div aria-label={t("stations.filter_stations_by_mission_status")} className="filter-tabs member-filter-tabs" role="tablist">
                   <button
                     aria-selected={activeStationTab === "all" && stationFilter === "all"}
-                    className={`member-filter-tab${activeStationTab === "all" && stationFilter === "all" ? " selected" : ""}`}
+                    className={`filter-tab${activeStationTab === "all" && stationFilter === "all" ? " selected" : ""}`}
                     onClick={() => {
                       setActiveStationTab("all");
                       setStationFilter("all");
@@ -609,14 +609,14 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
                   >{t("stations.filter_all")}<span>{stationCounts.all}</span></button>
                   {canChooseStationView && <button
                     aria-selected={activeStationTab === "mine"}
-                    className={`member-filter-tab${activeStationTab === "mine" ? " selected" : ""}`}
+                    className={`filter-tab${activeStationTab === "mine" ? " selected" : ""}`}
                     onClick={() => setActiveStationTab("mine")}
                     role="tab"
                     type="button"
                   >{t("stations.my_stations")}<span>{ownDiscoveredStations.length}</span></button>}
                   {visibleStationFilters.filter((status) => status !== "all").map((status) => <button
                     aria-selected={activeStationTab === "all" && stationFilter === status}
-                    className={`member-filter-tab${activeStationTab === "all" && stationFilter === status ? " selected" : ""}`}
+                    className={`filter-tab${activeStationTab === "all" && stationFilter === status ? " selected" : ""}`}
                     key={status}
                     onClick={() => {
                       setActiveStationTab("all");
@@ -626,8 +626,8 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
                     type="button"
                   >{t(status === "pending" ? "common.pending_status_label" : status === "in_progress" ? "stations.filter_in_mission" : status === "completed" ? "stations.filter_mission_completed" : "stations.filter_with_notes")}<span>{stationCounts[status]}</span></button>)}
                 </div>
-                {!pageMember.simpleView && <label className="search-field member-search station-search"><Search size={15} /><input aria-label={t("stations.search_stations_by_portal_owner_or_galaxy_or_notes")} onChange={(event) => setSearch(event.target.value)} placeholder={t("stations.search_portal_username_galaxy_or_notes")} value={search} /></label>}
-                {!pageMember.simpleView && <div className="station-toolbar-actions">
+                {!pageMember.simpleView && <div className="toolbar-actions station-toolbar-actions">
+                  <label className="search-field member-search station-search"><Search size={15} /><input aria-label={t("stations.search_stations_by_portal_owner_or_galaxy_or_notes")} onChange={(event) => setSearch(event.target.value)} placeholder={t("stations.search_portal_username_galaxy_or_notes")} value={search} /></label>
                   {canSeeAll && <button
                     aria-label={t(exportingStations ? "stations.exporting_stations" : "stations.export_stations_to_excel")}
                     className="station-export-button"
