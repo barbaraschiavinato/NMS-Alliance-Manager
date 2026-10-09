@@ -98,6 +98,17 @@ export default async function PlanetsRoute() {
       stationOwnerMemberId: mission.stationOwnerMemberId,
     }] as const;
   }));
+  for (const station of stations) {
+    const key = `${station.portal.slice(1).toUpperCase()}:${station.galaxy}`;
+    if (!systemsByAddress.has(key)) {
+      systemsByAddress.set(key, {
+        id: key,
+        portal: station.portal,
+        galaxy: station.galaxy,
+        stationOwnerMemberId: station.ownerId,
+      });
+    }
+  }
   const planetCandidates = (await Promise.all([...systemsByAddress.values()].map(async (system) => {
     const planetaryAddresses = await getSystemPlanetAddresses(system.portal, system.galaxy);
     const associatedStation = stations.find((station) =>
