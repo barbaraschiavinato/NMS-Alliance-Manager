@@ -15,6 +15,7 @@ export default async function StationsRoute({ searchParams }: Readonly<{
     portal?: string | string[];
     galaxy?: string | string[];
     ownerId?: string | string[];
+    createStation?: string | string[];
   }>;
 }>) {
   const accessData = await readAccessData();
@@ -43,13 +44,24 @@ export default async function StationsRoute({ searchParams }: Readonly<{
   const portal = typeof params.portal === "string" ? params.portal.toUpperCase() : "";
   const galaxy = typeof params.galaxy === "string" && /^\d+$/.test(params.galaxy) ? Number(params.galaxy) : -1;
   const ownerId = typeof params.ownerId === "string" ? params.ownerId : "";
-  const initialStation = /^[0-9A-F]{12}$/.test(portal) && Number.isInteger(galaxy) && galaxy >= 0 && galaxy <= 255 && ownerId
+  const canCreateStation = params.createStation === "1" && (member.role === "admin" || member.role === "moderator");
+  const initialCreateStation = canCreateStation && /^[0-9A-F]{12}$/.test(portal) && Number.isInteger(galaxy) && galaxy >= 0 && galaxy <= 255
+    ? {
+      portal,
+      galaxy,
+      ownerId: accessData.members.some((candidate) => candidate.publicId === ownerId && candidate.membershipStatus === "approved")
+        ? ownerId
+        : member.publicId,
+    }
+    : null;
+  const initialStation = !initialCreateStation && /^[0-9A-F]{12}$/.test(portal) && Number.isInteger(galaxy) && galaxy >= 0 && galaxy <= 255 && ownerId
     ? { portal, galaxy, ownerId }
     : null;
   return <StationsPage
     alliance={accessData.alliance}
     currentMember={member}
     initialSearch={initialSearch}
+    initialCreateStation={initialCreateStation}
     initialStation={initialStation}
     missionCount={missions.length}
     sidebarStationCount={stations.length}

@@ -1,4 +1,4 @@
-import { Check, Compass, Eye, EyeOff, FileText, Hammer, Info, LayoutGrid, List, Orbit, Pencil, Search, ShieldPlus, Trash2, X } from "lucide-react";
+import { Check, CirclePlus, Compass, Eye, EyeOff, FileText, Hammer, Info, LayoutGrid, List, Orbit, Pencil, Search, ShieldPlus, Trash2, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import type { Mission, MissionSpecialty, MissionStatus } from "@/lib/missions";
@@ -13,6 +13,7 @@ import { useLocale } from "@/components/locale-provider";
 import { StationSystemCoreInfo } from "@/components/station-system-core-info";
 import { editableSystemStatusRoles } from "@/lib/planet-system-status";
 import { MissionSystemProgress } from "@/components/mission-system-progress";
+import type { StationOwnerOption } from "@/components/mission-form";
 
 export type MissionFilter = "all" | MissionStatus | "pending_assigned" | "pending_unassigned";
 type MissionCounts = Record<MissionFilter, number>;
@@ -79,18 +80,43 @@ function MissionRowAction({ mission, currentMember, canManage, requestedSpecialt
   return <span className="no-row-action">—</span>;
 }
 
-function MissionStationLink({ mission, canManage }: Readonly<{ mission: Mission; canManage: boolean }>) {
+function MissionStationLink({ mission, canManage, stationOwners, stationOwnersLoaded }: Readonly<{
+  mission: Mission;
+  canManage: boolean;
+  stationOwners: StationOwnerOption[];
+  stationOwnersLoaded: boolean;
+}>) {
   const { t } = useLocale();
-  if (!canManage) return null;
-  const params = new URLSearchParams({ search: mission.systemAddress });
-  const label = t("missions.open_linked_station");
+  const stationExists = stationOwners.some((station) =>
+    station.portal === mission.systemAddress.toUpperCase() &&
+    station.galaxy === mission.galaxy,
+  );
+  if (!canManage || !stationOwnersLoaded) return null;
+  if (stationExists) {
+    const params = new URLSearchParams({ search: mission.systemAddress });
+    const label = t("missions.open_linked_station");
+    return <Link
+      aria-label={label}
+      className="member-icon-action mission-station-link member-station-filter"
+      data-tooltip={label}
+      href={`/stations?${params.toString()}`}
+      title={label}
+    ><Orbit size={14} /></Link>;
+  }
+  const params = new URLSearchParams({
+    createStation: "1",
+    portal: mission.systemAddress.toUpperCase(),
+    galaxy: String(mission.galaxy),
+  });
+  if (mission.stationOwnerMemberId) params.set("ownerId", mission.stationOwnerMemberId);
+  const label = t("stations.create_station_from_mission");
   return <Link
     aria-label={label}
-    className="member-icon-action mission-station-link member-station-filter"
+    className="member-icon-action member-station-filter mission-create-station"
     data-tooltip={label}
     href={`/stations?${params.toString()}`}
     title={label}
-  ><Orbit size={14} /></Link>;
+  ><CirclePlus size={15} /></Link>;
 }
 
 function AssigneeCell({ mission, members, currentMember, onOpenProfile }: Readonly<{
@@ -311,11 +337,13 @@ function MissionPlanetThumbnail({ mission }: Readonly<{ mission: Mission }>) {
   </span>;
 }
 
-function MissionCard({ mission, systemStatuses, currentMember, canManage, requestedSpecialty, onCreateRangerMission, members, onEdit, onDeleteMission, onOpenPlanet, onClaim, onComplete, onToggleSystemStatus, onUpdateProgress, onViewNotes, onViewPlanetNotes, onOpenProfile, getDiscovererImage }: Readonly<{
+function MissionCard({ mission, systemStatuses, currentMember, canManage, stationOwners, stationOwnersLoaded, requestedSpecialty, onCreateRangerMission, members, onEdit, onDeleteMission, onOpenPlanet, onClaim, onComplete, onToggleSystemStatus, onUpdateProgress, onViewNotes, onViewPlanetNotes, onOpenProfile, getDiscovererImage }: Readonly<{
   mission: Mission;
   systemStatuses: PlanetSystemStatuses;
   currentMember: AllianceMember;
   canManage: boolean;
+  stationOwners: StationOwnerOption[];
+  stationOwnersLoaded: boolean;
   requestedSpecialty: (mission: Mission) => MissionSpecialty | null;
   onCreateRangerMission: (mission: Mission) => void;
   members: AllianceMember[];
@@ -366,7 +394,7 @@ function MissionCard({ mission, systemStatuses, currentMember, canManage, reques
     <div className="mission-card-actions">
       <MissionSystemProgress editable={canUpdateSystemStatus} editableRoles={editableSystemStatusRoles(currentMember)} onToggle={(status, checked) => onToggleSystemStatus(mission, status, checked)} statuses={statuses} />
       <div className="mission-card-action-buttons">
-        <MissionStationLink canManage={canManage} mission={mission} />
+        <MissionStationLink canManage={canManage} mission={mission} stationOwners={stationOwners} stationOwnersLoaded={stationOwnersLoaded} />
         <MissionRowAction requestedSpecialty={requestedSpecialty(mission)} canManage={canManage} currentMember={currentMember} mission={mission} onClaim={onClaim} onComplete={onComplete} onCreateRanger={onCreateRangerMission} onDeleteMission={onDeleteMission} onEdit={onEdit} />
         {canViewNotes && <MissionNotesButton mission={mission} onView={onViewNotes} />}
       </div>
@@ -395,6 +423,8 @@ export function MissionTable({
   onUpdateProgress,
   currentMember,
   canManage,
+  stationOwners,
+  stationOwnersLoaded,
   members,
   defaultView,
   planetStatuses,
@@ -420,6 +450,8 @@ export function MissionTable({
   onUpdateProgress: (mission: Mission, progress: number) => Promise<void>;
   currentMember: AllianceMember;
   canManage: boolean;
+  stationOwners: StationOwnerOption[];
+  stationOwnersLoaded: boolean;
   members: AllianceMember[];
   defaultView: "list" | "cards";
   planetStatuses: PlanetSystemStatuses;
@@ -505,14 +537,14 @@ export function MissionTable({
                 onToggle={(status, checked) => onToggleSystemStatus(mission, status, checked)}
                 statuses={planetStatuses[planetSystemStatusKey(mission.systemAddress, mission.galaxy)] ?? []}
               /></td>
-              <td><span className="mission-row-actions"><MissionStationLink canManage={canManage} mission={mission} /><MissionRowAction requestedSpecialty={requestedSpecialty(mission)} canManage={canManage} currentMember={currentMember} mission={mission} onClaim={onClaim} onComplete={onComplete} onCreateRanger={onCreateRangerMission} onDeleteMission={onDeleteMission} onEdit={onEdit} />{canViewMissionNotes(mission) && <MissionNotesButton mission={mission} onView={setMissionNoteView} />}</span></td>
+              <td><span className="mission-row-actions"><MissionStationLink canManage={canManage} mission={mission} stationOwners={stationOwners} stationOwnersLoaded={stationOwnersLoaded} /><MissionRowAction requestedSpecialty={requestedSpecialty(mission)} canManage={canManage} currentMember={currentMember} mission={mission} onClaim={onClaim} onComplete={onComplete} onCreateRanger={onCreateRangerMission} onDeleteMission={onDeleteMission} onEdit={onEdit} />{canViewMissionNotes(mission) && <MissionNotesButton mission={mission} onView={setMissionNoteView} />}</span></td>
             </tr>)}
             {loading && <tr><td className="empty-state mission-table-loading" colSpan={9}><LoadingSpinner /></td></tr>}
             {!loading && missions.length === 0 && <tr><td className="empty-state" colSpan={9}><Search size={18} />{t("missions.no_missions_match_the_filters")}</td></tr>}
           </tbody>
         </table>
       </div> : <div className="mission-card-grid">
-        {missions.map((mission) => <MissionCard requestedSpecialty={requestedSpecialty} canManage={canManage} onCreateRangerMission={onCreateRangerMission} currentMember={currentMember} getDiscovererImage={getDiscovererImage} key={mission.id} members={members} mission={mission} onClaim={onClaim} onComplete={onComplete} onDeleteMission={onDeleteMission} onEdit={onEdit} onOpenPlanet={onOpenPlanet} onOpenProfile={(memberId, messageContext) => setProfileTarget({ memberId, messageContext })} onToggleSystemStatus={onToggleSystemStatus} onUpdateProgress={onUpdateProgress} onViewNotes={setMissionNoteView} onViewPlanetNotes={setPlanetNoteView} systemStatuses={planetStatuses} />)}
+        {missions.map((mission) => <MissionCard requestedSpecialty={requestedSpecialty} canManage={canManage} stationOwners={stationOwners} stationOwnersLoaded={stationOwnersLoaded} onCreateRangerMission={onCreateRangerMission} currentMember={currentMember} getDiscovererImage={getDiscovererImage} key={mission.id} members={members} mission={mission} onClaim={onClaim} onComplete={onComplete} onDeleteMission={onDeleteMission} onEdit={onEdit} onOpenPlanet={onOpenPlanet} onOpenProfile={(memberId, messageContext) => setProfileTarget({ memberId, messageContext })} onToggleSystemStatus={onToggleSystemStatus} onUpdateProgress={onUpdateProgress} onViewNotes={setMissionNoteView} onViewPlanetNotes={setPlanetNoteView} systemStatuses={planetStatuses} />)}
         {loading && <div className="mission-cards-loading"><LoadingSpinner /></div>}
         {!loading && missions.length === 0 && <p className="mission-cards-empty">{t("missions.no_missions_match_the_filters")}</p>}
       </div>}

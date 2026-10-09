@@ -19,6 +19,7 @@ import { isValidNmsFriendCode } from "@/lib/member-types";
 import { missionSystemStatuses, missionSystemStatusRoles, planetSystemStatusKey, type MissionSystemStatus, type PlanetSystemStatuses } from "@/lib/planet-system-status";
 import { useLocale } from "@/components/locale-provider";
 import { useNavigationSearchState } from "@/components/navigation-search-reset";
+import { sortByCreatedAtDescending } from "@/lib/created-at";
 
 const missionTypeLabels: Record<Mission["targetSpecialty"], string> = {
   all: "Tutti",
@@ -51,6 +52,7 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
   const [notice, setNotice] = useState("");
   const [members, setMembers] = useState<AllianceMember[]>([]);
   const [stationOwners, setStationOwners] = useState<StationOwnerOption[]>([]);
+  const [stationOwnersLoaded, setStationOwnersLoaded] = useState(false);
   const [alliance, setAlliance] = useState(initialAlliance);
   const [adminOpen, setAdminOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -102,8 +104,11 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
               : [];
           });
           setStationOwners(options);
+          setStationOwnersLoaded(true);
         })
-        .catch(() => setStationOwners([]));
+        .catch(() => {
+          setStationOwners([]);
+        });
     }
   }, [canManage]);
 
@@ -126,7 +131,7 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
     };
   }, [availableMissions]);
 
-  const visibleMissions = useMemo(() => availableMissions
+  const visibleMissions = useMemo(() => sortByCreatedAtDescending(availableMissions
     .filter((mission) => {
       if (filter === "all") return true;
       const isAssigned = Boolean(mission.assignedMemberId || mission.assignedTo.trim());
@@ -149,7 +154,7 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
       ].filter(Boolean).join(" ").toLowerCase();
       const textMatches = searchableText.includes(searchText);
       return textMatches || portalSearchMatches(mission.systemAddress, search);
-    })
+    }))
     , [availableMissions, filter, search]);
 
   async function saveMission(input: MissionInput) {
@@ -294,6 +299,8 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
             currentMember={member}
             canManage={canManage}
             members={members}
+            stationOwners={stationOwners}
+            stationOwnersLoaded={stationOwnersLoaded}
             defaultView={alliance.defaultTableView}
             planetStatuses={planetStatuses}
             requestedSpecialty={requestedSpecialty}

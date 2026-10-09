@@ -5,7 +5,7 @@ import { getBlobAuthOptions } from "@/lib/blob-config";
 import { decodePortalAddress } from "@/lib/missions";
 import { readAccessData } from "@/lib/access-store";
 
-export type StationPortal = Readonly<{ portal: string; galaxy: number; name?: string; note?: string; createdByMemberId?: string }>;
+export type StationPortal = Readonly<{ portal: string; galaxy: number; name?: string; note?: string; createdByMemberId?: string; createdAt?: string }>;
 export type OwnedStationPortal = StationPortal & Readonly<{ ownerId: string }>;
 type StationIndex = Record<string, StationPortal[]>;
 type NormalizedStation = StationPortal & Readonly<{ createdByEmail?: string }>;
@@ -27,12 +27,16 @@ function normalizeStationEntries(entries: unknown[]): NormalizedStation[] {
     const createdByEmail = "createdByEmail" in station && typeof station.createdByEmail === "string"
       ? station.createdByEmail.trim().toLowerCase()
       : "";
+    const createdAt = "createdAt" in station && typeof station.createdAt === "string" && Number.isFinite(Date.parse(station.createdAt))
+      ? station.createdAt
+      : "";
     return [{
       portal: station.portal.toUpperCase(),
       galaxy,
       ...(name ? { name } : {}),
       ...(note ? { note } : {}),
       ...(createdByMemberId ? { createdByMemberId } : {}),
+      ...(createdAt ? { createdAt } : {}),
       ...(createdByEmail ? { createdByEmail } : {}),
     }];
   });
@@ -65,6 +69,7 @@ function normalizeStationIndex(value: unknown, members: Awaited<ReturnType<typeo
         ...(station.name ? { name: station.name } : {}),
         ...(station.note ? { note: station.note } : {}),
         ...(legacyCreatorMemberId ? { createdByMemberId: legacyCreatorMemberId } : {}),
+        ...(station.createdAt ? { createdAt: station.createdAt } : {}),
       };
     });
     index[ownerKey] = [...new Map(
@@ -145,6 +150,7 @@ export async function addStationPortal(
       ...(normalizedName ? { name: normalizedName } : {}),
       ...(normalizedNote ? { note: normalizedNote } : {}),
       ...(creator ? { createdByMemberId: creator } : {}),
+      createdAt: new Date().toISOString(),
     });
   }
   index[owner] = stations;
@@ -201,6 +207,7 @@ export async function updateStationPortal(
     ...(normalizedName ? { name: normalizedName } : {}),
     ...(normalizedNote ? { note: normalizedNote } : {}),
     ...(existingStation.createdByMemberId ? { createdByMemberId: existingStation.createdByMemberId } : {}),
+    ...(existingStation.createdAt ? { createdAt: existingStation.createdAt } : {}),
   };
   index[owner] = [...(index[owner] ?? []), updatedStation];
   await writeStationIndex(index);

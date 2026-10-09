@@ -20,6 +20,7 @@ import { decodePortalAddress, missionSpecialties, portalSearchMatches, type Miss
 import { editableSystemStatusRoles, isMissionSystemStatus, planetSystemStatusKey, type MissionSystemStatus, type PlanetSystemStatuses } from "@/lib/planet-system-status";
 import { useLocale } from "@/components/locale-provider";
 import { useNavigationSearchState } from "@/components/navigation-search-reset";
+import { sortByCreatedAtDescending } from "@/lib/created-at";
 
 type CachedPlanet = Readonly<{ galaxy: number; response: Record<string, unknown> }>;
 type StationMissionStatus = "none" | "in_progress" | "completed";
@@ -32,6 +33,7 @@ type StationEntry = Readonly<{
   ownerNmsName?: string;
   ownerImage?: string;
   createdByMemberId?: string;
+  createdAt?: string;
   name?: string;
   note?: string;
   planet: CachedPlanet | null;
@@ -85,6 +87,7 @@ function parseStations(value: unknown): StationEntry[] {
       ...(typeof station.ownerNmsName === "string" ? { ownerNmsName: station.ownerNmsName } : {}),
       ...(typeof station.ownerImage === "string" ? { ownerImage: station.ownerImage } : {}),
       ...(typeof station.createdByMemberId === "string" ? { createdByMemberId: station.createdByMemberId } : {}),
+      ...(typeof station.createdAt === "string" ? { createdAt: station.createdAt } : {}),
       ...(typeof station.name === "string" ? { name: station.name } : {}),
       ...(typeof station.note === "string" ? { note: station.note } : {}),
       planet,
@@ -181,11 +184,12 @@ function CachedPlanetInfo({ planet, onOpen }: Readonly<{ planet: CachedPlanet; o
   );
 }
 
-export function StationsPage({ currentMember, alliance, missionCount, initialSearch = "", initialStation = null, sidebarOfflineCount, sidebarStationCount, sidebarUserCount }: Readonly<{
+export function StationsPage({ currentMember, alliance, missionCount, initialSearch = "", initialCreateStation = null, initialStation = null, sidebarOfflineCount, sidebarStationCount, sidebarUserCount }: Readonly<{
   currentMember: AllianceMember;
   alliance: AllianceSettings;
   missionCount: number;
   initialSearch?: string;
+  initialCreateStation?: Readonly<{ portal: string; galaxy: number; ownerId: string }> | null;
   initialStation?: Readonly<{ portal: string; galaxy: number; ownerId: string }> | null;
   sidebarStationCount: number;
   sidebarOfflineCount?: number;
@@ -205,15 +209,18 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
   const [missionStation, setMissionStation] = useState<StationMissionSeed | null>(null);
   const [members, setMembers] = useState<AllianceMember[]>([]);
   const [viewOverride, setViewOverride] = useState<"list" | "cards" | null>(null);
-  const [portal, setPortal] = useState("");
-  const [galaxy, setGalaxy] = useState(0);
-  const [stationOwnerId, setStationOwnerId] = useState(currentMember.publicId);
+  const [portal, setPortal] = useState(initialCreateStation?.portal ?? "");
+  const [galaxy, setGalaxy] = useState(initialCreateStation?.galaxy ?? 0);
+  const [stationOwnerId, setStationOwnerId] = useState(initialCreateStation?.ownerId ?? currentMember.publicId);
   const [stationName, setStationName] = useState("");
   const [stationNote, setStationNote] = useState("");
   const [planetType, setPlanetType] = useState("");
   const [stationNameEdited, setStationNameEdited] = useState(false);
-  const [validation, setValidation] = useState<SystemAddressValidation>({ valid: false, lookup: null });
-  const [addOpen, setAddOpen] = useState(false);
+  const [creatingFromMission, setCreatingFromMission] = useState(Boolean(initialCreateStation));
+  const [validation, setValidation] = useState<SystemAddressValidation>(
+    initialCreateStation ? { valid: true, lookup: null } : { valid: false, lookup: null },
+  );
+  const [addOpen, setAddOpen] = useState(Boolean(initialCreateStation));
   const [editingStation, setEditingStation] = useState<StationEntry | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -262,7 +269,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
       ? canSeeAll ? searchableStations.filter((station) => Boolean(station.note?.trim())) : searchableStations
       : searchableStations.filter((station) => station.missionStatus === (stationFilter === "pending" ? "none" : stationFilter));
   const ownDiscoveredStations = stationCandidates.filter((station) => station.ownerId === pageMember.publicId);
-  const visibleStations = activeStationTab === "mine" ? ownDiscoveredStations : statusFilteredStations;
+  const visibleStations = sortByCreatedAtDescending(activeStationTab === "mine" ? ownDiscoveredStations : statusFilteredStations);
 
   async function fetchStations() {
     const response = await fetch("/api/stations", { cache: "no-store" });
@@ -279,6 +286,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
   }
 
   function openAddStation() {
+    setCreatingFromMission(false);
     setEditingStation(null);
     setPortal("");
     setGalaxy(0);
@@ -293,6 +301,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
   }
 
   function openEditStation(station: StationEntry) {
+    setCreatingFromMission(false);
     setEditingStation(station);
     setPortal(station.portal);
     setGalaxy(station.galaxy);
@@ -329,6 +338,10 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
         });
     }
   }, [canCreateMissions, t]);
+
+  useEffect(() => {
+    if (initialCreateStation) window.history.replaceState(null, "", "/stations");
+  }, [initialCreateStation]);
 
   useEffect(() => {
     if (!canSeeAll) return;
@@ -669,7 +682,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
                 value={stationNote}
               />
             </label>
-            {!editingStation?.hasMissions && <SystemAddressField address={portal} galaxy={galaxy} onChange={(value) => {
+            {!creatingFromMission && !editingStation?.hasMissions && <SystemAddressField address={portal} galaxy={galaxy} onChange={(value) => {
               setPortal(value);
               setStationName("");
               setPlanetType("");
@@ -677,7 +690,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
               setError("");
               setValidation({ valid: false, lookup: null });
             }} onLookupResolved={handleStationLookup} onStateChange={setValidation} />}
-            {!editingStation?.hasMissions && <label className="field station-galaxy-select">
+            {!creatingFromMission && !editingStation?.hasMissions && <label className="field station-galaxy-select">
               <span>{t("stations.galaxy")}</span>
               <select onChange={(event) => {
                 setGalaxy(Number(event.target.value));

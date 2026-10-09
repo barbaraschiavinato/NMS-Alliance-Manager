@@ -306,10 +306,13 @@ kbd { display: inline-flex; align-items: center; gap: 2px; padding: 2px 4px; col
 .mission-row-actions [data-tooltip]::after { position: absolute; z-index: 30; right: 0; bottom: calc(100% + 7px); padding: 6px 8px; color: #f1eee7; border: 1px solid #394548; border-radius: 3px; background: #111719; box-shadow: 0 4px 14px #0008; content: attr(data-tooltip); font-size: 9px; font-weight: 500; line-height: 1.2; opacity: 0; pointer-events: none; text-transform: none; transform: translateY(3px); transition: opacity .12s, transform .12s; white-space: nowrap; }
 .mission-row-actions [data-tooltip]:hover::after,
 .mission-row-actions [data-tooltip]:focus-visible::after { opacity: 1; transform: translateY(0); }
-.mission-station-link { position: relative; color: #72d1c4; }
-.mission-station-link[data-tooltip]::after { position: absolute; z-index: 30; right: 0; bottom: calc(100% + 7px); padding: 6px 8px; color: #f1eee7; border: 1px solid #394548; border-radius: 3px; background: #111719; box-shadow: 0 4px 14px #0008; content: attr(data-tooltip); font-size: 9px; font-weight: 500; line-height: 1.2; opacity: 0; pointer-events: none; text-transform: none; transform: translateY(3px); transition: opacity .12s, transform .12s; white-space: nowrap; }
+.mission-create-station { position: relative; }
+.mission-station-link, .mission-station-link[data-tooltip], .mission-create-station[data-tooltip] { position: relative; }
+.mission-station-link[data-tooltip]::after, .mission-create-station[data-tooltip]::after { position: absolute; z-index: 30; right: 0; bottom: calc(100% + 7px); padding: 6px 8px; color: #f1eee7; border: 1px solid #394548; border-radius: 3px; background: #111719; box-shadow: 0 4px 14px #0008; content: attr(data-tooltip); font-size: 9px; font-weight: 500; line-height: 1.2; opacity: 0; pointer-events: none; text-transform: none; transform: translateY(3px); transition: opacity .12s, transform .12s; white-space: nowrap; }
 .mission-station-link[data-tooltip]:hover::after,
-.mission-station-link[data-tooltip]:focus-visible::after { opacity: 1; transform: translateY(0); }
+.mission-station-link[data-tooltip]:focus-visible::after,
+.mission-create-station[data-tooltip]:hover::after,
+.mission-create-station[data-tooltip]:focus-visible::after { opacity: 1; transform: translateY(0); }
 .row-action-ranger { color: #5fd68a; }
 .row-action-explorer { color: #4d9bff; }
 .row-action-builder { color: #ffb45d; }
@@ -1113,8 +1116,10 @@ body:has(.sidebar-compact) .mission-notes-content, body:has(.sidebar-compact) .p
 .sidebar-compact ~ .main-panel .planet-notes-button { width: 30px; height: 30px; flex-basis: 30px; }
 .sidebar-compact ~ .main-panel .planet-notes-button svg { width: 24px; height: 24px; }
 .sidebar-compact ~ .main-panel .mission-card-action-buttons { gap: 8px; }
-.sidebar-compact ~ .main-panel .mission-card-action-buttons .mission-station-link { width: 44px; height: 44px; }
-.sidebar-compact ~ .main-panel .mission-card-action-buttons .mission-station-link svg { width: 20px; height: 20px; }
+.sidebar-compact ~ .main-panel .mission-card-action-buttons .mission-station-link,
+.sidebar-compact ~ .main-panel .mission-card-action-buttons .mission-create-station { width: 44px; height: 44px; }
+.sidebar-compact ~ .main-panel .mission-card-action-buttons .mission-station-link svg,
+.sidebar-compact ~ .main-panel .mission-card-action-buttons .mission-create-station svg { width: 20px; height: 20px; }
 
 @media (max-width: 950px) {
   .sidebar-compact ~ .main-panel .topbar { height: 53px; padding: 0 12px; }

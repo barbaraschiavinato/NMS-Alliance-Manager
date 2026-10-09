@@ -56,6 +56,7 @@ export type Mission = {
   systemLabelFromAlmanac?: boolean;
   createdByName?: string;
   createdByMemberId?: string;
+  createdAt?: string;
   stationOwnerName?: string;
   stationOwnerMemberId?: string;
   assignedTo: string;

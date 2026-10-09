@@ -95,6 +95,7 @@ export async function POST(request: Request) {
       return {
         ...input,
         targetSpecialty,
+        createdAt: new Date().toISOString(),
         createdByMemberId: member.publicId,
         createdByName: member.nmsName || member.name,
         stationOwnerMemberId: stationOwner?.publicId,

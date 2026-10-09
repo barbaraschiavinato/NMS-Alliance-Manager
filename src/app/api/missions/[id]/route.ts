@@ -58,6 +58,7 @@ export async function PATCH(request: Request, context: RouteContext) {
       }
       updated = {
         ...input,
+        createdAt: existingMission.createdAt,
         createdByMemberId: existingMission.createdByMemberId,
         createdByName: existingMission.createdByName,
         stationOwnerMemberId: stationOwner?.publicId,

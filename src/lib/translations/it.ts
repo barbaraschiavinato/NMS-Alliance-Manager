@@ -312,6 +312,7 @@ export const translations: TranslationCatalog = {
     "stations.saved_portals": "Portali salvati",
     "stations.loading_stations": "Caricamento stazioni",
     "stations.add_station": "Aggiungi stazione",
+    "stations.create_station_from_mission": "Crea stazione per questa missione",
     "stations.space_stations": "Stazioni spaziali",
     "stations.my_stations": "Le mie stazioni",
     "stations.register_portals_for_systems_you_have_discovered": "Registra i portali dei sistemi che hai scoperto.",
