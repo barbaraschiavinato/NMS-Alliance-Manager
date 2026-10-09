@@ -129,6 +129,6 @@ async function findStationOwner(publicId: string, portal: string, galaxy: number
 async function findAssignableMember(publicId: string) {
   const data = await readAccessData();
   return data.members.find((candidate) =>
-    candidate.publicId === publicId.trim() && candidate.membershipStatus === "approved" && candidate.nmsName && isValidNmsFriendCode(candidate.nmsCode) && candidate.specialty,
+    candidate.publicId === publicId.trim() && candidate.membershipStatus === "approved" && candidate.nmsName && (candidate.offline || isValidNmsFriendCode(candidate.nmsCode)) && candidate.specialty,
   ) ?? null;
 }

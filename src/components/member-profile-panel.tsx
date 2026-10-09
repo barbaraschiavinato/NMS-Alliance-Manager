@@ -87,7 +87,7 @@ export function MemberProfilePanel({ member, onClose, onSaved, createOffline = f
             <input autoComplete="nickname" maxLength={40} onChange={(event) => setNmsName(event.target.value)} placeholder={t("common.in_game_name")} required value={nmsName} />
           </label>
           <label className="field full-field">
-            <span>{t("profile.nms_friend_code_label")} <small>{t("common.13_alphanumeric_characters")}</small></span>
+            <span>{t("profile.nms_friend_code_label")} <small>{t("common.13_alphanumeric_characters")}{offlineMode ? " · opzionale" : ""}</small></span>
             <input
               autoComplete="off"
               autoCapitalize="characters"
@@ -95,7 +95,7 @@ export function MemberProfilePanel({ member, onClose, onSaved, createOffline = f
               maxLength={15}
               onChange={(event) => setNmsCode(normalizeNmsFriendCode(event.target.value).slice(0, 13))}
               placeholder="BMPE-S0B9-RCDMT"
-              required
+              required={!offlineMode}
               value={formatNmsFriendCode(nmsCode)}
             />
           </label>
@@ -130,7 +130,7 @@ export function MemberProfilePanel({ member, onClose, onSaved, createOffline = f
           <div className="dialog-actions">
             <span className="action-spacer" />
             <button className="quiet-button" onClick={close} type="button">{t("common.close")}</button>
-            <button className="primary-button" disabled={busy || !nmsName.trim() || !isValidNmsFriendCode(nmsCode) || !specialty} type="submit">{busy ? t("common.saving") : t("profile.save_profile")}</button>
+            <button className="primary-button" disabled={busy || !nmsName.trim() || (offlineMode ? nmsCode.length > 0 && !isValidNmsFriendCode(nmsCode) : !isValidNmsFriendCode(nmsCode)) || !specialty} type="submit">{busy ? t("common.saving") : t("profile.save_profile")}</button>
           </div>
         </form>
       </dialog>

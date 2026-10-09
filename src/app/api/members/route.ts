@@ -31,7 +31,7 @@ export async function GET(request: Request) {
     });
   }
   if (!hasRole(member, "moderator")) return NextResponse.json({ error: "Permesso moderator richiesto." }, { status: 403 });
-  return NextResponse.json(data.members.filter((item) => item.membershipStatus === "approved" && item.nmsName && isValidNmsFriendCode(item.nmsCode) && item.specialty).map(({ publicId, email, name, image, nmsName, nmsCode, platforms, specialty, role }) => ({
+  return NextResponse.json(data.members.filter((item) => item.membershipStatus === "approved" && item.nmsName && (item.offline || isValidNmsFriendCode(item.nmsCode)) && item.specialty).map(({ publicId, email, name, image, nmsName, nmsCode, platforms, specialty, role }) => ({
     publicId,
     email,
     name,

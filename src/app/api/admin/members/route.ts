@@ -84,7 +84,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true });
   }
 
-  if (!isMemberProfileInput(input)) return NextResponse.json({ error: "Profilo non valido." }, { status: 400 });
+  if (!isMemberProfileInput(input, true)) return NextResponse.json({ error: "Profilo non valido." }, { status: 400 });
   if (action === "update") {
     const { offlineId } = input as unknown as Record<string, unknown>;
     const updated = typeof offlineId === "string" ? await updateOfflineMember(offlineId, input) : null;

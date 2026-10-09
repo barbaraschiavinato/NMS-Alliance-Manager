@@ -166,7 +166,7 @@ function findProfileConflict(members: AllianceMember[], profile: MemberProfileIn
   const code = normalizeNmsFriendCode(profile.nmsCode);
   const others = members.filter((member) => member.email !== excludeEmail);
   if (others.some((member) => member.nmsName.trim().toLowerCase() === name)) return "name";
-  if (others.some((member) => normalizeNmsFriendCode(member.nmsCode) === code)) return "code";
+  if (code && others.some((member) => normalizeNmsFriendCode(member.nmsCode) === code)) return "code";
   return null;
 }
 
@@ -249,12 +249,12 @@ export type MemberProfileInput = {
   simpleView?: boolean;
 };
 
-export function isMemberProfileInput(value: unknown): value is MemberProfileInput {
+export function isMemberProfileInput(value: unknown, allowEmptyCode = false): value is MemberProfileInput {
   if (!value || typeof value !== "object") return false;
   const profile = value as Record<string, unknown>;
   return typeof profile.nmsName === "string" &&
     profile.nmsName.trim().length > 0 && profile.nmsName.trim().length <= 40 &&
-    typeof profile.nmsCode === "string" && isValidNmsFriendCode(profile.nmsCode) &&
+    typeof profile.nmsCode === "string" && (isValidNmsFriendCode(profile.nmsCode) || (allowEmptyCode && !profile.nmsCode.trim())) &&
     Array.isArray(profile.platforms) &&
     profile.platforms.every((platform) => nmsPlatforms.includes(platform as NmsPlatform)) &&
     memberSpecialties.includes(profile.specialty as MemberSpecialty) &&
