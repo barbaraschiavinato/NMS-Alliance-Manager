@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, type SubmitEvent } from "react";
-import { CircleAlert, CirclePlus, Crosshair, FileText, LayoutGrid, List, Pencil, Plus, Search, Trash2, X } from "lucide-react";
+import { CircleAlert, CirclePlus, Crosshair, FileSpreadsheet, FileText, LayoutGrid, List, Pencil, Plus, Search, Trash2, X } from "lucide-react";
 import { AllianceSidebar, DashboardTopbar, MissionHero } from "@/components/dashboard-chrome";
 import { AdminPanel } from "@/components/admin-panel";
 import { MemberProfilePanel } from "@/components/member-profile-panel";
@@ -230,6 +230,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
   const [addOpen, setAddOpen] = useState(Boolean(initialCreateStation));
   const [editingStation, setEditingStation] = useState<StationEntry | null>(null);
   const [loading, setLoading] = useState(true);
+  const [exportingStations, setExportingStations] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -290,6 +291,32 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
 
   async function refreshStations() {
     setStations(await fetchStations());
+  }
+
+  async function exportStations() {
+    setExportingStations(true);
+    setError("");
+    try {
+      const response = await fetch("/api/stations/export", { cache: "no-store" });
+      if (!response.ok) {
+        const body: unknown = await response.json().catch(() => null);
+        const message = body && typeof body === "object" && "error" in body ? body.error : null;
+        throw new Error(typeof message === "string" ? t(message) : t("stations.error_unable_to_export_stations"));
+      }
+
+      const url = URL.createObjectURL(await response.blob());
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `stazioni-${new Date().toISOString().slice(0, 10)}.xlsx`;
+      document.body.append(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (error_) {
+      setError(error_ instanceof Error ? error_.message : t("stations.error_unable_to_export_stations"));
+    } finally {
+      setExportingStations(false);
+    }
   }
 
   function openAddStation() {
@@ -600,9 +627,20 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
                   >{t(status === "pending" ? "common.pending_status_label" : status === "in_progress" ? "stations.filter_in_mission" : status === "completed" ? "stations.filter_mission_completed" : "stations.filter_with_notes")}<span>{stationCounts[status]}</span></button>)}
                 </div>
                 {!pageMember.simpleView && <label className="search-field member-search station-search"><Search size={15} /><input aria-label={t("stations.search_stations_by_portal_owner_or_galaxy_or_notes")} onChange={(event) => setSearch(event.target.value)} placeholder={t("stations.search_portal_username_galaxy_or_notes")} value={search} /></label>}
-                {!pageMember.simpleView && <div aria-label={t("stations.station_view")} className="view-toggle" role="group">
-                  <button aria-label={t("navigation.list_view")} aria-pressed={viewMode === "list"} className={viewMode === "list" ? "selected" : ""} onClick={() => setViewOverride("list")} title={t("navigation.list_view")} type="button"><List size={15} /></button>
-                  <button aria-label={t("navigation.card_view")} aria-pressed={viewMode === "cards"} className={viewMode === "cards" ? "selected" : ""} onClick={() => setViewOverride("cards")} title={t("navigation.card_view")} type="button"><LayoutGrid size={15} /></button>
+                {!pageMember.simpleView && <div className="station-toolbar-actions">
+                  {canSeeAll && <button
+                    aria-label={t(exportingStations ? "stations.exporting_stations" : "stations.export_stations_to_excel")}
+                    className="station-export-button"
+                    data-tooltip={t(exportingStations ? "stations.exporting_stations" : "stations.export_stations_to_excel")}
+                    disabled={exportingStations}
+                    onClick={() => void exportStations()}
+                    title={t(exportingStations ? "stations.exporting_stations" : "stations.export_stations_to_excel")}
+                    type="button"
+                  ><FileSpreadsheet aria-hidden="true" size={15} /></button>}
+                  <div aria-label={t("stations.station_view")} className="view-toggle" role="group">
+                    <button aria-label={t("navigation.list_view")} aria-pressed={viewMode === "list"} className={viewMode === "list" ? "selected" : ""} onClick={() => setViewOverride("list")} title={t("navigation.list_view")} type="button"><List size={15} /></button>
+                    <button aria-label={t("navigation.card_view")} aria-pressed={viewMode === "cards"} className={viewMode === "cards" ? "selected" : ""} onClick={() => setViewOverride("cards")} title={t("navigation.card_view")} type="button"><LayoutGrid size={15} /></button>
+                  </div>
                 </div>}
             </div>
             {loading && <div className="station-list-empty station-list-loading"><LoadingSpinner /></div>}
