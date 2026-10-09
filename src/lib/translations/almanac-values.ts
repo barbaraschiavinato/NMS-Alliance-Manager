@@ -134,6 +134,7 @@ export const almanacValueTranslations: Readonly<Record<Locale, Readonly<Record<s
     // Colore della stella
     "Yellow": "Gialla",
     "Green": "Verde",
+    "Purple": "Viola",
     "Blue": "Blu",
     "Red": "Rossa",
   },
