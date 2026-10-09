@@ -1075,6 +1075,19 @@ body:has(.sidebar-compact) .member-card-dialog .primary-button, body:has(.sideba
 .sidebar-compact ~ .main-panel .station-portal-code .glyph-strip img { width: 28px; height: 28px; }
 .sidebar-compact ~ .main-panel .station-planet-info dt { font-size: 11px; }
 .sidebar-compact ~ .main-panel .station-planet-info dd { font-size: 14px; }
+.sidebar-compact ~ .main-panel .planet-station-group h2 { font-size: 17px; }
+.sidebar-compact ~ .main-panel .planet-station-address { font-size: 12px; }
+.sidebar-compact ~ .main-panel .planet-station-facts, .sidebar-compact ~ .main-panel .planet-mission-facts > span { font-size: 11px; }
+.sidebar-compact ~ .main-panel .planet-mission-card { min-height: 108px; padding: 12px; }
+.sidebar-compact ~ .main-panel .planet-mission-image { width: 84px; height: 84px; flex-basis: 84px; }
+.sidebar-compact ~ .main-panel .planet-mission-card-copy strong { font-size: 17px; }
+.sidebar-compact ~ .main-panel .planet-mission-card-copy > span, .sidebar-compact ~ .main-panel .planet-mission-card-copy code { font-size: 12px; }
+.sidebar-compact ~ .main-panel .planet-search input, .sidebar-compact ~ .main-panel .planet-filter select { font-size: 14px; }
+.sidebar-compact ~ .main-panel .planet-filter { font-size: 12px; }
+.sidebar-compact ~ .main-panel .planet-filter-tag { min-height: 34px; font-size: 12px; }
+.sidebar-compact ~ .main-panel .planet-station-link { width: 40px; height: 40px; }
+.sidebar-compact ~ .main-panel .planet-station-link svg { width: 20px; height: 20px; }
+.sidebar-compact ~ .main-panel .planet-station-link[data-tooltip]::after { font-size: 13px; }
 .sidebar-compact ~ .main-panel .station-planet-info { grid-template-columns: minmax(0, 1fr); padding: 8px 0; }
 .sidebar-compact ~ .main-panel .station-system-status > strong { font-size: 11px; }
 .sidebar-compact ~ .main-panel .station-owner-link { font-size: 14px; }

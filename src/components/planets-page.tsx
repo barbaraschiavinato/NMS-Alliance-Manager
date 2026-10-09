@@ -6,6 +6,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { Globe2, Orbit, RotateCcw, Search, SlidersHorizontal, X } from "lucide-react";
 import { AllianceSidebar, DashboardTopbar, MissionHero, storePlanetCount } from "@/components/dashboard-chrome";
+import { AdminPanel } from "@/components/admin-panel";
+import { MemberProfilePanel } from "@/components/member-profile-panel";
 import { PlanetCard } from "@/components/planet-card";
 import { GlyphStrip } from "@/components/portal-address-field";
 import type { AllianceMember, AllianceSettings } from "@/lib/access-store";
@@ -86,6 +88,10 @@ export function PlanetsPage({ alliance, currentMember, planets, almanacLookupFai
   useEffect(() => {
     if (!almanacLookupFailed) storePlanetCount(planets.length);
   }, [almanacLookupFailed, planets.length]);
+  const [pageMember, setPageMember] = useState(currentMember);
+  const [allianceSettings, setAllianceSettings] = useState(alliance);
+  const [adminOpen, setAdminOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const [selectedPlanet, setSelectedPlanet] = useState<PlanetDestination | null>(null);
   const [search, setSearch] = useState("");
   const [economy, setEconomy] = useState("");
@@ -213,17 +219,17 @@ export function PlanetsPage({ alliance, currentMember, planets, almanacLookupFai
     <div className="app-shell">
       <AllianceSidebar
         activeSection="pianeti"
-        currentMember={currentMember}
+        currentMember={pageMember}
         missionCount={missionCount}
         stationCount={stationCount}
         planetCount={planets.length}
         offlineCount={offlineCount}
         userCount={userCount}
-        settings={alliance}
+        settings={allianceSettings}
       />
       <section className="main-panel">
-        <DashboardTopbar currentMember={currentMember} sectionTitle="navigation.planets" settings={alliance} />
-        <MissionHero description={t("planet.missions_planets_description")} settings={alliance} title={t("navigation.planets")} />
+        <DashboardTopbar currentMember={pageMember} onAdminOpen={() => setAdminOpen(true)} onProfileOpen={() => setProfileOpen(true)} sectionTitle="navigation.planets" settings={allianceSettings} />
+        <MissionHero description={t("planet.missions_planets_description")} settings={allianceSettings} title={t("navigation.planets")} />
         <main className="content-wrap planets-page">
           {almanacLookupFailed && <p className="form-error">{t("planet.almanac_partial_lookup_failed")}</p>}
           <div className="planet-search-row">
@@ -414,6 +420,8 @@ export function PlanetsPage({ alliance, currentMember, planets, almanacLookupFai
         portal={selectedPlanet.portal}
         title={selectedPlanet.station?.name ?? selectedPlanet.title ?? t("planet.mission_planet")}
       />}
+      {adminOpen && pageMember.role === "admin" && <AdminPanel onClose={() => setAdminOpen(false)} onSaved={setAllianceSettings} />}
+      {profileOpen && <MemberProfilePanel member={pageMember} onClose={() => setProfileOpen(false)} onSaved={(profile) => setPageMember((current) => ({ ...current, ...profile }))} />}
     </div>
   );
 }
