@@ -1170,7 +1170,7 @@ body:has(.sidebar-compact) .dialog-heading .icon-button svg { width: 26px; heigh
 .station-list li.station-is-new { position: relative; }
 .station-new-ribbon-clip { position: absolute; z-index: 2; top: 0; left: 0; width: 96px; height: 96px; overflow: hidden; pointer-events: none; }
 .station-new-ribbon { position: absolute; top: 10px; left: -26px; width: 90px; padding: 2px 0; color: #10130f; background: var(--lime); font-size: 10px; font-weight: 750; letter-spacing: 0.06em; text-align: center; text-transform: uppercase; transform: rotate(-45deg); pointer-events: none; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35); }
-.sidebar-compact ~ .main-panel .station-new-ribbon { top: 12px; left: -28px; font-size: 12px; }
+.sidebar-compact ~ .main-panel .station-new-ribbon { top: 19px; left: -27px; width: 110px; font-size: 12px; }
 .mission-card-ribbon, .mission-ribbon-cell { position: relative; }
 .station-card-title-copy .mission-galaxy-alert, .station-planet-open .mission-galaxy-alert { width: fit-content; display: inline-flex; align-items: center; gap: 4px; padding: 2px 5px; color: #fff; font-weight: 700; background: #c62828; }
 .planet-station-address .mission-galaxy-alert { width: auto; display: inline-flex; vertical-align: middle; }
