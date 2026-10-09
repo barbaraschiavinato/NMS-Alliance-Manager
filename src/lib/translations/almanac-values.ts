@@ -34,7 +34,11 @@ export const almanacValueTranslations: Readonly<Record<Locale, Readonly<Record<s
     "Salvageable Scrap": "Rottami recuperabili",
     "Vile Brood": "Nidiata vile",
     "De-Harmonised": "Disarmonizzate",
+    "Forsaken": "Abbandonate",
     "Answer To None": "Non rispondono a nessuno",
+    "Answer to None": "Non rispondono a nessuno",
+    "Corrupted": "Corrotte",
+    "Dissonant": "Dissonanti",
     // Razza (traduzione non ufficiale)
     "Uncharted": "Sconosciuta",
     // Quantità di flora e fauna (traduzioni non ufficiali)
