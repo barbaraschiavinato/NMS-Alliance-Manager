@@ -402,6 +402,7 @@ export function PlanetsPage({ alliance, currentMember, planets, almanacLookupFai
                 ><Orbit aria-hidden="true" size={15} /></Link>}
               </div>
               <ul className="planet-mission-list">{groupPlanets.map((planet) => <li key={planet.id}>
+                {planet.dissonant && <span className="planet-ribbon-clip"><span className="planet-dissonant-ribbon">{t("planet.dissonant")}</span></span>}
                 <button className="planet-mission-card" onClick={() => setSelectedPlanet(planet)} type="button">
                   {planet.imageUrl
                     ? <Image alt="" className="planet-mission-image" height={96} src={planet.imageUrl} unoptimized width={96} />
