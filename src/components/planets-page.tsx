@@ -97,9 +97,8 @@ const raceIcons: Record<string, string> = { Gek: "/icons/nms-gek.svg", Korvax: "
 const conflictLevels: Record<string, number> = { None: 0, Low: 1, Medium: 2, High: 3, Outlaw: 3 };
 
 function PlanetWaterIndicator({ water, label }: Readonly<{ water?: string; label: (value: string) => string }>) {
-  if (!water) return null;
-  const hasWater = water !== "None";
-  return <span aria-label={label(water)} className={`planet-water-indicator${hasWater ? " has-water" : ""}`} data-tooltip={label(water)} role="img"><Droplet aria-hidden="true" size={14} /></span>;
+  if (!water || water === "None") return null;
+  return <span aria-label={label(water)} className="planet-water-indicator has-water" data-tooltip={label(water)} role="img"><Droplet aria-hidden="true" size={14} /></span>;
 }
 
 export function PlanetsPage({ alliance, currentMember, planets, almanacLookupFailed, missionCount, stationCount, offlineCount, userCount }: Readonly<{
