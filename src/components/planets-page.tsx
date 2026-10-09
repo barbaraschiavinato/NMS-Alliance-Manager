@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { sortByCreatedAtDescending } from "@/lib/created-at";
 import Image from "next/image";
 import Link from "next/link";
-import { Globe2, Orbit, RotateCcw, Search, SlidersHorizontal, X } from "lucide-react";
+import { AlertTriangle, Globe2, Orbit, RotateCcw, Search, SlidersHorizontal, X } from "lucide-react";
 import { AllianceSidebar, DashboardTopbar, MissionHero, storePlanetCount } from "@/components/dashboard-chrome";
 import { AdminPanel } from "@/components/admin-panel";
 import { MemberProfilePanel } from "@/components/member-profile-panel";
@@ -380,7 +380,7 @@ export function PlanetsPage({ alliance, currentMember, planets, almanacLookupFai
               <div className="planet-station-heading">
                 <div>
                   <h2>{station?.name || t(station ? "stations.space_station" : "planet.no_associated_station")}</h2>
-                  {station && <p className="planet-station-address">{galaxyLabel(station.galaxy)} · {station.portal}</p>}
+                  {station && <p className="planet-station-address"><span className={station.galaxy !== 0 ? "mission-galaxy-alert" : undefined} data-tooltip={station.galaxy !== 0 ? t("missions.galaxy_portals_warning") : undefined} tabIndex={station.galaxy !== 0 ? 0 : undefined}>{station.galaxy !== 0 && <AlertTriangle size={9} />}{galaxyLabel(station.galaxy)}</span> · {station.portal}</p>}
                   {groupPlanets[0]?.systemFacts.length > 0 && <div className="planet-station-facts">
                     {groupPlanets[0].systemFacts.map((fact) => <span key={fact.label}><b>{t(fact.label)}</b> {tv(fact.value)}</span>)}
                   </div>}

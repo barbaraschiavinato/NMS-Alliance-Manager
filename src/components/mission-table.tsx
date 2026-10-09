@@ -1,4 +1,4 @@
-import { Check, CirclePlus, Compass, Eye, EyeOff, FileText, Hammer, Info, LayoutGrid, List, Orbit, Pencil, Search, ShieldPlus, Trash2, X } from "lucide-react";
+import { AlertTriangle, Check, CirclePlus, Compass, Eye, EyeOff, FileText, Hammer, Info, LayoutGrid, List, Orbit, Pencil, Search, ShieldPlus, Trash2, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import type { Mission, MissionSpecialty, MissionStatus } from "@/lib/missions";
@@ -382,6 +382,7 @@ function MissionCard({ mission, systemStatuses, currentMember, canManage, statio
       <div className="mission-name-cell">
         <MissionPlanetThumbnail mission={mission} />
         <div>
+          <span className={`mission-galaxy${(mission.galaxy ?? 0) !== 0 ? " mission-galaxy-alert" : ""}`} data-tooltip={(mission.galaxy ?? 0) !== 0 ? t("missions.galaxy_portals_warning") : undefined} tabIndex={(mission.galaxy ?? 0) !== 0 ? 0 : undefined}>{(mission.galaxy ?? 0) !== 0 && <AlertTriangle size={9} />}{galaxyLabel(mission.galaxy ?? 0)}</span>
           <div className="mission-title-with-info">
             <button aria-label={`${t("planet.open_planet_details_for")} ${mission.title}`} className="mission-title" onClick={() => onOpenPlanet(mission)} type="button">{mission.title}</button>
             <PlanetNotesButton mission={mission} onView={onViewPlanetNotes} />
@@ -393,7 +394,7 @@ function MissionCard({ mission, systemStatuses, currentMember, canManage, statio
     </div>
     <div className="mission-card-system">
       <GlyphStrip address={mission.systemAddress ?? ""} />
-      <span className="mission-card-system-text">{systemLabel(mission) || t("system.system_label")} · {galaxyLabel(mission.galaxy ?? 0)}</span>
+      <span className="mission-card-system-text">{systemLabel(mission) || t("system.system_label")}</span>
       <StationSystemCoreInfo key={`${mission.systemAddress}:${mission.galaxy}`} galaxy={mission.galaxy ?? 0} portal={mission.systemAddress ?? ""} />
     </div>
     <div className="mission-card-people">
@@ -537,9 +538,9 @@ export function MissionTable({
           <thead><tr><th>{t("missions.mission_column_heading")}</th><th>{t("common.type_column_heading")}</th><th>{t("common.sector")}</th><th>{t("missions.discoverer_column_heading")}</th><th>{t("missions.assignee_column_heading")}</th><th>{t("missions.priority_column_heading")}</th><th>{t("missions.progress_column_heading")}</th><th>{t("missions.five_part_progress")}</th><th aria-label={t("common.actions_label")} /></tr></thead>
           <tbody>
             {missions.map((mission) => <tr key={mission.id}>
-                  <td className="mission-ribbon-cell"><NewMissionRibbon mission={mission} /><div className="mission-name-cell"><span className={`mission-icon ${mission.status === "completed" ? "mission-icon-done" : ""}`}>{mission.status === "completed" ? <Check size={15} /> : <Compass size={15} />}</span><div><div className="mission-title-with-info"><button aria-label={`${t("planet.open_planet_details_for")} ${mission.title}`} className="mission-title" onClick={() => onOpenPlanet(mission)} title={t("planet.open_planet_details")} type="button">{mission.title}</button><PlanetNotesButton mission={mission} onView={setPlanetNoteView} /></div><span className="mission-description">{mission.description}</span></div></div></td>
+                  <td className="mission-ribbon-cell"><NewMissionRibbon mission={mission} /><div className="mission-name-cell"><span className={`mission-icon ${mission.status === "completed" ? "mission-icon-done" : ""}`}>{mission.status === "completed" ? <Check size={15} /> : <Compass size={15} />}</span><div><span className={`mission-galaxy${(mission.galaxy ?? 0) !== 0 ? " mission-galaxy-alert" : ""}`} data-tooltip={(mission.galaxy ?? 0) !== 0 ? t("missions.galaxy_portals_warning") : undefined} tabIndex={(mission.galaxy ?? 0) !== 0 ? 0 : undefined}>{(mission.galaxy ?? 0) !== 0 && <AlertTriangle size={9} />}{galaxyLabel(mission.galaxy ?? 0)}</span><div className="mission-title-with-info"><button aria-label={`${t("planet.open_planet_details_for")} ${mission.title}`} className="mission-title" onClick={() => onOpenPlanet(mission)} title={t("planet.open_planet_details")} type="button">{mission.title}</button><PlanetNotesButton mission={mission} onView={setPlanetNoteView} /></div><span className="mission-description">{mission.description}</span></div></div></td>
               <td><span className={`badge badge--specialty badge--specialty-${mission.targetSpecialty ?? "all"}`}>{t(targetSpecialtyNames[mission.targetSpecialty ?? "all"])}</span></td>
-              <td><div className="system-cell"><GlyphStrip address={mission.systemAddress ?? ""} /><span className="system-caption">{systemLabel(mission) || t("system.system_label")} · {galaxyLabel(mission.galaxy ?? 0)}</span></div></td>
+              <td><div className="system-cell"><GlyphStrip address={mission.systemAddress ?? ""} /><span className="system-caption"><span>{systemLabel(mission) || t("system.system_label")}</span></span></div></td>
               <td><DiscovererCell memberId={mission.stationOwnerMemberId} galaxy={mission.galaxy} image={getDiscovererImage(mission.stationOwnerMemberId)} name={mission.stationOwnerName} onOpenProfile={(memberId, messageContext) => setProfileTarget({ memberId, messageContext })} portal={mission.systemAddress} /></td>
               <td><AssigneeCell currentMember={currentMember} members={members} mission={mission} onOpenProfile={(memberId, messageContext) => setProfileTarget({ memberId, messageContext })} /></td>
               <td><span className={`badge badge--priority badge--priority-${mission.priority}`}><span />{t(`common.${mission.priority}`)}</span></td>

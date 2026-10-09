@@ -171,6 +171,7 @@ export const translations: TranslationCatalog = {
     "missions.status_completed": "Completata",
     "missions.pending_assigned": "Attesa assegnate",
     "missions.pending_unassigned": "Attesa non assegnate",
+    "missions.galaxy_portals_warning": "Verifica di avere i portali per questa galassia",
     "missions.discoverer_column_heading": "SCOPRITORE",
     "missions.assignee_column_heading": "ASSEGNATARIO",
     "missions.mission_column_heading": "MISSIONE",

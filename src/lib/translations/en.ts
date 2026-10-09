@@ -171,6 +171,7 @@ export const translations: TranslationCatalog = {
     "missions.status_completed": "Completed",
     "missions.pending_assigned": "Pending · assigned",
     "missions.pending_unassigned": "Pending · unassigned",
+    "missions.galaxy_portals_warning": "Make sure you have portals for this galaxy",
     "missions.discoverer_column_heading": "DISCOVERER",
     "missions.assignee_column_heading": "ASSIGNEE",
     "missions.mission_column_heading": "MISSION",

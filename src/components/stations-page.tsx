@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, type SubmitEvent } from "react";
-import { CircleAlert, CirclePlus, Crosshair, FileSpreadsheet, FileText, LayoutGrid, List, Pencil, Plus, Search, Trash2, X } from "lucide-react";
+import { AlertTriangle, CircleAlert, CirclePlus, Crosshair, FileSpreadsheet, FileText, LayoutGrid, List, Pencil, Plus, Search, Trash2, X } from "lucide-react";
 import { AllianceSidebar, DashboardTopbar, MissionHero } from "@/components/dashboard-chrome";
 import { AdminPanel } from "@/components/admin-panel";
 import { MemberProfilePanel } from "@/components/member-profile-panel";
@@ -44,6 +44,12 @@ type StationEntry = Readonly<{
   availableSpecialties: MissionSpecialty[];
 }>;
 type StationMissionSeed = Readonly<{ portal: string; galaxy: number; title: string; ownerMemberId: string }>;
+
+function GalaxyLabel({ galaxy }: Readonly<{ galaxy: number }>) {
+  const { t } = useLocale();
+  const foreign = galaxy !== 0;
+  return <span className={foreign ? "mission-galaxy-alert" : undefined} data-tooltip={foreign ? t("missions.galaxy_portals_warning") : undefined} tabIndex={foreign ? 0 : undefined}>{foreign && <AlertTriangle size={9} />}{galaxyLabel(galaxy)}</span>;
+}
 
 function canCreateMissionFromStation(station: StationEntry, member: AllianceMember, canManage: boolean) {
   if (canManage) return station.availableSpecialties.length > 0;
@@ -178,7 +184,7 @@ function CachedPlanetInfo({ planet, onOpen }: Readonly<{ planet: CachedPlanet; o
   return (
     <div className="station-planet-info">
       <button className="station-planet-open" onClick={onOpen} type="button" aria-label={`${t("common.open_details_for")} ${title || t("planet.this_planet")}`}>
-        <span>{galaxyLabel(planet.galaxy)}</span><strong>{title || t("planet.planet_data")}</strong>
+        <GalaxyLabel galaxy={planet.galaxy} /><strong>{title || t("planet.planet_data")}</strong>
       </button>
       <dl>{facts.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{tv(value)}</dd></div>)}</dl>
     </div>
@@ -669,7 +675,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
                 {viewMode === "cards" && <button className={`station-card-title${planetImageUrl ? " station-card-title-with-image" : ""}`} onClick={() => setSelectedStation({ portal: station.portal, galaxy: station.galaxy })} type="button">
                   {planetImageUrl && <Image alt="" className="station-card-planet-image" height={112} src={planetImageUrl} unoptimized width={112} />}
                   <span className="station-card-title-copy">
-                    <span>{galaxyLabel(station.galaxy)}</span>
+                    <GalaxyLabel galaxy={station.galaxy} />
                     <strong>{stationDisplayName}</strong>
                     <StationSystemCoreInfo key={`${station.portal}:${station.galaxy}`} galaxy={station.galaxy} portal={station.portal} />
                   </span>
@@ -681,7 +687,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
                     ? <CachedPlanetInfo onOpen={() => setSelectedStation({ portal: station.portal, galaxy: station.galaxy })} planet={station.planet} />
                     : viewMode === "cards"
                       ? <p className="station-card-no-planet">{t("planet.no_almanac_data")}</p>
-                      : <button className="station-planet-open station-planet-unknown" onClick={() => setSelectedStation({ portal: station.portal, galaxy: station.galaxy })} type="button"><span>{galaxyLabel(station.galaxy)}</span><strong>{t("planet.no_almanac_data_open_details")}</strong></button>}
+                      : <button className="station-planet-open station-planet-unknown" onClick={() => setSelectedStation({ portal: station.portal, galaxy: station.galaxy })} type="button"><GalaxyLabel galaxy={station.galaxy} /><strong>{t("planet.no_almanac_data_open_details")}</strong></button>}
                 </div>
                 <div className="station-card-footer">
                   {canSeeAll && planetStatusesLoaded && <div className="station-system-status">
