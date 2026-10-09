@@ -22,6 +22,22 @@ function almanacWord(value: unknown): string | undefined {
   return typeof record?.word === "string" ? record.word : undefined;
 }
 
+function almanacStarCount(value: unknown): number | undefined {
+  const record = asRecord(value);
+  if (typeof record?.stars !== "number" || !Number.isFinite(record.stars)) return undefined;
+  return Math.max(0, Math.min(3, Math.floor(record.stars)));
+}
+
+function almanacResourceNames(value: unknown, kinds: readonly string[]): string[] {
+  if (!Array.isArray(value)) return [];
+  return [...new Set(value.flatMap((entry) => {
+    const record = asRecord(entry);
+    return typeof record?.name === "string" && typeof record.kind === "string" && kinds.includes(record.kind)
+      ? [record.name]
+      : [];
+  }))];
+}
+
 function almanacSearchValues(value: unknown, parentKey = ""): string[] {
   if (typeof value === "string") return [value];
   if (typeof value === "number" || typeof value === "boolean") return [String(value)];
@@ -111,6 +127,11 @@ export default async function PlanetsRoute() {
       almanacSearchIndex: string;
       almanacFacts: { label: string; value: string }[];
       systemFacts: { label: string; value: string }[];
+      planetType?: string;
+      economyStars?: number;
+      plants: string[];
+      minerals: string[];
+      valuables: string[];
     }) | null;
     failed: boolean;
   }[] = [];
@@ -123,9 +144,12 @@ export default async function PlanetsRoute() {
         const headline = asRecord(lines?.headline);
         const pictures = asRecord(almanac?.pictures);
         const disc = pictures?.disc;
+        const carries = almanac?.carries;
         const almanacName = typeof headline?.word === "string" ? headline.word : undefined;
+        const planetType = almanacWord(band?.type);
+        const economyStars = almanacStarCount(band?.economy);
         const almanacFacts = ([
-          ["common.planet_type_label", almanacWord(band?.type)],
+          ["common.planet_type_label", planetType],
           ["planet.weather", almanacWord(band?.weather)],
           ["planet.water", almanacWord(band?.water)],
           ["planet.sentinels", almanacWord(band?.sentinels)],
@@ -146,6 +170,11 @@ export default async function PlanetsRoute() {
             almanacSearchIndex: almanacSearchValues(almanac).join(" "),
             almanacFacts,
             systemFacts,
+            ...(planetType ? { planetType } : {}),
+            ...(economyStars !== undefined ? { economyStars } : {}),
+            plants: almanacResourceNames(carries, ["plant", "consumable"]),
+            minerals: almanacResourceNames(carries, ["mineral"]),
+            valuables: almanacResourceNames(carries, ["tradeable"]),
           } : null,
           failed: false,
         };

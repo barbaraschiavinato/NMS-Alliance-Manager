@@ -559,8 +559,31 @@ select { appearance: none; padding-right: 29px; background-image: linear-gradien
 .station-toolbar { margin-bottom: 0; }
 .members-toolbar.station-toolbar-simple { grid-template-columns: minmax(0, 1fr); }
 .members-toolbar.station-toolbar-simple .member-filter-tabs { grid-column: 1 / -1; }
-.planet-search { width: min(360px, 100%); margin: 0 0 16px auto; }
-.planet-station-groups { display: grid; gap: 22px; }
+.planet-search-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.planet-search-row .planet-search { flex: 1; }
+.planet-filters-toggle { width: 37px; height: 37px; position: relative; display: grid; flex: 0 0 37px; place-items: center; color: #a4adae; border: 1px solid #394548; border-radius: 3px; background: #171e21; cursor: pointer; }
+.planet-filters-toggle:hover, .planet-filters-toggle[aria-expanded="true"], .planet-filters-toggle[data-active] { color: var(--lime); border-color: var(--lime); }
+.planet-filters-toggle:focus-visible { outline: 1px solid var(--lime); outline-offset: 1px; }
+.planet-filters-toggle[data-tooltip]::after { position: absolute; z-index: 30; right: 0; bottom: calc(100% + 7px); padding: 6px 8px; color: #f1eee7; border: 1px solid #394548; border-radius: 3px; background: #111719; box-shadow: 0 4px 14px #0008; content: attr(data-tooltip); font-size: 9px; font-weight: 500; line-height: 1.2; opacity: 0; pointer-events: none; transform: translateY(3px); transition: opacity .12s, transform .12s; white-space: nowrap; }
+.planet-filters-toggle[data-tooltip]:hover::after, .planet-filters-toggle[data-tooltip]:focus-visible::after { opacity: 1; transform: translateY(0); }
+.planet-active-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: -4px 0 12px; }
+.planet-filter-tag { display: inline-flex; align-items: center; gap: 5px; min-height: 29px; padding: 0 5px 0 9px; color: #f1eee7; border: 1px solid #394548; border-radius: 3px; background: #171e21; font-size: 10px; }
+.planet-filter-tag button { width: 18px; height: 18px; display: grid; place-items: center; padding: 0; color: #a4adae; border: 0; border-radius: 2px; background: transparent; cursor: pointer; }
+.planet-filter-tag button:hover { color: var(--lime); }
+.planet-filter-tag button:focus-visible { outline: 1px solid var(--lime); }
+.planet-active-filters .planet-reset-filters { margin-left: auto; }
+.planet-controls { display: grid; grid-template-columns: repeat(4, minmax(130px, 1fr)); align-items: end; gap: 10px; margin-bottom: 16px; }
+.planet-search { width: 100%; height: auto; min-height: 37px; margin: 0; padding: 0 9px; border-color: #394548; border-radius: 3px; background: #171e21; }
+.planet-search input { font-size: 10px; }
+.planet-filter { min-width: 0; display: grid; gap: 5px; color: #a4adae; font-size: 9px; }
+.planet-filter select { width: 100%; min-height: 37px; padding: 0 9px; color: #f1eee7; border: 1px solid #394548; border-radius: 3px; background: #171e21; font-size: 10px; }
+.planet-filter select:focus-visible { outline: 1px solid var(--lime); outline-offset: 1px; }
+.planet-reset-filters { width: 29px; height: 29px; position: relative; display: grid; grid-column: 1 / -1; justify-self: end; place-items: center; color: #a4adae; border: 1px solid #394548; border-radius: 3px; background: #171e21; cursor: pointer; }
+.planet-reset-filters:hover { color: var(--lime); border-color: var(--lime); }
+.planet-reset-filters:focus-visible { outline: 1px solid var(--lime); outline-offset: 1px; }
+.planet-reset-filters[data-tooltip]::after { position: absolute; z-index: 30; right: 0; bottom: calc(100% + 7px); padding: 6px 8px; color: #f1eee7; border: 1px solid #394548; border-radius: 3px; background: #111719; box-shadow: 0 4px 14px #0008; content: attr(data-tooltip); font-size: 9px; font-weight: 500; line-height: 1.2; opacity: 0; pointer-events: none; transform: translateY(3px); transition: opacity .12s, transform .12s; white-space: nowrap; }
+.planet-reset-filters[data-tooltip]:hover::after, .planet-reset-filters[data-tooltip]:focus-visible::after { opacity: 1; transform: translateY(0); }
+.planet-station-groups { display: grid; gap: 22px; margin-top: 24px; }
 .planet-station-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
 .planet-station-group h2 { margin: 0 0 5px; color: var(--lime); font-size: 13px; font-weight: 650; }
 .planet-station-address { margin: 0 0 10px; color: #a4adae; font-family: "SFMono-Regular", Consolas, monospace; font-size: 9px; }
@@ -1105,6 +1128,7 @@ body:has(.sidebar-compact) .mission-notes-content, body:has(.sidebar-compact) .p
   .sidebar-compact ~ .main-panel .toolbar-actions { width: 100%; justify-content: flex-end; padding: 10px 0 2px; }
   .sidebar-compact ~ .main-panel .filter-tabs { width: 100%; justify-content: space-between; gap: 8px; overflow-x: auto; }
   .sidebar-compact ~ .main-panel .member-filter-tabs { height: 42px; overflow-x: auto; justify-content: flex-start; gap: 14px; }
+  .planet-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .sidebar-compact ~ .main-panel .station-list-cards, .member-card-grid { grid-template-columns: 1fr; }
   .planet-mission-list { grid-template-columns: 1fr; }
   .sidebar-compact ~ .main-panel .station-list-cards li { padding: 12px; }
