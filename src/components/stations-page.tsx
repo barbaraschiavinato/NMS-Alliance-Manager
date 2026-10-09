@@ -157,7 +157,7 @@ function cachedPlanetImageUrl(planet: CachedPlanet | null) {
 }
 
 function CachedPlanetInfo({ planet, onOpen }: Readonly<{ planet: CachedPlanet; onOpen: () => void }>) {
-  const { t } = useLocale();
+  const { t, tv } = useLocale();
   const lines = asRecord(planet.response.lines);
   const band = lines ? asRecord(lines.band) : null;
   const headline = lines ? asRecord(lines.headline) : null;
@@ -176,7 +176,7 @@ function CachedPlanetInfo({ planet, onOpen }: Readonly<{ planet: CachedPlanet; o
       <button className="station-planet-open" onClick={onOpen} type="button" aria-label={`${t("common.open_details_for")} ${title || t("planet.this_planet")}`}>
         <span>{galaxyLabel(planet.galaxy)}</span><strong>{title || t("planet.planet_data")}</strong>
       </button>
-      <dl>{facts.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>
+      <dl>{facts.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{tv(value)}</dd></div>)}</dl>
     </div>
   );
 }

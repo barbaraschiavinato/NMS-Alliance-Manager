@@ -55,9 +55,7 @@ export function LocaleProvider({ children }: Readonly<{ children: ReactNode }>) 
     setLocale,
     t: (message, values) => translate(locale, message, values),
     tv: (value) => translateAlmanacValue(locale, value),
-    systemLabel: ({ system, systemLabelFromAlmanac }) => systemLabelFromAlmanac
-      ? system.split(" · ").map((part) => translateAlmanacValue(locale, part)).join(" · ")
-      : system,
+    systemLabel: ({ system }) => system.split(" · ").map((part) => translateAlmanacValue(locale, part)).join(" · "),
   }), [locale]);
 
   return <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>;
