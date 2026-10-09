@@ -264,11 +264,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
     (`${station.name ?? cachedPlanetType(station.planet)} ${station.note ?? ""} ${station.portal} ${station.ownerNmsName ?? ""} ${station.ownerName ?? ""} ${galaxyLabel(station.galaxy)}`.toLowerCase().includes(search.toLowerCase()) ||
       portalSearchMatches(station.portal, search)),
   ), [initialStation, search, stations]);
-  const searchableStations = pageMember.specialty === "ranger"
-    ? stationCandidates
-    : stationCandidates.filter((station) =>
-      canSeeAll || canCreateMissionFromStation(station, pageMember, canCreateMissions) || station.canOpenOwnSpecialtyMission,
-    );
+  const searchableStations = stationCandidates;
   const stationCounts: Record<StationFilter, number> = {
     all: searchableStations.length,
     pending: searchableStations.filter((station) => station.missionStatus === "none").length,
