@@ -516,10 +516,12 @@ select { appearance: none; padding-right: 29px; background-image: linear-gradien
 .admin-feedback { display: flex; align-items: flex-start; gap: 6px; margin: 12px 0 0; font-size: 10px; line-height: 1.4; }
 .admin-success { color: #48744f; }
 .admin-error { color: #a64f3f; }
-.profile-required-banner { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 0 0 14px; padding: 11px 13px; border: 1px solid #e7d6ae; background: #f8f2e3; }
+.profile-required-banner { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 0 0 14px; padding: 13px 15px; border: 1px solid #594126; border-left: 3px solid var(--lime); background: linear-gradient(110deg, #211b14 0%, #171e21 72%); box-shadow: 0 8px 22px #0003; }
 .profile-required-banner > span { display: grid; gap: 3px; }
-.profile-required-banner strong { color: #624f2e; font-size: 10px; }
-.profile-required-banner small { color: #76694e; font-size: 9px; }
+.profile-required-banner strong { color: #f3bd72; font-family: var(--font-accent); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; }
+.profile-required-banner small { color: #b8b1a4; font-size: 10px; line-height: 1.5; }
+.profile-required-banner .claim-button { min-height: 32px; padding: 0 12px; color: #171a1a; border: 1px solid var(--lime); background: var(--lime); transition: background-color .15s, border-color .15s; }
+.profile-required-banner .claim-button:hover { border-color: #ff9b33; background: #ff9b33; }
 .messages-page { display: grid; gap: 14px; }
 .messages-loading { min-height: 120px; display: grid; place-items: center; }
 .messages-empty { margin: 0; padding: 22px; color: #a4adae; border: 1px solid #394548; border-radius: 4px; background: #171e21; font-size: 11px; }
@@ -873,10 +875,6 @@ select { appearance: none; padding-right: 29px; background-image: linear-gradien
 .mission-dialog .member-pending { color: #e4b478 !important; }
 .mission-dialog .member-approved { color: #72d1c4 !important; }
 .mission-dialog .member-blocked { color: #ef8067 !important; }
-.mission-dialog .profile-required-banner { border-color: #655536; background: #2b261b; }
-.mission-dialog .profile-required-banner strong { color: #f0dba1; }
-.mission-dialog .profile-required-banner small { color: #c5b78d; }
-
 @media (max-width: 1080px) {
   .sidebar { width: 210px; flex-basis: 210px; }
   .topbar { padding: 0 25px; }

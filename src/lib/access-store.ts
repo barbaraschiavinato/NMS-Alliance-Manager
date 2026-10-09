@@ -52,6 +52,7 @@ function normalizeMember(value: unknown): AllianceMember | null {
   const platforms = Array.isArray(member.platforms)
     ? member.platforms.filter((platform): platform is NmsPlatform => nmsPlatforms.includes(platform as NmsPlatform))
     : [];
+  const role = memberRoles.includes(member.role as MemberRole) ? member.role as MemberRole : "user";
   return {
     publicId: typeof member.publicId === "string" && publicIdPattern.test(member.publicId) ? member.publicId : randomUUID(),
     email: member.email,
@@ -61,7 +62,7 @@ function normalizeMember(value: unknown): AllianceMember | null {
     nmsCode: typeof member.nmsCode === "string" ? member.nmsCode : "",
     platforms,
     specialty: memberSpecialties.includes(member.specialty as MemberSpecialty) ? member.specialty as MemberSpecialty : "",
-    role: memberRoles.includes(member.role as MemberRole) ? member.role as MemberRole : "user",
+    role,
     membershipStatus: membershipStatuses.includes(member.membershipStatus as MembershipStatus)
       ? member.membershipStatus as MembershipStatus
       : "pending",
@@ -69,7 +70,7 @@ function normalizeMember(value: unknown): AllianceMember | null {
     approvedAt: typeof member.approvedAt === "string" ? member.approvedAt : "",
     lastLogin: typeof member.lastLogin === "string" ? member.lastLogin : "",
     ...(member.offline === true ? { offline: true } : {}),
-    ...(member.simpleView === true ? { simpleView: true } : {}),
+    simpleView: typeof member.simpleView === "boolean" ? member.simpleView : role === "user",
   };
 }
 
@@ -147,6 +148,7 @@ export async function registerMember(identity: Pick<AllianceMember, "email" | "n
     specialty: existingMember?.specialty ?? "",
     role,
     membershipStatus,
+    simpleView: existingMember?.simpleView ?? role === "user",
     approvedBy,
     approvedAt,
     lastLogin: new Date().toISOString(),
@@ -270,10 +272,7 @@ export async function updateMemberProfile(email: string, profile: MemberProfileI
   member.nmsCode = normalizeNmsFriendCode(profile.nmsCode);
   member.platforms = [...new Set(profile.platforms)];
   member.specialty = profile.specialty;
-  if (profile.simpleView !== undefined) {
-    if (profile.simpleView) member.simpleView = true;
-    else delete member.simpleView;
-  }
+  if (profile.simpleView !== undefined) member.simpleView = profile.simpleView;
   await writeAccessData(data);
   return member;
 }
