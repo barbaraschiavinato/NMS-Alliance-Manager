@@ -27,7 +27,7 @@ export function StationSystemCoreInfo({ portal, galaxy }: Readonly<{ portal: str
         const { systemAttributes, planetSeeds } = await import("@/lib/nms-core/system.js");
         const address = BigInt(`0x${portal}`);
         const attributes = systemAttributes(address, galaxy);
-        const planetCount = planetSeeds(address, galaxy).planet_count;
+        const planetCount = planetSeeds(address, galaxy).planet_seeds.length;
         if (
           !Number.isInteger(planetCount) ||
           planetCount < 1 ||
