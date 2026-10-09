@@ -111,6 +111,13 @@ export default async function PlanetsRoute() {
     `${mission.systemAddress.slice(1).toUpperCase()}:${mission.galaxy}`,
     mission,
   ]));
+  const earliestCreatedAt = new Map<string, string>();
+  for (const item of [...missions.map((mission) => ({ ...mission, portal: mission.systemAddress })), ...stations]) {
+    if (!item.createdAt) continue;
+    const key = `${item.portal.slice(1).toUpperCase()}:${item.galaxy}`;
+    const current = earliestCreatedAt.get(key);
+    if (!current || Date.parse(item.createdAt) < Date.parse(current)) earliestCreatedAt.set(key, item.createdAt);
+  }
   const systemsByAddress = new Map(missions.map((mission) => {
     const key = `${mission.systemAddress.slice(1).toUpperCase()}:${mission.galaxy}`;
     const visibleMission = visibleByAddress.get(key);
@@ -125,6 +132,7 @@ export default async function PlanetsRoute() {
         systemLabelFromAlmanac: visibleMission.systemLabelFromAlmanac,
       } : {}),
       stationOwnerMemberId: mission.stationOwnerMemberId,
+      ...(earliestCreatedAt.has(key) ? { createdAt: earliestCreatedAt.get(key) } : {}),
     }] as const;
   }));
   for (const station of stations) {
@@ -135,6 +143,7 @@ export default async function PlanetsRoute() {
         portal: station.portal,
         galaxy: station.galaxy,
         stationOwnerMemberId: station.ownerId,
+        ...(earliestCreatedAt.has(key) ? { createdAt: earliestCreatedAt.get(key) } : {}),
       });
     }
   }

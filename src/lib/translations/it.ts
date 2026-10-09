@@ -618,7 +618,7 @@ export const translations: TranslationCatalog = {
     "system.enter_the_system": "Indica il sistema",
     "system.coordinate_the_next_frontier_one_expedition_at_a_time": "Coordina la prossima frontiera, una spedizione alla volta.",
     "system.clear_address": "Cancella indirizzo",
-    "system.system_sector_name": "Nome sistema / settore",
+    "system.system_sector_name": "Caratteristiche sistema",
     "system.system_index_fff_is_reserved": "Indice sistema FFF riservato.",
     "system.system_column_heading": "SYSTEM",
     "system.planets_count": "{count} pianeti",

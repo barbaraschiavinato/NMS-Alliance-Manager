@@ -1,4 +1,5 @@
-import { useEffect, useState, type SubmitEvent } from "react";
+import { useEffect, useRef, useState, type SubmitEvent } from "react";
+import { generateSystemName } from "@/lib/system-name";
 import { ArrowUpRight, CircleAlert, Trash2, X } from "lucide-react";
 import {
   decodePortalAddress,
@@ -78,6 +79,7 @@ export function MissionForm({
     ? { ...mission, systemAddress: mission.systemAddress ?? "", galaxy: mission.galaxy ?? 0 }
     : { ...emptyMission, ...initialValues });
   const [saving, setSaving] = useState(false);
+  const titleEditedRef = useRef(Boolean(mission?.title));
   const [error, setError] = useState("");
   const [systemStatuses, setSystemStatuses] = useState<MissionSystemStatus[]>([]);
   const [loadedStatusKey, setLoadedStatusKey] = useState("");
@@ -176,6 +178,11 @@ export function MissionForm({
   };
   const handleSystemLookup = (lookup: SystemAddressLookup) => {
     const verified = lookup.status === "found";
+    if (!mission && !titleEditedRef.current) {
+      void generateSystemName(lookup.address, lookup.galaxy).then((systemName) => {
+        if (systemName && !titleEditedRef.current) setForm((current) => ({ ...current, title: `${systemName} System` }));
+      });
+    }
     setForm((current) => ({
       ...current,
       systemVerified: verified,
@@ -235,7 +242,10 @@ export function MissionForm({
         <form className={[simplified && "mission-form-simplified", hideAddress && "mission-form-hide-address", minimal && "mission-form-minimal"].filter(Boolean).join(" ") || undefined} onSubmit={submit}>
           <label className="field full-field">
             <span>{t("missions.mission_name")}</span>
-            <input autoFocus maxLength={120} onChange={(event) => update("title", event.target.value)} placeholder={t("common.e_g_map_the_sector")} required value={form.title} />
+            <input autoFocus maxLength={120} onChange={(event) => {
+              titleEditedRef.current = true;
+              update("title", event.target.value);
+            }} placeholder={t("common.e_g_map_the_sector")} required value={form.title} />
           </label>
           <label className="field full-field mission-objective-field">
             <span>{t("common.objective")}</span>

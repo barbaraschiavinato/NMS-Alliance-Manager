@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useMemo, useState, type SubmitEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type SubmitEvent } from "react";
 import { CircleAlert, CirclePlus, Crosshair, FileText, LayoutGrid, List, Pencil, Plus, Search, Trash2, X } from "lucide-react";
 import { AllianceSidebar, DashboardTopbar, MissionHero } from "@/components/dashboard-chrome";
 import { AdminPanel } from "@/components/admin-panel";
@@ -21,6 +21,7 @@ import { editableSystemStatusRoles, isMissionSystemStatus, planetSystemStatusKey
 import { useLocale } from "@/components/locale-provider";
 import { useNavigationSearchState } from "@/components/navigation-search-reset";
 import { sortByCreatedAtDescending } from "@/lib/created-at";
+import { generateSystemName } from "@/lib/system-name";
 
 type CachedPlanet = Readonly<{ galaxy: number; response: Record<string, unknown> }>;
 type StationMissionStatus = "none" | "in_progress" | "completed";
@@ -215,7 +216,12 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
   const [stationName, setStationName] = useState("");
   const [stationNote, setStationNote] = useState("");
   const [planetType, setPlanetType] = useState("");
-  const [stationNameEdited, setStationNameEdited] = useState(false);
+  const [stationNameEdited, setStationNameEditedState] = useState(false);
+  const stationNameEditedRef = useRef(false);
+  function setStationNameEdited(edited: boolean) {
+    stationNameEditedRef.current = edited;
+    setStationNameEditedState(edited);
+  }
   const [creatingFromMission, setCreatingFromMission] = useState(Boolean(initialCreateStation));
   const [validation, setValidation] = useState<SystemAddressValidation>(
     initialCreateStation ? { valid: true, lookup: null } : { valid: false, lookup: null },
@@ -340,7 +346,11 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
   }, [canCreateMissions, t]);
 
   useEffect(() => {
-    if (initialCreateStation) window.history.replaceState(null, "", "/stations");
+    if (!initialCreateStation) return;
+    window.history.replaceState(null, "", "/stations");
+    void generateSystemName(initialCreateStation.portal, initialCreateStation.galaxy).then((systemName) => {
+      if (systemName) setStationName((current) => stationNameEditedRef.current || current ? current : `${systemName} System`);
+    });
   }, [initialCreateStation]);
 
   useEffect(() => {
@@ -396,10 +406,16 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
     }
   }
 
+  async function fillSystemName(address: string, lookupGalaxy: number) {
+    const systemName = await generateSystemName(address, lookupGalaxy);
+    if (systemName) setStationName((current) => stationNameEditedRef.current ? current : `${systemName} System`);
+  }
+
   function handleStationLookup(lookup: NonNullable<SystemAddressValidation["lookup"]>) {
     const nextPlanetType = lookup.planetType?.trim() ?? "";
     setPlanetType(nextPlanetType);
     if (!stationNameEdited) setStationName(nextPlanetType);
+    void fillSystemName(lookup.address, lookup.galaxy);
   }
 
   async function addStation(event: SubmitEvent<HTMLFormElement>) {

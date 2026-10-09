@@ -618,7 +618,7 @@ export const translations: TranslationCatalog = {
     "system.enter_the_system": "Enter the system",
     "system.coordinate_the_next_frontier_one_expedition_at_a_time": "Coordinate the next frontier, one expedition at a time.",
     "system.clear_address": "Clear address",
-    "system.system_sector_name": "System/sector name",
+    "system.system_sector_name": "System features",
     "system.system_index_fff_is_reserved": "System index FFF is reserved.",
     "system.system_column_heading": "SYSTEM",
     "system.planets_count": "{count} planets",

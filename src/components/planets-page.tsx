@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { sortByCreatedAtDescending } from "@/lib/created-at";
 import Image from "next/image";
 import Link from "next/link";
 import { Globe2, Orbit, RotateCcw, Search, SlidersHorizontal, X } from "lucide-react";
@@ -16,6 +17,7 @@ type PlanetDestination = Readonly<{
   portal: string;
   planetPortal: string;
   planetNumber: number;
+  createdAt?: string;
   galaxy: number;
   title?: string;
   description?: string;
@@ -101,11 +103,11 @@ export function PlanetsPage({ alliance, currentMember, planets, almanacLookupFai
   const [mineral, setMineral] = useState("");
   const [valuable, setValuable] = useState("");
   const [economyStars, setEconomyStars] = useState<number | null>(null);
-  const sortedPlanets = useMemo(() => [...planets].sort((a, b) =>
+  const sortedPlanets = useMemo(() => sortByCreatedAtDescending([...planets].sort((a, b) =>
     (a.system ?? "").localeCompare(b.system ?? "", undefined, { sensitivity: "base" }) ||
     (a.title ?? "").localeCompare(b.title ?? "", undefined, { sensitivity: "base" }) ||
     a.portal.localeCompare(b.portal),
-  ), [planets]);
+  )), [planets]);
   const filterOptions = useMemo(() => ({
     economy: [...new Set(planets.map((planet) => systemFactValue(planet, "common.economy")).filter((value): value is string => Boolean(value)))]
       .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" })),
