@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { sortByCreatedAtDescending } from "@/lib/created-at";
 import Image from "next/image";
 import Link from "next/link";
-import { AlertTriangle, Globe2, Orbit, RotateCcw, Search, SlidersHorizontal, X } from "lucide-react";
+import { AlertTriangle, Globe2, Skull, Orbit, RotateCcw, Search, SlidersHorizontal, X } from "lucide-react";
 import { AllianceSidebar, DashboardTopbar, MissionHero, storePlanetCount } from "@/components/dashboard-chrome";
 import { AdminPanel } from "@/components/admin-panel";
 import { MemberProfilePanel } from "@/components/member-profile-panel";
@@ -37,6 +37,7 @@ type PlanetDestination = Readonly<{
   valuables: string[];
   dissonant: boolean;
   paradise: boolean;
+  blackMarket: boolean;
   station?: Readonly<{
     id: string;
     portal: string;
@@ -110,6 +111,7 @@ export function PlanetsPage({ alliance, currentMember, planets, almanacLookupFai
   const [size, setSize] = useState("");
   const [dissonant, setDissonant] = useState("");
   const [paradise, setParadise] = useState("");
+  const [pirate, setPirate] = useState("");
   const [water, setWater] = useState("");
   const [weather, setWeather] = useState("");
   const [sentinels, setSentinels] = useState("");
@@ -173,6 +175,7 @@ export function PlanetsPage({ alliance, currentMember, planets, almanacLookupFai
       (!size || sizeValue(planet) === size) &&
       (!dissonant || planet.dissonant === (dissonant === "yes")) &&
       (!paradise || planet.paradise === (paradise === "yes")) &&
+      (!pirate || planet.blackMarket === (pirate === "yes")) &&
       (!water || waterValue(planet) === water) &&
       (!weather || weatherValue(planet) === weather) &&
       (!conflict || systemFactValue(planet, "common.conflict") === conflict) &&
@@ -182,7 +185,7 @@ export function PlanetsPage({ alliance, currentMember, planets, almanacLookupFai
       (!valuable || planet.valuables.includes(valuable)),
     );
     return matchingPlanets.length > 0 ? [{ ...group, planets: matchingPlanets }] : [];
-  }), [economy, economyStars, mineral, plant, planetGroups, planetType, race, star, valuable, size, dissonant, paradise, water, weather, sentinels, conflict]);
+  }), [economy, economyStars, mineral, plant, planetGroups, planetType, race, star, valuable, size, dissonant, paradise, pirate, water, weather, sentinels, conflict]);
   const visiblePlanetGroups = useMemo(() => {
     if (!searchQuery) return filteredPlanetGroups;
     return filteredPlanetGroups.flatMap((group) => {
@@ -192,7 +195,7 @@ export function PlanetsPage({ alliance, currentMember, planets, almanacLookupFai
     });
   }, [filteredPlanetGroups, searchQuery]);
   const filteredPlanets = visiblePlanetGroups.flatMap((group) => group.planets);
-  const hasActiveFilters = Boolean(economy || economyStars !== null || star || race || planetType || size || dissonant || paradise || water || weather || sentinels || conflict || plant || mineral || valuable);
+  const hasActiveFilters = Boolean(economy || economyStars !== null || star || race || planetType || size || dissonant || paradise || pirate || water || weather || sentinels || conflict || plant || mineral || valuable);
   const activeFilterTags = [
     economy && { key: "economy", label: `${t("common.economy")}: ${tv(economy)}`, clear: () => setEconomy("") },
     economyStars !== null && { key: "economyStars", label: `${t("planet.economy_stars")}: ${"★".repeat(economyStars)}${"☆".repeat(3 - economyStars)}`, clear: () => setEconomyStars(null) },
@@ -202,6 +205,7 @@ export function PlanetsPage({ alliance, currentMember, planets, almanacLookupFai
     size && { key: "size", label: `${t("planet.size")}: ${tv(size)}`, clear: () => setSize("") },
     dissonant && { key: "dissonant", label: `${t("planet.dissonant")}: ${t(dissonant === "yes" ? "planet.dissonant_yes" : "planet.dissonant_no")}`, clear: () => setDissonant("") },
     paradise && { key: "paradise", label: `${t("planet.paradise")}: ${t(paradise === "yes" ? "planet.dissonant_yes" : "planet.dissonant_no")}`, clear: () => setParadise("") },
+    pirate && { key: "pirate", label: `${t("planet.pirate_system")}: ${t(pirate === "yes" ? "planet.dissonant_yes" : "planet.dissonant_no")}`, clear: () => setPirate("") },
     water && { key: "water", label: `${t("planet.water")}: ${tv(water)}`, clear: () => setWater("") },
     weather && { key: "weather", label: `${t("planet.weather")}: ${tv(weather)}`, clear: () => setWeather("") },
     conflict && { key: "conflict", label: `${t("common.conflict")}: ${tv(conflict)}`, clear: () => setConflict("") },
@@ -219,6 +223,7 @@ export function PlanetsPage({ alliance, currentMember, planets, almanacLookupFai
     setSize("");
     setDissonant("");
     setParadise("");
+    setPirate("");
     setWater("");
     setWeather("");
     setSentinels("");
@@ -334,6 +339,14 @@ export function PlanetsPage({ alliance, currentMember, planets, almanacLookupFai
               </select>
             </label>
             <label className="planet-filter">
+              <span>{t("planet.pirate_system")}</span>
+              <select aria-label={t("planet.filter_pirate_system")} onChange={(event) => setPirate(event.target.value)} value={pirate}>
+                <option value="">{t("planet.all_dissonant")}</option>
+                <option value="yes">{t("planet.dissonant_yes")}</option>
+                <option value="no">{t("planet.dissonant_no")}</option>
+              </select>
+            </label>
+            <label className="planet-filter">
               <span>{t("planet.water")}</span>
               <select aria-label={t("planet.filter_water")} onChange={(event) => setWater(event.target.value)} value={water}>
                 <option value="">{t("planet.all_water")}</option>
@@ -401,7 +414,7 @@ export function PlanetsPage({ alliance, currentMember, planets, almanacLookupFai
             : <div className="planet-station-groups">{visiblePlanetGroups.map(({ station, planets: groupPlanets }) => <section className="planet-station-group" key={station?.id ?? "unassociated"}>
               <div className="planet-station-heading">
                 <div>
-                  <h2>{station?.name || groupPlanets.find((planet) => planet.planetPortal === station?.portal)?.almanacName || t(station ? "stations.space_station" : "planet.no_associated_station")}{isNewStation(station) && <span className="planet-station-new">{t("stations.new_badge")}</span>}</h2>
+                  <h2>{station?.name || groupPlanets.find((planet) => planet.planetPortal === station?.portal)?.almanacName || t(station ? "stations.space_station" : "planet.no_associated_station")}{groupPlanets.some((planet) => planet.blackMarket) && <span aria-label={t("planet.black_market")} className="planet-station-black-market" data-tooltip={t("planet.black_market")} role="img" tabIndex={0}><Skull aria-hidden="true" size={15} /></span>}{isNewStation(station) && <span className="planet-station-new">{t("stations.new_badge")}</span>}</h2>
                   {station && <p className="planet-station-address"><span className={station.galaxy !== 0 ? "mission-galaxy-alert" : undefined} data-tooltip={station.galaxy !== 0 ? t("missions.galaxy_portals_warning") : undefined} tabIndex={station.galaxy !== 0 ? 0 : undefined}>{station.galaxy !== 0 && <AlertTriangle size={9} />}{galaxyLabel(station.galaxy)}</span> · {station.portal}</p>}
                   {groupPlanets[0]?.systemFacts.length > 0 && <div className="planet-station-facts">
                     {groupPlanets[0].systemFacts.map((fact) => <span key={fact.label}><b>{t(fact.label)}</b> {tv(fact.value)}</span>)}

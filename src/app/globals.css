@@ -1210,3 +1210,7 @@ body:has(.sidebar-compact) .dialog-heading .icon-button svg { width: 26px; heigh
 .planet-ribbon-clip-left { right: auto; left: 0; border-radius: 4px 0 0; }
 .planet-paradise-ribbon { position: absolute; top: 14px; left: -30px; width: 110px; padding: 2px 0; color: #fff; background: #2e9e5b; font-size: 8px; font-weight: 750; letter-spacing: 0.04em; text-align: center; text-transform: uppercase; transform: rotate(-45deg); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35); }
 .sidebar-compact ~ .main-panel .planet-paradise-ribbon { top: 19px; left: -32px; width: 125px; font-size: 10px; }
+.planet-station-black-market { position: relative; display: inline-flex; margin-left: 8px; color: var(--lime); vertical-align: middle; cursor: default; }
+.sidebar-compact ~ .main-panel .planet-station-black-market svg { width: 19px; height: 19px; }
+.planet-station-black-market[data-tooltip]::after { position: absolute; z-index: 30; left: 0; bottom: calc(100% + 7px); padding: 6px 8px; color: #f1eee7; border: 1px solid #394548; border-radius: 3px; background: #111719; box-shadow: 0 4px 14px #0008; content: attr(data-tooltip); font-size: 9px; font-weight: 500; line-height: 1.2; opacity: 0; pointer-events: none; transform: translateY(3px); transition: opacity .12s, transform .12s; white-space: nowrap; }
+.planet-station-black-market[data-tooltip]:hover::after, .planet-station-black-market[data-tooltip]:focus-visible::after { opacity: 1; transform: translateY(0); }

@@ -187,6 +187,7 @@ export default async function PlanetsRoute() {
       valuables: string[];
       dissonant: boolean;
       paradise: boolean;
+      blackMarket: boolean;
     }) | null;
     failed: boolean;
   }[] = [];
@@ -207,6 +208,7 @@ export default async function PlanetsRoute() {
         const almanacName = typeof headline?.word === "string" ? headline.word : undefined;
         const planetType = almanacWord(band?.type);
         const economyStars = almanacStarCount(band?.economy);
+        const economy = asRecord(band?.economy);
         const almanacFacts = ([
           ["common.planet_type_label", planetType],
           ["planet.size", almanacWord(band?.size)],
@@ -237,6 +239,7 @@ export default async function PlanetsRoute() {
             valuables: almanacResourceNames(carries, ["tradeable"]),
             dissonant: hasDissonantResources(carries),
             paradise: almanac?.paradise === true,
+            blackMarket: economy?.black_market === true,
           } : null,
           failed: false,
         };
