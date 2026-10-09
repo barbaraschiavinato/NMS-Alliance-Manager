@@ -38,16 +38,6 @@ function almanacResourceNames(value: unknown, kinds: readonly string[]): string[
   }))];
 }
 
-const dissonantResources = ["Radiant Shard", "Atlantideum", "Echo Seed", "Inverted Mirror"];
-
-function hasDissonantResources(value: unknown): boolean {
-  if (!Array.isArray(value)) return false;
-  return value.some((entry) => {
-    const name = asRecord(entry)?.name;
-    return typeof name === "string" && dissonantResources.includes(name);
-  });
-}
-
 function almanacSearchValues(value: unknown, parentKey = ""): string[] {
   if (typeof value === "string") return [value];
   if (typeof value === "number" || typeof value === "boolean") return [String(value)];
@@ -237,7 +227,7 @@ export default async function PlanetsRoute() {
             plants: almanacResourceNames(carries, ["plant", "consumable"]),
             minerals: almanacResourceNames(carries, ["mineral"]),
             valuables: almanacResourceNames(carries, ["tradeable"]),
-            dissonant: hasDissonantResources(carries),
+            dissonant: asRecord(band?.sentinels)?.ink === "exotic",
             paradise: almanac?.paradise === true,
             blackMarket: economy?.black_market === true,
           } : null,
