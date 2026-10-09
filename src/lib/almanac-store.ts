@@ -87,3 +87,18 @@ export async function writeAlmanacResponse(portalCode: string, galaxy: number, r
   index[canonicalCode][String(galaxy)] = response;
   await writeAlmanacIndex(index);
 }
+export async function readAlmanacCache(): Promise<(portalCode: string, galaxy: number) => AlmanacResponse | null> {
+  const index = await readAlmanacIndex();
+  return (portalCode, galaxy) => index[portalCode.toUpperCase()]?.[String(galaxy)] ?? null;
+}
+
+export async function writeAlmanacResponses(entries: ReadonlyArray<Readonly<{ portalCode: string; galaxy: number; response: AlmanacResponse }>>): Promise<void> {
+  if (entries.length === 0) return;
+  const index = await readAlmanacIndex();
+  for (const { portalCode, galaxy, response } of entries) {
+    const canonicalCode = portalCode.toUpperCase();
+    index[canonicalCode] ??= {};
+    index[canonicalCode][String(galaxy)] = response;
+  }
+  await writeAlmanacIndex(index);
+}

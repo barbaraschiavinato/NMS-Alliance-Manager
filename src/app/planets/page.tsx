@@ -7,7 +7,7 @@ import { readAccessData } from "@/lib/access-store";
 import { canViewMission, isDifferentPlanetInSameSystem } from "@/lib/missions";
 import { serializeMission } from "@/lib/mission-view";
 import { getSystemPlanetAddresses } from "@/lib/planet-addresses";
-import { lookupAlmanacPlanet } from "@/lib/almanac-lookup";
+import { lookupAlmanacPlanets } from "@/lib/almanac-lookup";
 import { readAllStationPortals, readStationPortals } from "@/lib/stations-store";
 import { readMissions } from "@/lib/store";
 
@@ -147,10 +147,13 @@ export default async function PlanetsRoute() {
     }) | null;
     failed: boolean;
   }[] = [];
-  for (let index = 0; index < planetCandidates.length; index += 6) {
-    const batch = await Promise.all(planetCandidates.slice(index, index + 6).map(async (planet) => {
+  const almanacResults = await lookupAlmanacPlanets(planetCandidates.map((planet) => ({ portal: planet.planetPortal, galaxy: planet.galaxy })));
+  {
+    const batch = planetCandidates.map((planet) => {
       try {
-        const almanac = await lookupAlmanacPlanet(planet.planetPortal, planet.galaxy);
+        const lookup = almanacResults.get(`${planet.planetPortal.toUpperCase()}:${planet.galaxy}`);
+        if (lookup?.failed) return { planet: null, failed: true };
+        const almanac = lookup?.planet ?? null;
         const lines = asRecord(almanac?.lines);
         const band = asRecord(lines?.band);
         const headline = asRecord(lines?.headline);
@@ -194,7 +197,7 @@ export default async function PlanetsRoute() {
       } catch {
         return { planet: null, failed: true };
       }
-    }));
+    });
     lookupResults.push(...batch);
   }
   const planetsWithData = lookupResults.flatMap((result) => result.planet ? [result.planet] : []);
