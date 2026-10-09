@@ -139,7 +139,7 @@ export function decodePortalAddress(address: string): PortalAddressDecode | null
 
   if (planet > 6) errors.push(`Planet index ${planet}: allowed range is 0–6.`);
   if (systemIndex > 0xffe) errors.push("System index FFF is reserved.");
-  if (rawY === 0 || rawY === 0x80) errors.push(`Y coordinate ${rawY.toString(16).toUpperCase().padStart(2, "0")}: unused value.`);
+  if (rawY === 0x80) errors.push(`Y coordinate ${rawY.toString(16).toUpperCase().padStart(2, "0")}: unused value.`);
   if (rawZ === 0 || rawZ === 0x800) errors.push(`Z coordinate ${rawZ.toString(16).toUpperCase().padStart(3, "0")}: unused value.`);
   if (rawX === 0 || rawX === 0x800) errors.push(`X coordinate ${rawX.toString(16).toUpperCase().padStart(3, "0")}: unused value.`);
 
