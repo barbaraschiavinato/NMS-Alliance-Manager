@@ -8,6 +8,17 @@ export const almanacValueTranslations: Readonly<Record<Locale, Readonly<Record<s
   it: {
     ...almanacResourcesIt,
     ...almanacWeatherIt,
+    // Acqua
+    "None": "Assente",
+    "Ocean": "Oceano",
+    // Livello di conflitto
+    "Low": "Basso",
+    "Medium": "Medio",
+    "High": "Alto",
+    // Indicatori meteo
+    "Storms": "Tempeste",
+    "Heavy storms": "Tempeste violente",
+    "Extreme": "Estremo",
     // Livello di allerta delle sentinelle (traduzioni non ufficiali)
     "Frequent": "Frequenti",
     "Enforcing": "Repressive",

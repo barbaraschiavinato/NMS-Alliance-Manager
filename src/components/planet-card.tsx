@@ -31,10 +31,10 @@ function asRecord(value: unknown): PlanetRecord | null {
   return value && typeof value === "object" && !Array.isArray(value) ? value as PlanetRecord : null;
 }
 
-function displayValue(value: unknown): string | null {
+function displayValue(value: unknown, tv: (value: string) => string = (text) => text): string | null {
   if (typeof value === "string" || typeof value === "number") return String(value);
   if (Array.isArray(value)) {
-    const values = value.map(displayValue).filter((item): item is string => Boolean(item));
+    const values = value.map((item) => displayValue(item, tv)).filter((item): item is string => Boolean(item));
     return values.length > 0 ? values.join(", ") : null;
   }
   const record = asRecord(value);
@@ -49,7 +49,7 @@ function displayValue(value: unknown): string | null {
       return typeof markRecord?.word === "string" ? [markRecord.word] : [];
     })
     : [];
-  const parts = [word, note, stars, ...marks].filter((part): part is string => Boolean(part));
+  const parts = [word, note, stars, ...marks].map((part) => part && tv(part)).filter((part): part is string => Boolean(part));
   return parts.length > 0 ? parts.join(" · ") : null;
 }
 
@@ -57,9 +57,9 @@ function PlanetFacts({ band, fields }: Readonly<{
   band: PlanetRecord | null;
   fields: ReadonlyArray<readonly [string, string]>;
 }>) {
-  const { t } = useLocale();
+  const { t, tv } = useLocale();
   const facts = fields.flatMap(([label, key]) => {
-    const value = band ? displayValue(band[key]) : null;
+    const value = band ? displayValue(band[key], tv) : null;
     return value ? [{ label, value }] : [];
   });
   if (facts.length === 0) return null;
