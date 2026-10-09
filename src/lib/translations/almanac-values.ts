@@ -73,6 +73,7 @@ export const almanacValueTranslations: Readonly<Record<Locale, Readonly<Record<s
     // Dimensione del pianeta (piccolo/medio/grande come nella wiki italiana)
     "Small": "Piccolo",
     "Large": "Grande",
+    "Huge": "Enorme",
     "Moon": "Luna",
     // Livello di conflitto
     "Low": "Basso",
