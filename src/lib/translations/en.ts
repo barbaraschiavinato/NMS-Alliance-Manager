@@ -291,7 +291,7 @@ export const translations: TranslationCatalog = {
     "stations.remove_portal_portal_in_galaxy_from_owner_s_archive": "Remove portal {portal} in {galaxy} from {owner}'s archive",
     "stations.enter_a_12_glyph_portal_address": "Enter a 12-glyph portal address.",
     "stations.select_the_station_owner": "Select the station owner.",
-    "stations.this_portal_is_already_in_the_selected_owner_s_list": "This portal is already in the selected owner's list.",
+    "stations.this_portal_is_already_in_the_selected_owner_s_list": "This station is already registered.",
     "stations.station_removed_from_the_owner_s_archive": "Station removed from the owner's archive.",
     "stations.portal_added_to_your_stations": "Portal added to your stations.",
     "stations.station_added_to_owner_s_archive": "Station added to {owner}'s archive.",

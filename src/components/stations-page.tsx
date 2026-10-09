@@ -418,7 +418,6 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
     if (stations.some((station) =>
       station.portal === canonicalPortal &&
       station.galaxy === galaxy &&
-      station.ownerId === requestedOwnerId &&
       !(editingStation &&
         station.portal === editingStation.portal &&
         station.galaxy === editingStation.galaxy &&

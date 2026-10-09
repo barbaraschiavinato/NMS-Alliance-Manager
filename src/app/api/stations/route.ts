@@ -55,12 +55,11 @@ export async function POST(request: Request) {
     if (!isModerator && ownerMember.publicId !== member.publicId) {
       return NextResponse.json({ error: "stations.error_cannot_create_stations_for_another_member" }, { status: 403 });
     }
-    const [ownerStations, stations, missions] = await Promise.all([
-      readStationPortals(ownerMember.publicId),
+    const [stations, missions] = await Promise.all([
       readAllStationPortals(),
       readMissions(),
     ]);
-    if (ownerStations.some((station) => station.portal === portal && station.galaxy === galaxy)) {
+    if (stations.some((station) => station.portal === portal && station.galaxy === galaxy)) {
       return NextResponse.json({ error: "stations.this_portal_is_already_in_the_selected_owner_s_list" }, { status: 409 });
     }
     const conflictsWithRegisteredPlanet = [
@@ -166,11 +165,10 @@ export async function PATCH(request: Request) {
     if (!isModerator && (currentOwner.publicId !== member.publicId || owner.publicId !== member.publicId)) {
       return NextResponse.json({ error: "stations.error_cannot_edit_another_member_s_station" }, { status: 403 });
     }
-    const [missions, stations, currentStations, destinationStations] = await Promise.all([
+    const [missions, stations, currentStations] = await Promise.all([
       readMissions(),
       readAllStationPortals(),
       readStationPortals(currentOwner.publicId),
-      readStationPortals(owner.publicId),
     ]);
     const currentStation = currentStations.find((station) =>
       station.portal === currentPortal && station.galaxy === currentGalaxy,
@@ -191,10 +189,10 @@ export async function PATCH(request: Request) {
     ) {
       return NextResponse.json({ error: "stations.error_station_associated_with_mission_title_only" }, { status: 409 });
     }
-    if (destinationStations.some((station) =>
+    if (stations.some((station) =>
       station.portal === portal &&
       station.galaxy === galaxy &&
-      !(owner.publicId === currentOwner.publicId && portal === currentPortal && galaxy === currentGalaxy),
+      !(station.ownerId === currentOwner.publicId && station.portal === currentPortal && station.galaxy === currentGalaxy),
     )) {
       return NextResponse.json({ error: "stations.this_portal_is_already_in_the_selected_owner_s_list" }, { status: 409 });
     }
