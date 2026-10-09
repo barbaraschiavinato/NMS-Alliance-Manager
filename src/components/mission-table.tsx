@@ -331,7 +331,7 @@ function MissionCard({ mission, systemStatuses, currentMember, canManage, reques
   onOpenProfile: (memberId: string, context: MemberMessageContext) => void;
   getDiscovererImage: (memberId?: string) => string | undefined;
 }>) {
-  const { t } = useLocale();
+  const { t, systemLabel } = useLocale();
   const statuses = systemStatuses[planetSystemStatusKey(mission.systemAddress, mission.galaxy)] ?? [];
   const canUpdateSystemStatus = mission.assignedMemberId === currentMember.publicId;
   const canUpdateProgress = !canManage && canUpdateSystemStatus;
@@ -352,7 +352,7 @@ function MissionCard({ mission, systemStatuses, currentMember, canManage, reques
     </div>
     <div className="mission-card-system">
       <GlyphStrip address={mission.systemAddress ?? ""} />
-      <span className="mission-card-system-text">{mission.system || t("system.system_label")} · {galaxyLabel(mission.galaxy ?? 0)}</span>
+      <span className="mission-card-system-text">{systemLabel(mission) || t("system.system_label")} · {galaxyLabel(mission.galaxy ?? 0)}</span>
       <StationSystemCoreInfo key={`${mission.systemAddress}:${mission.galaxy}`} galaxy={mission.galaxy ?? 0} portal={mission.systemAddress ?? ""} />
     </div>
     <div className="mission-card-people">
@@ -425,7 +425,7 @@ export function MissionTable({
   planetStatuses: PlanetSystemStatuses;
   loading?: boolean;
 }>) {
-  const { t } = useLocale();
+  const { t, systemLabel } = useLocale();
   const [profileTarget, setProfileTarget] = useState<{ memberId: string; messageContext: MemberMessageContext } | null>(null);
   const [missionNoteView, setMissionNoteView] = useState<Mission | null>(null);
   const [planetNoteView, setPlanetNoteView] = useState<PlanetNotes | null>(null);
@@ -494,7 +494,7 @@ export function MissionTable({
             {missions.map((mission) => <tr key={mission.id}>
                   <td><div className="mission-name-cell"><span className={`mission-icon ${mission.status === "completed" ? "mission-icon-done" : ""}`}>{mission.status === "completed" ? <Check size={15} /> : <Compass size={15} />}</span><div><div className="mission-title-with-info"><button aria-label={`${t("planet.open_planet_details_for")} ${mission.title}`} className="mission-title" onClick={() => onOpenPlanet(mission)} title={t("planet.open_planet_details")} type="button">{mission.title}</button><PlanetNotesButton mission={mission} onView={setPlanetNoteView} /></div><span className="mission-description">{mission.description}</span></div></div></td>
               <td><span className={`badge badge--specialty badge--specialty-${mission.targetSpecialty ?? "all"}`}>{t(targetSpecialtyNames[mission.targetSpecialty ?? "all"])}</span></td>
-              <td><div className="system-cell"><GlyphStrip address={mission.systemAddress ?? ""} /><span className="system-caption">{mission.system || t("system.system_label")} · {galaxyLabel(mission.galaxy ?? 0)}</span></div></td>
+              <td><div className="system-cell"><GlyphStrip address={mission.systemAddress ?? ""} /><span className="system-caption">{systemLabel(mission) || t("system.system_label")} · {galaxyLabel(mission.galaxy ?? 0)}</span></div></td>
               <td><DiscovererCell memberId={mission.stationOwnerMemberId} galaxy={mission.galaxy} image={getDiscovererImage(mission.stationOwnerMemberId)} name={mission.stationOwnerName} onOpenProfile={(memberId, messageContext) => setProfileTarget({ memberId, messageContext })} portal={mission.systemAddress} /></td>
               <td><AssigneeCell currentMember={currentMember} members={members} mission={mission} onOpenProfile={(memberId, messageContext) => setProfileTarget({ memberId, messageContext })} /></td>
               <td><span className={`badge badge--priority badge--priority-${mission.priority}`}><span />{t(`common.${mission.priority}`)}</span></td>

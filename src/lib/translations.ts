@@ -51,6 +51,8 @@ const legacyAliases = new Map<string, string>([
 ]);
 
 export function translateAlmanacValue(locale: Locale, value: string) {
+  const count = locale === "it" ? value.match(/^(\d+) (species|plants?)$/) : null;
+  if (count) return `${count[1]} ${count[2] === "plant" ? "pianta" : count[2] === "plants" ? "piante" : "specie"}`;
   return Object.hasOwn(almanacValueTranslations[locale], value) ? almanacValueTranslations[locale][value] : value;
 }
 

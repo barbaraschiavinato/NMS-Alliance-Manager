@@ -8,6 +8,7 @@ type LocaleContextValue = Readonly<{
   setLocale: (locale: Locale) => void;
   t: (message: string, values?: Readonly<Record<string, string | number>>) => string;
   tv: (value: string) => string;
+  systemLabel: (mission: { system: string; systemLabelFromAlmanac?: boolean }) => string;
 }>;
 
 const preferenceKey = "nms-alliance-locale";
@@ -54,6 +55,9 @@ export function LocaleProvider({ children }: Readonly<{ children: ReactNode }>) 
     setLocale,
     t: (message, values) => translate(locale, message, values),
     tv: (value) => translateAlmanacValue(locale, value),
+    systemLabel: ({ system, systemLabelFromAlmanac }) => systemLabelFromAlmanac
+      ? system.split(" · ").map((part) => translateAlmanacValue(locale, part)).join(" · ")
+      : system,
   }), [locale]);
 
   return <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>;

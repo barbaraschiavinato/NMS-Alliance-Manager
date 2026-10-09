@@ -37,7 +37,7 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
   sidebarOfflineCount?: number;
   sidebarUserCount?: number;
 }>) {
-  const { t } = useLocale();
+  const { t, systemLabel } = useLocale();
   const [member, setMember] = useState(currentMember);
   const [missions, setMissions] = useState<Mission[]>([]);
   const [loadingMissions, setLoadingMissions] = useState(true);
@@ -345,7 +345,7 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
         stationOwners={stationOwners}
       />}
       {planetMission && <PlanetCard
-        contextLabel={planetMission.system}
+        contextLabel={systemLabel(planetMission)}
         missionDescription={planetMission.description}
         galaxy={planetMission.galaxy}
         key={planetMission.id}

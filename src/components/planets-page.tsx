@@ -20,6 +20,7 @@ type PlanetDestination = Readonly<{
   title?: string;
   description?: string;
   system?: string;
+  systemLabelFromAlmanac?: boolean;
   imageUrl?: string;
   almanacName?: string;
   almanacSearchIndex: string;
@@ -78,7 +79,7 @@ export function PlanetsPage({ alliance, currentMember, planets, almanacLookupFai
   offlineCount?: number;
   userCount?: number;
 }>) {
-  const { t, tv } = useLocale();
+  const { t, tv, systemLabel } = useLocale();
   useEffect(() => {
     if (!almanacLookupFailed) storePlanetCount(planets.length);
   }, [almanacLookupFailed, planets.length]);
@@ -389,7 +390,7 @@ export function PlanetsPage({ alliance, currentMember, planets, almanacLookupFai
         </main>
       </section>
       {selectedPlanet && <PlanetCard
-        contextLabel={selectedPlanet.system}
+        contextLabel={selectedPlanet.system ? systemLabel({ system: selectedPlanet.system, systemLabelFromAlmanac: selectedPlanet.systemLabelFromAlmanac }) : undefined}
         missionDescription={selectedPlanet.description}
         galaxy={selectedPlanet.galaxy}
         key={selectedPlanet.id}

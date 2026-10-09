@@ -94,6 +94,7 @@ export default async function PlanetsRoute() {
         title: visibleMission.title,
         description: visibleMission.description,
         system: visibleMission.system,
+        systemLabelFromAlmanac: visibleMission.systemLabelFromAlmanac,
       } : {}),
       stationOwnerMemberId: mission.stationOwnerMemberId,
     }] as const;
