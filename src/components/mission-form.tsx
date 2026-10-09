@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type SubmitEvent } from "react";
 import { generateSystemName } from "@/lib/system-name";
-import { ArrowUpRight, CircleAlert, Trash2, X } from "lucide-react";
+import { ArrowUpRight, CircleAlert, Orbit, Trash2, X } from "lucide-react";
 import {
   decodePortalAddress,
   missionPriorities,
@@ -80,6 +80,7 @@ export function MissionForm({
     : { ...emptyMission, ...initialValues });
   const [saving, setSaving] = useState(false);
   const titleEditedRef = useRef(Boolean(mission?.title));
+  const [generatingNames, setGeneratingNames] = useState(0);
   const [error, setError] = useState("");
   const [systemStatuses, setSystemStatuses] = useState<MissionSystemStatus[]>([]);
   const [loadedStatusKey, setLoadedStatusKey] = useState("");
@@ -179,9 +180,10 @@ export function MissionForm({
   const handleSystemLookup = (lookup: SystemAddressLookup) => {
     const verified = lookup.status === "found";
     if (!mission && !titleEditedRef.current) {
+      setGeneratingNames((count) => count + 1);
       void generateSystemName(lookup.address, lookup.galaxy).then((systemName) => {
         if (systemName && !titleEditedRef.current) setForm((current) => ({ ...current, title: `${systemName} System` }));
-      });
+      }).finally(() => setGeneratingNames((count) => count - 1));
     }
     setForm((current) => ({
       ...current,
@@ -363,7 +365,7 @@ export function MissionForm({
             {mission && <button className="delete-button" disabled={saving} onClick={remove} type="button"><Trash2 size={15} /> {t("common.delete")}</button>}
             <span className="action-spacer" />
             <button className="quiet-button" onClick={onClose} type="button">{t("common.cancel")}</button>
-            <button className="primary-button" disabled={saving || !addressComplete || systemLookup?.status === "checking"} type="submit">{submitLabel}<ArrowUpRight size={15} /></button>
+            <button className="primary-button" disabled={saving || generatingNames > 0 || !addressComplete || systemLookup?.status === "checking"} type="submit">{submitLabel}{generatingNames > 0 || systemLookup?.status === "checking" ? <Orbit aria-hidden="true" className="button-spinner" size={15} /> : <ArrowUpRight size={15} />}</button>
           </div>
         </form>
       </dialog>

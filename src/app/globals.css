@@ -1177,3 +1177,4 @@ body:has(.sidebar-compact) .dialog-heading .icon-button svg { width: 26px; heigh
 .station-card-title-copy .mission-galaxy-alert, .station-planet-open .mission-galaxy-alert { width: fit-content; display: inline-flex; align-items: center; gap: 4px; padding: 2px 5px; color: #fff; font-weight: 700; background: #c62828; }
 .planet-station-address .mission-galaxy-alert { width: auto; display: inline-flex; vertical-align: middle; font-family: "Raleway", sans-serif; }
 .planet-station-address > span:not(.mission-galaxy-alert) { font-family: "Raleway", sans-serif; }
+.button-spinner { animation: loading-spin 1.2s linear infinite; }

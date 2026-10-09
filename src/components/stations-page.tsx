@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, type SubmitEvent } from "react";
-import { AlertTriangle, CircleAlert, CirclePlus, Crosshair, FileSpreadsheet, FileText, LayoutGrid, List, Pencil, Plus, Search, Trash2, X } from "lucide-react";
+import { AlertTriangle, CircleAlert, CirclePlus, Crosshair, FileSpreadsheet, FileText, LayoutGrid, List, Orbit, Pencil, Plus, Search, Trash2, X } from "lucide-react";
 import { AllianceSidebar, DashboardTopbar, MissionHero } from "@/components/dashboard-chrome";
 import { AdminPanel } from "@/components/admin-panel";
 import { MemberProfilePanel } from "@/components/member-profile-panel";
@@ -225,6 +225,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
   const [planetType, setPlanetType] = useState("");
   const [stationNameEdited, setStationNameEditedState] = useState(false);
   const stationNameEditedRef = useRef(false);
+  const [generatingNames, setGeneratingNames] = useState(initialCreateStation ? 1 : 0);
   function setStationNameEdited(edited: boolean) {
     stationNameEditedRef.current = edited;
     setStationNameEditedState(edited);
@@ -384,7 +385,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
     window.history.replaceState(null, "", "/stations");
     void generateSystemName(initialCreateStation.portal, initialCreateStation.galaxy).then((systemName) => {
       if (systemName) setStationName((current) => stationNameEditedRef.current || current ? current : `${systemName} System`);
-    });
+    }).finally(() => setGeneratingNames((count) => count - 1));
   }, [initialCreateStation]);
 
   useEffect(() => {
@@ -441,8 +442,13 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
   }
 
   async function fillSystemName(address: string, lookupGalaxy: number) {
-    const systemName = await generateSystemName(address, lookupGalaxy);
-    if (systemName) setStationName((current) => stationNameEditedRef.current ? current : `${systemName} System`);
+    setGeneratingNames((count) => count + 1);
+    try {
+      const systemName = await generateSystemName(address, lookupGalaxy);
+      if (systemName) setStationName((current) => stationNameEditedRef.current ? current : `${systemName} System`);
+    } finally {
+      setGeneratingNames((count) => count - 1);
+    }
   }
 
   function handleStationLookup(lookup: NonNullable<SystemAddressValidation["lookup"]>) {
@@ -781,7 +787,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
             <div className="dialog-actions">
               <span className="action-spacer" />
               <button className="quiet-button" onClick={closeStationDialog} type="button">{t("common.cancel")}</button>
-              <button className="primary-button" disabled={saving || (!editingStation?.hasMissions && !validation.valid)} type="submit">{saving ? t("common.saving") : t(editingStation ? "common.save" : "common.add")}{editingStation ? <Pencil size={15} /> : <Plus size={15} />}</button>
+              <button className="primary-button" disabled={saving || generatingNames > 0 || (!editingStation && validation.valid && !validation.lookup) || (!editingStation?.hasMissions && !validation.valid)} type="submit">{saving ? t("common.saving") : t(editingStation ? "common.save" : "common.add")}{generatingNames > 0 || (!editingStation && validation.valid && !validation.lookup) ? <Orbit aria-hidden="true" className="button-spinner" size={15} /> : editingStation ? <Pencil size={15} /> : <Plus size={15} />}</button>
             </div>
           </form>
         </dialog>
