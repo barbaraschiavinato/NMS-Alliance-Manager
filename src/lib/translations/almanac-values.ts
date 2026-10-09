@@ -8,9 +8,23 @@ export const almanacValueTranslations: Readonly<Record<Locale, Readonly<Record<s
   it: {
     ...almanacResourcesIt,
     ...almanacWeatherIt,
+    // Caratteristiche del pianeta (Rings dalla wiki italiana, le altre traduzioni non ufficiali)
+    "Rings": "Anelli",
+    "Huge plants": "Piante enormi",
+    "Huge scorched": "Enorme bruciato",
+    "Titan worm": "Verme titano",
+    "Hives": "Alveari",
+    "Hydro garden": "Giardino idroponico",
+    "Nuclear": "Nucleare",
+    "Floral": "Floreale",
+    "Rocky": "Roccioso",
     // Acqua
     "None": "Assente",
     "Ocean": "Oceano",
+    // Dimensione del pianeta (piccolo/medio/grande come nella wiki italiana)
+    "Small": "Piccolo",
+    "Large": "Grande",
+    "Moon": "Luna",
     // Livello di conflitto
     "Low": "Basso",
     "Medium": "Medio",

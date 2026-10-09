@@ -48,6 +48,10 @@ function almanacFactValue(planet: PlanetDestination, label: string) {
   return planet.almanacFacts.find((fact) => fact.label === label)?.value;
 }
 
+function sizeValue(planet: PlanetDestination) {
+  return almanacFactValue(planet, "planet.size");
+}
+
 function waterValue(planet: PlanetDestination) {
   return almanacFactValue(planet, "planet.water");
 }
@@ -85,6 +89,7 @@ export function PlanetsPage({ alliance, currentMember, planets, almanacLookupFai
   const [race, setRace] = useState("");
   const [planetType, setPlanetType] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [size, setSize] = useState("");
   const [water, setWater] = useState("");
   const [weather, setWeather] = useState("");
   const [sentinels, setSentinels] = useState("");
@@ -109,6 +114,7 @@ export function PlanetsPage({ alliance, currentMember, planets, almanacLookupFai
       .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" })),
     planetType: [...new Set(planets.map((planet) => planet.planetType).filter((value): value is string => Boolean(value)))]
       .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" })),
+    size: [...new Set(planets.map(sizeValue).filter((value): value is string => Boolean(value)))],
     water: [...new Set(planets.map(waterValue).filter((value): value is string => Boolean(value)))]
       .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" })),
     weather: [...new Set(planets.map(weatherValue).filter((value): value is string => Boolean(value)))]
@@ -142,6 +148,7 @@ export function PlanetsPage({ alliance, currentMember, planets, almanacLookupFai
       (!star || systemFactValue(planet, "planet.star") === star) &&
       (!race || systemFactValue(planet, "common.race") === race) &&
       (!planetType || planet.planetType === planetType) &&
+      (!size || sizeValue(planet) === size) &&
       (!water || waterValue(planet) === water) &&
       (!weather || weatherValue(planet) === weather) &&
       (!conflict || systemFactValue(planet, "common.conflict") === conflict) &&
@@ -151,7 +158,7 @@ export function PlanetsPage({ alliance, currentMember, planets, almanacLookupFai
       (!valuable || planet.valuables.includes(valuable)),
     );
     return matchingPlanets.length > 0 ? [{ ...group, planets: matchingPlanets }] : [];
-  }), [economy, economyStars, mineral, plant, planetGroups, planetType, race, star, valuable, water, weather, sentinels, conflict]);
+  }), [economy, economyStars, mineral, plant, planetGroups, planetType, race, star, valuable, size, water, weather, sentinels, conflict]);
   const visiblePlanetGroups = useMemo(() => {
     if (!searchQuery) return filteredPlanetGroups;
     return filteredPlanetGroups.flatMap((group) => {
@@ -161,13 +168,14 @@ export function PlanetsPage({ alliance, currentMember, planets, almanacLookupFai
     });
   }, [filteredPlanetGroups, searchQuery]);
   const filteredPlanets = visiblePlanetGroups.flatMap((group) => group.planets);
-  const hasActiveFilters = Boolean(economy || economyStars !== null || star || race || planetType || water || weather || sentinels || conflict || plant || mineral || valuable);
+  const hasActiveFilters = Boolean(economy || economyStars !== null || star || race || planetType || size || water || weather || sentinels || conflict || plant || mineral || valuable);
   const activeFilterTags = [
     economy && { key: "economy", label: `${t("common.economy")}: ${tv(economy)}`, clear: () => setEconomy("") },
     economyStars !== null && { key: "economyStars", label: `${t("planet.economy_stars")}: ${"★".repeat(economyStars)}${"☆".repeat(3 - economyStars)}`, clear: () => setEconomyStars(null) },
     star && { key: "star", label: `${t("planet.star_type")}: ${tv(star)}`, clear: () => setStar("") },
     race && { key: "race", label: `${t("common.race")}: ${tv(race)}`, clear: () => setRace("") },
     planetType && { key: "planetType", label: `${t("planet.planet_type")}: ${tv(planetType)}`, clear: () => setPlanetType("") },
+    size && { key: "size", label: `${t("planet.size")}: ${tv(size)}`, clear: () => setSize("") },
     water && { key: "water", label: `${t("planet.water")}: ${tv(water)}`, clear: () => setWater("") },
     weather && { key: "weather", label: `${t("planet.weather")}: ${tv(weather)}`, clear: () => setWeather("") },
     conflict && { key: "conflict", label: `${t("common.conflict")}: ${tv(conflict)}`, clear: () => setConflict("") },
@@ -182,6 +190,7 @@ export function PlanetsPage({ alliance, currentMember, planets, almanacLookupFai
     setStar("");
     setRace("");
     setPlanetType("");
+    setSize("");
     setWater("");
     setWeather("");
     setSentinels("");
@@ -271,6 +280,13 @@ export function PlanetsPage({ alliance, currentMember, planets, almanacLookupFai
               <select aria-label={t("planet.filter_race")} onChange={(event) => setRace(event.target.value)} value={race}>
                 <option value="">{t("planet.all_races")}</option>
                 {filterOptions.race.map((value) => <option key={value} value={value}>{tv(value)}</option>)}
+              </select>
+            </label>
+            <label className="planet-filter">
+              <span>{t("planet.size")}</span>
+              <select aria-label={t("planet.filter_size")} onChange={(event) => setSize(event.target.value)} value={size}>
+                <option value="">{t("planet.all_sizes")}</option>
+                {filterOptions.size.map((value) => <option key={value} value={value}>{tv(value)}</option>)}
               </select>
             </label>
             <label className="planet-filter">

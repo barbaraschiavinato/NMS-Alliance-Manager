@@ -90,7 +90,7 @@ function PlanetSky({ sky }: Readonly<{ sky: PlanetRecord | null }>) {
 }
 
 function PlanetResources({ carries }: Readonly<{ carries: unknown[] }>) {
-  const { t } = useLocale();
+  const { t, tv } = useLocale();
   const resources = carries.flatMap((entry) => {
     const record = asRecord(entry);
     return typeof record?.name === "string" && typeof record.kind === "string"
@@ -116,7 +116,7 @@ function PlanetResources({ carries }: Readonly<{ carries: unknown[] }>) {
       <div className="planet-resource-groups">
         {groups.map((group) => <div className="planet-resource-group" key={group.name}>
           <h5><span>{t(group.name)}</span><span>{group.items.length}</span></h5>
-          <ul>{group.items.map((item) => <li key={item}>{item}</li>)}</ul>
+          <ul>{group.items.map((item) => <li key={item}>{tv(item)}</li>)}</ul>
         </div>)}
       </div>
     </section>
@@ -238,7 +238,6 @@ export function PlanetCard({ portal, galaxy, title: cardTitle, contextLabel, mis
   const band = asRecord(lines?.band);
   const headline = asRecord(lines?.headline);
   const title = typeof headline?.word === "string" ? headline.word : t("planet.fallback_name");
-  const sentence = typeof lines?.sentence === "string" ? lines.sentence : "";
   const sky = asRecord(planet?.sky);
   const pictures = asRecord(planet?.pictures);
   const disc = pictures?.disc;
@@ -321,7 +320,6 @@ export function PlanetCard({ portal, galaxy, title: cardTitle, contextLabel, mis
                 <h4 id="planet-conditions-title">{t("planet.conditions")}</h4>
                 <PlanetFacts band={band} fields={planetConditions} />
                 <PlanetSky sky={sky} />
-                {sentence && <p className="planet-card-summary">{sentence}</p>}
               </section>
               <section aria-labelledby="planet-system-title" className="planet-card-section">
                 <h4 id="planet-system-title">{t("system.system_label")}</h4>

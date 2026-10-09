@@ -150,6 +150,7 @@ export default async function PlanetsRoute() {
         const economyStars = almanacStarCount(band?.economy);
         const almanacFacts = ([
           ["common.planet_type_label", planetType],
+          ["planet.size", almanacWord(band?.size)],
           ["planet.weather", almanacWord(band?.weather)],
           ["planet.water", almanacWord(band?.water)],
           ["planet.sentinels", almanacWord(band?.sentinels)],

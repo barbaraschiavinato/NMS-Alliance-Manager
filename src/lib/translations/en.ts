@@ -495,6 +495,8 @@ export const translations: TranslationCatalog = {
     "planet.all_stars": "All stars",
     "planet.all_races": "All races",
     "planet.filter_planet_type": "Filter by planet type",
+    "planet.filter_size": "Filter by size",
+    "planet.all_sizes": "Any size",
     "planet.filter_water": "Filter by water",
     "planet.filter_weather": "Filter by weather",
     "planet.filter_sentinels": "Filter by sentinels",
