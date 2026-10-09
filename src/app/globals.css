@@ -559,6 +559,29 @@ select { appearance: none; padding-right: 29px; background-image: linear-gradien
 .station-toolbar { margin-bottom: 0; }
 .members-toolbar.station-toolbar-simple { grid-template-columns: minmax(0, 1fr); }
 .members-toolbar.station-toolbar-simple .member-filter-tabs { grid-column: 1 / -1; }
+.planet-search { width: min(360px, 100%); margin: 0 0 16px auto; }
+.planet-station-groups { display: grid; gap: 22px; }
+.planet-station-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.planet-station-group h2 { margin: 0 0 5px; color: var(--lime); font-size: 13px; font-weight: 650; }
+.planet-station-address { margin: 0 0 10px; color: #a4adae; font-family: "SFMono-Regular", Consolas, monospace; font-size: 9px; }
+.planet-station-facts { display: flex; flex-wrap: wrap; gap: 4px 12px; color: #a4adae; font-size: 8px; }
+.planet-station-facts b { color: #75847a; font-weight: 600; }
+.planet-station-link { position: relative; flex: 0 0 auto; color: var(--lime); text-decoration: none; }
+.planet-station-link[data-tooltip]::after { position: absolute; z-index: 30; top: calc(100% + 7px); right: 0; padding: 6px 8px; color: #f1eee7; border: 1px solid #394548; border-radius: 3px; background: #111719; box-shadow: 0 4px 14px #0008; content: attr(data-tooltip); font-size: 9px; font-weight: 500; line-height: 1.2; opacity: 0; pointer-events: none; transform: translateY(-3px); transition: opacity .12s, transform .12s; white-space: nowrap; }
+.planet-station-link[data-tooltip]:hover::after, .planet-station-link[data-tooltip]:focus-visible::after { opacity: 1; transform: translateY(0); }
+.planet-mission-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 0; padding: 0; list-style: none; }
+.planet-mission-card { width: 100%; min-width: 0; min-height: 96px; display: flex; align-items: center; gap: 12px; padding: 10px; color: var(--lime); border: 1px solid #394548; border-radius: 4px; background: #171e21; cursor: pointer; text-align: left; }
+.planet-mission-card:hover { border-color: var(--lime); background: #1d2527; }
+.planet-mission-image { width: 76px; height: 76px; flex: 0 0 76px; border: 1px solid #394548; border-radius: 3px; object-fit: cover; }
+.planet-mission-icon { flex: 0 0 auto; margin: 0 28px; }
+.planet-mission-card-copy { min-width: 0; display: grid; gap: 5px; }
+.planet-mission-card-copy strong { overflow: hidden; color: #f1eee7; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.planet-mission-card-copy .glyph-strip { max-width: max-content; }
+.planet-mission-card-copy > span { overflow: hidden; color: #a4adae; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+.planet-mission-card-copy code { color: var(--lime); font-family: "SFMono-Regular", Consolas, monospace; font-size: 9px; }
+.planet-mission-card-copy .planet-mission-facts { display: flex; flex-wrap: wrap; gap: 4px 10px; overflow: visible; white-space: normal; }
+.planet-mission-facts > span { color: #a4adae; font-size: 8px; }
+.planet-mission-facts b { color: #75847a; font-weight: 600; }
 .station-list { margin: 0; padding: 0; list-style: none; }
 .station-list li { min-height: 48px; display: grid; grid-template-columns: minmax(215px, 235px) minmax(0, 1fr) minmax(30px, max-content); align-items: center; gap: 12px; padding: 10px 3px; border-bottom: 1px solid #e5e9e2; }
 .station-list-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 12px; border-top: 0; }
@@ -1083,6 +1106,7 @@ body:has(.sidebar-compact) .mission-notes-content, body:has(.sidebar-compact) .p
   .sidebar-compact ~ .main-panel .filter-tabs { width: 100%; justify-content: space-between; gap: 8px; overflow-x: auto; }
   .sidebar-compact ~ .main-panel .member-filter-tabs { height: 42px; overflow-x: auto; justify-content: flex-start; gap: 14px; }
   .sidebar-compact ~ .main-panel .station-list-cards, .member-card-grid { grid-template-columns: 1fr; }
+  .planet-mission-list { grid-template-columns: 1fr; }
   .sidebar-compact ~ .main-panel .station-list-cards li { padding: 12px; }
   .sidebar-compact ~ .main-panel .station-system-status { flex-wrap: wrap; }
   .sidebar-compact ~ .main-panel .planet-resource-groups { grid-template-columns: repeat(2, minmax(0, 1fr)); }

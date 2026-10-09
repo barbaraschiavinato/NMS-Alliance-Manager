@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentMember } from "@/lib/authorization";
-import { readAlmanacResponse, writeAlmanacResponse } from "@/lib/almanac-store";
+import { lookupAlmanacPlanet } from "@/lib/almanac-lookup";
 import { decodePortalAddress } from "@/lib/missions";
 
 export const runtime = "nodejs";
@@ -28,31 +28,10 @@ export async function GET(request: Request) {
   }
 
   try {
-    const cachedPlanet = await readAlmanacResponse(address, galaxy);
-    if (cachedPlanet) {
-      return NextResponse.json({ planet: cachedPlanet }, { headers: { "Cache-Control": "no-store" } });
-    }
-
-    const response = await fetch(`https://nmsalmanac.com/api/planets/${address}?galaxy=${galaxy + 1}`, {
-      headers: { Accept: "application/json" },
-      signal: AbortSignal.timeout(6000),
-      cache: "no-store",
-    });
-    if (response.status === 404) {
+    const planet = await lookupAlmanacPlanet(address, galaxy);
+    if (!planet) {
       return NextResponse.json({ error: "planet.no_almanac_details_are_archived_for_this_mission" }, { status: 404 });
     }
-    if (!response.ok) {
-      console.error("NMS Almanac returned an error for planet lookup", { address, galaxy, status: response.status });
-      return NextResponse.json({ error: "planet.almanac_lookup_failed" }, { status: 502 });
-    }
-
-    const planet: unknown = await response.json();
-    if (!planet || typeof planet !== "object" || Array.isArray(planet) ||
-      !("portal" in planet) || typeof planet.portal !== "string" || planet.portal.toUpperCase() !== address) {
-      console.error("NMS Almanac returned invalid planet data", { address, galaxy });
-      return NextResponse.json({ error: "planet.almanac_lookup_failed" }, { status: 502 });
-    }
-    await writeAlmanacResponse(address, galaxy, planet as Record<string, unknown>);
     return NextResponse.json({ planet }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     console.error("Unable to read archived Almanac planet", error);

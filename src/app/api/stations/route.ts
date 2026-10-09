@@ -233,7 +233,8 @@ export async function PATCH(request: Request) {
 async function readStations(member: AllianceMember) {
   const canViewAllStations = hasRole(member, "moderator") ||
     member.specialty === "explorer" ||
-    member.specialty === "builder";
+    member.specialty === "builder" ||
+    member.specialty === "ranger";
   const stations = canViewAllStations
     ? await readAllStationPortals()
     : (await readStationPortals(member.publicId)).map((station) => ({ ...station, ownerId: member.publicId }));

@@ -1,0 +1,170 @@
+import { auth } from "@/auth";
+import { GoogleLogin } from "@/components/google-login";
+import { PlanetsPage } from "@/components/planets-page";
+import { PendingApproval } from "@/components/pending-approval";
+import { getCurrentMember, hasRole } from "@/lib/authorization";
+import { readAccessData } from "@/lib/access-store";
+import { canViewMission, isDifferentPlanetInSameSystem } from "@/lib/missions";
+import { serializeMission } from "@/lib/mission-view";
+import { getSystemPlanetAddresses } from "@/lib/planet-addresses";
+import { lookupAlmanacPlanet } from "@/lib/almanac-lookup";
+import { readAllStationPortals, readStationPortals } from "@/lib/stations-store";
+import { readMissions } from "@/lib/store";
+
+export const dynamic = "force-dynamic";
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : null;
+}
+
+function almanacWord(value: unknown): string | undefined {
+  const record = asRecord(value);
+  return typeof record?.word === "string" ? record.word : undefined;
+}
+
+function almanacSearchValues(value: unknown, parentKey = ""): string[] {
+  if (typeof value === "string") return [value];
+  if (typeof value === "number" || typeof value === "boolean") return [String(value)];
+  if (Array.isArray(value)) return value.flatMap((entry) => almanacSearchValues(entry, parentKey));
+  if (value && typeof value === "object") {
+    return Object.entries(value).flatMap(([key, entry]) => {
+      if (parentKey === "band" && ["star", "economy", "conflict", "race"].includes(key)) return [];
+      return [key, ...almanacSearchValues(entry, key)];
+    });
+  }
+  return [];
+}
+
+export default async function PlanetsRoute() {
+  const accessData = await readAccessData();
+  const { alliance } = accessData;
+  const missingConfiguration = ["AUTH_SECRET", "AUTH_GOOGLE_ID", "AUTH_GOOGLE_SECRET", "ALLIANCE_ADMIN_EMAIL"]
+    .filter((key) => !process.env[key]);
+  if (missingConfiguration.length > 0) {
+    return <GoogleLogin allianceLogoUrl={alliance.logoUrl} allianceName={alliance.name} missingConfiguration={missingConfiguration} />;
+  }
+
+  const session = await auth();
+  if (!session?.user?.email) return <GoogleLogin allianceLogoUrl={alliance.logoUrl} allianceName={alliance.name} />;
+
+  const member = await getCurrentMember({ allowPending: true, allowBlocked: true });
+  if (!member) return <GoogleLogin allianceLogoUrl={alliance.logoUrl} allianceName={alliance.name} />;
+  if (member.membershipStatus !== "approved") return <PendingApproval member={member} />;
+
+  const canManage = hasRole(member, "moderator");
+  const [missions, stations] = await Promise.all([
+    readMissions(),
+    canManage || member.specialty === "explorer" || member.specialty === "builder" || member.specialty === "ranger"
+      ? readAllStationPortals()
+      : readStationPortals(member.publicId).then((entries) =>
+        entries.map((station) => ({ ...station, ownerId: member.publicId })),
+      ),
+  ]);
+  const visibleMissions = missions
+    .filter((mission) => canManage || canViewMission(mission, member))
+    .map((mission) => serializeMission(mission, accessData.members));
+  const visibleByAddress = new Map(visibleMissions.map((mission) => [
+    `${mission.systemAddress.slice(1).toUpperCase()}:${mission.galaxy}`,
+    mission,
+  ]));
+  const systemsByAddress = new Map(missions.map((mission) => {
+    const key = `${mission.systemAddress.slice(1).toUpperCase()}:${mission.galaxy}`;
+    const visibleMission = visibleByAddress.get(key);
+    return [key, {
+      id: visibleMission?.id ?? key,
+      portal: mission.systemAddress,
+      galaxy: mission.galaxy,
+      ...(visibleMission ? {
+        title: visibleMission.title,
+        description: visibleMission.description,
+        system: visibleMission.system,
+      } : {}),
+      stationOwnerMemberId: mission.stationOwnerMemberId,
+    }] as const;
+  }));
+  const planetCandidates = (await Promise.all([...systemsByAddress.values()].map(async (system) => {
+    const planetaryAddresses = await getSystemPlanetAddresses(system.portal, system.galaxy);
+    const associatedStation = stations.find((station) =>
+      (system.stationOwnerMemberId ? station.ownerId === system.stationOwnerMemberId : true) &&
+      (station.portal === system.portal ||
+        isDifferentPlanetInSameSystem(station.portal, station.galaxy, system.portal, system.galaxy)),
+    );
+    return planetaryAddresses.map(({ portal, number }) => ({
+      ...system,
+      id: `${portal}:${system.galaxy}`,
+      planetPortal: portal,
+      planetNumber: number,
+      ...(associatedStation ? {
+        station: {
+          id: `${associatedStation.ownerId}:${associatedStation.portal}:${associatedStation.galaxy}`,
+          portal: associatedStation.portal,
+          galaxy: associatedStation.galaxy,
+          ...(associatedStation.name ? { name: associatedStation.name } : {}),
+        },
+      } : {}),
+    }));
+  }))).flat();
+  const lookupResults: {
+    planet: ((typeof planetCandidates)[number] & {
+      imageUrl?: string;
+      almanacName?: string;
+      almanacSearchIndex: string;
+      almanacFacts: { label: string; value: string }[];
+      systemFacts: { label: string; value: string }[];
+    }) | null;
+    failed: boolean;
+  }[] = [];
+  for (let index = 0; index < planetCandidates.length; index += 6) {
+    const batch = await Promise.all(planetCandidates.slice(index, index + 6).map(async (planet) => {
+      try {
+        const almanac = await lookupAlmanacPlanet(planet.planetPortal, planet.galaxy);
+        const lines = asRecord(almanac?.lines);
+        const band = asRecord(lines?.band);
+        const headline = asRecord(lines?.headline);
+        const pictures = asRecord(almanac?.pictures);
+        const disc = pictures?.disc;
+        const almanacName = typeof headline?.word === "string" ? headline.word : undefined;
+        const almanacFacts = ([
+          ["common.planet_type_label", almanacWord(band?.type)],
+          ["planet.weather", almanacWord(band?.weather)],
+          ["planet.water", almanacWord(band?.water)],
+          ["planet.sentinels", almanacWord(band?.sentinels)],
+        ] as const).flatMap(([label, value]) => value ? [{ label, value }] : []);
+        const systemFacts = ([
+          ["planet.star", almanacWord(band?.star)],
+          ["common.economy", almanacWord(band?.economy)],
+          ["common.conflict", almanacWord(band?.conflict)],
+          ["common.race", almanacWord(band?.race)],
+        ] as const).flatMap(([label, value]) => value ? [{ label, value }] : []);
+        return {
+          planet: almanac ? {
+            ...planet,
+            ...(typeof disc === "string" && disc.startsWith("/planets/")
+              ? { imageUrl: `https://nmsalmanac.com/api${disc}` }
+              : {}),
+            ...(almanacName ? { almanacName } : {}),
+            almanacSearchIndex: almanacSearchValues(almanac).join(" "),
+            almanacFacts,
+            systemFacts,
+          } : null,
+          failed: false,
+        };
+      } catch {
+        return { planet: null, failed: true };
+      }
+    }));
+    lookupResults.push(...batch);
+  }
+  const planetsWithData = lookupResults.flatMap((result) => result.planet ? [result.planet] : []);
+  const almanacLookupFailed = lookupResults.some((result) => result.failed);
+  return <PlanetsPage
+    alliance={alliance}
+    currentMember={member}
+    planets={planetsWithData}
+    almanacLookupFailed={almanacLookupFailed}
+    missionCount={missions.length}
+    stationCount={stations.length}
+    offlineCount={canManage ? accessData.members.filter((item) => item.offline).length : undefined}
+    userCount={canManage ? accessData.members.filter((item) => !item.offline).length : undefined}
+  />;
+}

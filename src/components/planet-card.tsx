@@ -123,17 +123,18 @@ function PlanetResources({ carries }: Readonly<{ carries: unknown[] }>) {
   );
 }
 
-export function PlanetCard({ portal, galaxy, title: cardTitle, contextLabel, missionDescription, onClose }: Readonly<{
+export function PlanetCard({ portal, galaxy, title: cardTitle, contextLabel, missionDescription, initialPlanetPortal, onClose }: Readonly<{
   portal: string;
   galaxy: number;
   title: string;
   contextLabel?: string;
   missionDescription?: string;
+  initialPlanetPortal?: string;
   onClose: () => void;
 }>) {
   const { t } = useLocale();
   const [planetEntries, setPlanetEntries] = useState<PlanetEntry[]>([]);
-  const [selectedPortal, setSelectedPortal] = useState(portal);
+  const [selectedPortal, setSelectedPortal] = useState(initialPlanetPortal ?? portal);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [helpOpen, setHelpOpen] = useState(false);
@@ -187,7 +188,7 @@ export function PlanetCard({ portal, galaxy, title: cardTitle, contextLabel, mis
 
         if (!controller.signal.aborted) {
           setPlanetEntries(entries);
-          if (!entries.some((entry) => entry.portal === portal.toUpperCase()) && entries[0]) {
+          if (!initialPlanetPortal && !entries.some((entry) => entry.portal === portal.toUpperCase()) && entries[0]) {
             setSelectedPortal(entries[0].portal);
           }
           setError(lookupError);
@@ -203,7 +204,7 @@ export function PlanetCard({ portal, galaxy, title: cardTitle, contextLabel, mis
 
     void loadSystemPlanets();
     return () => controller.abort();
-  }, [galaxy, portal]);
+  }, [galaxy, initialPlanetPortal, portal]);
 
   async function sendHelpRequest(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -330,7 +331,7 @@ export function PlanetCard({ portal, galaxy, title: cardTitle, contextLabel, mis
               <div className="planet-card-attribution">{t("common.data")} <a href="https://nmsalmanac.com" rel="noreferrer" target="_blank">NMS Almanac</a></div>
             </>
           )}
-          {!loading && !planetEntries.length && !error && <p className="planet-card-message">{t("planet.no_almanac_details_are_archived_for_this_mission")}</p>}
+          {!loading && !planet && !error && <p className="planet-card-message">{t("planet.no_almanac_details_are_archived_for_this_mission")}</p>}
         </div>
       </dialog>
     </div>

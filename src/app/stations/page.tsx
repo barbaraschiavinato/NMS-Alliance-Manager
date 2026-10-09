@@ -33,7 +33,8 @@ export default async function StationsRoute({ searchParams }: Readonly<{
 
   const [missions, stations] = await Promise.all([
     readMissions(),
-    member.role === "admin" || member.role === "moderator"
+    member.role === "admin" || member.role === "moderator" ||
+      member.specialty === "explorer" || member.specialty === "builder" || member.specialty === "ranger"
       ? readAllStationPortals()
       : readStationPortals(member.publicId),
   ]);
