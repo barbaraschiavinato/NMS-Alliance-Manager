@@ -1170,3 +1170,8 @@ body:has(.sidebar-compact) .dialog-heading .icon-button svg { width: 26px; heigh
 .planet-help-button svg { width: 20px; height: 20px; }
 .planet-help-button:hover { color: #ffdd55; border-color: #ffdd55; }
 .planet-help-form { display: grid; gap: 8px; margin-top: 10px; }
+
+.station-list li.station-is-new { position: relative; overflow: hidden; }
+.station-new-ribbon { position: absolute; z-index: 2; top: 10px; left: -26px; width: 90px; padding: 2px 0; color: #10130f; background: var(--lime); font-size: 10px; font-weight: 750; letter-spacing: 0.06em; text-align: center; text-transform: uppercase; transform: rotate(-45deg); pointer-events: none; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35); }
+.sidebar-compact ~ .main-panel .station-new-ribbon { top: 12px; left: -28px; font-size: 12px; }
+.mission-card-ribbon, .mission-ribbon-cell { position: relative; overflow: hidden; }

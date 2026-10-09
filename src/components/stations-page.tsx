@@ -198,6 +198,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
 }>) {
   const { t } = useLocale();
   const [pageMember, setPageMember] = useState(currentMember);
+  const [renderedAt] = useState(() => Date.now());
   const [allianceSettings, setAllianceSettings] = useState(alliance);
   const [stations, setStations] = useState<StationEntry[]>([]);
   const [planetStatuses, setPlanetStatuses] = useState<PlanetSystemStatuses>({});
@@ -610,6 +611,9 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
               const planetImageUrl = cachedPlanetImageUrl(station.planet);
               const stationDisplayName = station.name || cachedPlanetType(station.planet) || cachedPlanetTitle(station.planet) || t("planet.unnamed_planet");
               const statusKey = planetSystemStatusKey(station.portal, station.galaxy);
+              const createdTime = station.createdAt ? Date.parse(station.createdAt) : Number.NaN;
+              const isNewStation = !station.hasMissions && Number.isFinite(createdTime) && renderedAt - createdTime < 7 * 24 * 60 * 60 * 1000;
+              const newRibbon = isNewStation && <span className="station-new-ribbon">{t("stations.new_badge")}</span>;
               const canEditStation = canSeeAll ||
                 (station.createdByMemberId ?? station.ownerId) === pageMember.publicId;
               const canCreateMission = canCreateMissionFromStation(station, pageMember, canCreateMissions);
@@ -622,7 +626,8 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
                   subjectLabel: station.name || cachedPlanetTitle(station.planet) || cachedPlanetType(station.planet),
                 },
               })} ownerLabel={t("stations.station_owner")} station={station} />;
-              return <li key={`${station.portal}:${station.galaxy}:${station.ownerId}`}>
+              return <li key={`${station.portal}:${station.galaxy}:${station.ownerId}`} className={isNewStation ? "station-is-new" : undefined}>
+                {newRibbon}
                 {viewMode === "cards" && <button className={`station-card-title${planetImageUrl ? " station-card-title-with-image" : ""}`} onClick={() => setSelectedStation({ portal: station.portal, galaxy: station.galaxy })} type="button">
                   {planetImageUrl && <Image alt="" className="station-card-planet-image" height={112} src={planetImageUrl} unoptimized width={112} />}
                   <span className="station-card-title-copy">

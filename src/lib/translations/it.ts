@@ -259,6 +259,7 @@ export const translations: TranslationCatalog = {
     "stations.view_notes_for_station": "Visualizza le note di {station}",
     "stations.optional_max_1000_characters": "facoltative · max 1.000 caratteri",
     "stations.station_owner": "Proprietario della stazione",
+    "stations.new_badge": "Nuova",
     "stations.edit_station": "Modifica stazione",
     "stations.edit_station_portal": "Modifica stazione {portal}",
     "stations.station_updated": "Stazione aggiornata.",
