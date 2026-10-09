@@ -165,6 +165,10 @@ export default async function PlanetsRoute() {
           portal: associatedStation.portal,
           galaxy: associatedStation.galaxy,
           ...(associatedStation.name ? { name: associatedStation.name } : {}),
+          ...(associatedStation.createdAt ? { createdAt: associatedStation.createdAt } : {}),
+          hasMissions: missions.some((mission) =>
+            mission.galaxy === associatedStation.galaxy &&
+            mission.systemAddress.slice(1).toUpperCase() === associatedStation.portal.slice(1).toUpperCase()),
         },
       } : {}),
     }));

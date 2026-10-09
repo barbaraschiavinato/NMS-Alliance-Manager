@@ -41,6 +41,8 @@ type PlanetDestination = Readonly<{
     portal: string;
     galaxy: number;
     name?: string;
+    createdAt?: string;
+    hasMissions?: boolean;
   }>;
 }>;
 
@@ -85,6 +87,11 @@ export function PlanetsPage({ alliance, currentMember, planets, almanacLookupFai
   userCount?: number;
 }>) {
   const { t, tv, systemLabel } = useLocale();
+  const [renderedAt] = useState(() => Date.now());
+  const isNewStation = (station: PlanetDestination["station"]) => {
+    const createdTime = station?.createdAt ? Date.parse(station.createdAt) : Number.NaN;
+    return Boolean(station) && !station?.hasMissions && Number.isFinite(createdTime) && renderedAt - createdTime < 7 * 24 * 60 * 60 * 1000;
+  };
   useEffect(() => {
     if (!almanacLookupFailed) storePlanetCount(planets.length);
   }, [almanacLookupFailed, planets.length]);
@@ -150,7 +157,9 @@ export function PlanetsPage({ alliance, currentMember, planets, almanacLookupFai
       group.planets.push(planet);
       groups.set(key, group);
     }
-    return [...groups.values()];
+    return sortByCreatedAtDescending(
+      [...groups.values()].map((group) => ({ group, createdAt: group.station?.createdAt })),
+    ).map(({ group }) => group);
   }, [sortedPlanets]);
   const filteredPlanetGroups = useMemo(() => planetGroups.flatMap((group) => {
     const matchingPlanets = group.planets.filter((planet) =>
@@ -379,7 +388,7 @@ export function PlanetsPage({ alliance, currentMember, planets, almanacLookupFai
             : <div className="planet-station-groups">{visiblePlanetGroups.map(({ station, planets: groupPlanets }) => <section className="planet-station-group" key={station?.id ?? "unassociated"}>
               <div className="planet-station-heading">
                 <div>
-                  <h2>{station?.name || t(station ? "stations.space_station" : "planet.no_associated_station")}</h2>
+                  <h2>{station?.name || groupPlanets.find((planet) => planet.planetPortal === station?.portal)?.almanacName || t(station ? "stations.space_station" : "planet.no_associated_station")}{isNewStation(station) && <span className="planet-station-new">{t("stations.new_badge")}</span>}</h2>
                   {station && <p className="planet-station-address"><span className={station.galaxy !== 0 ? "mission-galaxy-alert" : undefined} data-tooltip={station.galaxy !== 0 ? t("missions.galaxy_portals_warning") : undefined} tabIndex={station.galaxy !== 0 ? 0 : undefined}>{station.galaxy !== 0 && <AlertTriangle size={9} />}{galaxyLabel(station.galaxy)}</span> · {station.portal}</p>}
                   {groupPlanets[0]?.systemFacts.length > 0 && <div className="planet-station-facts">
                     {groupPlanets[0].systemFacts.map((fact) => <span key={fact.label}><b>{t(fact.label)}</b> {tv(fact.value)}</span>)}
