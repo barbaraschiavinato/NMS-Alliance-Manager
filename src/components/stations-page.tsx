@@ -657,7 +657,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
               const statusKey = planetSystemStatusKey(station.portal, station.galaxy);
               const createdTime = station.createdAt ? Date.parse(station.createdAt) : Number.NaN;
               const isNewStation = !station.hasMissions && Number.isFinite(createdTime) && renderedAt - createdTime < 7 * 24 * 60 * 60 * 1000;
-              const newRibbon = isNewStation && <span className="station-new-ribbon">{t("stations.new_badge")}</span>;
+              const newRibbon = isNewStation && <span className="station-new-ribbon-clip"><span className="station-new-ribbon">{t("stations.new_badge")}</span></span>;
               const canEditStation = canSeeAll ||
                 (station.createdByMemberId ?? station.ownerId) === pageMember.publicId;
               const canCreateMission = canCreateMissionFromStation(station, pageMember, canCreateMissions);

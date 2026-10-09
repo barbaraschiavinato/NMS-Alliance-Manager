@@ -346,7 +346,7 @@ function useIsNewUnassigned(mission: Mission) {
 
 function NewMissionRibbon({ mission }: Readonly<{ mission: Mission }>) {
   const { t } = useLocale();
-  return useIsNewUnassigned(mission) ? <span className="station-new-ribbon">{t("stations.new_badge")}</span> : null;
+  return useIsNewUnassigned(mission) ? <span className="station-new-ribbon-clip"><span className="station-new-ribbon">{t("stations.new_badge")}</span></span> : null;
 }
 
 function MissionCard({ mission, systemStatuses, currentMember, canManage, stationOwners, stationOwnersLoaded, requestedSpecialty, onCreateRangerMission, members, onEdit, onDeleteMission, onOpenPlanet, onClaim, onComplete, onToggleSystemStatus, onUpdateProgress, onViewNotes, onViewPlanetNotes, onOpenProfile, getDiscovererImage }: Readonly<{
