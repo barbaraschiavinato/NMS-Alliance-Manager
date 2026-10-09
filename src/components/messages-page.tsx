@@ -206,7 +206,7 @@ export function MessagesPage({ currentMember, alliance, missionCount, stationCou
                 aria-label={t("messages.open_mission")}
                 className="member-icon-action message-subject-link member-link-action"
                 data-tooltip={t("messages.open_mission")}
-                href={`/?search=${encodeURIComponent(message.missionCode)}`}
+                href={`/missions?search=${encodeURIComponent(message.missionCode)}`}
                 title={t("messages.open_mission")}
               ><Crosshair size={15} /></Link>}
               {!isReply && message.subjectType === "planet" && message.portal && <Link

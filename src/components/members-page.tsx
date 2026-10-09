@@ -223,7 +223,7 @@ export function MembersPage({ memberActivity, currentMember, alliance, missionCo
             </dl>
             <div className="member-card-actions">
               <div className="member-page-actions">
-                {member.nmsName && memberActivity.missionOwnerIds.includes(member.publicId) && <Link aria-label={t("members.find_member_s_missions", { member: member.nmsName || member.name })} className="member-icon-action member-link-action" data-tooltip={t("members.user_missions")} href={`/?search=${encodeURIComponent(member.nmsName)}`}><Crosshair size={14} /></Link>}
+                {member.nmsName && memberActivity.missionOwnerIds.includes(member.publicId) && <Link aria-label={t("members.find_member_s_missions", { member: member.nmsName || member.name })} className="member-icon-action member-link-action" data-tooltip={t("members.user_missions")} href={`/missions?search=${encodeURIComponent(member.nmsName)}`}><Crosshair size={14} /></Link>}
                 {member.nmsName && memberActivity.stationOwnerIds.includes(member.publicId) && <Link aria-label={t("stations.find_member_s_stations", { member: member.nmsName || member.name })} className="member-icon-action member-link-action member-station-filter" data-tooltip={t("stations.user_stations")} href={`/stations?search=${encodeURIComponent(member.nmsName)}`}><Orbit size={14} /></Link>}
               </div>
               <MemberActions canChangeRole={canChangeRole} currentMemberEmail={pageMember.email} member={member} onDelete={(target) => void deleteMember(target)} onRole={(email, role) => void patchMember(email, { role })} onStatus={(email, membershipStatus) => void patchMember(email, { membershipStatus })} />

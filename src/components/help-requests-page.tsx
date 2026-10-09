@@ -156,7 +156,7 @@ export function HelpRequestsPage({ currentMember, alliance, missionCount, statio
                     {request.missionCode && <Link
                       aria-label={t("messages.open_mission")}
                       className="member-icon-action message-subject-link member-link-action"
-                      href={`/?search=${encodeURIComponent(request.missionCode)}`}
+                      href={`/missions?search=${encodeURIComponent(request.missionCode)}`}
                       title={t("messages.open_mission")}
                     ><Crosshair size={15} /></Link>}
                     {request.portal && request.galaxy !== undefined && <button

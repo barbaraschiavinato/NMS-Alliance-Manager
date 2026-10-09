@@ -8,7 +8,7 @@ import { readAllStationPortals, readStationPortals } from "@/lib/stations-store"
 
 export const dynamic = "force-dynamic";
 
-export default async function Home({ searchParams }: Readonly<{
+export default async function MissionsRoute({ searchParams }: Readonly<{
   searchParams: Promise<{ search?: string | string[] }>;
 }>) {
   const accessData = await readAccessData();
