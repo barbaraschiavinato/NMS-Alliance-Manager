@@ -1,10 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Globe2, Orbit, RotateCcw, Search, SlidersHorizontal, X } from "lucide-react";
-import { AllianceSidebar, DashboardTopbar, MissionHero } from "@/components/dashboard-chrome";
+import { AllianceSidebar, DashboardTopbar, MissionHero, storePlanetCount } from "@/components/dashboard-chrome";
 import { PlanetCard } from "@/components/planet-card";
 import { GlyphStrip } from "@/components/portal-address-field";
 import type { AllianceMember, AllianceSettings } from "@/lib/access-store";
@@ -71,6 +71,9 @@ export function PlanetsPage({ alliance, currentMember, planets, almanacLookupFai
   userCount?: number;
 }>) {
   const { t } = useLocale();
+  useEffect(() => {
+    if (!almanacLookupFailed) storePlanetCount(planets.length);
+  }, [almanacLookupFailed, planets.length]);
   const [selectedPlanet, setSelectedPlanet] = useState<PlanetDestination | null>(null);
   const [search, setSearch] = useState("");
   const [economy, setEconomy] = useState("");
@@ -180,6 +183,7 @@ export function PlanetsPage({ alliance, currentMember, planets, almanacLookupFai
         currentMember={currentMember}
         missionCount={missionCount}
         stationCount={stationCount}
+        planetCount={planets.length}
         offlineCount={offlineCount}
         userCount={userCount}
         settings={alliance}

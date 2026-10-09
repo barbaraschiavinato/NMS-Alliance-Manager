@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { signOut } from "next-auth/react";
 import Image from "next/image";
 import Link from "next/link";
@@ -25,10 +25,40 @@ import { LanguageSelector } from "@/components/language-selector";
 import { useRequestSearchReset } from "@/components/navigation-search-reset";
 
 const counterRefreshMs = 2 * 60 * 1000;
+const planetCountKey = "nms-planet-count";
+const planetCountEvent = "planet-count-changed";
 
-export function AllianceSidebar({ missionCount, stationCount, userCount, offlineCount, currentMember, settings, activeSection }: Readonly<{
+function subscribePlanetCount(callback: () => void) {
+  window.addEventListener("storage", callback);
+  window.addEventListener(planetCountEvent, callback);
+  return () => {
+    window.removeEventListener("storage", callback);
+    window.removeEventListener(planetCountEvent, callback);
+  };
+}
+
+function readPlanetCount() {
+  try {
+    return window.localStorage.getItem(planetCountKey);
+  } catch {
+    return null;
+  }
+}
+
+export function storePlanetCount(count: number) {
+  try {
+    if (window.localStorage.getItem(planetCountKey) === String(count)) return;
+    window.localStorage.setItem(planetCountKey, String(count));
+    window.dispatchEvent(new Event(planetCountEvent));
+  } catch {
+    // Il contatore è solo informativo.
+  }
+}
+
+export function AllianceSidebar({ missionCount, stationCount, planetCount, userCount, offlineCount, currentMember, settings, activeSection }: Readonly<{
   missionCount: number;
   stationCount: number;
+  planetCount?: number;
   userCount?: number;
   offlineCount?: number;
   currentMember: AllianceMember;
@@ -37,6 +67,8 @@ export function AllianceSidebar({ missionCount, stationCount, userCount, offline
 }>) {
   const { t } = useLocale();
   const resetSearch = useRequestSearchReset();
+  const storedPlanetCount = useSyncExternalStore(subscribePlanetCount, readPlanetCount, () => null);
+  const shownPlanetCount = planetCount ?? (storedPlanetCount === null ? null : Number(storedPlanetCount));
   const [unreadCount, setUnreadCount] = useState(0);
   const [helpCount, setHelpCount] = useState(0);
   useEffect(() => {
@@ -92,7 +124,7 @@ export function AllianceSidebar({ missionCount, stationCount, userCount, offline
       <nav className="side-nav" aria-label={t("navigation.main_navigation")}>
         <Link className={`nav-item ${activeSection === "missioni" ? "active" : ""}`} href="/" onClick={resetSearch}><Crosshair size={17} /><span>{t("missions.section_title")}</span><span className="nav-count">{missionCount}</span></Link>
         <Link className={`nav-item ${activeSection === "stazioni" ? "active" : ""}`} href="/stations" onClick={resetSearch}><Orbit size={17} /><span>{t("stations.stations")}</span><span className="nav-count">{stationCount}</span></Link>
-        <Link className={`nav-item ${activeSection === "pianeti" ? "active" : ""}`} href="/planets" onClick={resetSearch}><Eclipse size={17} /><span>{t("navigation.planets")}</span></Link>
+        <Link className={`nav-item ${activeSection === "pianeti" ? "active" : ""}`} href="/planets" onClick={resetSearch}><Eclipse size={17} /><span>{t("navigation.planets")}</span>{shownPlanetCount !== null && Number.isFinite(shownPlanetCount) && <span className="nav-count">{shownPlanetCount}</span>}</Link>
         {(currentMember.role === "admin" || currentMember.role === "moderator") && <Link className={`nav-item ${activeSection === "utenti" ? "active" : ""}`} href="/users" onClick={resetSearch}><UsersRound size={17} /><span>{t("members.users")}</span><span className="nav-count">{userCount ?? 0}</span></Link>}
         {(currentMember.role === "admin" || currentMember.role === "moderator") && <Link className={`nav-item ${activeSection === "offline" ? "active" : ""}`} href="/offline-players" onClick={resetSearch}><UserRoundX size={17} /><span>{t("members.offline_players")}</span><span className="nav-count">{offlineCount ?? 0}</span></Link>}
         <Link className={`nav-item ${activeSection === "aiuto" ? "active" : ""}`} href="/help-requests" onClick={resetSearch}><Siren size={17} /><span>{t("help.help_requests")}</span><span className={helpCount > 0 ? "nav-count nav-unread nav-unread-active" : "nav-count nav-unread"}>{helpCount}</span></Link>
