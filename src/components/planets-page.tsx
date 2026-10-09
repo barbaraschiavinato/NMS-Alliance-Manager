@@ -410,7 +410,7 @@ export function PlanetsPage({ alliance, currentMember, planets, almanacLookupFai
         initialPlanetPortal={selectedPlanet.planetPortal}
         onClose={() => setSelectedPlanet(null)}
         portal={selectedPlanet.portal}
-        title={selectedPlanet.title ?? t("planet.mission_planet")}
+        title={selectedPlanet.station?.name ?? selectedPlanet.title ?? t("planet.mission_planet")}
       />}
     </div>
   );

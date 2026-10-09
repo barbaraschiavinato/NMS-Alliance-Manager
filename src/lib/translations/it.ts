@@ -535,6 +535,7 @@ export const translations: TranslationCatalog = {
     "planet.water": "Acqua",
     "planet.star": "Stella",
     "planet.e_g_large_irradiated_planet": "Es. Large irradiated planet",
+    "stations.station_name_example": "Es. [{alliance}] Nome Sistema",
     "planet.no_almanac_data": "Nessun dato Almanac",
     "planet.no_almanac_data_open_details": "Nessun dato Almanac · apri scheda",
     "planet.open_planet_details": "Apri la scheda del sistema",

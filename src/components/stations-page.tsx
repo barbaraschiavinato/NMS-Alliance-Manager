@@ -655,7 +655,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
                   setStationName(event.target.value);
                   setStationNameEdited(true);
                 }}
-                placeholder={planetType || t("planet.e_g_large_irradiated_planet")}
+                placeholder={planetType || t("stations.station_name_example", { alliance: allianceSettings.name })}
                 value={stationName}
               />
             </label>
