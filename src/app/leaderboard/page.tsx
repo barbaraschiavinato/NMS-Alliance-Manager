@@ -8,6 +8,8 @@ import { readMissions } from "@/lib/store";
 import { coveredSpecialties } from "@/lib/missions";
 import { missionSystemStatuses, missionSystemStatusRoles } from "@/lib/planet-system-status";
 import { readPlanetSystemStatuses } from "@/lib/planet-system-status-store";
+import { readAlmanacCache } from "@/lib/almanac-store";
+import { getSystemPlanetAddresses } from "@/lib/planet-addresses";
 import { readAllStationPortals, readStationPortals } from "@/lib/stations-store";
 
 export const dynamic = "force-dynamic";
@@ -83,7 +85,38 @@ export default async function LeaderboardRoute() {
       count: counts.get(candidate.publicId) ?? 0,
     }))
     .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+  const approvedMembers = accessData.members.filter((candidate) => candidate.membershipStatus === "approved");
+  const completedTasks = Object.values(planetStatuses).reduce((total, statuses) => total + statuses.filter((task) => task !== "data_error").length, 0);
+  // Pianeti dei sistemi dell'alleanza già presenti nella cache dell'almanacco, senza chiamate di rete.
+  const systems = new Map<string, { portal: string; galaxy: number }>();
+  for (const item of [...missions.map((mission) => ({ portal: mission.systemAddress, galaxy: mission.galaxy })), ...allStations]) {
+    systems.set(`${item.portal.slice(1).toUpperCase()}:${item.galaxy}`, { portal: item.portal, galaxy: item.galaxy });
+  }
+  const almanacCache = await readAlmanacCache();
+  const planetCounts = await Promise.all([...systems.values()].map(async (system) => {
+    try {
+      return (await getSystemPlanetAddresses(system.portal, system.galaxy))
+        .filter((planet) => almanacCache(planet.portal, system.galaxy)).length;
+    } catch {
+      return 0;
+    }
+  }));
+  const planetCount = planetCounts.reduce((total, count) => total + count, 0);
   const boards: LeaderboardBoard[] = [
+    {
+      id: "alliance_stats",
+      title: "leaderboard.board_alliance",
+      empty: "",
+      entries: [],
+      stats: [
+        { label: "leaderboard.stat_stations", value: allStations.length },
+        { label: "leaderboard.stat_missions", value: missions.length },
+        { label: "leaderboard.stat_missions_completed", value: missions.filter((mission) => mission.status === "completed").length },
+        { label: "leaderboard.stat_tasks", value: completedTasks },
+        { label: "leaderboard.stat_planets", value: planetCount },
+        { label: "leaderboard.stat_members", value: approvedMembers.filter((candidate) => !candidate.offline).length },
+      ],
+    },
     { id: "stations", title: "leaderboard.board_stations", empty: "leaderboard.empty_stations", entries: buildEntries(stationsByMember) },
     { id: "missions", title: "leaderboard.board_missions", empty: "leaderboard.empty_missions", entries: buildEntries(missionsByMember) },
     ...(["ranger", "explorer", "builder"] as const).map((role) => ({

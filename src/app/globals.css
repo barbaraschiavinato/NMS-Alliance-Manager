@@ -1512,3 +1512,8 @@ body:has(.sidebar-compact) .dialog-heading .icon-button svg { width: 26px; heigh
 .station-list-cards .station-card-owner .station-owner-card { width: 100%; justify-items: end; }
 .station-list-cards .station-card-owner .station-owner-link { max-width: 100%; }
 @media (max-width: 950px) { .station-list-cards li { grid-template-columns: minmax(0, 1fr) fit-content(35%); } }
+.leaderboard-stats { display: grid; gap: 4px; margin: 0; }
+.leaderboard-stats > div { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 12px; border: 1px solid #394548; border-radius: 4px; background: #171e21; }
+.leaderboard-stats dt { min-width: 0; overflow: hidden; color: var(--muted); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.leaderboard-stats dd { margin: 0; color: var(--lime); font-size: 18px; font-weight: 700; }
+@media (max-width: 720px) { .leaderboard-stats > div { padding: 5px 8px; } .leaderboard-stats dt { font-size: 11px; } .leaderboard-stats dd { font-size: 15px; } }

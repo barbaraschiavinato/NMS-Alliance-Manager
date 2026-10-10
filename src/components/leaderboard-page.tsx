@@ -17,7 +17,7 @@ export type LeaderboardEntry = Readonly<{
   count: number;
 }>;
 
-export type LeaderboardBoard = Readonly<{ id: string; title: string; empty: string; role?: string; entries: readonly LeaderboardEntry[]; sections?: readonly Readonly<{ id: string; title: string; entries: readonly LeaderboardEntry[] }>[] }>;
+export type LeaderboardBoard = Readonly<{ id: string; title: string; empty: string; role?: string; entries: readonly LeaderboardEntry[]; stats?: readonly Readonly<{ label: string; value: number }>[]; sections?: readonly Readonly<{ id: string; title: string; entries: readonly LeaderboardEntry[] }>[] }>;
 
 export function LeaderboardPage({ currentMember, alliance, boards, missionCount, stationCount, userCount, offlineCount }: Readonly<{
   currentMember: AllianceMember;
@@ -43,7 +43,8 @@ export function LeaderboardPage({ currentMember, alliance, boards, missionCount,
         {[boards.filter((board) => !board.role), boards.filter((board) => board.role)].map((group, groupIndex) => <div className={`leaderboard-widgets${groupIndex === 1 ? " leaderboard-widgets-roles" : ""}`} key={groupIndex}>
           {group.map((board) => <section className={`leaderboard-widget${board.role ? ` leaderboard-widget-${board.role}` : ""}`} key={board.id}>
             <h3>{board.role === "ranger" ? <Compass size={14} /> : board.role === "builder" ? <Hammer size={14} /> : board.role === "explorer" ? <Search size={14} /> : null}{t(board.title)}</h3>
-            {(board.sections ?? [{ id: board.id, title: "", entries: board.entries }]).map((section) => <div className="leaderboard-section" key={section.id}>
+            {board.stats && <dl className="leaderboard-stats">{board.stats.map((stat) => <div key={stat.label}><dt>{t(stat.label)}</dt><dd>{stat.value}</dd></div>)}</dl>}
+            {!board.stats && (board.sections ?? [{ id: board.id, title: "", entries: board.entries }]).map((section) => <div className="leaderboard-section" key={section.id}>
               {section.title && <h4>{t(section.title)}</h4>}
               {section.entries.length === 0 && <p className="messages-empty">{t(board.empty)}</p>}
               <ol className="leaderboard-list">
