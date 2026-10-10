@@ -1387,7 +1387,7 @@ body:has(.sidebar-compact) .dialog-heading .icon-button svg { width: 26px; heigh
   .main-panel.main-panel .planet-station-link { align-self: flex-start; }
 }
 
-.main-panel .planet-sticky-filters { position: sticky; top: 61px; z-index: 9; max-height: calc(100vh - 61px); overflow-y: auto; margin-bottom: 12px; background: #000; }
+.main-panel .planet-sticky-filters { position: sticky; top: 61px; z-index: 9; max-height: calc(100vh - 61px); margin-bottom: 12px; background: var(--paper); }
 .main-panel .planet-sticky-filters > .planet-search-row { margin-bottom: 12px; padding-top: 10px; }
 @media (max-width: 720px) {
   .main-panel .planet-sticky-filters { top: 53px; max-height: calc(100vh - 53px); }
@@ -1527,3 +1527,17 @@ body:has(.sidebar-compact) .dialog-heading .icon-button svg { width: 26px; heigh
   .main-panel .toolbar-actions .search-field { flex: 1; width: auto; min-width: 0; margin-right: 0; }
   .main-panel .member-toolbar-actions { width: 100%; }
 }
+
+.sidebar-compact ~ .main-panel .station-card-footer .station-actions { margin-left: auto; justify-content: flex-end; }
+
+.sidebar-compact ~ .main-panel .mission-card-action-buttons { gap: 5px; }
+.sidebar-compact ~ .main-panel .mission-card-action-buttons :is(.member-icon-action, .square-button, .row-action, .icon-button, .mission-station-link, .mission-create-station) { width: 40px; height: 40px; }
+.sidebar-compact ~ .main-panel .mission-card-action-buttons :is(.member-icon-action, .square-button, .row-action, .icon-button, .mission-station-link, .mission-create-station) svg { width: 20px; height: 20px; }
+
+.sidebar-compact ~ .main-panel .toolbar-actions .search-field { height: auto; min-height: 37px; padding: 0 9px; border-color: #394548; border-radius: 3px; background: #171e21; }
+.sidebar-compact ~ .main-panel .toolbar-actions .search-field input { font-size: 14px; }
+
+.planet-filters-toggle[data-tooltip]::after { top: calc(100% + 7px); bottom: auto; transform: translateY(-3px); }
+.planet-filters-toggle[data-tooltip]:hover::after, .planet-filters-toggle[data-tooltip]:focus-visible::after { transform: translateY(0); }
+
+.main-panel .planet-sticky-filters:has(#planet-filters-panel) { overflow-y: auto; }
