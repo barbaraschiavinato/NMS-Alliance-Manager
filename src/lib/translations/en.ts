@@ -198,6 +198,7 @@ export const translations: TranslationCatalog = {
     "missions.mission_assigned_to_you": "Mission assigned to you.",
     "missions.this_mission_is_already_assigned": "This mission is already assigned.",
     "missions.complete_mission": "Complete mission",
+    "missions.start_mission": "Start mission",
     "missions.available_ribbon": "Available",
     "missions.reopen_mission": "Reopen mission",
   },

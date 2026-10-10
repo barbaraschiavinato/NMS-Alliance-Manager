@@ -1408,3 +1408,6 @@ body:has(.sidebar-compact) .dialog-heading .icon-button svg { width: 26px; heigh
 
 .station-new-ribbon.station-available-ribbon { color: #10130f; background: var(--lime); font-size: 8px; letter-spacing: .04em; }
 .sidebar-compact ~ .main-panel .station-new-ribbon.station-available-ribbon { font-size: 10px; }
+
+.mission-action-button.claim-button-progress { color: #6cb4f5; border-color: #2c4f73; background: #121f2d; }
+.mission-action-button.claim-button-progress:hover { border-color: #6cb4f5; background: #192b3f; }

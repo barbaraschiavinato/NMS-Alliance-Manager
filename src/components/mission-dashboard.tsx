@@ -131,7 +131,8 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
     };
   }, [availableMissions]);
 
-  const visibleMissions = useMemo(() => sortByCreatedAtDescending(availableMissions
+  const visibleMissions = useMemo(() => {
+    const chronological = sortByCreatedAtDescending(availableMissions
     .filter((mission) => {
       if (filter === "all") return true;
       const isAssigned = Boolean(mission.assignedMemberId || mission.assignedTo.trim());
@@ -154,8 +155,17 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
       ].filter(Boolean).join(" ").toLowerCase();
       const textMatches = searchableText.includes(searchText);
       return textMatches || portalSearchMatches(mission.systemAddress, search);
-    }))
-    , [availableMissions, filter, search]);
+    }));
+    if (filter !== "all" || (canManage && !member.simpleView)) return chronological;
+    const rank = (mission: Mission) => {
+      if (mission.status === "completed") return 3;
+      if (mission.status === "in_progress") return 0;
+      return mission.assignedMemberId || mission.assignedTo.trim() ? 1 : 2;
+    };
+    return chronological.map((mission, index) => ({ mission, index }))
+      .sort((first, second) => rank(first.mission) - rank(second.mission) || first.index - second.index)
+      .map(({ mission }) => mission);
+  }, [availableMissions, canManage, filter, member.simpleView, search]);
 
   async function saveMission(input: MissionInput) {
     const editing = dialogMission;
@@ -207,6 +217,18 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
     if (!response.ok) throw new Error(body.error ?? "Unable to complete the mission.");
     setMissions((current) => current.map((item) => item.id === mission.id ? body as Mission : item));
     setNotice("Mission completed.");
+  }
+
+  async function startMission(mission: Mission) {
+    const response = await fetch(`/api/missions/${mission.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "in_progress", progress: mission.progress }),
+    });
+    const body = await response.json();
+    if (!response.ok) throw new Error(body.error ?? "Unable to start the mission.");
+    setMissions((current) => current.map((item) => item.id === mission.id ? body as Mission : item));
+    setNotice("Mission started.");
   }
 
   async function reopenMission(mission: Mission) {
@@ -319,6 +341,7 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
             onCreateRangerMission={createRangerMission}
             onClaim={(mission) => void claimMission(mission).catch((error: unknown) => setNotice(error instanceof Error ? error.message : t("errors.request_failed")))}
             onComplete={(mission) => void completeMission(mission).catch((error: unknown) => setNotice(error instanceof Error ? error.message : t("errors.request_failed")))}
+            onStart={(mission) => void startMission(mission).catch((error: unknown) => setNotice(error instanceof Error ? error.message : t("errors.request_failed")))}
             onReopen={(mission) => void reopenMission(mission).catch((error: unknown) => setNotice(error instanceof Error ? error.message : t("errors.request_failed")))}
             onUpdateProgress={async (mission, progress) => {
               try {
