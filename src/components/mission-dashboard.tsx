@@ -222,7 +222,7 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
     const response = await fetch(`/api/missions/${mission.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: "completed", progress: 100 }),
+      body: JSON.stringify({ status: "completed", progress: mission.progress }),
     });
     const body = await response.json();
     if (!response.ok) throw new Error(body.error ?? "Unable to complete the mission.");
@@ -246,7 +246,7 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
     const response = await fetch(`/api/missions/${mission.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: "in_progress", progress: 99 }),
+      body: JSON.stringify({ status: "in_progress", progress: Math.min(mission.progress, 99) }),
     });
     const body = await response.json();
     if (!response.ok) throw new Error(body.error ?? "Unable to reopen the mission.");
