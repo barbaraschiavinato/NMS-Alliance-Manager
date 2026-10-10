@@ -274,6 +274,7 @@ export function PlanetsPage({ alliance, currentMember, planets, almanacLookupFai
         <MissionHero description={t("planet.missions_planets_description")} settings={allianceSettings} title={t("navigation.planets")} />
         <main className="content-wrap planets-page">
           {almanacLookupFailed && <p className="form-error">{t("planet.almanac_partial_lookup_failed")}</p>}
+          <div className="planet-sticky-filters">
           <div className="planet-search-row">
             <label className="search-field planet-search">
               <Search aria-hidden="true" size={15} />
@@ -432,6 +433,7 @@ export function PlanetsPage({ alliance, currentMember, planets, almanacLookupFai
               type="button"
             ><RotateCcw aria-hidden="true" size={14} /></button>
           </div>}
+          </div>
           {filteredPlanets.length === 0
             ? <p className="station-list-empty">{t(hasActiveCriteria ? (hasActiveFilters && !searchQuery ? "planet.no_planets_match_filters" : "planet.no_planets_match_search") : almanacLookupFailed ? "planet.no_verified_mission_planets" : "planet.no_mission_planets")}</p>
             : <div className="planet-station-groups">{visiblePlanetGroups.map(({ station, planets: groupPlanets }) => <section className="planet-station-group" key={station?.id ?? "unassociated"}>
