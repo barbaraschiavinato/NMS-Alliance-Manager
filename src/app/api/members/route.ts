@@ -25,10 +25,11 @@ export async function GET(request: Request) {
       image: profile.image,
       nmsName: isEmailAddress(profile.nmsName) ? "" : profile.nmsName,
       platforms: profile.platforms,
-      telegramName: profile.telegramName ?? "",
-      discordName: profile.discordName ?? "",
       specialty: profile.specialty,
       offline: profile.offline === true,
+      ...(hasRole(member, "moderator") || profile.publicId === member.publicId
+        ? { telegramName: profile.telegramName ?? "", discordName: profile.discordName ?? "" }
+        : {}),
       ...(hasRole(member, "moderator") ? { nmsCode: profile.nmsCode, role: profile.role } : {}),
     });
   }
