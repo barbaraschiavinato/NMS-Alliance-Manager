@@ -37,6 +37,16 @@ Ogni nuovo account Google resta in attesa finché un moderatore o admin non lo a
 
 Ogni membro completa il proprio profilo con nome in gioco, codice amico NMS alfanumerico di 13 caratteri, una o più piattaforme (PC, PlayStation, Xbox, Nintendo Switch, Mac) e una specializzazione (Costruttore, Ranger o Esploratore). Il ruolo non è modificabile dall'utente. Non si possono prendere o assegnare missioni a profili incompleti.
 
+## Sezioni dell'app
+
+- **Missioni**: card con stato, responsabile, avanzamento e indicatori per i task di sistema (Ranger, Esploratore, Costruttore). Il completamento di una missione non modifica la barra di avanzamento.
+- **Stazioni**: stazioni scoperte con scopritore, pianeta dall'Almanac e note. Lo scopritore può spuntare «Stazione riscattata» e «Sistema rinominato» sulle proprie stazioni. Admin e moderatori possono esportare l'elenco in Excel, con i task completati e le missioni associate.
+- **Pianeti**: ricerca e filtri sui pianeti dei sistemi dell'alleanza.
+- **Utenti**: gestione di approvazioni, ruoli e profili, riservata ad admin e moderatori.
+- **Classifica**: widget dell'alleanza (stazioni, missioni, task, pianeti, membri attivi) e classifiche per stazioni scoperte, missioni completate e task di ciascun ruolo. Un task senza missione che lo copra viene attribuito allo scopritore della stazione.
+
+Tutte le sezioni sono mostrate come card. Gli utenti normali usano sempre la vista semplificata; admin e moderatori possono attivarla o disattivarla dal proprio profilo, e in quel caso i permessi sono quelli di un utente normale.
+
 ## Verifica
 
 ```bash
