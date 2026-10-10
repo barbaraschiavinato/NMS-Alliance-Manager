@@ -1249,9 +1249,10 @@ body:has(.sidebar-compact) .dialog-heading .icon-button svg { width: 26px; heigh
 .sidebar-compact ~ .main-panel .planet-race-icon { width: 15px; height: 14px; }
 .planet-race-unknown { margin: 0 4px 0 2px; color: var(--lime); font-weight: 700; }
 
-.member-card-actions > .member-page-actions:first-child { order: 2; flex-basis: 100%; }
-.member-card-actions > .member-page-actions:not(:first-child) { display: flex; flex: 1 1 0; min-width: 0; }
-.member-card-actions > .member-page-actions:not(:first-child) select { flex: 1 1 0; min-width: 0; max-width: none; }
+.member-card-actions > .member-page-actions:first-child { order: 2; }
+.member-card-actions > .member-page-actions:not(:first-child) { display: contents; }
+.member-card-actions > .member-page-actions:not(:first-child) select { order: 1; flex: 1 1 100%; min-width: 0; max-width: none; }
+.member-card-actions > .member-page-actions:not(:first-child) > :not(select) { order: 3; }
 .member-card { grid-template-rows: auto auto 1fr; }
 .member-card .member-card-actions { align-self: end; }
 
@@ -1519,7 +1520,7 @@ body:has(.sidebar-compact) .dialog-heading .icon-button svg { width: 26px; heigh
 @media (max-width: 720px) { .leaderboard-stats > div { padding: 5px 8px; } .leaderboard-stats dt { font-size: 11px; } .leaderboard-stats dd { font-size: 15px; } }
 
 .member-card-heading .member-page-identity { flex: 1 1 0; min-width: 0; }
-.member-card-heading .member-page-identity > span:last-child { flex: 1 1 0; min-width: 0; }
+.member-card-heading .member-page-identity > span:last-child { flex: 1 1 0; min-width: 0; max-width: 120px; }
 .member-card-heading .member-page-identity > span:last-child strong, .member-card-heading .member-page-identity > span:last-child small { display: block; max-width: none; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .member-card-heading > .badge { flex: 0 0 auto; }
 
@@ -1541,3 +1542,8 @@ body:has(.sidebar-compact) .dialog-heading .icon-button svg { width: 26px; heigh
 .planet-filters-toggle[data-tooltip]:hover::after, .planet-filters-toggle[data-tooltip]:focus-visible::after { transform: translateY(0); }
 
 .main-panel .planet-sticky-filters:has(#planet-filters-panel) { overflow-y: auto; }
+
+.member-card-actions .member-page-actions select { padding-right: 30px; background-position: right 16px center, right 12px center; }
+
+.member-card .member-card-actions { justify-content: flex-start; }
+.member-card-actions > .member-page-actions:not(:first-child) > button:first-of-type { margin-left: auto; }
