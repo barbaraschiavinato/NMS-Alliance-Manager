@@ -79,7 +79,7 @@ export function MissionForm({
     ? { ...mission, systemAddress: mission.systemAddress ?? "", galaxy: mission.galaxy ?? 0 }
     : { ...emptyMission, ...initialValues });
   const [saving, setSaving] = useState(false);
-  const titleEditedRef = useRef(Boolean(mission?.title));
+  const titleEditedRef = useRef(Boolean(mission?.title || initialValues?.title));
   const [generatingNames, setGeneratingNames] = useState(0);
   const [error, setError] = useState("");
   const [systemStatuses, setSystemStatuses] = useState<MissionSystemStatus[]>([]);

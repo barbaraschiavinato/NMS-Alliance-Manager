@@ -703,7 +703,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
                     />
                   </div>}
                   <div className="station-actions">
-                  {canCreateMission && <button aria-label={t("stations.create_mission_from_portal", { portal: station.portal })} className="member-icon-action create-station-mission" data-tooltip={t("stations.create_mission_from_station")} onClick={() => setMissionStation({ portal: station.portal, galaxy: station.galaxy, title: cachedPlanetTitle(station.planet), ownerMemberId: station.ownerId })} type="button"><CirclePlus size={14} /></button>}
+                  {canCreateMission && <button aria-label={t("stations.create_mission_from_portal", { portal: station.portal })} className="member-icon-action create-station-mission" data-tooltip={t("stations.create_mission_from_station")} onClick={() => setMissionStation({ portal: station.portal, galaxy: station.galaxy, title: station.name || cachedPlanetTitle(station.planet), ownerMemberId: station.ownerId })} type="button"><CirclePlus size={14} /></button>}
                   {!canCreateMission && !canSeeAll && (pageMember.specialty === "explorer" || pageMember.specialty === "builder") && station.hasMissions && !station.canOpenOwnSpecialtyMission &&
                     <span aria-label={t("stations.mission_in_progress", { specialty: t(pageMember.specialty === "explorer" ? "common.explorers" : "common.builders") })} className="member-icon-action create-station-mission station-mission-disabled" data-tooltip={t("stations.mission_in_progress", { specialty: t(pageMember.specialty === "explorer" ? "common.explorers" : "common.builders") })} role="img"><CirclePlus size={14} /></span>}
                   {station.hasMissions
