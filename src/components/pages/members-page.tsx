@@ -1,23 +1,16 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
-import { Ban, Check, CircleAlert, CircleX, Crosshair, Orbit, Pencil, Search, Trash2, UserRoundCheck } from "lucide-react";
-import { formatNmsFriendCode } from "@/lib/member-types";
-import type { AllianceMember, AllianceSettings, MemberRole, MemberSpecialty, MembershipStatus } from "@/lib/member-types";
-import { AllianceSidebar, DashboardTopbar, MissionHero } from "@/components/dashboard-chrome";
-import { AdminPanel } from "@/components/admin-panel";
-import { MemberProfilePanel } from "@/components/member-profile-panel";
-import { LoadingSpinner } from "@/components/loading-spinner";
-import { useLocale } from "@/components/locale-provider";
-import { useNavigationSearchState } from "@/components/navigation-search-reset";
+import type { AllianceMember, AllianceSettings, MemberRole, MembershipStatus } from "@/lib/member-types";
 
-type MemberFilter = "all" | MembershipStatus;
-type ManagedMember = AllianceMember & { protectedAdmin: boolean };
-
-const roleLabels: Record<MemberRole, string> = { user: "members.member_role_label", moderator: "common.moderator", admin: "admin.administrator" };
-const statusLabels: Record<MembershipStatus, string> = { pending: "common.pending_status_label", approved: "auth.approved_status_label", blocked: "common.blocked_status_label" };
-const specialtyLabels: Record<MemberSpecialty, string> = { builder: "common.builder", ranger: "common.ranger", explorer: "common.explorer" };
+import { Sidebar } from "@/components/layout/sidebar";
+import { Header } from "@/components/layout/header";
+import { Hero } from "@/components/layout/hero";
+import { AdminPanel } from "@/components/modals/admin-panel";
+import { MemberProfilePanel } from "@/components/modals/member-profile-panel";
+import { MemberList, type ManagedMember, type MemberFilter } from "@/components/sections/member-list";
+import { useLocale } from "@/components/providers/locale-provider";
+import { useNavigationSearchState } from "@/components/shared/navigation-search-reset";
 
 function updateNotice(update: { membershipStatus: MembershipStatus } | { role: MemberRole }) {
   if ("role" in update) {
@@ -27,45 +20,6 @@ function updateNotice(update: { membershipStatus: MembershipStatus } | { role: M
   if (update.membershipStatus === "approved") return "User approved.";
   if (update.membershipStatus === "blocked") return "User blocked.";
   return "User is pending approval.";
-}
-
-function MemberActions({ member, canChangeRole, currentMemberEmail, onStatus, onRole, onDelete, onEdit }: Readonly<{
-  member: ManagedMember;
-  canChangeRole: boolean;
-  currentMemberEmail: string;
-  onStatus: (email: string, status: MembershipStatus) => void;
-  onRole: (email: string, role: MemberRole) => void;
-  onDelete: (member: AllianceMember) => void;
-  onEdit: (member: AllianceMember) => void;
-}>) {
-  const { t } = useLocale();
-  const canManage = canChangeRole || member.role === "user";
-  const isCurrentMember = member.email.toLowerCase() === currentMemberEmail.toLowerCase();
-  if (member.protectedAdmin || isCurrentMember || !canManage) return null;
-
-
-  const editButton = <button aria-label={t("members.edit_member_profile")} className="member-icon-action" data-tooltip={t("members.edit_member_profile")} onClick={() => onEdit(member)} type="button"><Pencil size={14} /></button>;
-
-  if (member.role === "admin") return <div className="member-page-actions">
-    <select aria-label={t("members.role_for_email", { email: member.email })} onChange={(event) => onRole(member.email, event.target.value as MemberRole)} value={member.role}>
-      {(Object.keys(roleLabels) as MemberRole[]).map((role) => <option key={role} value={role}>{t(roleLabels[role])}</option>)}
-    </select>
-    {editButton}
-    <button aria-label={t("common.delete_email", { email: member.email })} className="member-icon-action delete-member" data-tooltip={t("admin.delete_administrator")} onClick={() => onDelete(member)} type="button"><Trash2 size={14} /></button>
-  </div>;
-
-  return (
-    <div className="member-page-actions">
-      {canChangeRole && <select aria-label={t("members.role_for_email", { email: member.email })} onChange={(event) => onRole(member.email, event.target.value as MemberRole)} value={member.role}>{(Object.keys(roleLabels) as MemberRole[]).map((role) => <option key={role} value={role}>{t(roleLabels[role])}</option>)}</select>}
-      {member.membershipStatus === "pending" && <button aria-label={t("common.approve_email", { email: member.email })} className="member-icon-action approval-button" data-tooltip={t("members.approve_user")} onClick={() => onStatus(member.email, "approved")} type="button"><Check size={14} /></button>}
-      {member.membershipStatus === "approved" && <button aria-label={t("auth.revoke_approval_for_email", { email: member.email })} className="member-icon-action approval-button revoke-approval" data-tooltip={t("auth.revoke_approval")} onClick={() => onStatus(member.email, "pending")} type="button"><CircleX size={14} /></button>}
-      {member.membershipStatus === "blocked"
-        ? <button aria-label={t("common.unblock_email", { email: member.email })} className="member-icon-action approval-button" data-tooltip={t("members.unblock_user")} onClick={() => onStatus(member.email, "pending")} type="button"><UserRoundCheck size={14} /></button>
-        : <button aria-label={t("common.block_email", { email: member.email })} className="member-icon-action block-member" data-tooltip={t("members.block_user")} onClick={() => onStatus(member.email, "blocked")} type="button"><Ban size={14} /></button>}
-      {editButton}
-      <button aria-label={t("common.delete_email", { email: member.email })} className="member-icon-action delete-member" data-tooltip={t("members.delete_user")} onClick={() => onDelete(member)} type="button"><Trash2 size={14} /></button>
-    </div>
-  );
 }
 
 export function MembersPage({ memberActivity, currentMember, alliance, missionCount, sidebarOfflineCount, sidebarStationCount, sidebarUserCount }: Readonly<{
@@ -109,13 +63,6 @@ export function MembersPage({ memberActivity, currentMember, alliance, missionCo
     blocked: members.filter((member) => member.membershipStatus === "blocked").length,
   }), [members]);
 
-  const visibleMembers = useMemo(() => members
-    .filter((member) => filter === "all" || member.membershipStatus === filter)
-    .filter((member) => `${member.name} ${member.nmsName} ${member.email} ${member.nmsCode} ${member.specialty ? t(specialtyLabels[member.specialty]) : ""}`.toLowerCase().includes(search.toLowerCase()))
-    .sort((a, b) => a.name.localeCompare(b.name)), [filter, members, search, t]);
-  let emptyMessage = t("members.no_users_match_this_filter");
-  if (counts.all === 0) emptyMessage = t("auth.no_registered_users_members_will_appear_after_their_first_google_sign_in");
-  else if (filter === "pending") emptyMessage = t("auth.there_are_no_requests_awaiting_approval");
 
   async function patchMember(email: string, update: { membershipStatus: MembershipStatus } | { role: MemberRole }) {
     setError("");
@@ -156,13 +103,12 @@ export function MembersPage({ memberActivity, currentMember, alliance, missionCo
 
   return (
     <div className="app-shell">
-      <AllianceSidebar activeSection="utenti" currentMember={pageMember} missionCount={missionCount} settings={allianceSettings} stationCount={sidebarStationCount} offlineCount={sidebarOfflineCount} userCount={loadingMembers ? sidebarUserCount : members.length} />
+      <Sidebar activeSection="utenti" currentMember={pageMember} missionCount={missionCount} settings={allianceSettings} stationCount={sidebarStationCount} offlineCount={sidebarOfflineCount} userCount={loadingMembers ? sidebarUserCount : members.length} />
       <section className="main-panel">
-        <DashboardTopbar currentMember={pageMember} onAdminOpen={() => setAdminOpen(true)} onProfileOpen={() => setProfileOpen(true)} sectionTitle="Users" settings={allianceSettings} />
-        <MissionHero
-          description="Approve requests, manage access, and review NMS profiles."
+        <Header currentMember={pageMember} onAdminOpen={() => setAdminOpen(true)} onProfileOpen={() => setProfileOpen(true)} sectionTitle="Users" settings={allianceSettings} />
+        <Hero
+          subtitle="Approve requests, manage access, and review NMS profiles."
           settings={allianceSettings}
-          showCreate={false}
           title="Users"
         />
         {!pageMember.simpleView && <section aria-label={t("members.user_status")} className="metrics-row">
@@ -174,49 +120,25 @@ export function MembersPage({ memberActivity, currentMember, alliance, missionCo
           </div>
         </section>}
         <main className="content-wrap">
-      <section className="members-list-section">
-        <div className="toolbar members-toolbar">
-          <div className="filter-tabs member-filter-tabs" role="tablist" aria-label={t("members.filter_users_by_status")}>
-            {(["pending", "approved", "blocked", "all"] as MemberFilter[]).filter((status) => status === "all" || status === filter || counts[status] > 0).map((status) => <button aria-selected={filter === status} className={filter === status ? "filter-tab selected" : "filter-tab"} key={status} onClick={() => setFilter(status)} role="tab" type="button">{t(status === "all" ? "common.all" : statusLabels[status])}<span>{counts[status]}</span></button>)}
-          </div>
-          <div className="toolbar-actions member-toolbar-actions">
-            <label className="search-field member-search"><Search size={15} /><input aria-label={t("members.search_users")} onChange={(event) => setSearch(event.target.value)} placeholder={t("common.search_name_email_or_code")} value={search} /></label>
-          </div>
-        </div>
-
-        {error && <p className="form-error"><CircleAlert size={15} />{t(error)}</p>}
-        {notice && <p className="address-validation address-valid"><Check size={14} />{t(notice)}</p>}
-
-        {loadingMembers ? <LoadingSpinner /> : visibleMembers.length === 0 ? <p className="messages-empty">{emptyMessage}</p> : <div className="member-card-grid">
-          {visibleMembers.map((member) => <article className="member-card" key={member.email}>
-            <div className="member-card-heading">
-              <div className="member-page-identity">
-                <span className="member-admin-avatar">{member.image ? <span style={{ backgroundImage: `url("${member.image}")` }} /> : (member.nmsName || member.name).slice(0, 1).toUpperCase()}</span>
-                <span><strong>{member.nmsName || t("common.nms_name_incomplete_label")}</strong><small>{member.email}</small></span>
-              </div>
-              {member.protectedAdmin
-                ? <span className="badge badge--protected">{t("common.protected")}</span>
-                : <span className={`badge badge--member-status badge--member-status-${member.membershipStatus}`}>{t(statusLabels[member.membershipStatus])}</span>}
-            </div>
-            <dl className="member-card-details">
-              <div><dt>{t("profile.friend_code_label")}</dt><dd>{member.nmsCode ? formatNmsFriendCode(member.nmsCode) : t("common.incomplete")}</dd></div>
-              <div><dt>{t("profile.telegram_name_label")}</dt><dd>{member.telegramName || "-"}</dd></div>
-              <div><dt>{t("profile.discord_name_label")}</dt><dd>{member.discordName || "-"}</dd></div>
-              <div><dt>{t("profile.platforms_label")}</dt><dd>{member.platforms.length ? member.platforms.join(", ") : t("common.not_selected")}</dd></div>
-              <div><dt>{t("profile.specialty_label")}</dt><dd>{member.specialty ? t(specialtyLabels[member.specialty]) : t("common.not_selected")}</dd></div>
-              <div><dt>{t("members.role_label")}</dt><dd>{t(roleLabels[member.role])}</dd></div>
-            </dl>
-            <div className="member-card-actions">
-              <div className="member-page-actions">
-                {member.nmsName && memberActivity.missionOwnerIds.includes(member.publicId) && <Link aria-label={t("members.find_member_s_missions", { member: member.nmsName || member.name })} className="member-icon-action member-link-action" data-tooltip={t("members.user_missions")} href={`/missions?search=${encodeURIComponent(member.nmsName)}`}><Crosshair size={14} /></Link>}
-                {member.nmsName && memberActivity.stationOwnerIds.includes(member.publicId) && <Link aria-label={t("stations.find_member_s_stations", { member: member.nmsName || member.name })} className="member-icon-action member-link-action member-station-filter" data-tooltip={t("stations.user_stations")} href={`/stations?search=${encodeURIComponent(member.nmsName)}`}><Orbit size={14} /></Link>}
-              </div>
-              <MemberActions onEdit={(target) => setEditingMember(target as ManagedMember)} canChangeRole={canChangeRole} currentMemberEmail={pageMember.email} member={member} onDelete={(target) => void deleteMember(target)} onRole={(email, role) => void patchMember(email, { role })} onStatus={(email, membershipStatus) => void patchMember(email, { membershipStatus })} />
-            </div>
-          </article>)}
-        </div>}
-        {!pageMember.simpleView && <footer className="members-list-footer">{loadingMembers ? t("members.loading_users") : t("members.showing_visible_of_total_users", { visible: visibleMembers.length, total: counts.all })}</footer>}
-      </section>
+          <MemberList
+            canChangeRole={canChangeRole}
+            counts={counts}
+            currentMemberEmail={pageMember.email}
+            error={error}
+            filter={filter}
+            loading={loadingMembers}
+            memberActivity={memberActivity}
+            members={members}
+            notice={notice}
+            onDelete={(target) => void deleteMember(target)}
+            onEdit={setEditingMember}
+            onFilterChange={setFilter}
+            onRole={(email, role) => void patchMember(email, { role })}
+            onSearchChange={setSearch}
+            onStatus={(email, membershipStatus) => void patchMember(email, { membershipStatus })}
+            search={search}
+            simpleView={pageMember.simpleView === true}
+          />
         </main>
       </section>
       {adminOpen && pageMember.role === "admin" && <AdminPanel onClose={() => setAdminOpen(false)} onSaved={setAllianceSettings} />}

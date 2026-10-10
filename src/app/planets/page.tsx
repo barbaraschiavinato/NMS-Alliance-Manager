@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
-import { GoogleLogin } from "@/components/google-login";
-import { PlanetsPage } from "@/components/planets-page";
-import { PendingApproval } from "@/components/pending-approval";
+import { GoogleLogin } from "@/components/pages/google-login";
+import { PlanetsPage } from "@/components/pages/planets-page";
+import { PendingApproval } from "@/components/pages/pending-approval";
 import { getCurrentMember, hasRole } from "@/lib/authorization";
 import { readAccessData } from "@/lib/access-store";
 import { canViewMission, isDifferentPlanetInSameSystem } from "@/lib/missions";

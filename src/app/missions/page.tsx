@@ -1,8 +1,8 @@
-import { MissionDashboard } from "@/components/mission-dashboard";
-import { GoogleLogin } from "@/components/google-login";
+import { MissionDashboard } from "@/components/pages/mission-dashboard";
+import { GoogleLogin } from "@/components/pages/google-login";
 import { auth } from "@/auth";
 import { getCurrentMember } from "@/lib/authorization";
-import { PendingApproval } from "@/components/pending-approval";
+import { PendingApproval } from "@/components/pages/pending-approval";
 import { readAccessData } from "@/lib/access-store";
 import { readAllStationPortals, readStationPortals } from "@/lib/stations-store";
 

@@ -5,12 +5,15 @@ import Link from "next/link";
 import { Check, CircleAlert, Crosshair, Orbit, Pencil, Search, Trash2 } from "lucide-react";
 import { formatNmsFriendCode } from "@/lib/member-types";
 import type { AllianceMember, AllianceSettings, MemberSpecialty } from "@/lib/member-types";
-import { AllianceSidebar, DashboardTopbar, MissionHero } from "@/components/dashboard-chrome";
-import { AdminPanel } from "@/components/admin-panel";
-import { MemberProfilePanel } from "@/components/member-profile-panel";
-import { LoadingSpinner } from "@/components/loading-spinner";
-import { useLocale } from "@/components/locale-provider";
-import { useNavigationSearchState } from "@/components/navigation-search-reset";
+
+import { Sidebar } from "@/components/layout/sidebar";
+import { Header } from "@/components/layout/header";
+import { Hero, HeroAddButton } from "@/components/layout/hero";
+import { AdminPanel } from "@/components/modals/admin-panel";
+import { MemberProfilePanel } from "@/components/modals/member-profile-panel";
+import { LoadingSpinner } from "@/components/shared/loading-spinner";
+import { useLocale } from "@/components/providers/locale-provider";
+import { useNavigationSearchState } from "@/components/shared/navigation-search-reset";
 
 const specialtyLabels: Record<MemberSpecialty, string> = { builder: "common.builder", ranger: "common.ranger", explorer: "common.explorer" };
 
@@ -99,10 +102,12 @@ export function OfflinePlayersPage({ memberActivity, currentMember, alliance, mi
 
   return (
     <div className="app-shell">
-      <AllianceSidebar activeSection="offline" currentMember={pageMember} missionCount={missionCount} settings={allianceSettings} stationCount={sidebarStationCount} offlineCount={loading ? sidebarOfflineCount : all.filter((member) => member.offline).length} userCount={sidebarUserCount} />
+      <Sidebar activeSection="offline" currentMember={pageMember} missionCount={missionCount} settings={allianceSettings} stationCount={sidebarStationCount} offlineCount={loading ? sidebarOfflineCount : all.filter((member) => member.offline).length} userCount={sidebarUserCount} />
       <section className="main-panel">
-        <DashboardTopbar currentMember={pageMember} onAdminOpen={() => setAdminOpen(true)} onProfileOpen={() => setProfileOpen(true)} sectionTitle={t("members.offline_players")} settings={allianceSettings} />
-        <MissionHero description={t("members.offline_players_description")} actionLabel="members.add_offline_player" onCreate={() => setAddOpen(true)} settings={allianceSettings} showCreate title={t("members.offline_players")} />
+        <Header currentMember={pageMember} onAdminOpen={() => setAdminOpen(true)} onProfileOpen={() => setProfileOpen(true)} sectionTitle={t("members.offline_players")} settings={allianceSettings} />
+        <Hero settings={allianceSettings} subtitle={t("members.offline_players_description")} title={t("members.offline_players")}>
+          <HeroAddButton label="members.add_offline_player" onClick={() => setAddOpen(true)} />
+        </Hero>
         <main className="content-wrap">
           <section className="members-list-section">
             <div className="members-toolbar offline-toolbar">

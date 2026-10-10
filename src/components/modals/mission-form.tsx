@@ -10,13 +10,13 @@ import {
   type MissionPriority,
   type MissionStatus,
 } from "@/lib/missions";
-import { SystemAddressField, type SystemAddressLookup, type SystemAddressValidation } from "@/components/portal-address-field";
+import { SystemAddressField, type SystemAddressLookup, type SystemAddressValidation } from "@/components/shared/portal-address-field";
 import type { AllianceMember } from "@/lib/access-store";
 import type { MemberSpecialty } from "@/lib/member-types";
 import { missionSpecialties, specialtyAlreadyCovered, type MissionSpecialty } from "@/lib/missions";
 import { galaxyNames, galaxyLabel } from "@/lib/galaxies";
 import { isMissionSystemStatus, missionSystemStatuses, missionSystemStatusRoles, planetSystemStatusKey, systemProgressFloor, type MissionSystemStatus } from "@/lib/planet-system-status";
-import { useLocale } from "@/components/locale-provider";
+import { useLocale } from "@/components/providers/locale-provider";
 
 const specialtyNames: Record<MemberSpecialty, string> = { builder: "common.builder", ranger: "common.ranger", explorer: "common.explorer" };
 const targetNames: Record<MissionSpecialty, string> = { all: "common.all", explorer_builder: "common.explorers_and_builders", builder: "common.builders", ranger: "common.ranger", explorer: "common.explorers", other: "common.other" };

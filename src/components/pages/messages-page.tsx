@@ -1,14 +1,18 @@
 "use client";
 
+import { Tabs } from "@/components/layout/tabs";
 import { useEffect, useState, type ReactNode, type SubmitEvent } from "react";
 import Link from "next/link";
 import { ChevronDown, ChevronRight, CircleAlert, Crosshair, MailCheck, Orbit, Reply, Send, Trash2, X } from "lucide-react";
-import { AllianceSidebar, DashboardTopbar, MissionHero } from "@/components/dashboard-chrome";
-import { AdminPanel } from "@/components/admin-panel";
-import { MemberProfilePanel } from "@/components/member-profile-panel";
-import { LoadingSpinner } from "@/components/loading-spinner";
+
+import { Sidebar } from "@/components/layout/sidebar";
+import { Header } from "@/components/layout/header";
+import { Hero } from "@/components/layout/hero";
+import { AdminPanel } from "@/components/modals/admin-panel";
+import { MemberProfilePanel } from "@/components/modals/member-profile-panel";
+import { LoadingSpinner } from "@/components/shared/loading-spinner";
 import type { AllianceMember, AllianceSettings } from "@/lib/access-store";
-import { useLocale } from "@/components/locale-provider";
+import { useLocale } from "@/components/providers/locale-provider";
 
 type MessageEntry = Readonly<{
   id: string;
@@ -291,18 +295,22 @@ export function MessagesPage({ currentMember, alliance, missionCount, stationCou
   }
 
   return <div className="app-shell">
-    <AllianceSidebar activeSection="messaggi" currentMember={member} missionCount={missionCount} settings={settings} stationCount={stationCount} offlineCount={offlineCount} userCount={userCount} />
+    <Sidebar activeSection="messaggi" currentMember={member} missionCount={missionCount} settings={settings} stationCount={stationCount} offlineCount={offlineCount} userCount={userCount} />
     <section className="main-panel">
-      <DashboardTopbar currentMember={member} onAdminOpen={() => setAdminOpen(true)} onProfileOpen={() => setProfileOpen(true)} sectionTitle="messages.messages" settings={settings} />
-      <MissionHero description={t("messages.page_description")} settings={settings} title="messages.messages" />
+      <Header currentMember={member} onAdminOpen={() => setAdminOpen(true)} onProfileOpen={() => setProfileOpen(true)} sectionTitle="messages.messages" settings={settings} />
+      <Hero settings={settings} subtitle={t("messages.page_description")} title="messages.messages" />
       <main className="content-wrap messages-page">
-        <div aria-label={t("messages.messages")} className="filter-tabs member-filter-tabs" role="tablist">
-          {(["received", "sent", ...(isAdmin ? ["all" as const] : [])] as MessageTab[]).filter((key) => key === tab || key === "received" || (key === "sent" ? sentMessages.length : messages.length) > 0).map((key) => <button aria-selected={tab === key} className={tab === key ? "filter-tab selected" : "filter-tab"} key={key} onClick={() => {
+        <Tabs className="member-filter-tabs" items={(["received", "sent", ...(isAdmin ? ["all" as const] : [])] as MessageTab[]).filter((key) => key === tab || key === "received" || (key === "sent" ? sentMessages.length : messages.length) > 0).map((key) => ({
+          key,
+          label: t(`messages.tab_${key}`),
+          count: key === "all" ? messages.length : key === "sent" ? sentMessages.length : receivedMessages.length,
+          selected: tab === key,
+          onSelect: () => {
             setTab(key);
             void markRead(receivedMessages.map((entry) => entry.id));
             setExpandedMessageIds(new Set());
-          }} role="tab" type="button">{t(`messages.tab_${key}`)}<span>{key === "all" ? messages.length : key === "sent" ? sentMessages.length : receivedMessages.length}</span></button>)}
-        </div>
+          },
+        }))} label={t("messages.messages")} />
         {error && <p className="form-error"><CircleAlert size={15} />{t(error)}</p>}
         {loading
           ? <div className="messages-loading"><LoadingSpinner /></div>

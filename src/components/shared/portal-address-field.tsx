@@ -2,7 +2,7 @@ import { useEffect, useEffectEvent, useState } from "react";
 import Image from "next/image";
 import { ArrowLeft, Check, CircleAlert, X } from "lucide-react";
 import { decodePortalAddress } from "@/lib/missions";
-import { useLocale } from "@/components/locale-provider";
+import { useLocale } from "@/components/providers/locale-provider";
 
 export type SystemAddressLookup = Readonly<{
   address: string;

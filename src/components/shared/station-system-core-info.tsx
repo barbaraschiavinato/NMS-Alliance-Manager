@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useLocale } from "@/components/locale-provider";
+import { useLocale } from "@/components/providers/locale-provider";
 
 type SystemSummary = Readonly<{ planetCount: number; starType: number }>;
 

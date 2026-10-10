@@ -3,7 +3,7 @@
 import { useState, type SubmitEvent } from "react";
 import { Compass, Hammer, Search, Check, CircleAlert, X } from "lucide-react";
 import { formatNmsFriendCode, isValidNmsFriendCode, memberSpecialties, normalizeNmsFriendCode, nmsPlatforms, type AllianceMember, type MemberRole, type MemberSpecialty, type NmsPlatform } from "@/lib/member-types";
-import { useLocale } from "@/components/locale-provider";
+import { useLocale } from "@/components/providers/locale-provider";
 
 const roleLabels: Record<MemberRole, string> = {
   user: "members.member_role_label",

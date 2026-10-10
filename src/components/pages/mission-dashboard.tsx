@@ -2,23 +2,21 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Check, X } from "lucide-react";
-import {
-  AllianceSidebar,
-  DashboardTopbar,
-  MissionHero,
-  MissionMetrics,
-} from "@/components/dashboard-chrome";
-import { MissionForm, type StationOwnerOption } from "@/components/mission-form";
-import { MissionTable, type MissionFilter } from "@/components/mission-table";
+import { MissionMetrics } from "@/components/sections/mission-metrics";
+import { Sidebar } from "@/components/layout/sidebar";
+import { Header } from "@/components/layout/header";
+import { Hero, HeroAddButton } from "@/components/layout/hero";
+import { MissionForm, type StationOwnerOption } from "@/components/modals/mission-form";
+import { MissionList, type MissionFilter } from "@/components/sections/mission-list";
 import { canViewMission, coveredSpecialties, portalSearchMatches, specialtyAlreadyCovered, type Mission, type MissionInput, type MissionSpecialty } from "@/lib/missions";
 import type { AllianceMember, AllianceSettings } from "@/lib/access-store";
-import { AdminPanel } from "@/components/admin-panel";
-import { MemberProfilePanel } from "@/components/member-profile-panel";
-import { PlanetCard } from "@/components/planet-card";
+import { AdminPanel } from "@/components/modals/admin-panel";
+import { MemberProfilePanel } from "@/components/modals/member-profile-panel";
+import { PlanetCard } from "@/components/modals/planet-card";
 import { isValidNmsFriendCode } from "@/lib/member-types";
 import { missionSystemStatuses, missionSystemStatusRoles, planetSystemStatusKey, systemProgressFloor, type MissionSystemStatus, type PlanetSystemStatuses } from "@/lib/planet-system-status";
-import { useLocale } from "@/components/locale-provider";
-import { useNavigationSearchState } from "@/components/navigation-search-reset";
+import { useLocale } from "@/components/providers/locale-provider";
+import { useNavigationSearchState } from "@/components/shared/navigation-search-reset";
 import { sortByCreatedAtDescending } from "@/lib/created-at";
 
 const missionTypeLabels: Record<Mission["targetSpecialty"], string> = {
@@ -361,14 +359,16 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
 
   return (
     <main className="app-shell">
-      <AllianceSidebar activeSection="missioni" currentMember={member} missionCount={missions.length} settings={alliance} stationCount={sidebarStationCount} offlineCount={sidebarOfflineCount} userCount={sidebarUserCount} />
+      <Sidebar activeSection="missioni" currentMember={member} missionCount={missions.length} settings={alliance} stationCount={sidebarStationCount} offlineCount={sidebarOfflineCount} userCount={sidebarUserCount} />
       <section className="main-panel" id="missioni">
-        <DashboardTopbar currentMember={member} onAdminOpen={() => setAdminOpen(true)} onProfileOpen={() => setProfileOpen(true)} settings={alliance} />
-        <MissionHero onCreate={() => openMission(null)} settings={alliance} showCreate={canManage} />
+        <Header currentMember={member} onAdminOpen={() => setAdminOpen(true)} onProfileOpen={() => setProfileOpen(true)} settings={alliance} />
+        <Hero settings={alliance} subtitle="Coordinate the next frontier, one expedition at a time." title="Mission log">
+          {canManage && <HeroAddButton label="New mission" onClick={() => openMission(null)} />}
+        </Hero>
         {!member.simpleView && <MissionMetrics counts={counts} missions={availableMissions} />}
         <div className="content-wrap">
           {!profileComplete && <section className="profile-required-banner"><span><strong>{t("profile.complete_your_nms_profile")}</strong><small>{t("profile.enter_your_in_game_name_friend_code_platforms_and_specialty_to_claim_or_be_assigned_missions")}</small></span><button className="claim-button" onClick={() => setProfileOpen(true)} type="button">{t("profile.complete_profile")}</button></section>}
-          <MissionTable
+          <MissionList
             counts={counts}
             filter={filter}
             missions={visibleMissions}

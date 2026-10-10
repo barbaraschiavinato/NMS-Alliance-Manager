@@ -1,195 +1,27 @@
 "use client";
 
-import Image from "next/image";
-import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, type SubmitEvent } from "react";
-import { AlertTriangle, CircleAlert, CirclePlus, Crosshair, FileSpreadsheet, FileText, Orbit, Pencil, Plus, Search, Trash2, X } from "lucide-react";
-import { AllianceSidebar, DashboardTopbar, MissionHero } from "@/components/dashboard-chrome";
-import { AdminPanel } from "@/components/admin-panel";
-import { MemberProfilePanel } from "@/components/member-profile-panel";
-import { GlyphStrip, SystemAddressField, type SystemAddressValidation } from "@/components/portal-address-field";
-import { MissionForm } from "@/components/mission-form";
-import { StationSystemCoreInfo } from "@/components/station-system-core-info";
-import { PlanetCard } from "@/components/planet-card";
-import { LoadingSpinner } from "@/components/loading-spinner";
-import { MemberCardDialog, type MemberMessageContext } from "@/components/member-card-dialog";
-import { MissionSystemProgress } from "@/components/mission-system-progress";
+import { CircleAlert, Orbit, Pencil, Plus, X } from "lucide-react";
+
+import { Sidebar } from "@/components/layout/sidebar";
+import { Header } from "@/components/layout/header";
+import { Hero, HeroAddButton } from "@/components/layout/hero";
+import { AdminPanel } from "@/components/modals/admin-panel";
+import { MemberProfilePanel } from "@/components/modals/member-profile-panel";
+import { SystemAddressField, type SystemAddressValidation } from "@/components/shared/portal-address-field";
+import { MissionForm } from "@/components/modals/mission-form";
+import { PlanetCard } from "@/components/modals/planet-card";
+import { MemberCardDialog, type MemberMessageContext } from "@/components/modals/member-card-dialog";
 import type { AllianceMember, AllianceSettings } from "@/lib/access-store";
 import { galaxyNames, galaxyLabel } from "@/lib/galaxies";
-import { decodePortalAddress, missionSpecialties, portalSearchMatches, type Mission, type MissionInput, type MissionSpecialty } from "@/lib/missions";
-import { editableSystemStatusRoles, isMissionSystemStatus, planetSystemStatusKey, type MissionSystemStatus, type PlanetSystemStatuses } from "@/lib/planet-system-status";
-import { useLocale } from "@/components/locale-provider";
-import { useNavigationSearchState } from "@/components/navigation-search-reset";
+import { decodePortalAddress, portalSearchMatches, type Mission, type MissionInput } from "@/lib/missions";
+import { isMissionSystemStatus, planetSystemStatusKey, type MissionSystemStatus, type PlanetSystemStatuses } from "@/lib/planet-system-status";
+import { useLocale } from "@/components/providers/locale-provider";
+import { useNavigationSearchState } from "@/components/shared/navigation-search-reset";
 import { sortByCreatedAtDescending } from "@/lib/created-at";
 import { generateSystemName } from "@/lib/system-name";
-
-type CachedPlanet = Readonly<{ galaxy: number; response: Record<string, unknown> }>;
-type StationMissionStatus = "none" | "in_progress" | "completed";
-type StationFilter = "all" | "pending" | "in_progress" | "completed" | "notes";
-type StationEntry = Readonly<{
-  portal: string;
-  galaxy: number;
-  ownerId: string;
-  ownerName?: string;
-  ownerNmsName?: string;
-  ownerImage?: string;
-  createdByMemberId?: string;
-  createdAt?: string;
-  name?: string;
-  note?: string;
-  planet: CachedPlanet | null;
-  hasMissions: boolean;
-  canOpenOwnSpecialtyMission: boolean;
-  missionStatus: StationMissionStatus;
-  availableSpecialties: MissionSpecialty[];
-}>;
-type StationMissionSeed = Readonly<{ portal: string; galaxy: number; title: string; ownerMemberId: string }>;
-
-function GalaxyLabel({ galaxy }: Readonly<{ galaxy: number }>) {
-  const { t } = useLocale();
-  const foreign = galaxy !== 0;
-  return <span className={foreign ? "mission-galaxy-alert" : undefined} data-tooltip={foreign ? t("missions.galaxy_portals_warning") : undefined} tabIndex={foreign ? 0 : undefined}>{foreign && <AlertTriangle size={9} />}{galaxyLabel(galaxy)}</span>;
-}
-
-function canCreateMissionFromStation(station: StationEntry, member: AllianceMember, canManage: boolean) {
-  if (canManage) return station.availableSpecialties.length > 0;
-  if (member.specialty === "explorer" || member.specialty === "builder") {
-    return station.availableSpecialties.some((specialty) => specialty === member.specialty);
-  }
-  return member.specialty === "ranger" &&
-    station.ownerId === member.publicId &&
-    station.availableSpecialties.some((specialty) => ["explorer_builder", "explorer", "builder"].includes(specialty));
-}
-
-function asRecord(value: unknown): Record<string, unknown> | null {
-  return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : null;
-}
-
-function cachedPlanetType(planet: CachedPlanet | null) {
-  const title = cachedPlanetTitle(planet);
-  if (title) return title;
-  const lines = asRecord(planet?.response.lines);
-  return planetWord(asRecord(lines?.band), "type") ?? "";
-}
-
-function parseStations(value: unknown): StationEntry[] {
-  if (!Array.isArray(value)) return [];
-  return value.flatMap((item) => {
-    const station = asRecord(item);
-    if (typeof station?.portal !== "string" || typeof station.galaxy !== "number" || typeof station.ownerId !== "string") return [];
-    const response = asRecord(station.planet);
-    const planet = response
-      ? { galaxy: station.galaxy, response }
-      : null;
-    const availableSpecialties = Array.isArray(station.availableSpecialties)
-      ? station.availableSpecialties.filter((specialty): specialty is MissionSpecialty =>
-        missionSpecialties.includes(specialty as MissionSpecialty),
-      )
-      : [];
-    return [{
-      portal: station.portal,
-      galaxy: station.galaxy,
-      ownerId: station.ownerId,
-      ...(typeof station.ownerName === "string" ? { ownerName: station.ownerName } : {}),
-      ...(typeof station.ownerNmsName === "string" ? { ownerNmsName: station.ownerNmsName } : {}),
-      ...(typeof station.ownerImage === "string" ? { ownerImage: station.ownerImage } : {}),
-      ...(typeof station.createdByMemberId === "string" ? { createdByMemberId: station.createdByMemberId } : {}),
-      ...(typeof station.createdAt === "string" ? { createdAt: station.createdAt } : {}),
-      ...(typeof station.name === "string" ? { name: station.name } : {}),
-      ...(typeof station.note === "string" ? { note: station.note } : {}),
-      planet,
-      hasMissions: station.hasMissions === true,
-      canOpenOwnSpecialtyMission: station.canOpenOwnSpecialtyMission === true,
-      missionStatus: station.missionStatus === "in_progress" || station.missionStatus === "completed"
-        ? station.missionStatus
-        : "none",
-      availableSpecialties,
-    }];
-  });
-}
-
-function parsePlanetSystemStatuses(value: unknown): PlanetSystemStatuses {
-  const statuses = asRecord(value);
-  if (!statuses) throw new Error("Invalid system status response.");
-  return Object.fromEntries(Object.entries(statuses).map(([key, values]) => {
-    if (!Array.isArray(values) || !values.every(isMissionSystemStatus)) {
-      throw new Error("Invalid system status response.");
-    }
-    return [key, [...new Set(values)]];
-  }));
-}
-
-function stationOwnerName(station: StationEntry) {
-  const profileName = station.ownerName?.trim();
-  if (profileName && !profileName.includes("@")) return profileName;
-  return "Former member";
-}
-
-function StationOwnerCell({ station, onOpenProfile, ownerLabel }: Readonly<{
-  station: StationEntry;
-  onOpenProfile: (memberId: string) => void;
-  ownerLabel: string;
-}>) {
-  const [imageFailed, setImageFailed] = useState(false);
-  const name = stationOwnerName(station);
-  const initials = name.slice(0, 2).toUpperCase() || "—";
-
-  return <div className="station-owner-card">
-    <small>{ownerLabel}</small>
-    <button aria-label={name} className="assignee-cell mission-member-link station-owner-link" data-tooltip={name} onClick={() => onOpenProfile(station.ownerId)} type="button">
-      <span aria-hidden="true" className={`assignee-avatar ${station.ownerImage && !imageFailed ? "assignee-avatar-image" : ""}`}>
-        {station.ownerImage && !imageFailed
-          ? <Image alt="" height={21} onError={() => setImageFailed(true)} src={station.ownerImage} unoptimized width={21} />
-          : initials}
-      </span>
-      <span className="assignee-name">{name}</span>
-    </button>
-  </div>;
-}
-
-function planetWord(band: Record<string, unknown> | null, key: string) {
-  const attribute = band ? asRecord(band[key]) : null;
-  return typeof attribute?.word === "string" ? attribute.word : null;
-}
-
-function cachedPlanetTitle(planet: CachedPlanet | null) {
-  const lines = asRecord(planet?.response.lines);
-  const headline = asRecord(lines?.headline);
-  return typeof headline?.word === "string" ? headline.word : "";
-}
-
-function cachedPlanetImageUrl(planet: CachedPlanet | null) {
-  const pictures = asRecord(planet?.response.pictures);
-  const disc = pictures?.disc;
-  return typeof disc === "string" && disc.startsWith("/planets/")
-    ? `https://nmsalmanac.com/api${disc}`
-    : null;
-}
-
-function CachedPlanetInfo({ planet, onOpen }: Readonly<{ planet: CachedPlanet; onOpen: () => void }>) {
-  const { t, tv } = useLocale();
-  const lines = asRecord(planet.response.lines);
-  const band = lines ? asRecord(lines.band) : null;
-  const headline = lines ? asRecord(lines.headline) : null;
-  const title = typeof headline?.word === "string" ? headline.word : planetWord(band, "type");
-  const facts = [
-    [t("common.planet_type_label"), planetWord(band, "type")],
-    [t("planet.weather"), planetWord(band, "weather")],
-    [t("planet.water"), planetWord(band, "water")],
-    [t("planet.star"), planetWord(band, "star")],
-    [t("common.economy"), planetWord(band, "economy")],
-    [t("common.race"), planetWord(band, "race")],
-  ].filter((fact): fact is [string, string] => Boolean(fact[1]));
-
-  return (
-    <div className="station-planet-info">
-      <button className="station-planet-open" onClick={onOpen} type="button" aria-label={`${t("common.open_details_for")} ${title || t("planet.this_planet")}`}>
-        <GalaxyLabel galaxy={planet.galaxy} /><strong>{title || t("planet.planet_data")}</strong>
-      </button>
-      <dl>{facts.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{tv(value)}</dd></div>)}</dl>
-    </div>
-  );
-}
+import { asRecord, cachedPlanetTitle, cachedPlanetType, parsePlanetSystemStatuses, parseStations, stationOwnerName, type StationEntry, type StationFilter, type StationMissionSeed } from "@/components/cards/station-card/parts";
+import { StationList } from "@/components/sections/station-list";
 
 export function StationsPage({ currentMember, alliance, missionCount, initialSearch = "", initialCreateStation = null, initialStation = null, sidebarOfflineCount, sidebarStationCount, sidebarUserCount }: Readonly<{
   currentMember: AllianceMember;
@@ -585,129 +417,50 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
 
   return (
     <div className="app-shell">
-      <AllianceSidebar activeSection="stazioni" currentMember={pageMember} missionCount={missionCount} settings={allianceSettings} stationCount={loading ? sidebarStationCount : stations.length} offlineCount={sidebarOfflineCount} userCount={sidebarUserCount} />
+      <Sidebar activeSection="stazioni" currentMember={pageMember} missionCount={missionCount} settings={allianceSettings} stationCount={loading ? sidebarStationCount : stations.length} offlineCount={sidebarOfflineCount} userCount={sidebarUserCount} />
       <section className="main-panel">
-        <DashboardTopbar currentMember={pageMember} onAdminOpen={() => setAdminOpen(true)} onProfileOpen={() => setProfileOpen(true)} sectionTitle={t("stations.stations")} settings={allianceSettings} />
-        <MissionHero
-          actionLabel={t("stations.add_station")}
-          description={t(canSeeAll || canCreateOwnSpecialtyMission ? "admin.browse_alliance_registered_portals_and_their_planets" : "stations.register_portals_for_systems_you_have_discovered")}
-          onCreate={openAddStation}
+        <Header currentMember={pageMember} onAdminOpen={() => setAdminOpen(true)} onProfileOpen={() => setProfileOpen(true)} sectionTitle={t("stations.stations")} settings={allianceSettings} />
+        <Hero
+          subtitle={t(canSeeAll || canCreateOwnSpecialtyMission ? "admin.browse_alliance_registered_portals_and_their_planets" : "stations.register_portals_for_systems_you_have_discovered")}
           settings={allianceSettings}
-          showCreate
           title={t(canSeeAll || canCreateOwnSpecialtyMission ? "stations.space_stations" : "stations.my_stations")}
-        />
+        >
+          <HeroAddButton label={t("stations.add_station")} onClick={openAddStation} />
+        </Hero>
         <main className="content-wrap stations-page">
           {(error || notice) && <p className={error ? "form-error" : "address-validation address-valid"}>{error ? <CircleAlert size={15} /> : null}{t(error || notice)}</p>}
 
-          <section aria-label={t("stations.my_space_stations")} className="station-list-section">
-            <div className="toolbar members-toolbar station-toolbar">
-                <div aria-label={t("stations.filter_stations_by_mission_status")} className="filter-tabs member-filter-tabs" role="tablist">
-                  <button
-                    aria-selected={activeStationTab === "all" && stationFilter === "all"}
-                    className={`filter-tab${activeStationTab === "all" && stationFilter === "all" ? " selected" : ""}`}
-                    onClick={() => {
-                      setActiveStationTab("all");
-                      setStationFilter("all");
-                    }}
-                    role="tab"
-                    type="button"
-                  >{t("stations.filter_all")}<span>{stationCounts.all}</span></button>
-                  {canChooseStationView && <button
-                    aria-selected={activeStationTab === "mine"}
-                    className={`filter-tab${activeStationTab === "mine" ? " selected" : ""}`}
-                    onClick={() => setActiveStationTab("mine")}
-                    role="tab"
-                    type="button"
-                  >{t("stations.my_stations")}<span>{ownDiscoveredStations.length}</span></button>}
-                  {visibleStationFilters.filter((status) => status !== "all").map((status) => <button
-                    aria-selected={activeStationTab === "all" && stationFilter === status}
-                    className={`filter-tab${activeStationTab === "all" && stationFilter === status ? " selected" : ""}`}
-                    key={status}
-                    onClick={() => {
-                      setActiveStationTab("all");
-                      setStationFilter(status);
-                    }}
-                    role="tab"
-                    type="button"
-                  >{t(status === "pending" ? "common.pending_status_label" : status === "in_progress" ? "stations.filter_in_mission" : status === "completed" ? "stations.filter_mission_completed" : "stations.filter_with_notes")}<span>{stationCounts[status]}</span></button>)}
-                </div>
-                {<div className="toolbar-actions station-toolbar-actions">
-                  <label className="search-field member-search station-search"><Search size={15} /><input aria-label={t("stations.search_stations_by_portal_owner_or_galaxy_or_notes")} onChange={(event) => setSearch(event.target.value)} placeholder={t("stations.search_portal_username_galaxy_or_notes")} value={search} /></label>
-                  {canSeeAll && <button
-                    aria-label={t(exportingStations ? "stations.exporting_stations" : "stations.export_stations_to_excel")}
-                    className="station-export-button"
-                    data-tooltip={t(exportingStations ? "stations.exporting_stations" : "stations.export_stations_to_excel")}
-                    disabled={exportingStations}
-                    onClick={() => void exportStations()}
-                    title={t(exportingStations ? "stations.exporting_stations" : "stations.export_stations_to_excel")}
-                    type="button"
-                  ><FileSpreadsheet aria-hidden="true" size={15} /></button>}
-                </div>}
-            </div>
-            {loading && <div className="station-list-empty station-list-loading"><LoadingSpinner /></div>}
-            {!loading && visibleStations.length === 0 && <p className={`station-list-empty${stations.length === 0 ? " station-list-empty-no-saved" : ""}`}>{t(stations.length === 0 ? "stations.no_saved_portals" : "stations.no_stations_found")}</p>}
-            {visibleStations.length > 0 && <ul className={`station-list station-list-cards`}>{visibleStations.map((station) => {
-              const planetImageUrl = cachedPlanetImageUrl(station.planet);
-              const stationDisplayName = station.name || cachedPlanetType(station.planet) || cachedPlanetTitle(station.planet) || t("planet.unnamed_planet");
-              const statusKey = planetSystemStatusKey(station.portal, station.galaxy);
-              const createdTime = station.createdAt ? Date.parse(station.createdAt) : Number.NaN;
-              const isNewStation = !station.hasMissions && Number.isFinite(createdTime) && renderedAt - createdTime < 7 * 24 * 60 * 60 * 1000;
-              const newRibbon = isNewStation && <span className="station-new-ribbon-clip"><span className="station-new-ribbon">{t("stations.new_badge")}</span></span>;
-              const canEditStation = canSeeAll ||
-                (station.createdByMemberId ?? station.ownerId) === pageMember.publicId;
-              const canCreateMission = canCreateMissionFromStation(station, pageMember, canCreateMissions);
-              const stationOwner = <StationOwnerCell onOpenProfile={(memberId) => setProfileTarget({
-                memberId,
-                messageContext: {
-                  type: "planet",
-                  portal: station.portal,
-                  galaxy: station.galaxy,
-                  subjectLabel: station.name || cachedPlanetTitle(station.planet) || cachedPlanetType(station.planet),
-                },
-              })} ownerLabel={t("stations.station_owner")} station={station} />;
-              return <li key={`${station.portal}:${station.galaxy}:${station.ownerId}`} className={isNewStation ? "station-is-new" : undefined}>
-                {newRibbon}
-                {<button className={`station-card-title${planetImageUrl ? " station-card-title-with-image" : ""}`} onClick={() => setSelectedStation({ portal: station.portal, galaxy: station.galaxy })} type="button">
-                  {planetImageUrl && <Image alt="" className="station-card-planet-image" height={112} src={planetImageUrl} unoptimized width={112} />}
-                  <span className="station-card-title-copy">
-                    <GalaxyLabel galaxy={station.galaxy} />
-                    <strong>{stationDisplayName}</strong>
-                    <StationSystemCoreInfo key={`${station.portal}:${station.galaxy}`} galaxy={station.galaxy} portal={station.portal} />
-                  </span>
-                </button>}
-                <div className="station-card-owner">{stationOwner}</div>
-                <div className="station-portal-code"><strong className="station-name">{stationDisplayName}</strong><GlyphStrip address={station.portal} /><code>{station.portal}</code></div>
-                <div className="station-planet-info-list">
-                  {station.planet
-                    ? <CachedPlanetInfo onOpen={() => setSelectedStation({ portal: station.portal, galaxy: station.galaxy })} planet={station.planet} />
-                    : <p className="station-card-no-planet">{t("planet.no_almanac_data")}</p>}
-                </div>
-                <div className="station-card-footer">
-                  {(canSeeAll || station.ownerId === pageMember.publicId) && planetStatusesLoaded && <div className="station-system-status">
-                    <MissionSystemProgress
-                      disabled={savingStatusKeys.includes(statusKey)}
-                      editable
-                      editableRoles={canSeeAll ? editableSystemStatusRoles(pageMember) : ["ranger"]}
-                      onToggle={(status, checked) => void toggleStationSystemStatus(station.portal, station.galaxy, status, checked)}
-                      statuses={planetStatuses[statusKey] ?? []}
-                    />
-                  </div>}
-                  <div className="station-actions">
-                  {canCreateMission && <button aria-label={t("stations.create_mission_from_portal", { portal: station.portal })} className="member-icon-action create-station-mission" data-tooltip={t("stations.create_mission_from_station")} onClick={() => setMissionStation({ portal: station.portal, galaxy: station.galaxy, title: station.name || cachedPlanetTitle(station.planet), ownerMemberId: station.ownerId })} type="button"><CirclePlus size={14} /></button>}
-                  {!canCreateMission && !canSeeAll && (pageMember.specialty === "explorer" || pageMember.specialty === "builder") && station.hasMissions && !station.canOpenOwnSpecialtyMission &&
-                    <span aria-label={t("stations.mission_in_progress", { specialty: t(pageMember.specialty === "explorer" ? "common.explorers" : "common.builders") })} className="member-icon-action create-station-mission station-mission-disabled" data-tooltip={t("stations.mission_in_progress", { specialty: t(pageMember.specialty === "explorer" ? "common.explorers" : "common.builders") })} role="img"><CirclePlus size={14} /></span>}
-                  {station.hasMissions
-                    ? canSeeAll || station.canOpenOwnSpecialtyMission
-                      ? <Link aria-label={t("planet.open_missions_for_planet_portal", { portal: station.portal })} className="member-icon-action station-missions-link" data-tooltip={t("missions.open_associated_missions")} href={`/missions?search=${encodeURIComponent(station.portal)}`}><Crosshair size={14} /></Link>
-                      : <span className="station-mission-lock">{t("missions.associated_mission")}</span>
-                    : (canSeeAll || station.ownerId === pageMember.publicId) && <button aria-label={t("stations.remove_portal_portal_in_galaxy_from_owner_s_archive", { portal: station.portal, galaxy: galaxyLabel(station.galaxy), owner: stationOwnerName(station) })} className="member-icon-action delete-member" data-tooltip={t("stations.delete_station")} onClick={() => void removeStation(station.portal, station.galaxy, station.ownerId, stationOwnerName(station))} type="button"><Trash2 size={14} /></button>}
-                  {canEditStation && <button aria-label={t("stations.edit_station_portal", { portal: station.portal })} className="member-icon-action" data-tooltip={t("stations.edit_station")} onClick={() => openEditStation(station)} type="button"><Pencil size={14} /></button>}
-                  {station.note && <button aria-label={t("stations.view_notes_for_station", { station: stationDisplayName })} className="member-icon-action station-notes-action" data-tooltip={t("stations.view_station_notes")} onClick={() => setStationNoteView({ portal: station.portal, note: station.note ?? "" })} type="button"><FileText size={14} /></button>}
-                  </div>
-                </div>
-              </li>;
-            })}</ul>}
-          </section>
+<StationList
+          activeStationTab={activeStationTab}
+          canChooseStationView={canChooseStationView}
+          canCreateMissions={canCreateMissions}
+          canSeeAll={canSeeAll}
+          exportingStations={exportingStations}
+          loading={loading}
+          member={pageMember}
+          onCreateMission={(station) => setMissionStation({ portal: station.portal, galaxy: station.galaxy, title: station.name || cachedPlanetTitle(station.planet), ownerMemberId: station.ownerId })}
+          onEdit={openEditStation}
+          onExport={() => void exportStations()}
+          onFilterChange={setStationFilter}
+          onOpenProfile={setProfileTarget}
+          onOpenStation={(station) => setSelectedStation({ portal: station.portal, galaxy: station.galaxy })}
+          onRemove={(station) => void removeStation(station.portal, station.galaxy, station.ownerId, stationOwnerName(station))}
+          onSearchChange={setSearch}
+          onTabChange={setActiveStationTab}
+          onToggleStatus={(station, status, checked) => void toggleStationSystemStatus(station.portal, station.galaxy, status, checked)}
+          onViewNote={(station) => setStationNoteView({ portal: station.portal, note: station.note ?? "" })}
+          ownStationCount={ownDiscoveredStations.length}
+          planetStatuses={planetStatuses}
+          planetStatusesLoaded={planetStatusesLoaded}
+          renderedAt={renderedAt}
+          savingStatusKeys={savingStatusKeys}
+          search={search}
+          stationCounts={stationCounts}
+          stationFilter={stationFilter}
+          stations={stations}
+          visibleStationFilters={visibleStationFilters}
+          visibleStations={visibleStations}
+        />
         </main>
       </section>
       {addOpen && <div className="dialog-backdrop">

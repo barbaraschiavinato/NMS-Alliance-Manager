@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { GoogleLogin } from "@/components/google-login";
-import { OfflinePlayersPage } from "@/components/offline-players-page";
-import { PendingApproval } from "@/components/pending-approval";
+import { GoogleLogin } from "@/components/pages/google-login";
+import { OfflinePlayersPage } from "@/components/pages/offline-players-page";
+import { PendingApproval } from "@/components/pages/pending-approval";
 import { getCurrentMember } from "@/lib/authorization";
 import { readAccessData } from "@/lib/access-store";
 import { readMissions } from "@/lib/store";

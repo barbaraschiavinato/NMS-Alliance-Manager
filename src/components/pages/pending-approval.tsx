@@ -3,10 +3,10 @@
 import { useState } from "react";
 import { signOut } from "next-auth/react";
 import { CircleAlert, LogOut, Orbit, UserRound } from "lucide-react";
-import { MemberProfilePanel } from "@/components/member-profile-panel";
+import { MemberProfilePanel } from "@/components/modals/member-profile-panel";
 import { isValidNmsFriendCode, type AllianceMember } from "@/lib/member-types";
-import { useLocale } from "@/components/locale-provider";
-import { LanguageSelector } from "@/components/language-selector";
+import { useLocale } from "@/components/providers/locale-provider";
+import { LanguageSelector } from "@/components/shared/language-selector";
 
 export function PendingApproval({ member }: Readonly<{ member: AllianceMember }>) {
   const { t } = useLocale();

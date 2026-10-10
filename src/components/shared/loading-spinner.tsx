@@ -1,7 +1,7 @@
 "use client";
 
 import { Orbit } from "lucide-react";
-import { useLocale } from "@/components/locale-provider";
+import { useLocale } from "@/components/providers/locale-provider";
 
 export function LoadingSpinner() {
   const { t } = useLocale();

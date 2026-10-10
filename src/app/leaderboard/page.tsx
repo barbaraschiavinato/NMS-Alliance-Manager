@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
-import { GoogleLogin } from "@/components/google-login";
-import { LeaderboardPage, type LeaderboardBoard } from "@/components/leaderboard-page";
-import { PendingApproval } from "@/components/pending-approval";
+import { GoogleLogin } from "@/components/pages/google-login";
+import { LeaderboardPage, type LeaderboardBoard } from "@/components/pages/leaderboard-page";
+import { PendingApproval } from "@/components/pages/pending-approval";
 import { getCurrentMember } from "@/lib/authorization";
 import { readAccessData } from "@/lib/access-store";
 import { readMissions } from "@/lib/store";

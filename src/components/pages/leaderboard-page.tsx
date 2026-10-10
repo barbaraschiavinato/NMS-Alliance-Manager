@@ -3,10 +3,13 @@
 import { useState } from "react";
 import Image from "next/image";
 import { Compass, Hammer, Search } from "lucide-react";
-import { AllianceSidebar, DashboardTopbar, MissionHero } from "@/components/dashboard-chrome";
-import { AdminPanel } from "@/components/admin-panel";
-import { MemberProfilePanel } from "@/components/member-profile-panel";
-import { useLocale } from "@/components/locale-provider";
+
+import { Sidebar } from "@/components/layout/sidebar";
+import { Header } from "@/components/layout/header";
+import { Hero } from "@/components/layout/hero";
+import { AdminPanel } from "@/components/modals/admin-panel";
+import { MemberProfilePanel } from "@/components/modals/member-profile-panel";
+import { useLocale } from "@/components/providers/locale-provider";
 import type { AllianceMember, AllianceSettings } from "@/lib/access-store";
 
 export type LeaderboardEntry = Readonly<{
@@ -35,10 +38,10 @@ export function LeaderboardPage({ currentMember, alliance, boards, missionCount,
   const [profileOpen, setProfileOpen] = useState(false);
 
   return <div className="app-shell">
-    <AllianceSidebar activeSection="classifica" currentMember={member} missionCount={missionCount} settings={settings} stationCount={stationCount} offlineCount={offlineCount} userCount={userCount} />
+    <Sidebar activeSection="classifica" currentMember={member} missionCount={missionCount} settings={settings} stationCount={stationCount} offlineCount={offlineCount} userCount={userCount} />
     <section className="main-panel">
-      <DashboardTopbar currentMember={member} onAdminOpen={() => setAdminOpen(true)} onProfileOpen={() => setProfileOpen(true)} sectionTitle="leaderboard.title" settings={settings} />
-      <MissionHero description={t("leaderboard.description")} settings={settings} title="leaderboard.title" />
+      <Header currentMember={member} onAdminOpen={() => setAdminOpen(true)} onProfileOpen={() => setProfileOpen(true)} sectionTitle="leaderboard.title" settings={settings} />
+      <Hero settings={settings} subtitle={t("leaderboard.description")} title="leaderboard.title" />
       <main className="content-wrap leaderboard-page">
         {[boards.filter((board) => !board.role), boards.filter((board) => board.role)].map((group, groupIndex) => <div className={`leaderboard-widgets${groupIndex === 1 ? " leaderboard-widgets-roles" : ""}`} key={groupIndex}>
           {group.map((board) => <section className={`leaderboard-widget${board.role ? ` leaderboard-widget-${board.role}` : ""}`} key={board.id}>

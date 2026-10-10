@@ -1,9 +1,9 @@
 import Image from "next/image";
 import { useEffect, useState, type SubmitEvent } from "react";
 import { Siren, X } from "lucide-react";
-import { GlyphStrip } from "@/components/portal-address-field";
+import { GlyphStrip } from "@/components/shared/portal-address-field";
 import { galaxyLabel } from "@/lib/galaxies";
-import { useLocale } from "@/components/locale-provider";
+import { useLocale } from "@/components/providers/locale-provider";
 
 type PlanetRecord = Record<string, unknown>;
 type PlanetEntry = Readonly<{ portal: string; planet: PlanetRecord }>;

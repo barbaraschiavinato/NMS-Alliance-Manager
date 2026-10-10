@@ -3,7 +3,7 @@
 import { useEffect, useState, type SubmitEvent } from "react";
 import { Check, CircleAlert, ImagePlus, ShieldCheck, X } from "lucide-react";
 import type { AllianceSettings } from "@/lib/access-store";
-import { useLocale } from "@/components/locale-provider";
+import { useLocale } from "@/components/providers/locale-provider";
 
 export function AdminPanel({ onClose, onSaved }: Readonly<{
   onClose: () => void;

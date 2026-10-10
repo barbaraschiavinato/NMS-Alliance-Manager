@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { LocaleProvider } from "@/components/locale-provider";
-import { NavigationSearchResetProvider } from "@/components/navigation-search-reset";
+import { LocaleProvider } from "@/components/providers/locale-provider";
+import { NavigationSearchResetProvider } from "@/components/shared/navigation-search-reset";
 import "./globals.css";
 
 export const metadata: Metadata = {

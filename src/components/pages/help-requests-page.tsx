@@ -3,13 +3,16 @@
 import { useEffect, useState, type SubmitEvent } from "react";
 import Link from "next/link";
 import { CircleAlert, Crosshair, Eclipse, Reply, Send, Trash2, X } from "lucide-react";
-import { AllianceSidebar, DashboardTopbar, MissionHero } from "@/components/dashboard-chrome";
-import { AdminPanel } from "@/components/admin-panel";
-import { PlanetCard } from "@/components/planet-card";
-import { MemberProfilePanel } from "@/components/member-profile-panel";
-import { LoadingSpinner } from "@/components/loading-spinner";
+
+import { Sidebar } from "@/components/layout/sidebar";
+import { Header } from "@/components/layout/header";
+import { Hero } from "@/components/layout/hero";
+import { AdminPanel } from "@/components/modals/admin-panel";
+import { PlanetCard } from "@/components/modals/planet-card";
+import { MemberProfilePanel } from "@/components/modals/member-profile-panel";
+import { LoadingSpinner } from "@/components/shared/loading-spinner";
 import { galaxyLabel } from "@/lib/galaxies";
-import { useLocale } from "@/components/locale-provider";
+import { useLocale } from "@/components/providers/locale-provider";
 import type { AllianceMember, AllianceSettings } from "@/lib/access-store";
 
 type HelpReply = Readonly<{
@@ -139,10 +142,10 @@ export function HelpRequestsPage({ currentMember, alliance, missionCount, statio
   }
 
   return <div className="app-shell">
-    <AllianceSidebar activeSection="aiuto" currentMember={member} missionCount={missionCount} settings={settings} stationCount={stationCount} offlineCount={offlineCount} userCount={userCount} />
+    <Sidebar activeSection="aiuto" currentMember={member} missionCount={missionCount} settings={settings} stationCount={stationCount} offlineCount={offlineCount} userCount={userCount} />
     <section className="main-panel">
-      <DashboardTopbar currentMember={member} onAdminOpen={() => setAdminOpen(true)} onProfileOpen={() => setProfileOpen(true)} sectionTitle="help.help_requests" settings={settings} />
-      <MissionHero description={t("help.page_description")} settings={settings} title="help.help_requests" />
+      <Header currentMember={member} onAdminOpen={() => setAdminOpen(true)} onProfileOpen={() => setProfileOpen(true)} sectionTitle="help.help_requests" settings={settings} />
+      <Hero settings={settings} subtitle={t("help.page_description")} title="help.help_requests" />
       <main className="content-wrap messages-page">
         {error && <p className="form-error"><CircleAlert size={15} />{t(error)}</p>}
         {loading && <div className="messages-loading"><LoadingSpinner /></div>}

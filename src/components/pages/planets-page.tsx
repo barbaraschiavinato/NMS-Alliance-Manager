@@ -1,52 +1,19 @@
 "use client";
 
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { sortByCreatedAtDescending } from "@/lib/created-at";
-import Image from "next/image";
-import Link from "next/link";
-import { AlertTriangle, Droplet, Globe2, Moon, Skull, Orbit, RotateCcw, Search, SlidersHorizontal, X } from "lucide-react";
-import { AllianceSidebar, DashboardTopbar, MissionHero, storePlanetCount } from "@/components/dashboard-chrome";
-import { AdminPanel } from "@/components/admin-panel";
-import { MemberProfilePanel } from "@/components/member-profile-panel";
-import { PlanetCard } from "@/components/planet-card";
-import { GlyphStrip } from "@/components/portal-address-field";
+import { RotateCcw, Search, SlidersHorizontal, X } from "lucide-react";
+import { Sidebar, storePlanetCount } from "@/components/layout/sidebar";
+import { Header } from "@/components/layout/header";
+import { Hero } from "@/components/layout/hero";
+import { AdminPanel } from "@/components/modals/admin-panel";
+import { MemberProfilePanel } from "@/components/modals/member-profile-panel";
+import { PlanetList } from "@/components/sections/planet-list";
+import type { PlanetDestination } from "@/components/cards/planet-destination-card";
+import { PlanetCard } from "@/components/modals/planet-card";
 import type { AllianceMember, AllianceSettings } from "@/lib/access-store";
-import { galaxyLabel } from "@/lib/galaxies";
-import { useLocale } from "@/components/locale-provider";
+import { useLocale } from "@/components/providers/locale-provider";
 
-type PlanetDestination = Readonly<{
-  id: string;
-  portal: string;
-  planetPortal: string;
-  planetNumber: number;
-  createdAt?: string;
-  galaxy: number;
-  title?: string;
-  description?: string;
-  system?: string;
-  systemLabelFromAlmanac?: boolean;
-  imageUrl?: string;
-  almanacName?: string;
-  almanacSearchIndex: string;
-  almanacFacts: { label: string; value: string }[];
-  systemFacts: { label: string; value: string }[];
-  planetType?: string;
-  economyStars?: number;
-  plants: string[];
-  minerals: string[];
-  valuables: string[];
-  dissonant: boolean;
-  paradise: boolean;
-  blackMarket: boolean;
-  station?: Readonly<{
-    id: string;
-    portal: string;
-    galaxy: number;
-    name?: string;
-    createdAt?: string;
-    hasMissions?: boolean;
-  }>;
-}>;
 
 function planetMatchesSearch(planet: PlanetDestination, query: string) {
   return `${planet.almanacSearchIndex} ${planet.planetPortal} ${planet.almanacName ?? ""}`
@@ -78,28 +45,7 @@ function systemFactValue(planet: PlanetDestination, label: string) {
   return planet.systemFacts.find((fact) => fact.label === label)?.value;
 }
 
-const planetSizeLevels: Record<string, number> = { Small: 1, Medium: 2, Large: 3, Huge: 3 };
 
-function PlanetSizeIndicator({ size, label }: Readonly<{ size?: string; label: (value: string) => string }>) {
-  if (!size) return null;
-  if (size === "Moon") {
-    return <span aria-label={label(size)} className="planet-size-indicator" data-tooltip={label(size)} role="img"><Moon aria-hidden="true" size={14} /></span>;
-  }
-  const level = planetSizeLevels[size];
-  if (!level) return null;
-  return <span aria-label={label(size)} className="planet-size-indicator" data-tooltip={label(size)} role="img">
-    {[1, 2, 3].map((step) => <i className={step === level ? "active" : undefined} data-step={step} key={step} />)}
-  </span>;
-}
-
-const raceIcons: Record<string, string> = { Gek: "/icons/nms-gek.svg", Korvax: "/icons/nms-korvax.svg", "Vy’keen": "/icons/nms-vykeen.svg" };
-
-const conflictLevels: Record<string, number> = { None: 0, Low: 1, Medium: 2, High: 3, Outlaw: 3 };
-
-function PlanetWaterIndicator({ water, label }: Readonly<{ water?: string; label: (value: string) => string }>) {
-  if (!water || water === "None") return null;
-  return <span aria-label={label(water)} className="planet-water-indicator has-water" data-tooltip={label(water)} role="img"><Droplet aria-hidden="true" size={14} /></span>;
-}
 
 export function PlanetsPage({ alliance, currentMember, planets, almanacLookupFailed, missionCount, stationCount, offlineCount, userCount }: Readonly<{
   alliance: AllianceSettings;
@@ -113,10 +59,6 @@ export function PlanetsPage({ alliance, currentMember, planets, almanacLookupFai
 }>) {
   const { t, tv, systemLabel } = useLocale();
   const [renderedAt] = useState(() => Date.now());
-  const isNewStation = (station: PlanetDestination["station"]) => {
-    const createdTime = station?.createdAt ? Date.parse(station.createdAt) : Number.NaN;
-    return Boolean(station) && !station?.hasMissions && Number.isFinite(createdTime) && renderedAt - createdTime < 7 * 24 * 60 * 60 * 1000;
-  };
   useEffect(() => {
     if (!almanacLookupFailed) storePlanetCount(planets.length);
   }, [almanacLookupFailed, planets.length]);
@@ -259,7 +201,7 @@ export function PlanetsPage({ alliance, currentMember, planets, almanacLookupFai
 
   return (
     <div className="app-shell">
-      <AllianceSidebar
+      <Sidebar
         activeSection="pianeti"
         currentMember={pageMember}
         missionCount={missionCount}
@@ -270,8 +212,8 @@ export function PlanetsPage({ alliance, currentMember, planets, almanacLookupFai
         settings={allianceSettings}
       />
       <section className="main-panel">
-        <DashboardTopbar currentMember={pageMember} onAdminOpen={() => setAdminOpen(true)} onProfileOpen={() => setProfileOpen(true)} sectionTitle="navigation.planets" settings={allianceSettings} />
-        <MissionHero description={t("planet.missions_planets_description")} settings={allianceSettings} title={t("navigation.planets")} />
+        <Header currentMember={pageMember} onAdminOpen={() => setAdminOpen(true)} onProfileOpen={() => setProfileOpen(true)} sectionTitle="navigation.planets" settings={allianceSettings} />
+        <Hero settings={allianceSettings} subtitle={t("planet.missions_planets_description")} title={t("navigation.planets")} />
         <main className="content-wrap planets-page">
           {almanacLookupFailed && <p className="form-error">{t("planet.almanac_partial_lookup_failed")}</p>}
           <div className="planet-sticky-filters">
@@ -436,42 +378,7 @@ export function PlanetsPage({ alliance, currentMember, planets, almanacLookupFai
           </div>
           {filteredPlanets.length === 0
             ? <p className="station-list-empty">{t(hasActiveCriteria ? (hasActiveFilters && !searchQuery ? "planet.no_planets_match_filters" : "planet.no_planets_match_search") : almanacLookupFailed ? "planet.no_verified_mission_planets" : "planet.no_mission_planets")}</p>
-            : <div className="planet-station-groups">{visiblePlanetGroups.map(({ station, planets: groupPlanets }) => <section className="planet-station-group" key={station?.id ?? "unassociated"}>
-              <div className="planet-station-heading">
-                <div>
-                  <h2>{station?.name || groupPlanets.find((planet) => planet.planetPortal === station?.portal)?.almanacName || t(station ? "stations.space_station" : "planet.no_associated_station")}{groupPlanets.some((planet) => planet.blackMarket) && <span aria-label={t("planet.black_market")} className="planet-station-black-market" data-tooltip={t("planet.black_market")} role="img" tabIndex={0}><Skull aria-hidden="true" size={15} /></span>}{isNewStation(station) && <span className="planet-station-new">{t("stations.new_badge")}</span>}</h2>
-                  {station && <p className="planet-station-address"><span className={station.galaxy !== 0 ? "mission-galaxy-alert" : undefined} data-tooltip={station.galaxy !== 0 ? t("missions.galaxy_portals_warning") : undefined} tabIndex={station.galaxy !== 0 ? 0 : undefined}>{station.galaxy !== 0 && <AlertTriangle size={9} />}{galaxyLabel(station.galaxy)}</span> · {station.portal}</p>}
-                  {groupPlanets[0]?.systemFacts.length > 0 && <div className="planet-station-facts">
-                    {groupPlanets[0].systemFacts.map((fact) => <span key={fact.label}><b>{t(fact.label)}</b>{fact.label === "common.race" && raceIcons[fact.value] && <span aria-label={tv(fact.value)} className="planet-race-icon" data-tooltip={tv(fact.value)} role="img" style={{ "--race-icon": `url(${raceIcons[fact.value]})` } as CSSProperties} />}{fact.label === "common.race" && !raceIcons[fact.value] && <span aria-label={tv(fact.value)} className="planet-race-unknown" data-tooltip={tv(fact.value)} role="img">-</span>}{fact.label !== "common.conflict" && fact.label !== "common.race" && <> {tv(fact.value)}</>}{fact.label === "common.economy" && groupPlanets[0].economyStars !== undefined && <span aria-label={`${groupPlanets[0].economyStars}/3`} className="planet-economy-stars">{" "}{"★".repeat(groupPlanets[0].economyStars)}{"☆".repeat(3 - groupPlanets[0].economyStars)}</span>}{fact.label === "common.conflict" && conflictLevels[fact.value] !== undefined && <span aria-label={tv(fact.value)} className="planet-conflict-dots" data-tooltip={tv(fact.value)} role="img">{[1, 2, 3].map((step) => <i className={step <= conflictLevels[fact.value] ? "filled" : undefined} key={step} />)}</span>}</span>)}
-                  </div>}
-                </div>
-                {station && <Link
-                  aria-label={t("planet.open_station_in_stations", { station: station.name || station.portal })}
-                  className="member-icon-action planet-station-link"
-                  data-tooltip={t("planet.open_station_in_stations", { station: station.name || station.portal })}
-                  href={`/stations?search=${encodeURIComponent(station.portal)}`}
-                ><Orbit aria-hidden="true" size={15} /></Link>}
-              </div>
-              <ul className="planet-mission-list">{groupPlanets.map((planet) => <li key={planet.id}>
-                {planet.dissonant && <span className="planet-ribbon-clip"><span className="planet-dissonant-ribbon">{t("planet.dissonant")}</span></span>}
-                {planet.paradise && <span className="planet-ribbon-clip planet-ribbon-clip-left"><span className="planet-paradise-ribbon">{t("planet.paradise")}</span></span>}
-                <button className="planet-mission-card" onClick={() => setSelectedPlanet(planet)} type="button">
-                  {planet.imageUrl
-                    ? <Image alt="" className="planet-mission-image" height={96} src={planet.imageUrl} unoptimized width={96} />
-                    : <Globe2 aria-hidden="true" className="planet-mission-icon" size={19} />}
-                  <span className="planet-mission-card-copy">
-                    <strong>{planet.almanacName || t("planet.planet_number", { number: planet.planetNumber })}</strong>
-                    <GlyphStrip address={planet.planetPortal} />
-                    <code>{planet.planetPortal}</code>
-                    {planet.almanacFacts.some((fact) => !["planet.size", "planet.water"].includes(fact.label)) && <span className="planet-mission-facts">{planet.almanacFacts.filter((fact) => !["planet.size", "planet.water"].includes(fact.label)).map((fact) =>
-                      <span key={fact.label}><b>{t(fact.label)}</b> {tv(fact.value)}</span>,
-                    )}</span>}
-                  </span>
-                  <PlanetWaterIndicator label={tv} water={planet.almanacFacts.find((fact) => fact.label === "planet.water")?.value} />
-                  <PlanetSizeIndicator size={planet.almanacFacts.find((fact) => fact.label === "planet.size")?.value} label={tv} />
-                </button>
-              </li>)}</ul>
-            </section>)}</div>}
+            : <PlanetList renderedAt={renderedAt} groups={visiblePlanetGroups} onOpen={setSelectedPlanet} />}
         </main>
       </section>
       {selectedPlanet && <PlanetCard

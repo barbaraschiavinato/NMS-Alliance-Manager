@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
-import { GoogleLogin } from "@/components/google-login";
-import { PendingApproval } from "@/components/pending-approval";
-import { StationsPage } from "@/components/stations-page";
+import { GoogleLogin } from "@/components/pages/google-login";
+import { PendingApproval } from "@/components/pages/pending-approval";
+import { StationsPage } from "@/components/pages/stations-page";
 import { getCurrentMember } from "@/lib/authorization";
 import { readAccessData } from "@/lib/access-store";
 import { readMissions } from "@/lib/store";

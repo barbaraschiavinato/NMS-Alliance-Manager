@@ -4,8 +4,8 @@ import { useState } from "react";
 import Image from "next/image";
 import { signIn } from "next-auth/react";
 import { Orbit } from "lucide-react";
-import { useLocale } from "@/components/locale-provider";
-import { LanguageSelector } from "@/components/language-selector";
+import { useLocale } from "@/components/providers/locale-provider";
+import { LanguageSelector } from "@/components/shared/language-selector";
 
 export function GoogleLogin({ allianceName, allianceLogoUrl, missingConfiguration = [] }: Readonly<{ allianceName?: string; allianceLogoUrl?: string; missingConfiguration?: string[] }>) {
   const [logoLoadFailed, setLogoLoadFailed] = useState(false);
