@@ -62,3 +62,11 @@ export function normalizeMissionSystemStatus(value: unknown): MissionSystemStatu
 export function isMissionSystemStatus(value: unknown): value is MissionSystemStatus {
   return typeof value === "string" && missionSystemStatuses.some((status) => status === value);
 }
+
+export const systemProgressCap = 80;
+
+export function systemProgressFloor(statuses: readonly MissionSystemStatus[], specialty: string) {
+  const roleStatuses = missionSystemStatuses.filter((status) => status !== "data_error" && missionSystemStatusRoles[status] === specialty);
+  if (roleStatuses.length === 0) return 0;
+  return Math.round(systemProgressCap * roleStatuses.filter((status) => statuses.includes(status)).length / roleStatuses.length);
+}

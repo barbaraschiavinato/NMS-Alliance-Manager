@@ -10,13 +10,13 @@ import {
 } from "@/components/dashboard-chrome";
 import { MissionForm, type StationOwnerOption } from "@/components/mission-form";
 import { MissionTable, type MissionFilter } from "@/components/mission-table";
-import { canViewMission, portalSearchMatches, specialtyAlreadyCovered, type Mission, type MissionInput, type MissionSpecialty } from "@/lib/missions";
+import { canViewMission, coveredSpecialties, portalSearchMatches, specialtyAlreadyCovered, type Mission, type MissionInput, type MissionSpecialty } from "@/lib/missions";
 import type { AllianceMember, AllianceSettings } from "@/lib/access-store";
 import { AdminPanel } from "@/components/admin-panel";
 import { MemberProfilePanel } from "@/components/member-profile-panel";
 import { PlanetCard } from "@/components/planet-card";
 import { isValidNmsFriendCode } from "@/lib/member-types";
-import { missionSystemStatuses, missionSystemStatusRoles, planetSystemStatusKey, type MissionSystemStatus, type PlanetSystemStatuses } from "@/lib/planet-system-status";
+import { missionSystemStatuses, missionSystemStatusRoles, planetSystemStatusKey, systemProgressFloor, type MissionSystemStatus, type PlanetSystemStatuses } from "@/lib/planet-system-status";
 import { useLocale } from "@/components/locale-provider";
 import { useNavigationSearchState } from "@/components/navigation-search-reset";
 import { sortByCreatedAtDescending } from "@/lib/created-at";
@@ -42,6 +42,7 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
   const [member, setMember] = useState(currentMember);
   const [missions, setMissions] = useState<Mission[]>([]);
   const [loadingMissions, setLoadingMissions] = useState(true);
+  const [coveredMap, setCoveredMap] = useState<Record<string, string[]>>({});
   const [planetStatuses, setPlanetStatuses] = useState<PlanetSystemStatuses>({});
   const [filter, setFilter] = useState<MissionFilter>("all");
   const [search, setSearch] = useNavigationSearchState(initialSearch);
@@ -61,7 +62,17 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
   const [showAllMissions, setShowAllMissions] = useState(true);
   const profileComplete = Boolean(member.nmsName.trim() && isValidNmsFriendCode(member.nmsCode) && member.specialty);
 
+  function loadCovered() {
+    fetch("/api/missions/covered", { cache: "no-store" })
+      .then(async (response) => {
+        const body: unknown = await response.json();
+        if (response.ok && body && typeof body === "object" && "covered" in body) setCoveredMap(body.covered as Record<string, string[]>);
+      })
+      .catch(() => undefined);
+  }
+
   useEffect(() => {
+    loadCovered();
     fetch("/api/missions", { cache: "no-store" })
       .then(async (response) => {
         if (!response.ok) throw new Error("Unable to load missions.");
@@ -167,8 +178,7 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
       .map(({ mission }) => mission);
   }, [availableMissions, canManage, filter, member.simpleView, search]);
 
-  async function saveMission(input: MissionInput) {
-    const editing = dialogMission;
+  async function saveMission(input: MissionInput, editing: Mission | null = dialogMission) {
     const response = await fetch(editing ? `/api/missions/${editing.id}` : "/api/missions", {
       method: editing ? "PATCH" : "POST",
       headers: { "Content-Type": "application/json" },
@@ -184,7 +194,8 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
     }
 
     const created = body as Mission[];
-    setMissions((current) => [...created, ...current]);
+    setMissions((current) => [...created.filter((item) => canManage || canViewMission(item, member)), ...current]);
+    loadCovered();
     setNotice(created.length === 3
       ? "Created 3 missions: one each for Builders, Rangers, and Explorers."
       : "Mission added to the log.");
@@ -277,10 +288,15 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
     const savedStatuses = body && typeof body === "object" && "systemStatuses" in body ? body.systemStatuses : null;
     if (!Array.isArray(savedStatuses)) throw new Error("Invalid planet status response.");
     setPlanetStatuses((current) => ({ ...current, [key]: savedStatuses }));
+    if (!canManage && mission.assignedMemberId === member.publicId && mission.status === "in_progress") {
+      const floor = systemProgressFloor(savedStatuses, member.specialty ?? "");
+      const progress = checked ? Math.max(mission.progress, floor) : floor;
+      if (progress !== mission.progress) await updateMissionProgress(mission, progress);
+    }
   }
 
   function requestedSpecialty(mission: Mission): MissionSpecialty | null {
-    if (!canManage) return null;
+    if (!canManage && (mission.assignedMemberId !== member.publicId || mission.status !== "completed")) return null;
     const statuses = planetStatuses[planetSystemStatusKey(mission.systemAddress, mission.galaxy)] ?? [];
     const done = (role: "explorer" | "builder") => missionSystemStatuses
       .filter((status) => status !== "data_error" && missionSystemStatusRoles[status] === role)
@@ -290,12 +306,38 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
     const target: MissionSpecialty | null = explorersDone && buildersDone ? "ranger" : explorersDone ? "builder" : buildersDone ? "explorer" : null;
     if (!target || mission.targetSpecialty === target) return null;
     if (specialtyAlreadyCovered(target, missions, mission.systemAddress, mission.galaxy)) return null;
+    if (coveredSpecialties(target).some((item) => (coveredMap[`${mission.galaxy}:${mission.systemAddress.toUpperCase()}`] ?? []).includes(item))) return null;
+    const targetDone = missionSystemStatuses
+      .filter((status) => status !== "data_error" && missionSystemStatusRoles[status] === target)
+      .every((status) => statuses.includes(status));
+    if (targetDone) return null;
     return target;
   }
 
   function createRangerMission(mission: Mission) {
     const target = requestedSpecialty(mission);
     if (!target) return;
+    if (!canManage) {
+      void saveMission({
+        title: mission.title,
+        description: "",
+        notes: "",
+        system: mission.system,
+        systemAddress: mission.systemAddress,
+        galaxy: mission.galaxy,
+        systemVerified: mission.systemVerified,
+        systemLabelFromAlmanac: mission.systemLabelFromAlmanac,
+        stationOwnerMemberId: mission.stationOwnerMemberId,
+        stationOwnerName: mission.stationOwnerName,
+        assignedTo: "",
+        targetSpecialty: target,
+        dueDate: new Date().toISOString().slice(0, 10),
+        status: "pending",
+        priority: "normal",
+        progress: 0,
+      }, null).catch((error: unknown) => setNotice(error instanceof Error ? error.message : "Unable to save the mission."));
+      return;
+    }
     setDialogInitialValues({
       title: mission.title,
       system: mission.system,

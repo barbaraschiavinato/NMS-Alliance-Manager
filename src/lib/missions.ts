@@ -99,15 +99,16 @@ export type MissionViewer = Readonly<{
 }>;
 
 export function canViewMission(mission: Mission, viewer: MissionViewer): boolean {
+  const matchesType = mission.targetSpecialty === "all" ||
+    mission.targetSpecialty === viewer.specialty ||
+    (mission.targetSpecialty === "explorer_builder" &&
+      (viewer.specialty === "builder" || viewer.specialty === "explorer"));
+  if (!matchesType) return false;
   const assignedMemberId = mission.assignedMemberId?.trim() ?? "";
   if (assignedMemberId || mission.assignedTo.trim()) {
     return Boolean(viewer.publicId && assignedMemberId === viewer.publicId);
   }
-
-  return mission.targetSpecialty === "all" ||
-    mission.targetSpecialty === viewer.specialty ||
-    (mission.targetSpecialty === "explorer_builder" &&
-      (viewer.specialty === "builder" || viewer.specialty === "explorer"));
+  return true;
 }
 
 export type PortalAddressDecode = {

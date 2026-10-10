@@ -15,7 +15,7 @@ import type { AllianceMember } from "@/lib/access-store";
 import type { MemberSpecialty } from "@/lib/member-types";
 import { missionSpecialties, specialtyAlreadyCovered, type MissionSpecialty } from "@/lib/missions";
 import { galaxyNames, galaxyLabel } from "@/lib/galaxies";
-import { isMissionSystemStatus, missionSystemStatuses, missionSystemStatusRoles, planetSystemStatusKey, type MissionSystemStatus } from "@/lib/planet-system-status";
+import { isMissionSystemStatus, missionSystemStatuses, missionSystemStatusRoles, planetSystemStatusKey, systemProgressFloor, type MissionSystemStatus } from "@/lib/planet-system-status";
 import { useLocale } from "@/components/locale-provider";
 
 const specialtyNames: Record<MemberSpecialty, string> = { builder: "common.builder", ranger: "common.ranger", explorer: "common.explorer" };
@@ -108,9 +108,11 @@ export function MissionForm({
     decodePortalAddress(form.systemAddress)?.errors.length === 0
     ? planetSystemStatusKey(form.systemAddress, form.galaxy)
     : "";
+  const isEditing = Boolean(mission);
   const systemStatusesLoading = Boolean(currentPlanetKey && loadedStatusKey !== currentPlanetKey);
   useEffect(() => {
     const address = form.systemAddress;
+    const editingMission = isEditing;
     const galaxy = form.galaxy;
     if (hideSystemStatus || !/^[0-9a-f]{12}$/i.test(address) || !Number.isInteger(galaxy) || galaxy < 0 || galaxy > 255 ||
       decodePortalAddress(address)?.errors.length !== 0) return;
@@ -128,6 +130,7 @@ export function MissionForm({
           throw new Error("Invalid planet status response.");
         }
         setSystemStatuses(statuses);
+        if (editingMission) setForm((current) => current.progress === 0 ? { ...current, progress: systemProgressFloor(statuses, current.targetSpecialty) } : current);
         setLoadedStatusErrorKey("");
       })
       .catch((error_: unknown) => {
@@ -140,7 +143,7 @@ export function MissionForm({
         if (!controller.signal.aborted) setLoadedStatusKey(planetSystemStatusKey(address, galaxy));
       });
     return () => controller.abort();
-  }, [form.galaxy, form.systemAddress, hideSystemStatus]);
+  }, [form.galaxy, form.systemAddress, hideSystemStatus, isEditing]);
 
   async function updateSystemStatus(status: MissionSystemStatus, checked: boolean) {
     const nextStatuses = checked

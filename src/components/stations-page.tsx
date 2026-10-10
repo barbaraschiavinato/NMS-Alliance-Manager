@@ -822,9 +822,11 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
           systemAddress: missionStation.portal,
           galaxy: missionStation.galaxy,
           stationOwnerMemberId: missionStation.ownerMemberId,
-          targetSpecialty: pageMember.specialty === "builder" || pageMember.specialty === "explorer"
-            ? pageMember.specialty
-            : (missionStationRow ? (missionSpecialtiesFor(missionStationRow).includes("explorer") ? "explorer" : missionSpecialtiesFor(missionStationRow)[0]) : undefined) ?? "builder",
+          targetSpecialty: (() => {
+            const available = missionStationRow ? missionSpecialtiesFor(missionStationRow) : [];
+            if (pageMember.specialty && available.includes(pageMember.specialty)) return pageMember.specialty;
+            return available.includes("explorer") ? "explorer" : available[0] ?? "builder";
+          })(),
           ...(canCreateOwnSpecialtyMission ? {
             assignedMemberId: pageMember.publicId,
             assignedTo: pageMember.nmsName || pageMember.name,

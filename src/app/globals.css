@@ -1411,3 +1411,24 @@ body:has(.sidebar-compact) .dialog-heading .icon-button svg { width: 26px; heigh
 
 .mission-action-button.claim-button-progress { color: #6cb4f5; border-color: #2c4f73; background: #121f2d; }
 .mission-action-button.claim-button-progress:hover { border-color: #6cb4f5; background: #192b3f; }
+
+.mission-system-progress-item-labeled { width: auto; flex: 0 1 auto; display: inline-flex; gap: 5px; padding: 0 4px; }
+.mission-system-progress-item-labeled .mission-system-progress-tooltip { display: none; }
+.mission-system-progress-label { color: var(--muted); font-size: 9px; white-space: nowrap; }
+.sidebar-compact ~ .main-panel .mission-system-progress-label { font-size: 12px; }
+.mission-system-progress:has(.mission-system-progress-item-labeled),
+.mission-system-progress:has(.mission-system-progress-item-labeled) .mission-system-progress-group { flex-wrap: wrap; }
+.main-panel.main-panel .mission-card-actions .mission-system-progress-item-labeled { flex: 0 1 auto; }
+.mission-system-progress-item-labeled { align-items: center; height: 24px; }
+.mission-system-progress-item-labeled .mission-system-progress-square { flex: none; }
+
+.mission-system-progress-item.mission-system-progress-item-editable { width: auto; min-width: 20px; flex: 0 1 auto; }
+
+.sidebar-compact ~ .main-panel .mission-system-progress-item.mission-system-progress-item-editable,
+.sidebar-compact ~ .main-panel .mission-system-progress-item.mission-system-progress-item-labeled { width: auto; min-width: 30px; flex: 0 1 auto; }
+
+.mission-action-button:disabled { cursor: not-allowed; opacity: .4; }
+.mission-action-button:disabled:hover { border-color: #315b55; background: #192a29; }
+
+.row-action-reopen { color: #ef8067; border-color: #70413b; background: #2b1e1d; }
+.row-action-reopen:hover { color: #ef8067; border-color: #ef8067; background: #3a2724; }

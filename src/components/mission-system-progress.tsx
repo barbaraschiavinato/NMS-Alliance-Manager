@@ -18,6 +18,7 @@ export function MissionSystemProgress({ statuses, editable, editableRoles = null
 }>) {
   const { t } = useLocale();
   const hasDataError = statuses.includes("data_error");
+  const showLabels = editable && editableRoles !== null;
   return <span
     aria-label={hasDataError
       ? t("errors.system_progress_data_error")
@@ -28,11 +29,12 @@ export function MissionSystemProgress({ statuses, editable, editableRoles = null
     className="mission-system-progress"
     role="group"
   >
-    {roleOrder.map((role) => <span className="mission-system-progress-group" key={role}>
+    {roleOrder.map((role) => editable && editableRoles && !editableRoles.includes(role) ? null : <span className="mission-system-progress-group" key={role}>
     {progressStatuses.filter((status) => statusRoles[status] === role).map((status) => {
       const itemEditable = editable && (!editableRoles || editableRoles.includes(statusRoles[status]));
+      if (editable && !itemEditable) return null;
       const tooltip = t(hasDataError ? "system.data_error" : status);
-      return <label aria-label={tooltip} className={`mission-system-progress-item${itemEditable ? " mission-system-progress-item-editable" : ""}`} key={status} title={tooltip}>
+      return <label aria-label={tooltip} className={`mission-system-progress-item${itemEditable ? " mission-system-progress-item-editable" : ""}${showLabels ? " mission-system-progress-item-labeled" : ""}`} key={status} title={tooltip}>
         {itemEditable && <input
           aria-label={tooltip}
           checked={statuses.includes(status)}
@@ -47,6 +49,7 @@ export function MissionSystemProgress({ statuses, editable, editableRoles = null
             : `mission-system-progress-square mission-system-progress-square-${statusRoles[status]}${statuses.includes(status) ? " mission-system-progress-square-done" : ""}`}
         />
         <span aria-hidden="true" className="mission-system-progress-tooltip">{tooltip}</span>
+        {showLabels && <span aria-hidden="true" className="mission-system-progress-label">{tooltip}</span>}
       </label>;
     })}
     </span>)}

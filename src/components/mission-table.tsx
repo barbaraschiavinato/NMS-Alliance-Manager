@@ -1,4 +1,4 @@
-import { AlertTriangle, Check, CirclePlus, Compass, Eye, EyeOff, FileText, Hammer, Info, LayoutGrid, List, Orbit, Pencil, Search, ShieldPlus, Trash2, X } from "lucide-react";
+import { AlertTriangle, Check, CirclePlus, Compass, Eye, EyeOff, FileText, Hammer, Info, LayoutGrid, List, Orbit, Pencil, RotateCcw, Search, ShieldPlus, Trash2, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import type { Mission, MissionSpecialty, MissionStatus } from "@/lib/missions";
@@ -11,7 +11,7 @@ import { MemberCardDialog, type MemberMessageContext } from "@/components/member
 import { LoadingSpinner } from "@/components/loading-spinner";
 import { useLocale } from "@/components/locale-provider";
 import { StationSystemCoreInfo } from "@/components/station-system-core-info";
-import { editableSystemStatusRoles } from "@/lib/planet-system-status";
+import { editableSystemStatusRoles, systemProgressCap, systemProgressFloor } from "@/lib/planet-system-status";
 import { MissionSystemProgress } from "@/components/mission-system-progress";
 import type { StationOwnerOption } from "@/components/mission-form";
 
@@ -52,7 +52,7 @@ const requestTooltipKeys = {
   explorer_builder: "missions.create_ranger_mission",
 } as const;
 
-function MissionRowAction({ mission, currentMember, canManage, requestedSpecialty = null, onCreateRanger, onEdit, onDeleteMission, onClaim, onComplete, onReopen, onStart }: Readonly<{
+function MissionRowAction({ mission, currentMember, canManage, requestedSpecialty = null, onCreateRanger, onEdit, onDeleteMission, onClaim, onComplete, onReopen, onStart, tasksDone = true }: Readonly<{
   mission: Mission;
   currentMember: AllianceMember;
   canManage: boolean;
@@ -64,17 +64,20 @@ function MissionRowAction({ mission, currentMember, canManage, requestedSpecialt
   onComplete: (mission: Mission) => void;
   onReopen: (mission: Mission) => void;
   onStart: (mission: Mission) => void;
+  tasksDone?: boolean;
 }>) {
   const { t } = useLocale();
+  const requestButton = requestedSpecialty && onCreateRanger && <button aria-label={t(requestTooltipKeys[requestedSpecialty])} className={`row-action row-action-${requestedSpecialty}`} data-tooltip={t(requestTooltipKeys[requestedSpecialty])} onClick={() => onCreateRanger(mission)} type="button">{requestedSpecialty === "builder" ? <Hammer size={15} /> : requestedSpecialty === "ranger" ? <Compass size={15} /> : requestedSpecialty === "explorer" ? <Search size={15} /> : <ShieldPlus size={15} />}</button>;
   if (mission.status === "completed" && (currentMember.simpleView === true || !canManage)) {
     if (mission.assignedMemberId === currentMember.publicId) {
-      return <button className="claim-button claim-button-reopen mission-action-button" onClick={() => onReopen(mission)} type="button">{t("missions.reopen_mission")}</button>;
+      return <span className="mission-row-actions">{requestButton}<button aria-label={t("missions.reopen_mission")} className="row-action row-action-reopen" data-tooltip={t("missions.reopen_mission")} onClick={() => onReopen(mission)} type="button"><RotateCcw size={15} /></button></span>;
     }
     return <span className="no-row-action">—</span>;
   }
   if (canManage) {
     return <span className="mission-row-actions">
-      {requestedSpecialty && onCreateRanger && <button aria-label={t(requestTooltipKeys[requestedSpecialty])} className={`row-action row-action-${requestedSpecialty}`} data-tooltip={t(requestTooltipKeys[requestedSpecialty])} onClick={() => onCreateRanger(mission)} type="button">{requestedSpecialty === "builder" ? <Hammer size={15} /> : requestedSpecialty === "ranger" ? <Compass size={15} /> : requestedSpecialty === "explorer" ? <Search size={15} /> : <ShieldPlus size={15} />}</button>}
+      {requestButton}
+      {mission.status === "completed" && mission.assignedMemberId === currentMember.publicId && <button aria-label={t("missions.reopen_mission")} className="row-action row-action-reopen" data-tooltip={t("missions.reopen_mission")} onClick={() => onReopen(mission)} type="button"><RotateCcw size={15} /></button>}
       <button aria-label={`${t("common.edit")} ${mission.title}`} className="row-action" data-tooltip={t("missions.edit_mission")} onClick={() => onEdit(mission)} type="button"><Pencil size={15} /></button>
       <button aria-label={`${t("common.delete")} ${mission.title}`} className="row-action row-action-delete" data-tooltip={t("missions.delete_mission")} onClick={() => onDeleteMission(mission)} type="button"><Trash2 size={15} /></button>
     </span>;
@@ -83,7 +86,7 @@ function MissionRowAction({ mission, currentMember, canManage, requestedSpecialt
     return <button className="claim-button claim-button-progress mission-action-button" onClick={() => onStart(mission)} type="button">{t("missions.start_mission")}</button>;
   }
   if (mission.assignedMemberId === currentMember.publicId && mission.status !== "completed") {
-    return <button className="claim-button mission-action-button" onClick={() => onComplete(mission)} type="button">{t("missions.complete_mission")}</button>;
+    return <button className="claim-button mission-action-button" disabled={!tasksDone} onClick={() => onComplete(mission)} type="button">{t("missions.complete_mission")}</button>;
   }
   if (!mission.assignedMemberId && !mission.assignedTo.trim()) {
     return <button className="claim-button claim-button-take mission-action-button" onClick={() => onClaim(mission)} type="button">{t("missions.claim")}</button>;
@@ -172,13 +175,20 @@ function DiscovererCell({ memberId, name, image, portal, galaxy, onOpenProfile }
     : <span className="assignee-cell">{content}</span>;
 }
 
-function MissionProgress({ mission, editable, onChange }: Readonly<{
+function MissionProgress({ mission, editable, minimum = 0, readOnlyFloor = 0, onChange }: Readonly<{
   mission: Mission;
   editable: boolean;
+  minimum?: number;
+  readOnlyFloor?: number;
   onChange: (mission: Mission, progress: number) => Promise<void>;
 }>) {
   const { t } = useLocale();
   const [draft, setDraft] = useState<{ source: number; value: number } | null>(null);
+  const [seenProgress, setSeenProgress] = useState(mission.progress);
+  if (seenProgress !== mission.progress) {
+    setSeenProgress(mission.progress);
+    setDraft(null);
+  }
   const progress = draft?.source === mission.progress ? draft.value : mission.progress;
   const committedProgress = useRef(mission.progress);
 
@@ -186,7 +196,8 @@ function MissionProgress({ mission, editable, onChange }: Readonly<{
     committedProgress.current = mission.progress;
   }, [mission.progress]);
 
-  function commitProgress(value: number) {
+  function commitProgress(rawValue: number) {
+    const value = Math.max(rawValue, minimum);
     setDraft({ source: mission.progress, value });
     if (value === committedProgress.current) return;
     committedProgress.current = value;
@@ -198,6 +209,8 @@ function MissionProgress({ mission, editable, onChange }: Readonly<{
 
   if (mission.targetSpecialty !== "ranger" && mission.targetSpecialty !== "explorer" && mission.targetSpecialty !== "builder") return null;
 
+  const shownProgress = editable ? progress : mission.progress === 0 ? readOnlyFloor : mission.progress;
+
   return <div className={`progress-cell progress-cell-${mission.targetSpecialty}${editable ? " progress-cell-editable" : ""}`}>
     {editable
       ? <input
@@ -205,14 +218,14 @@ function MissionProgress({ mission, editable, onChange }: Readonly<{
         max={100}
         min={0}
         onBlur={(event) => commitProgress(Number(event.currentTarget.value))}
-        onChange={(event) => setDraft({ source: mission.progress, value: Number(event.target.value) })}
+        onChange={(event) => setDraft({ source: mission.progress, value: Math.max(Number(event.target.value), minimum) })}
         onKeyUp={(event) => commitProgress(Number(event.currentTarget.value))}
         onPointerUp={(event) => commitProgress(Number(event.currentTarget.value))}
         type="range"
         value={progress}
       />
-      : <div aria-hidden="true" className="progress-track"><span style={{ width: `${mission.progress}%` }} /></div>}
-    <span>{progress}%</span>
+      : <div aria-hidden="true" className="progress-track"><span style={{ width: `${shownProgress}%` }} /></div>}
+    <span>{shownProgress}%</span>
   </div>;
 }
 
@@ -381,7 +394,7 @@ function MissionCard({ onReopen, onStart, mission, systemStatuses, currentMember
 }>) {
   const { t, systemLabel } = useLocale();
   const statuses = systemStatuses[planetSystemStatusKey(mission.systemAddress, mission.galaxy)] ?? [];
-  const locked = mission.status === "completed" && (currentMember.simpleView === true || !canManage);
+  const locked = (mission.status === "completed" && (currentMember.simpleView === true || !canManage));
   const canUpdateSystemStatus = mission.assignedMemberId === currentMember.publicId && !locked && mission.status !== "pending";
   const canUpdateProgress = !canManage && canUpdateSystemStatus;
   const canViewNotes = canManage || isMissionAssignee(mission, currentMember);
@@ -412,13 +425,13 @@ function MissionCard({ onReopen, onStart, mission, systemStatuses, currentMember
     </div>
     <div className="mission-card-progress">
       <span className={`badge badge--priority badge--priority-${mission.priority}`}><span />{t(`common.${mission.priority}`)}</span>
-      <MissionProgress editable={canUpdateProgress} mission={mission} onChange={onUpdateProgress} />
+      <MissionProgress readOnlyFloor={systemProgressFloor(statuses, mission.targetSpecialty)} editable={canUpdateProgress} minimum={systemProgressFloor(statuses, currentMember.specialty ?? "")} mission={mission} onChange={onUpdateProgress} />
     </div>
     <div className="mission-card-actions">
       <MissionSystemProgress editable={canUpdateSystemStatus} editableRoles={editableSystemStatusRoles(currentMember)} onToggle={(status, checked) => onToggleSystemStatus(mission, status, checked)} statuses={statuses} />
       <div className="mission-card-action-buttons">
         <MissionStationLink canManage={canManage} mission={mission} stationOwners={stationOwners} stationOwnersLoaded={stationOwnersLoaded} />
-        <MissionRowAction requestedSpecialty={requestedSpecialty(mission)} canManage={canManage} currentMember={currentMember} mission={mission} onClaim={onClaim} onComplete={onComplete} onReopen={onReopen} onStart={onStart} onCreateRanger={onCreateRangerMission} onDeleteMission={onDeleteMission} onEdit={onEdit} />
+        <MissionRowAction tasksDone={systemProgressFloor(statuses, currentMember.specialty ?? "") >= systemProgressCap} requestedSpecialty={requestedSpecialty(mission)} canManage={canManage} currentMember={currentMember} mission={mission} onClaim={onClaim} onComplete={onComplete} onReopen={onReopen} onStart={onStart} onCreateRanger={onCreateRangerMission} onDeleteMission={onDeleteMission} onEdit={onEdit} />
         {canViewNotes && <MissionNotesButton mission={mission} onView={onViewNotes} />}
       </div>
     </div>
@@ -557,14 +570,14 @@ export function MissionTable({
               <td><DiscovererCell memberId={mission.stationOwnerMemberId} galaxy={mission.galaxy} image={getDiscovererImage(mission.stationOwnerMemberId)} name={mission.stationOwnerName} onOpenProfile={(memberId, messageContext) => setProfileTarget({ memberId, messageContext })} portal={mission.systemAddress} /></td>
               <td><AssigneeCell currentMember={currentMember} members={members} mission={mission} onOpenProfile={(memberId, messageContext) => setProfileTarget({ memberId, messageContext })} /></td>
               <td><span className={`badge badge--priority badge--priority-${mission.priority}`}><span />{t(`common.${mission.priority}`)}</span></td>
-              <td><MissionProgress editable={!canManage && mission.assignedMemberId === currentMember.publicId && mission.status === "in_progress"} mission={mission} onChange={onUpdateProgress} /></td>
+              <td><MissionProgress readOnlyFloor={systemProgressFloor(planetStatuses[planetSystemStatusKey(mission.systemAddress, mission.galaxy)] ?? [], mission.targetSpecialty)} editable={!canManage && mission.assignedMemberId === currentMember.publicId && mission.status === "in_progress"} minimum={systemProgressFloor(planetStatuses[planetSystemStatusKey(mission.systemAddress, mission.galaxy)] ?? [], currentMember.specialty ?? "")} mission={mission} onChange={onUpdateProgress} /></td>
               <td><MissionSystemProgress
                 editable={mission.assignedMemberId === currentMember.publicId && mission.status !== "pending" && (mission.status !== "completed" || (canManage && !simpleView))}
                 editableRoles={editableSystemStatusRoles(currentMember)}
                 onToggle={(status, checked) => onToggleSystemStatus(mission, status, checked)}
                 statuses={planetStatuses[planetSystemStatusKey(mission.systemAddress, mission.galaxy)] ?? []}
               /></td>
-              <td><span className="mission-row-actions"><MissionStationLink canManage={canManage} mission={mission} stationOwners={stationOwners} stationOwnersLoaded={stationOwnersLoaded} /><MissionRowAction requestedSpecialty={requestedSpecialty(mission)} canManage={canManage} currentMember={currentMember} mission={mission} onClaim={onClaim} onComplete={onComplete} onReopen={onReopen} onStart={onStart} onCreateRanger={onCreateRangerMission} onDeleteMission={onDeleteMission} onEdit={onEdit} />{canViewMissionNotes(mission) && <MissionNotesButton mission={mission} onView={setMissionNoteView} />}</span></td>
+              <td><span className="mission-row-actions"><MissionStationLink canManage={canManage} mission={mission} stationOwners={stationOwners} stationOwnersLoaded={stationOwnersLoaded} /><MissionRowAction tasksDone={systemProgressFloor(planetStatuses[planetSystemStatusKey(mission.systemAddress, mission.galaxy)] ?? [], currentMember.specialty ?? "") >= systemProgressCap} requestedSpecialty={requestedSpecialty(mission)} canManage={canManage} currentMember={currentMember} mission={mission} onClaim={onClaim} onComplete={onComplete} onReopen={onReopen} onStart={onStart} onCreateRanger={onCreateRangerMission} onDeleteMission={onDeleteMission} onEdit={onEdit} />{canViewMissionNotes(mission) && <MissionNotesButton mission={mission} onView={setMissionNoteView} />}</span></td>
             </tr>)}
             {loading && <tr><td className="empty-state mission-table-loading" colSpan={9}><LoadingSpinner /></td></tr>}
             {!loading && missions.length === 0 && <tr><td className="empty-state" colSpan={9}><Search size={18} />{t("missions.no_missions_match_the_filters")}</td></tr>}
