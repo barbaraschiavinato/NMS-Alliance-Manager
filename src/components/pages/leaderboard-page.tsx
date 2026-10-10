@@ -43,7 +43,7 @@ export function LeaderboardPage({ currentMember, alliance, boards, missionCount,
       <Header currentMember={member} onAdminOpen={() => setAdminOpen(true)} onProfileOpen={() => setProfileOpen(true)} sectionTitle="leaderboard.title" settings={settings} />
       <Hero settings={settings} subtitle={t("leaderboard.description")} title="leaderboard.title" />
       <main className="content-wrap leaderboard-page">
-        {[boards.filter((board) => !board.role), boards.filter((board) => board.role)].map((group, groupIndex) => <div className={`leaderboard-widgets${groupIndex === 1 ? " leaderboard-widgets-roles" : ""}`} key={groupIndex}>
+        {[boards.filter((board) => !board.role), boards.filter((board) => board.role)].map((group, groupIndex) => <div className={"leaderboard-widgets"} key={groupIndex}>
           {group.map((board) => <section className={`leaderboard-widget${board.role ? ` leaderboard-widget-${board.role}` : ""}`} key={board.id}>
             <h3>{board.role === "ranger" ? <Compass size={14} /> : board.role === "builder" ? <Hammer size={14} /> : board.role === "explorer" ? <Search size={14} /> : null}{t(board.title)}</h3>
             {board.stats && <dl className="leaderboard-stats">{board.stats.map((stat) => <div key={stat.label}><dt>{t(stat.label)}</dt><dd>{stat.value}</dd></div>)}</dl>}
