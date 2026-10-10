@@ -1365,3 +1365,24 @@ body:has(.sidebar-compact) .dialog-heading .icon-button svg { width: 26px; heigh
 @media (max-width: 720px) {
   .sidebar-compact ~ .main-panel .filter-tab { font-size: 12px; }
 }
+
+@media (max-width: 720px) {
+  .main-panel.main-panel .planet-mission-card { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 8px 12px; }
+  .main-panel.main-panel .planet-mission-card-copy { display: contents; }
+  .main-panel.main-panel .planet-mission-card-copy > strong { grid-column: 2; grid-row: 1; min-width: 0; }
+  .main-panel.main-panel .planet-mission-card > .planet-mission-image,
+  .main-panel.main-panel .planet-mission-card > .planet-mission-icon { grid-column: 1; grid-row: 1; margin: 0; }
+  .main-panel.main-panel .planet-mission-card-copy > :not(strong) { grid-column: 1 / -1; min-width: 0; }
+  .main-panel.main-panel .planet-mission-card-copy .planet-mission-facts { padding-right: 56px; }
+}
+
+@media (max-width: 720px) {
+  .main-panel.main-panel .planet-mission-card > .planet-mission-image,
+  .main-panel.main-panel .planet-mission-card > .planet-mission-icon { grid-row: 1 / span 2; }
+  .main-panel.main-panel .planet-mission-card-copy > strong { align-self: end; }
+  .main-panel.main-panel .planet-mission-card-copy > code { grid-column: 2; grid-row: 2; align-self: start; }
+}
+
+@media (max-width: 720px) {
+  .main-panel.main-panel .planet-station-link { align-self: flex-start; }
+}
