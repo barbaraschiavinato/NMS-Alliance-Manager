@@ -631,7 +631,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
                     type="button"
                   >{t(status === "pending" ? "common.pending_status_label" : status === "in_progress" ? "stations.filter_in_mission" : status === "completed" ? "stations.filter_mission_completed" : "stations.filter_with_notes")}<span>{stationCounts[status]}</span></button>)}
                 </div>
-                {!pageMember.simpleView && <div className="toolbar-actions station-toolbar-actions">
+                {<div className="toolbar-actions station-toolbar-actions">
                   <label className="search-field member-search station-search"><Search size={15} /><input aria-label={t("stations.search_stations_by_portal_owner_or_galaxy_or_notes")} onChange={(event) => setSearch(event.target.value)} placeholder={t("stations.search_portal_username_galaxy_or_notes")} value={search} /></label>
                   {canSeeAll && <button
                     aria-label={t(exportingStations ? "stations.exporting_stations" : "stations.export_stations_to_excel")}

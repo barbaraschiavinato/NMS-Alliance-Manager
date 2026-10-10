@@ -71,7 +71,7 @@ function normalizeMember(value: unknown): AllianceMember | null {
     approvedAt: typeof member.approvedAt === "string" ? member.approvedAt : "",
     lastLogin: typeof member.lastLogin === "string" ? member.lastLogin : "",
     ...(member.offline === true ? { offline: true } : {}),
-    simpleView: typeof member.simpleView === "boolean" ? member.simpleView : role === "user",
+    simpleView: role === "user" || (typeof member.simpleView === "boolean" && member.simpleView),
   };
 }
 
@@ -151,7 +151,7 @@ export async function registerMember(identity: Pick<AllianceMember, "email" | "n
     specialty: existingMember?.specialty ?? "",
     role,
     membershipStatus,
-    simpleView: existingMember?.simpleView ?? role === "user",
+    simpleView: role === "user" || existingMember?.simpleView === true,
     approvedBy,
     approvedAt,
     lastLogin: new Date().toISOString(),
@@ -297,7 +297,7 @@ export async function updateMemberProfile(email: string, profile: MemberProfileI
   applyContactFields(member, profile);
   member.platforms = [...new Set(profile.platforms)];
   member.specialty = profile.specialty;
-  if (profile.simpleView !== undefined) member.simpleView = profile.simpleView;
+  if (profile.simpleView !== undefined && member.role !== "user") member.simpleView = profile.simpleView;
   await writeAccessData(data);
   return member;
 }

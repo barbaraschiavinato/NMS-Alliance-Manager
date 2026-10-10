@@ -886,7 +886,7 @@ select { appearance: none; padding-right: 29px; background-image: linear-gradien
 @media (max-width: 1200px) {
   .toolbar { align-items: flex-start; flex-direction: column-reverse; gap: 2px; }
   .toolbar-actions { width: 100%; justify-content: flex-end; padding: 10px 0 2px; }
-  .search-field { width: min(260px, 100%); margin-right: auto; }
+  .search-field { width: min(260px, 100%); margin-right: auto; flex: 1; }
   .filter-tabs { width: 100%; justify-content: space-between; gap: 8px; }
   .filter-tab { font-size: 9px; }
 }
@@ -1359,7 +1359,7 @@ body:has(.sidebar-compact) .dialog-heading .icon-button svg { width: 26px; heigh
 }
 
 @media (max-width: 720px) {
-  .sidebar-compact ~ .main-panel .toolbar-actions:not(.station-toolbar-actions):not(.member-toolbar-actions) { display: none; }
+  .sidebar-compact ~ .main-panel .toolbar-actions:not(.station-toolbar-actions):not(.member-toolbar-actions) > :not(.search-field) { display: none; }
 }
 
 @media (max-width: 720px) {
@@ -1522,3 +1522,8 @@ body:has(.sidebar-compact) .dialog-heading .icon-button svg { width: 26px; heigh
 .member-card-heading .member-page-identity > span:last-child { flex: 1 1 0; min-width: 0; }
 .member-card-heading .member-page-identity > span:last-child strong, .member-card-heading .member-page-identity > span:last-child small { display: block; max-width: none; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .member-card-heading > .badge { flex: 0 0 auto; }
+
+@media (max-width: 720px) {
+  .main-panel .toolbar-actions .search-field { flex: 1; width: auto; min-width: 0; margin-right: 0; }
+  .main-panel .member-toolbar-actions { width: 100%; }
+}
