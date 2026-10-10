@@ -259,7 +259,7 @@ export const translations: TranslationCatalog = {
     "stations.view_station_notes": "View discoverer notes",
     "stations.view_notes_for_station": "View notes for {station}",
     "stations.optional_max_1000_characters": "optional · max 1,000 characters",
-    "stations.station_owner": "Station owner",
+    "stations.station_owner": "DISCOVERER",
     "stations.new_badge": "New",
     "stations.edit_station": "Edit station",
     "stations.edit_station_portal": "Edit station {portal}",

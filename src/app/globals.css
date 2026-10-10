@@ -1254,3 +1254,35 @@ body:has(.sidebar-compact) .dialog-heading .icon-button svg { width: 26px; heigh
 .member-card-actions > .member-page-actions:not(:first-child) select { flex: 1 1 0; min-width: 0; max-width: none; }
 .member-card { grid-template-rows: auto auto 1fr; }
 .member-card .member-card-actions { align-self: end; }
+
+@media (max-width: 720px) {
+  .main-panel .mission-card-system .glyph-strip,
+  .main-panel .station-list-cards .station-portal-code > .glyph-strip { display: flex; width: 100%; gap: 2px; }
+  .main-panel .station-list-cards .station-portal-code > .glyph-strip { grid-column: 1 / -1; }
+  .main-panel .station-list-cards .station-portal-code > code { grid-column: 1 / -1; grid-row: 2; text-align: left; }
+  .main-panel .mission-card-system .glyph-slot,
+  .main-panel .station-list-cards .station-portal-code .glyph-slot { width: auto; height: auto; flex: 1 1 0; min-width: 0; aspect-ratio: 14 / 15; }
+  .main-panel .mission-card-system .glyph-strip img,
+  .main-panel .station-list-cards .station-portal-code .glyph-strip img { width: 90%; height: auto; aspect-ratio: 1; }
+}
+
+@media (max-width: 720px) {
+  .main-panel .station-list-cards li { grid-template-rows: auto auto auto 1fr auto; }
+  .main-panel .station-list-cards .station-card-title { grid-column: 1 / -1; }
+  .main-panel .station-list-cards .station-card-owner { grid-column: 1 / -1; grid-row: 2; justify-self: stretch; }
+  .main-panel .station-list-cards .station-card-owner .station-owner-card { justify-items: start; }
+  .main-panel .station-list-cards .station-card-owner .station-owner-link { justify-content: flex-start; }
+  .main-panel .station-list-cards .station-portal-code { grid-row: 3; }
+  .main-panel .station-list-cards .station-planet-info-list { grid-row: 4; }
+}
+
+@media (max-width: 720px) {
+  .main-panel .station-list-cards .station-card-owner .station-owner-card { display: flex; flex-wrap: nowrap; align-items: center; gap: 8px; }
+  .main-panel .station-list-cards .station-card-owner .station-owner-card > small { flex: 0 0 auto; }
+  .main-panel .station-list-cards .station-card-owner .station-owner-link { flex: 1 1 auto; min-width: 0; }
+}
+
+@media (max-width: 720px) {
+  .main-panel .station-list-cards .station-card-owner .station-owner-card { justify-content: flex-end; }
+  .main-panel .station-list-cards .station-card-owner .station-owner-link { flex: 0 1 auto; justify-content: flex-end; }
+}
