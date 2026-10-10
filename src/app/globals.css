@@ -1464,12 +1464,9 @@ body:has(.sidebar-compact) .dialog-heading .icon-button svg { width: 26px; heigh
 .leaderboard-widget-builder .leaderboard-score { color: #ffb45d; }
 .leaderboard-widget-explorer .leaderboard-score { color: #4d9bff; }
 .leaderboard-row-top-1 .leaderboard-name { color: var(--lime); }
-.leaderboard-badge-icon { display: none; }
-@media (max-width: 720px) {
-  .leaderboard-badge-label { display: none; }
-  .leaderboard-badge-icon { display: inline-flex; }
-  .leaderboard-badge { padding: 0; border: 0; background: none; }
-}
+.leaderboard-badge-label { display: none; }
+.leaderboard-badge-icon { display: inline-flex; }
+.leaderboard-badge { padding: 0; border: 0; background: none; }
 @media (max-width: 720px) {
   .leaderboard-widget h3 { font-size: 11px; }
   .leaderboard-section h4 { font-size: 11px; }
@@ -1488,3 +1485,30 @@ body:has(.sidebar-compact) .dialog-heading .icon-button svg { width: 26px; heigh
   .leaderboard-row { gap: 8px; padding: 5px 8px; }
   .leaderboard-avatar { width: 24px; height: 24px; }
 }
+.sidebar-compact { overflow: visible; }
+@media (max-width: 950px) { .sidebar { overflow: visible; } }
+.sidebar { z-index: 20; }
+.leaderboard-list { grid-template-columns: minmax(0, 1fr); }
+.leaderboard-row { min-width: 0; }
+.leaderboard-section { min-width: 0; }
+.assignee-cell { max-width: 100%; min-width: 0; }
+.assignee-name, .station-owner-link > span:last-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.profile > span:last-child { min-width: 0; }
+.profile strong, .profile small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.station-owner-card { grid-template-columns: minmax(0, 1fr); max-width: 100%; }
+.station-card-owner, .mission-card-people { min-width: 0; }
+.mission-member-link.assignee-cell, .station-owner-link { display: inline-flex; max-width: 100%; min-width: 0; }
+.mission-member-link .assignee-avatar { flex: none; }
+.mission-member-link .assignee-name { flex: 0 1 auto; }
+.main-panel .mission-card-people .assignee-cell, .main-panel .station-owner-link { flex-wrap: nowrap; }
+.main-panel .mission-card-people .assignee-name, .main-panel .station-owner-link .assignee-name { flex: 1 1 0; min-width: 0; }
+.main-panel .station-card-owner .station-owner-card { width: 100%; }
+.mission-table td:has(> .assignee-cell) { max-width: 180px; }
+.mission-table td > .assignee-cell { display: flex; flex-wrap: nowrap; max-width: 100%; }
+.mission-table td > .assignee-cell .assignee-name { flex: 1 1 0; min-width: 0; }
+.station-portal-code > .station-owner-card { width: 100%; }
+.station-list-cards li { grid-template-columns: minmax(0, 1fr) fit-content(35%); }
+.station-list-cards .station-card-owner { max-width: 100%; }
+.station-list-cards .station-card-owner .station-owner-card { width: 100%; justify-items: end; }
+.station-list-cards .station-card-owner .station-owner-link { max-width: 100%; }
+@media (max-width: 950px) { .station-list-cards li { grid-template-columns: minmax(0, 1fr) fit-content(35%); } }
