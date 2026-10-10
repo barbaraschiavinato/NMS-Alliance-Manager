@@ -198,6 +198,8 @@ export const translations: TranslationCatalog = {
     "missions.mission_assigned_to_you": "Missione assegnata a te.",
     "missions.this_mission_is_already_assigned": "Questa missione è già assegnata.",
     "missions.complete_mission": "Completa missione",
+    "missions.available_ribbon": "Disponibile",
+    "missions.reopen_mission": "Riapri missione",
   },
   messages: {
     "messages.mark_read": "Segna come letto",

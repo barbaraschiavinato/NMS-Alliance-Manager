@@ -1396,3 +1396,15 @@ body:has(.sidebar-compact) .dialog-heading .icon-button svg { width: 26px; heigh
 @media (max-width: 950px) {
   .sidebar-compact ~ .main-panel .planet-sticky-filters { top: 53px; max-height: calc(100vh - 53px); }
 }
+
+.mission-action-button.claim-button-reopen { color: #ef8067; border-color: #70413b; background: #2b1e1d; }
+.mission-action-button.claim-button-reopen:hover { border-color: #ef8067; background: #3a2724; }
+
+.mission-action-button.claim-button-take { color: #f2c94c; border-color: #6b5a24; background: #2a2412; }
+.mission-action-button.claim-button-take:hover { border-color: #f2c94c; background: #3a3118; }
+
+.station-new-ribbon.station-completed-ribbon { color: #fff; background: #2e9e5b; font-size: 8px; letter-spacing: .04em; }
+.sidebar-compact ~ .main-panel .station-new-ribbon.station-completed-ribbon { font-size: 10px; }
+
+.station-new-ribbon.station-available-ribbon { color: #10130f; background: var(--lime); font-size: 8px; letter-spacing: .04em; }
+.sidebar-compact ~ .main-panel .station-new-ribbon.station-available-ribbon { font-size: 10px; }

@@ -20,7 +20,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     const index = missions.findIndex((mission) => mission.id === id);
     if (index === -1) return NextResponse.json({ error: "Missione non trovata." }, { status: 404 });
     let updated;
-    if (hasRole(member, "moderator")) {
+    if (hasRole(member, "moderator") && !isProgressUpdate(input)) {
       if (!isMissionInput(input)) return NextResponse.json({ error: "Dati missione non validi." }, { status: 400 });
       const existingMission = missions[index];
       const stations = await readAllStationPortals();
@@ -71,6 +71,9 @@ export async function PATCH(request: Request, context: RouteContext) {
     } else {
       if (missions[index].assignedMemberId !== member.publicId || !isProgressUpdate(input)) {
         return NextResponse.json({ error: "Puoi aggiornare solo l'avanzamento delle missioni assegnate a te." }, { status: 403 });
+      }
+      if (missions[index].status === "completed" && input.status === "completed") {
+        return NextResponse.json({ error: "La missione è già completata." }, { status: 409 });
       }
       updated = { ...missions[index], ...input };
     }

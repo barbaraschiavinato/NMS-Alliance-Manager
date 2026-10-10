@@ -209,6 +209,18 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
     setNotice("Mission completed.");
   }
 
+  async function reopenMission(mission: Mission) {
+    const response = await fetch(`/api/missions/${mission.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "in_progress", progress: 99 }),
+    });
+    const body = await response.json();
+    if (!response.ok) throw new Error(body.error ?? "Unable to reopen the mission.");
+    setMissions((current) => current.map((item) => item.id === mission.id ? body as Mission : item));
+    setNotice("Mission reopened.");
+  }
+
   async function updateMissionProgress(mission: Mission, progress: number) {
     const status = progress === 100 ? "completed" : "in_progress";
     const response = await fetch(`/api/missions/${mission.id}`, {
@@ -307,6 +319,7 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
             onCreateRangerMission={createRangerMission}
             onClaim={(mission) => void claimMission(mission).catch((error: unknown) => setNotice(error instanceof Error ? error.message : t("errors.request_failed")))}
             onComplete={(mission) => void completeMission(mission).catch((error: unknown) => setNotice(error instanceof Error ? error.message : t("errors.request_failed")))}
+            onReopen={(mission) => void reopenMission(mission).catch((error: unknown) => setNotice(error instanceof Error ? error.message : t("errors.request_failed")))}
             onUpdateProgress={async (mission, progress) => {
               try {
                 await updateMissionProgress(mission, progress);
