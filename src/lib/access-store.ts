@@ -19,7 +19,7 @@ const localPath = path.join(process.cwd(), "data", "access.json");
 const publicIdPattern = /^[\da-f]{8}-[\da-f]{4}-4[\da-f]{3}-[89ab][\da-f]{3}-[\da-f]{12}$/i;
 const defaultData: AccessData = {
   members: [],
-  alliance: { name: "", logoUrl: "", bannerUrl: "", discordUrl: "", telegramUrl: "", heroGradientMode: "full", defaultTableView: "list" },
+  alliance: { name: "", logoUrl: "", bannerUrl: "", discordUrl: "", telegramUrl: "", heroGradientMode: "full" },
 };
 
 function normalizeAccessData(value: unknown): AccessData {
@@ -40,7 +40,6 @@ function normalizeAccessData(value: unknown): AccessData {
       heroGradientMode: storedAlliance?.heroGradientMode === "none" || storedAlliance?.heroGradientMode === "left" || storedAlliance?.heroGradientMode === "full"
         ? storedAlliance.heroGradientMode
         : storedAlliance?.heroGradientEnabled === false ? "none" : "full",
-      defaultTableView: storedAlliance?.defaultTableView === "cards" ? "cards" : "list",
     },
   };
 }

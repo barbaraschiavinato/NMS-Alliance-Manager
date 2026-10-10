@@ -53,5 +53,4 @@ export type AllianceSettings = {
   discordUrl: string;
   telegramUrl: string;
   heroGradientMode: "none" | "left" | "full";
-  defaultTableView: "list" | "cards";
 };

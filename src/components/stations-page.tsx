@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, type SubmitEvent } from "react";
-import { AlertTriangle, CircleAlert, CirclePlus, Crosshair, FileSpreadsheet, FileText, LayoutGrid, List, Orbit, Pencil, Plus, Search, Trash2, X } from "lucide-react";
+import { AlertTriangle, CircleAlert, CirclePlus, Crosshair, FileSpreadsheet, FileText, Orbit, Pencil, Plus, Search, Trash2, X } from "lucide-react";
 import { AllianceSidebar, DashboardTopbar, MissionHero } from "@/components/dashboard-chrome";
 import { AdminPanel } from "@/components/admin-panel";
 import { MemberProfilePanel } from "@/components/member-profile-panel";
@@ -216,7 +216,6 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
   const [stationNoteView, setStationNoteView] = useState<{ portal: string; note: string } | null>(null);
   const [missionStation, setMissionStation] = useState<StationMissionSeed | null>(null);
   const [members, setMembers] = useState<AllianceMember[]>([]);
-  const [viewOverride, setViewOverride] = useState<"list" | "cards" | null>(null);
   const [portal, setPortal] = useState(initialCreateStation?.portal ?? "");
   const [galaxy, setGalaxy] = useState(initialCreateStation?.galaxy ?? 0);
   const [stationOwnerId, setStationOwnerId] = useState(initialCreateStation?.ownerId ?? currentMember.publicId);
@@ -254,7 +253,6 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
     ? stations.find((station) => station.portal === missionStation.portal && station.galaxy === missionStation.galaxy)
     : undefined;
   const [activeStationTab, setActiveStationTab] = useState<"all" | "mine">("all");
-  const viewMode = pageMember.simpleView ? "cards" : viewOverride ?? allianceSettings.defaultTableView;
   const stationCandidates = useMemo(() => stations.filter((station) =>
     (!initialStation || (
       station.portal === initialStation.portal &&
@@ -644,15 +642,11 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
                     title={t(exportingStations ? "stations.exporting_stations" : "stations.export_stations_to_excel")}
                     type="button"
                   ><FileSpreadsheet aria-hidden="true" size={15} /></button>}
-                  <div aria-label={t("stations.station_view")} className="view-toggle" role="group">
-                    <button aria-label={t("navigation.list_view")} aria-pressed={viewMode === "list"} className={viewMode === "list" ? "selected" : ""} onClick={() => setViewOverride("list")} title={t("navigation.list_view")} type="button"><List size={15} /></button>
-                    <button aria-label={t("navigation.card_view")} aria-pressed={viewMode === "cards"} className={viewMode === "cards" ? "selected" : ""} onClick={() => setViewOverride("cards")} title={t("navigation.card_view")} type="button"><LayoutGrid size={15} /></button>
-                  </div>
                 </div>}
             </div>
             {loading && <div className="station-list-empty station-list-loading"><LoadingSpinner /></div>}
             {!loading && visibleStations.length === 0 && <p className={`station-list-empty${stations.length === 0 ? " station-list-empty-no-saved" : ""}`}>{t(stations.length === 0 ? "stations.no_saved_portals" : "stations.no_stations_found")}</p>}
-            {visibleStations.length > 0 && <ul className={`station-list ${viewMode === "cards" ? "station-list-cards" : ""}`}>{visibleStations.map((station) => {
+            {visibleStations.length > 0 && <ul className={`station-list station-list-cards`}>{visibleStations.map((station) => {
               const planetImageUrl = cachedPlanetImageUrl(station.planet);
               const stationDisplayName = station.name || cachedPlanetType(station.planet) || cachedPlanetTitle(station.planet) || t("planet.unnamed_planet");
               const statusKey = planetSystemStatusKey(station.portal, station.galaxy);
@@ -673,7 +667,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
               })} ownerLabel={t("stations.station_owner")} station={station} />;
               return <li key={`${station.portal}:${station.galaxy}:${station.ownerId}`} className={isNewStation ? "station-is-new" : undefined}>
                 {newRibbon}
-                {viewMode === "cards" && <button className={`station-card-title${planetImageUrl ? " station-card-title-with-image" : ""}`} onClick={() => setSelectedStation({ portal: station.portal, galaxy: station.galaxy })} type="button">
+                {<button className={`station-card-title${planetImageUrl ? " station-card-title-with-image" : ""}`} onClick={() => setSelectedStation({ portal: station.portal, galaxy: station.galaxy })} type="button">
                   {planetImageUrl && <Image alt="" className="station-card-planet-image" height={112} src={planetImageUrl} unoptimized width={112} />}
                   <span className="station-card-title-copy">
                     <GalaxyLabel galaxy={station.galaxy} />
@@ -681,14 +675,12 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
                     <StationSystemCoreInfo key={`${station.portal}:${station.galaxy}`} galaxy={station.galaxy} portal={station.portal} />
                   </span>
                 </button>}
-                {viewMode === "cards" && <div className="station-card-owner">{stationOwner}</div>}
-                <div className="station-portal-code"><strong className="station-name">{stationDisplayName}</strong><GlyphStrip address={station.portal} /><code>{station.portal}</code>{viewMode === "list" && stationOwner}</div>
+                <div className="station-card-owner">{stationOwner}</div>
+                <div className="station-portal-code"><strong className="station-name">{stationDisplayName}</strong><GlyphStrip address={station.portal} /><code>{station.portal}</code></div>
                 <div className="station-planet-info-list">
                   {station.planet
                     ? <CachedPlanetInfo onOpen={() => setSelectedStation({ portal: station.portal, galaxy: station.galaxy })} planet={station.planet} />
-                    : viewMode === "cards"
-                      ? <p className="station-card-no-planet">{t("planet.no_almanac_data")}</p>
-                      : <button className="station-planet-open station-planet-unknown" onClick={() => setSelectedStation({ portal: station.portal, galaxy: station.galaxy })} type="button"><GalaxyLabel galaxy={station.galaxy} /><strong>{t("planet.no_almanac_data_open_details")}</strong></button>}
+                    : <p className="station-card-no-planet">{t("planet.no_almanac_data")}</p>}
                 </div>
                 <div className="station-card-footer">
                   {(canSeeAll || station.ownerId === pageMember.publicId) && planetStatusesLoaded && <div className="station-system-status">

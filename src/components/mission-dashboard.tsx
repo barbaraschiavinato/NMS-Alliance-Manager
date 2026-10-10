@@ -377,7 +377,6 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
             members={members}
             stationOwners={stationOwners}
             stationOwnersLoaded={stationOwnersLoaded}
-            defaultView={alliance.defaultTableView}
             planetStatuses={planetStatuses}
             requestedSpecialty={requestedSpecialty}
             onCreateRangerMission={createRangerMission}

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Ban, Check, CircleAlert, CircleX, Crosshair, LayoutGrid, List, Orbit, Pencil, Search, Trash2, UserRoundCheck } from "lucide-react";
+import { Ban, Check, CircleAlert, CircleX, Crosshair, Orbit, Pencil, Search, Trash2, UserRoundCheck } from "lucide-react";
 import { formatNmsFriendCode } from "@/lib/member-types";
 import type { AllianceMember, AllianceSettings, MemberRole, MemberSpecialty, MembershipStatus } from "@/lib/member-types";
 import { AllianceSidebar, DashboardTopbar, MissionHero } from "@/components/dashboard-chrome";
@@ -83,8 +83,6 @@ export function MembersPage({ memberActivity, currentMember, alliance, missionCo
   const [members, setMembers] = useState<ManagedMember[]>([]);
   const [loadingMembers, setLoadingMembers] = useState(true);
   const [filter, setFilter] = useState<MemberFilter>("all");
-  const [viewOverride, setViewOverride] = useState<"list" | "cards" | null>(null);
-  const viewMode = pageMember.simpleView ? "cards" : viewOverride ?? allianceSettings.defaultTableView;
   const [search, setSearch] = useNavigationSearchState("");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -183,36 +181,13 @@ export function MembersPage({ memberActivity, currentMember, alliance, missionCo
           </div>
           <div className="toolbar-actions member-toolbar-actions">
             <label className="search-field member-search"><Search size={15} /><input aria-label={t("members.search_users")} onChange={(event) => setSearch(event.target.value)} placeholder={t("common.search_name_email_or_code")} value={search} /></label>
-            {!pageMember.simpleView && <div aria-label={t("members.user_view")} className="view-toggle" role="group">
-              <button aria-label={t("navigation.list_view")} aria-pressed={viewMode === "list"} className={viewMode === "list" ? "selected" : ""} onClick={() => setViewOverride("list")} title={t("navigation.list_view")} type="button"><List size={15} /></button>
-              <button aria-label={t("navigation.card_view")} aria-pressed={viewMode === "cards"} className={viewMode === "cards" ? "selected" : ""} onClick={() => setViewOverride("cards")} title={t("navigation.card_view")} type="button"><LayoutGrid size={15} /></button>
-            </div>}
           </div>
         </div>
 
         {error && <p className="form-error"><CircleAlert size={15} />{t(error)}</p>}
         {notice && <p className="address-validation address-valid"><Check size={14} />{t(notice)}</p>}
 
-        {loadingMembers ? <LoadingSpinner /> : visibleMembers.length === 0 ? <p className="messages-empty">{emptyMessage}</p> : viewMode === "list" ? <div className="members-table-wrap">
-          <table className="members-table">
-            <thead><tr><th>{t("members.member_column_heading")}</th><th>{t("profile.friend_code_column_heading")}</th><th>{t("profile.telegram_name_label")}</th><th>{t("profile.discord_name_label")}</th><th>{t("profile.platforms_column_heading")}</th><th>{t("profile.specialty_column_heading")}</th><th>{t("common.status_column_heading")}</th><th>{t("members.role_column_heading")}</th><th>{t("common.actions_column_heading")}</th></tr></thead>
-            <tbody>
-              {visibleMembers.map((member) => <tr key={member.email}>
-                <td><div className="member-page-identity"><span className="member-admin-avatar">{member.image ? <span style={{ backgroundImage: `url("${member.image}")` }} /> : (member.nmsName || member.name).slice(0, 1).toUpperCase()}</span><span><strong>{member.nmsName || t("common.nms_name_incomplete_label")}</strong><small>{member.email}</small></span></div></td>
-                <td className="member-code-cell">{member.nmsCode ? formatNmsFriendCode(member.nmsCode) : t("common.incomplete")}</td>
-                <td>{member.telegramName || "-"}</td>
-                <td>{member.discordName || "-"}</td>
-                <td>{member.platforms.length ? member.platforms.join(", ") : t("common.not_selected")}</td>
-                <td>{member.specialty ? t(specialtyLabels[member.specialty]) : t("common.not_selected")}</td>
-                <td>{member.protectedAdmin
-                  ? <span className="badge badge--protected">{t("common.protected")}</span>
-                  : <span className={`badge badge--member-status badge--member-status-${member.membershipStatus}`}>{t(statusLabels[member.membershipStatus])}</span>}</td>
-                <td>{t(roleLabels[member.role])}</td>
-                <td><MemberActions onEdit={(target) => setEditingMember(target as ManagedMember)} canChangeRole={canChangeRole} currentMemberEmail={pageMember.email} member={member} onDelete={(target) => void deleteMember(target)} onRole={(email, role) => void patchMember(email, { role })} onStatus={(email, membershipStatus) => void patchMember(email, { membershipStatus })} /></td>
-              </tr>)}
-            </tbody>
-          </table>
-        </div> : <div className="member-card-grid">
+        {loadingMembers ? <LoadingSpinner /> : visibleMembers.length === 0 ? <p className="messages-empty">{emptyMessage}</p> : <div className="member-card-grid">
           {visibleMembers.map((member) => <article className="member-card" key={member.email}>
             <div className="member-card-heading">
               <div className="member-page-identity">

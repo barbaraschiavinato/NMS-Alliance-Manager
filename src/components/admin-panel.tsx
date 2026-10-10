@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, type SubmitEvent } from "react";
-import { Check, CircleAlert, ImagePlus, LayoutGrid, List, ShieldCheck, X } from "lucide-react";
+import { Check, CircleAlert, ImagePlus, ShieldCheck, X } from "lucide-react";
 import type { AllianceSettings } from "@/lib/access-store";
 import { useLocale } from "@/components/locale-provider";
 
@@ -10,7 +10,7 @@ export function AdminPanel({ onClose, onSaved }: Readonly<{
   onSaved: (settings: AllianceSettings) => void;
 }>) {
   const { t } = useLocale();
-  const [settings, setSettings] = useState<AllianceSettings>({ name: "", logoUrl: "", bannerUrl: "", discordUrl: "", telegramUrl: "", heroGradientMode: "full", defaultTableView: "list" });
+  const [settings, setSettings] = useState<AllianceSettings>({ name: "", logoUrl: "", bannerUrl: "", discordUrl: "", telegramUrl: "", heroGradientMode: "full" });
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -80,13 +80,6 @@ export function AdminPanel({ onClose, onSaved }: Readonly<{
               <span>{t("admin.alliance_name")}</span>
               <input maxLength={80} onChange={(event) => setSettings((current) => ({ ...current, name: event.target.value }))} required value={settings.name} />
             </label>
-            <div className="field admin-default-view">
-              <span>{t("navigation.default_table_view")}</span>
-              <div aria-label={t("navigation.default_table_view")} className="view-toggle admin-view-toggle" role="group">
-                <button aria-pressed={settings.defaultTableView === "list"} className={settings.defaultTableView === "list" ? "selected" : ""} onClick={() => setSettings((current) => ({ ...current, defaultTableView: "list" }))} type="button"><List size={14} /> {t("common.list")}</button>
-                <button aria-pressed={settings.defaultTableView === "cards"} className={settings.defaultTableView === "cards" ? "selected" : ""} onClick={() => setSettings((current) => ({ ...current, defaultTableView: "cards" }))} type="button"><LayoutGrid size={14} /> {t("common.cards")}</button>
-              </div>
-            </div>
             <div className="field admin-default-view">
               <span>{t("common.hero_image_gradient")}</span>
               <div aria-label={t("common.hero_image_gradient")} className="view-toggle admin-view-toggle" role="group">
