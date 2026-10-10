@@ -32,7 +32,7 @@ export function StationCardExtended({ station, member, canSeeAll, canCreateMissi
                   subjectLabel: station.name || cachedPlanetTitle(station.planet) || cachedPlanetType(station.planet),
                 },
               })} ownerLabel={t("stations.station_owner")} station={station} />;
-              return <li className={isNewStation ? "station-is-new" : undefined}>
+              return <li className={`station-card-extended${isNewStation ? " station-is-new" : ""}`}>
                 {newRibbon}
                 {<button className={`station-card-title${planetImageUrl ? " station-card-title-with-image" : ""}`} onClick={() => onOpenStation(station)} type="button">
                   {planetImageUrl && <Image alt="" className="station-card-planet-image" height={112} src={planetImageUrl} unoptimized width={112} />}
@@ -68,7 +68,7 @@ export function StationCardExtended({ station, member, canSeeAll, canCreateMissi
                       ? <Link aria-label={t("planet.open_missions_for_planet_portal", { portal: station.portal })} className="member-icon-action station-missions-link" data-tooltip={t("missions.open_associated_missions")} href={`/missions?search=${encodeURIComponent(station.portal)}`}><Crosshair size={14} /></Link>
                       : <span className="station-mission-lock">{t("missions.associated_mission")}</span>
                     : (canSeeAll || station.ownerId === member.publicId) && <button aria-label={t("stations.remove_portal_portal_in_galaxy_from_owner_s_archive", { portal: station.portal, galaxy: galaxyLabel(station.galaxy), owner: stationOwnerName(station) })} className="member-icon-action delete-member" data-tooltip={t("stations.delete_station")} onClick={() => onRemove(station)} type="button"><Trash2 size={14} /></button>}
-                  {canEditStation && <button aria-label={t("stations.edit_station_portal", { portal: station.portal })} className="member-icon-action" data-tooltip={t("stations.edit_station")} onClick={() => onEdit(station)} type="button"><Pencil size={14} /></button>}
+                  {canEditStation && <button aria-label={t("stations.edit_station_portal", { portal: station.portal })} className="member-icon-action station-edit-action" data-tooltip={t("stations.edit_station")} onClick={() => onEdit(station)} type="button"><Pencil size={14} /></button>}
                   {station.note && <button aria-label={t("stations.view_notes_for_station", { station: stationDisplayName })} className="member-icon-action station-notes-action" data-tooltip={t("stations.view_station_notes")} onClick={() => onViewNote(station)} type="button"><FileText size={14} /></button>}
                   </div>
                 </div>

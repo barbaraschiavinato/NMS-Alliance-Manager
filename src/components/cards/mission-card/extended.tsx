@@ -18,7 +18,7 @@ export function MissionCardExtended({ onReopen, onStart, mission, systemStatuses
   const canUpdateSystemStatus = mission.assignedMemberId === currentMember.publicId && !locked && mission.status !== "pending";
   const canUpdateProgress = !canManage && canUpdateSystemStatus;
   const canViewNotes = canManage || isMissionAssignee(mission, currentMember);
-  return <article className="mission-card mission-card-ribbon">
+  return <article className="mission-card mission-card-ribbon mission-card-extended">
     <NewMissionRibbon mission={mission} />
     <div className="mission-card-heading">
       <div className="mission-name-cell">

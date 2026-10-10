@@ -62,7 +62,7 @@ export function MissionRowAction({ mission, currentMember, canManage, requestedS
     return <span className="mission-row-actions">
       {requestButton}
       {mission.status === "completed" && mission.assignedMemberId === currentMember.publicId && <button aria-label={t("missions.reopen_mission")} className="row-action row-action-reopen" data-tooltip={t("missions.reopen_mission")} onClick={() => onReopen(mission)} type="button"><RotateCcw size={15} /></button>}
-      <button aria-label={`${t("common.edit")} ${mission.title}`} className="row-action" data-tooltip={t("missions.edit_mission")} onClick={() => onEdit(mission)} type="button"><Pencil size={15} /></button>
+      <button aria-label={`${t("common.edit")} ${mission.title}`} className="row-action row-action-edit" data-tooltip={t("missions.edit_mission")} onClick={() => onEdit(mission)} type="button"><Pencil size={15} /></button>
       <button aria-label={`${t("common.delete")} ${mission.title}`} className="row-action row-action-delete" data-tooltip={t("missions.delete_mission")} onClick={() => onDeleteMission(mission)} type="button"><Trash2 size={15} /></button>
     </span>;
   }

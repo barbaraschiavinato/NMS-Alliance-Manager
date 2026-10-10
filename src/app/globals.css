@@ -1444,15 +1444,14 @@ body:has(.sidebar-compact) .dialog-heading .icon-button svg { width: 26px; heigh
 .leaderboard-avatar { width: 32px; height: 32px; flex: none; border-radius: 50%; background: #252d30; object-fit: cover; }
 .leaderboard-name { min-width: 0; flex: 1; overflow: hidden; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
 .leaderboard-score { min-width: 32px; color: var(--lime); font-size: 18px; font-weight: 700; text-align: right; }
-.leaderboard-widgets { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 16px; align-items: start; }
+.leaderboard-widgets { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; align-items: start; }
 .leaderboard-widget { min-width: 0; padding: 14px; border: 1px solid #394548; border-radius: 4px; background: #12181a; }
 .leaderboard-widget h3 { margin: 0 0 12px; font-size: 13px; letter-spacing: .06em; text-transform: uppercase; }
 .leaderboard-widget .leaderboard-list { max-width: none; }
 .leaderboard-widget h3 { display: flex; align-items: center; gap: 6px; }
 .leaderboard-widget-ranger { border-color: #2f6a43; background: #17291e55; }
 .leaderboard-widgets + .leaderboard-widgets { margin-top: 16px; }
-.leaderboard-widgets-roles { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-@media (max-width: 1080px) { .leaderboard-widgets-roles { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); } }
+@media (max-width: 1080px) { .leaderboard-widgets { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); } }
 .leaderboard-section + .leaderboard-section { margin-top: 14px; }
 .leaderboard-section h4 { margin: 0 0 8px; font-size: 12px; }
 .leaderboard-widget-ranger h3, .leaderboard-widget-ranger h4 { color: #5fd68a; }
@@ -1550,3 +1549,46 @@ body:has(.sidebar-compact) .dialog-heading .icon-button svg { width: 26px; heigh
 
 .member-card { grid-template-columns: minmax(0, 1fr); }
 .member-card-heading { min-width: 0; }
+
+@media (max-width: 950px) {
+  .main-panel.main-panel .mission-card-extended .mission-card-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+  .main-panel.main-panel .mission-card-extended .mission-card-actions > .mission-system-progress { flex: 1 1 100%; width: 100%; }
+  .main-panel.main-panel .mission-card-extended .mission-card-actions > .mission-card-action-buttons { flex: 1 1 100%; width: 100%; flex-wrap: wrap; justify-content: flex-start; margin-left: 0; }
+  .main-panel.main-panel .mission-card-extended .mission-row-actions { display: contents; }
+  .main-panel.main-panel .mission-card-extended .mission-card-action-buttons .row-action-edit,
+  .main-panel.main-panel .mission-card-extended .mission-card-action-buttons .row-action-delete { order: 1; }
+  .main-panel.main-panel .mission-card-extended .mission-card-action-buttons .row-action-edit { margin-left: auto; }
+}
+
+@media (max-width: 950px) {
+  .main-panel.main-panel .mission-card-extended .mission-card-actions > .mission-system-progress { display: flex; justify-content: space-between; gap: 6px; }
+  .main-panel.main-panel .mission-card-extended .mission-system-progress-group { flex: 1 1 0; min-width: 0; display: flex; justify-content: space-evenly; }
+  .main-panel.main-panel .mission-card-extended .mission-system-progress-item { flex: 1 1 0; width: auto; min-width: 0; }
+  .main-panel.main-panel .mission-card-extended .mission-system-progress-item-labeled { flex: 0 1 auto; }
+}
+
+@media (max-width: 950px) {
+  .main-panel.main-panel .mission-card-extended .mission-system-progress-square { width: 14px; height: 14px; }
+  .main-panel.main-panel .mission-card-extended .mission-system-progress-item { height: 34px; }
+}
+
+@media (max-width: 950px) {
+  .main-panel.main-panel .station-list-cards .station-card-extended .station-portal-code > .glyph-strip { grid-column: 1 / -1; display: flex; width: 100%; max-width: 100%; min-height: 0; gap: 2px; }
+  .main-panel.main-panel .station-list-cards .station-card-extended .station-portal-code > code { grid-column: 1 / -1; grid-row: 2; text-align: left; }
+  .main-panel.main-panel .station-list-cards .station-card-extended .station-portal-code .glyph-slot { width: auto; height: auto; flex: 1 1 0; min-width: 0; aspect-ratio: 14 / 15; }
+  .main-panel.main-panel .station-list-cards .station-card-extended .station-portal-code .glyph-strip img { width: 90%; height: auto; aspect-ratio: 1; }
+}
+
+@media (max-width: 950px) {
+  .main-panel.main-panel .station-card-extended .station-card-footer { flex-wrap: wrap; justify-content: flex-start; gap: 10px; }
+  .main-panel.main-panel .station-card-extended .station-system-status { flex: 1 1 100%; width: 100%; flex-wrap: nowrap; justify-content: space-between; gap: 6px; }
+  .main-panel.main-panel .station-card-extended .station-system-status .mission-system-progress { flex: 1 1 100%; width: 100%; display: flex; justify-content: space-between; gap: 6px; }
+  .main-panel.main-panel .station-card-extended .mission-system-progress-group { flex: 1 1 0; min-width: 0; display: flex; justify-content: space-evenly; }
+  .main-panel.main-panel .station-card-extended .mission-system-progress-item { flex: 1 1 0; width: auto; min-width: 0; height: 34px; }
+  .main-panel.main-panel .station-card-extended .mission-system-progress-item-labeled { flex: 0 1 auto; }
+  .main-panel.main-panel .station-card-extended .mission-system-progress-square { width: 14px; height: 14px; }
+  .main-panel.main-panel .station-card-extended .station-card-footer .station-actions { flex: 1 1 100%; width: 100%; margin-left: 0; justify-content: flex-start; flex-wrap: wrap; }
+  .main-panel.main-panel .station-card-extended .station-actions .station-edit-action { order: 1; margin-left: auto; }
+  .main-panel.main-panel .station-card-extended .station-actions .delete-member { order: 2; margin-left: auto; }
+  .main-panel.main-panel .station-card-extended .station-actions:has(.station-edit-action) .delete-member { margin-left: 0; }
+}

@@ -2,15 +2,16 @@
 
 import { useEffect, useState, type SubmitEvent } from "react";
 import Link from "next/link";
-import { CircleAlert, Crosshair, Eclipse, Reply, Send, Trash2, X } from "lucide-react";
+import { Crosshair, Eclipse } from "lucide-react";
 
+import { MessageCard, MessageReplyForm } from "@/components/cards/message-card";
+import { MessageList } from "@/components/sections/message-list";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
 import { Hero } from "@/components/layout/hero";
 import { AdminPanel } from "@/components/modals/admin-panel";
 import { PlanetCard } from "@/components/modals/planet-card";
 import { MemberProfilePanel } from "@/components/modals/member-profile-panel";
-import { LoadingSpinner } from "@/components/shared/loading-spinner";
 import { galaxyLabel } from "@/lib/galaxies";
 import { useLocale } from "@/components/providers/locale-provider";
 import type { AllianceMember, AllianceSettings } from "@/lib/access-store";
@@ -147,100 +148,64 @@ export function HelpRequestsPage({ currentMember, alliance, missionCount, statio
       <Header currentMember={member} onAdminOpen={() => setAdminOpen(true)} onProfileOpen={() => setProfileOpen(true)} sectionTitle="help.help_requests" settings={settings} />
       <Hero settings={settings} subtitle={t("help.page_description")} title="help.help_requests" />
       <main className="content-wrap messages-page">
-        {error && <p className="form-error"><CircleAlert size={15} />{t(error)}</p>}
-        {loading && <div className="messages-loading"><LoadingSpinner /></div>}
-        {!loading && !error && requests.length === 0 && <p className="messages-empty">{t("help.no_requests")}</p>}
-        <ul className="messages-list">
-          {requests.map((request) => <li className="message-tree-node" key={request.id}>
-            <article className="message-card">
-              <div className="message-card-heading">
-                <div className="message-card-main-heading">
-                  <div className="message-card-subject">
-                    {request.missionCode && <Link
-                      aria-label={t("messages.open_mission")}
-                      className="member-icon-action message-subject-link member-link-action"
-                      href={`/missions?search=${encodeURIComponent(request.missionCode)}`}
-                      title={t("messages.open_mission")}
-                    ><Crosshair size={15} /></Link>}
-                    {request.portal && request.galaxy !== undefined && <button
-                      aria-label={t("planet.open_planet_details")}
-                      className="member-icon-action message-subject-link member-planet-action"
-                      onClick={() => setOpenRequest(request)}
-                      title={t("planet.open_planet_details")}
-                      type="button"
-                    ><Eclipse size={15} /></button>}
-                    <h2>{request.subject || t("messages.no_subject")}</h2>
-                  </div>
-                  <p className="message-participants">{t("messages.from")} <strong>{request.senderName}</strong></p>
-                </div>
-                <div className="message-card-tools">
-                  <time dateTime={request.createdAt}>{formatDate(request.createdAt)}</time>
-                  {(request.senderMemberId === member.publicId || member.role === "admin" || member.role === "moderator") && <button
-                    aria-label={t("help.delete_request")}
-                    className="member-icon-action delete-member"
-                    disabled={deletingId === request.id}
-                    onClick={() => void deleteRequest(request.id, false)}
-                    title={t("help.delete_request")}
-                    type="button"
-                  ><Trash2 size={14} /></button>}
-                </div>
-              </div>
-              <p className="message-body">{request.body}</p>
-              {request.replies.length > 0 && <ul className="message-thread-children">
-                {request.replies.map((reply) => <li className="message-tree-node" key={reply.id}>
-                  <article className="message-card">
-                    <div className="message-card-heading">
-                      <div className="message-card-main-heading">
-                        <p className="message-participants">{t("messages.from")} <strong className={reply.senderMemberId === member.publicId ? "current-member" : undefined}>{reply.senderName}</strong></p>
-                      </div>
-                      <div className="message-card-tools">
-                        <time dateTime={reply.createdAt}>{formatDate(reply.createdAt)}</time>
-                        {(reply.senderMemberId === member.publicId || member.role === "admin" || member.role === "moderator") && <button
-                          aria-label={t("help.delete_request")}
-                          className="member-icon-action delete-member"
-                          disabled={deletingId === reply.id}
-                          onClick={() => void deleteRequest(reply.id, true)}
-                          title={t("help.delete_request")}
-                          type="button"
-                        ><Trash2 size={14} /></button>}
-                      </div>
-                    </div>
-                    <p className="message-body">{reply.body}</p>
-                  </article>
-                </li>)}
-              </ul>}
-              <div className="message-card-actions">
-                {replyingTo !== request.id && <button
-                  aria-label={t("messages.reply")}
-                  className="member-icon-action message-reply-button"
-                  onClick={() => {
-                    setReplyError("");
-                    setReplyBody("");
-                    setReplyAcknowledged(false);
-                    setReplyingTo(request.id);
-                  }}
-                  title={t("messages.reply")}
-                  type="button"
-                ><Reply size={14} /></button>}
-              </div>
-              {replyingTo === request.id && <form className="message-reply-form" onSubmit={(event) => void sendReply(event, request.id)}>
-                <label className="field">
-                  <span>{t("messages.reply_to", { subject: request.subject || t("messages.no_subject") })}</span>
-                  <textarea autoFocus maxLength={2000} onChange={(event) => setReplyBody(event.target.value)} required rows={3} value={replyBody} />
-                </label>
-                <label className="message-acknowledgement">
-                  <input checked={replyAcknowledged} onChange={(event) => setReplyAcknowledged(event.target.checked)} required type="checkbox" />
-                  <span>{t("profile.message_mission_only_notice")}</span>
-                </label>
-                {replyError && <p className="form-error"><CircleAlert size={15} />{t(replyError)}</p>}
-                <div className="message-reply-actions">
-                  <button aria-label={t("common.cancel")} className="member-icon-action delete-member" onClick={() => setReplyingTo("")} title={t("common.cancel")} type="button"><X size={14} /></button>
-                  <button aria-label={t("messages.send_reply")} className="member-icon-action reply-submit" disabled={replySending || !replyBody.trim() || !replyAcknowledged} title={t("messages.send_reply")} type="submit"><Send size={14} /></button>
-                </div>
-              </form>}
-            </article>
-          </li>)}
-        </ul>
+        <MessageList empty={requests.length === 0} emptyLabel={t("help.no_requests")} error={error} loading={loading}>
+          {requests.map((request) => <MessageCard
+            body={request.body}
+            createdAt={request.createdAt}
+            deleteLabel={t("help.delete_request")}
+            deleting={deletingId === request.id}
+            form={replyingTo === request.id ? <MessageReplyForm
+              acknowledged={replyAcknowledged}
+              error={replyError}
+              onAcknowledgedChange={setReplyAcknowledged}
+              onCancel={() => setReplyingTo("")}
+              onChange={setReplyBody}
+              onSubmit={(event) => void sendReply(event, request.id)}
+              rows={3}
+              sending={replySending}
+              subject={request.subject || t("messages.no_subject")}
+              value={replyBody}
+            /> : undefined}
+            formattedDate={formatDate(request.createdAt)}
+            key={request.id}
+            onDelete={request.senderMemberId === member.publicId || member.role === "admin" || member.role === "moderator" ? () => void deleteRequest(request.id, false) : undefined}
+            onReply={replyingTo !== request.id ? () => {
+              setReplyError("");
+              setReplyBody("");
+              setReplyAcknowledged(false);
+              setReplyingTo(request.id);
+            } : undefined}
+            participants={<>{t("messages.from")} <strong>{request.senderName}</strong></>}
+            replies={request.replies.length > 0 ? <ul className="message-thread-children">
+              {request.replies.map((reply) => <MessageCard
+                body={reply.body}
+                createdAt={reply.createdAt}
+                deleteLabel={t("help.delete_request")}
+                deleting={deletingId === reply.id}
+                formattedDate={formatDate(reply.createdAt)}
+                key={reply.id}
+                onDelete={reply.senderMemberId === member.publicId || member.role === "admin" || member.role === "moderator" ? () => void deleteRequest(reply.id, true) : undefined}
+                participants={<>{t("messages.from")} <strong className={reply.senderMemberId === member.publicId ? "current-member" : undefined}>{reply.senderName}</strong></>}
+              />)}
+            </ul> : undefined}
+            subjectActions={<>
+              {request.missionCode && <Link
+                aria-label={t("messages.open_mission")}
+                className="member-icon-action message-subject-link member-link-action"
+                href={`/missions?search=${encodeURIComponent(request.missionCode)}`}
+                title={t("messages.open_mission")}
+              ><Crosshair size={15} /></Link>}
+              {request.portal && request.galaxy !== undefined && <button
+                aria-label={t("planet.open_planet_details")}
+                className="member-icon-action message-subject-link member-planet-action"
+                onClick={() => setOpenRequest(request)}
+                title={t("planet.open_planet_details")}
+                type="button"
+              ><Eclipse size={15} /></button>}
+            </>}
+            title={request.subject || t("messages.no_subject")}
+          />)}
+        </MessageList>
       </main>
     </section>
     {openRequest?.portal && openRequest.galaxy !== undefined && <PlanetCard
