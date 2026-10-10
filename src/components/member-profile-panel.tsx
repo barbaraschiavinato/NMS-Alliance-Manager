@@ -132,7 +132,7 @@ export function MemberProfilePanel({ member, onClose, onSaved, createOffline = f
               })}
             </div>
           </fieldset>
-          {!offlineMode && !editMember && member.role !== "user" && <label className="message-acknowledgement">
+          {!offlineMode && !editMember && (member.displayRole ?? member.role) !== "user" && <label className="message-acknowledgement">
             <input checked={simpleView} onChange={(event) => setSimpleView(event.target.checked)} type="checkbox" />
             <span>{t("profile.simple_view")}</span>
           </label>}
