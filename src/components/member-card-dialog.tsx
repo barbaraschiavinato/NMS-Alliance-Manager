@@ -13,8 +13,9 @@ type MemberCard = {
   nmsName: string;
   platforms: NmsPlatform[];
   specialty: MemberSpecialty | "";
-  email?: string;
   nmsCode?: string;
+  telegramName?: string;
+  discordName?: string;
   role?: MemberRole;
   offline?: boolean;
 };
@@ -132,9 +133,10 @@ export function MemberCardDialog({ memberId, messageContext, onClose }: Readonly
           <dl className="member-card-details">
             <div><dt>{t("profile.specialty_label")}</dt><dd>{profile.specialty ? t(specialtyLabels[profile.specialty]) : t("profile.no_specialty_specified")}</dd></div>
             <div><dt>{t("profile.platforms_label")}</dt><dd>{profile.platforms.length ? profile.platforms.join(", ") : t("profile.no_platforms_specified")}</dd></div>
+            {profile.telegramName && <div><dt>{t("profile.telegram_name_label")}</dt><dd>{profile.telegramName}</dd></div>}
+            {profile.discordName && <div><dt>{t("profile.discord_name_label")}</dt><dd>{profile.discordName}</dd></div>}
             {profile.nmsCode && <div><dt>{t("profile.nms_friend_code_label")}</dt><dd>{profile.nmsCode}</dd></div>}
             {profile.role && <div><dt>{t("members.role_label")}</dt><dd>{t(roleLabels[profile.role])}</dd></div>}
-            {profile.email && !profile.offline && <div><dt>{t("common.email")}</dt><dd>{profile.email}</dd></div>}
           </dl>
           {!profile.offline && <button aria-label={t("profile.leave_a_message")} className="primary-button member-message-open" onClick={() => {
             setMessageSent(false);

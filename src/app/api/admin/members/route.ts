@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentMember, hasRole } from "@/lib/authorization";
 import { linkOfflineMember } from "@/lib/offline-members";
-import { createOfflineMember, updateOfflineMember, isMemberProfileInput, deleteMember, readAccessData, memberRoles, updateMemberApproval, updateMemberRole } from "@/lib/access-store";
+import { updateMemberProfile, createOfflineMember, updateOfflineMember, isMemberProfileInput, deleteMember, readAccessData, memberRoles, updateMemberApproval, updateMemberRole } from "@/lib/access-store";
 import { readMissions, writeMissions } from "@/lib/store";
 import { membershipStatuses } from "@/lib/member-types";
 
@@ -25,6 +25,19 @@ export async function PATCH(request: Request) {
   if (!input || typeof input !== "object") return NextResponse.json({ error: "Dati ruolo non validi." }, { status: 400 });
   const { email, role, membershipStatus } = input as Record<string, unknown>;
   if (typeof email !== "string") return NextResponse.json({ error: "Email non valida." }, { status: 400 });
+
+  if ((input as Record<string, unknown>).action === "profile") {
+    if (!isMemberProfileInput(input)) return NextResponse.json({ error: "Profilo non valido." }, { status: 400 });
+    const data = await readAccessData();
+    const target = data.members.find((item) => item.email === email.trim().toLowerCase());
+    if (!target || target.offline || (member.role === "moderator" && target.role !== "user")) {
+      return NextResponse.json({ error: "Utente non trovato o non modificabile." }, { status: 404 });
+    }
+    const updated = await updateMemberProfile(target.email, input);
+    if (!updated) return NextResponse.json({ error: "Utente non trovato o non modificabile." }, { status: 404 });
+    if (typeof updated === "string") return NextResponse.json({ error: profileConflictMessages[updated] }, { status: 409 });
+    return NextResponse.json(updated);
+  }
 
   if (membershipStatus !== undefined) {
     if (typeof membershipStatus !== "string" || !membershipStatuses.includes(membershipStatus as (typeof membershipStatuses)[number])) {

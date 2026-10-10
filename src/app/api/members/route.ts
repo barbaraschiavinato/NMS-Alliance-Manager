@@ -25,19 +25,23 @@ export async function GET(request: Request) {
       image: profile.image,
       nmsName: isEmailAddress(profile.nmsName) ? "" : profile.nmsName,
       platforms: profile.platforms,
+      telegramName: profile.telegramName ?? "",
+      discordName: profile.discordName ?? "",
       specialty: profile.specialty,
       offline: profile.offline === true,
-      ...(hasRole(member, "moderator") ? { ...(profile.offline ? {} : { email: profile.email }), nmsCode: profile.nmsCode, role: profile.role } : {}),
+      ...(hasRole(member, "moderator") ? { nmsCode: profile.nmsCode, role: profile.role } : {}),
     });
   }
   if (!hasRole(member, "moderator")) return NextResponse.json({ error: "Permesso moderator richiesto." }, { status: 403 });
-  return NextResponse.json(data.members.filter((item) => item.membershipStatus === "approved" && item.nmsName && (item.offline || isValidNmsFriendCode(item.nmsCode)) && item.specialty).map(({ publicId, email, name, image, nmsName, nmsCode, platforms, specialty, role }) => ({
+  return NextResponse.json(data.members.filter((item) => item.membershipStatus === "approved" && item.nmsName && (item.offline || isValidNmsFriendCode(item.nmsCode)) && item.specialty).map(({ publicId, email, name, image, nmsName, nmsCode, telegramName, discordName, platforms, specialty, role }) => ({
     publicId,
     email,
     name,
     image,
     nmsName,
     nmsCode,
+    telegramName: telegramName ?? "",
+    discordName: discordName ?? "",
     platforms,
     specialty,
     role,

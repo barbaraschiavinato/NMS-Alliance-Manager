@@ -9,6 +9,8 @@ export async function GET() {
   return NextResponse.json({
     nmsName: member.nmsName,
     nmsCode: member.nmsCode,
+    telegramName: member.telegramName ?? "",
+    discordName: member.discordName ?? "",
     platforms: member.platforms,
     specialty: member.specialty,
     simpleView: member.simpleView === true,
@@ -29,6 +31,8 @@ export async function PATCH(request: Request) {
   return NextResponse.json({
     nmsName: updated.nmsName,
     nmsCode: updated.nmsCode,
+    telegramName: updated.telegramName ?? "",
+    discordName: updated.discordName ?? "",
     platforms: updated.platforms,
     specialty: updated.specialty,
     simpleView: updated.simpleView === true,

@@ -60,6 +60,8 @@ function normalizeMember(value: unknown): AllianceMember | null {
     image: member.image,
     nmsName: typeof member.nmsName === "string" ? member.nmsName : "",
     nmsCode: typeof member.nmsCode === "string" ? member.nmsCode : "",
+    ...(typeof member.telegramName === "string" && member.telegramName ? { telegramName: member.telegramName } : {}),
+    ...(typeof member.discordName === "string" && member.discordName ? { discordName: member.discordName } : {}),
     platforms,
     specialty: memberSpecialties.includes(member.specialty as MemberSpecialty) ? member.specialty as MemberSpecialty : "",
     role,
@@ -144,6 +146,8 @@ export async function registerMember(identity: Pick<AllianceMember, "email" | "n
     image: identity.image,
     nmsName: existingMember?.nmsName ?? "",
     nmsCode: existingMember?.nmsCode ?? "",
+    ...(existingMember?.telegramName ? { telegramName: existingMember.telegramName } : {}),
+    ...(existingMember?.discordName ? { discordName: existingMember.discordName } : {}),
     platforms: existingMember?.platforms ?? [],
     specialty: existingMember?.specialty ?? "",
     role,
@@ -182,6 +186,7 @@ export async function createOfflineMember(profile: MemberProfileInput, createdBy
     image: "",
     nmsName: profile.nmsName.trim(),
     nmsCode: normalizeNmsFriendCode(profile.nmsCode),
+    ...contactFields(profile),
     platforms: [...new Set(profile.platforms)],
     specialty: profile.specialty,
     role: "user",
@@ -205,6 +210,7 @@ export async function updateOfflineMember(publicId: string, profile: MemberProfi
   member.name = profile.nmsName.trim();
   member.nmsName = profile.nmsName.trim();
   member.nmsCode = normalizeNmsFriendCode(profile.nmsCode);
+  applyContactFields(member, profile);
   member.platforms = [...new Set(profile.platforms)];
   member.specialty = profile.specialty;
   await writeAccessData(data);
@@ -244,10 +250,27 @@ export async function deleteMember(email: string, actorRole: MemberRole, actorEm
 export type MemberProfileInput = {
   nmsName: string;
   nmsCode: string;
+  telegramName?: string;
+  discordName?: string;
   platforms: NmsPlatform[];
   specialty: MemberSpecialty;
   simpleView?: boolean;
 };
+
+function contactFields(profile: MemberProfileInput) {
+  const telegramName = profile.telegramName?.trim();
+  const discordName = profile.discordName?.trim();
+  return {
+    ...(telegramName ? { telegramName } : {}),
+    ...(discordName ? { discordName } : {}),
+  };
+}
+
+function applyContactFields(member: AllianceMember, profile: MemberProfileInput) {
+  const { telegramName, discordName } = contactFields(profile);
+  if (telegramName) member.telegramName = telegramName; else delete member.telegramName;
+  if (discordName) member.discordName = discordName; else delete member.discordName;
+}
 
 export function isMemberProfileInput(value: unknown, allowEmptyCode = false): value is MemberProfileInput {
   if (!value || typeof value !== "object") return false;
@@ -256,6 +279,8 @@ export function isMemberProfileInput(value: unknown, allowEmptyCode = false): va
     profile.nmsName.trim().length > 0 && profile.nmsName.trim().length <= 40 &&
     typeof profile.nmsCode === "string" && (isValidNmsFriendCode(profile.nmsCode) || (allowEmptyCode && !profile.nmsCode.trim())) &&
     Array.isArray(profile.platforms) &&
+    (profile.telegramName === undefined || (typeof profile.telegramName === "string" && profile.telegramName.trim().length <= 40)) &&
+    (profile.discordName === undefined || (typeof profile.discordName === "string" && profile.discordName.trim().length <= 40)) &&
     profile.platforms.every((platform) => nmsPlatforms.includes(platform as NmsPlatform)) &&
     memberSpecialties.includes(profile.specialty as MemberSpecialty) &&
     (profile.simpleView === undefined || typeof profile.simpleView === "boolean");
@@ -270,6 +295,7 @@ export async function updateMemberProfile(email: string, profile: MemberProfileI
   if (conflict) return conflict;
   member.nmsName = profile.nmsName.trim();
   member.nmsCode = normalizeNmsFriendCode(profile.nmsCode);
+  applyContactFields(member, profile);
   member.platforms = [...new Set(profile.platforms)];
   member.specialty = profile.specialty;
   if (profile.simpleView !== undefined) member.simpleView = profile.simpleView;

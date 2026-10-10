@@ -15,6 +15,8 @@ export async function linkOfflineMember(offlineId: string, targetId: string): Pr
   if (!hasProfile) {
     target.nmsName = offline.nmsName;
     target.nmsCode = offline.nmsCode;
+    if (offline.telegramName) target.telegramName = offline.telegramName;
+    if (offline.discordName) target.discordName = offline.discordName;
     target.platforms = offline.platforms;
     target.specialty = offline.specialty;
   }

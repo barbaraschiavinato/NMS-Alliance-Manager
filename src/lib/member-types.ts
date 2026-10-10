@@ -32,6 +32,8 @@ export type AllianceMember = {
   image: string;
   nmsName: string;
   nmsCode: string;
+  telegramName?: string;
+  discordName?: string;
   platforms: NmsPlatform[];
   specialty: MemberSpecialty | "";
   role: MemberRole;

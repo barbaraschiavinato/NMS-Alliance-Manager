@@ -17,16 +17,19 @@ const specialtyLabels: Record<MemberSpecialty, string> = {
   explorer: "common.explorer",
 };
 
-export function MemberProfilePanel({ member, onClose, onSaved, createOffline = false, editOffline = false }: Readonly<{
+export function MemberProfilePanel({ member, onClose, onSaved, createOffline = false, editOffline = false, editMember = false }: Readonly<{
   member: AllianceMember;
   onClose: () => void;
   onSaved: (profile: AllianceMember) => void;
   createOffline?: boolean;
   editOffline?: boolean;
+  editMember?: boolean;
 }>) {
   const { t } = useLocale();
   const [nmsName, setNmsName] = useState(member.nmsName);
   const [nmsCode, setNmsCode] = useState(member.nmsCode);
+  const [telegramName, setTelegramName] = useState(member.telegramName ?? "");
+  const [discordName, setDiscordName] = useState(member.discordName ?? "");
   const [platforms, setPlatforms] = useState<NmsPlatform[]>(member.platforms);
   const [specialty, setSpecialty] = useState<MemberSpecialty | "">(member.specialty);
   const [simpleView, setSimpleView] = useState(member.simpleView === true);
@@ -52,10 +55,10 @@ export function MemberProfilePanel({ member, onClose, onSaved, createOffline = f
     setError("");
     setSaved(false);
     try {
-      const response = await fetch(offlineMode ? "/api/admin/members" : "/api/profile", {
+      const response = await fetch(offlineMode || editMember ? "/api/admin/members" : "/api/profile", {
         method: offlineMode ? "POST" : "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nmsName, nmsCode, platforms, specialty, ...(offlineMode ? {} : { simpleView }), ...(editOffline ? { action: "update", offlineId: member.publicId } : {}) }),
+        body: JSON.stringify({ nmsName, nmsCode, telegramName, discordName, platforms, specialty, ...(offlineMode || editMember ? {} : { simpleView }),...(editMember ? { action: "profile", email: member.email } : {}), ...(editOffline ? { action: "update", offlineId: member.publicId } : {}) }),
       });
       const body = await response.json();
       if (!response.ok) throw new Error(body.error ?? "Unable to save the profile.");
@@ -73,7 +76,7 @@ export function MemberProfilePanel({ member, onClose, onSaved, createOffline = f
     <div className="dialog-backdrop">
       <dialog aria-labelledby="profile-title" aria-modal="true" className="mission-dialog profile-dialog" open>
         <div className="dialog-heading">
-          <div><span className="eyebrow">{t("profile.member_profile")}</span><h2 id="profile-title">{createOffline ? t("members.add_offline_player") : editOffline ? t("members.edit_offline_player") : t("profile.my_nms_profile")}</h2></div>
+          <div><span className="eyebrow">{t("profile.member_profile")}</span><h2 id="profile-title">{createOffline ? t("members.add_offline_player") : editOffline ? t("members.edit_offline_player") : editMember ? t("members.edit_member_profile") : t("profile.my_nms_profile")}</h2></div>
           <button aria-label={t("common.close")} className="icon-button" onClick={close} type="button"><X size={18} /></button>
         </div>
         <form onSubmit={submit}>
@@ -99,6 +102,14 @@ export function MemberProfilePanel({ member, onClose, onSaved, createOffline = f
               value={formatNmsFriendCode(nmsCode)}
             />
           </label>
+          <label className="field full-field">
+            <span>{t("profile.telegram_name_label")} <small>{t("profile.optional")}</small></span>
+            <input autoComplete="off" maxLength={40} onChange={(event) => setTelegramName(event.target.value)} placeholder="@username" value={telegramName} />
+          </label>
+          <label className="field full-field">
+            <span>{t("profile.discord_name_label")} <small>{t("profile.optional")}</small></span>
+            <input autoComplete="off" maxLength={40} onChange={(event) => setDiscordName(event.target.value)} placeholder="username" value={discordName} />
+          </label>
           <fieldset className="platform-fieldset">
             <legend>{t("profile.platforms_label")} <small>{t("common.select_all_that_you_use")}</small></legend>
             <div className="platform-options">
@@ -121,7 +132,7 @@ export function MemberProfilePanel({ member, onClose, onSaved, createOffline = f
               })}
             </div>
           </fieldset>
-          {!offlineMode && <label className="message-acknowledgement">
+          {!offlineMode && !editMember && <label className="message-acknowledgement">
             <input checked={simpleView} onChange={(event) => setSimpleView(event.target.checked)} type="checkbox" />
             <span>{t("profile.simple_view")}</span>
           </label>}

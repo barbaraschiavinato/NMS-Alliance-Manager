@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Ban, Check, CircleAlert, CircleX, Crosshair, LayoutGrid, List, Orbit, Search, Trash2, UserRoundCheck } from "lucide-react";
+import { Ban, Check, CircleAlert, CircleX, Crosshair, LayoutGrid, List, Orbit, Pencil, Search, Trash2, UserRoundCheck } from "lucide-react";
 import { formatNmsFriendCode } from "@/lib/member-types";
 import type { AllianceMember, AllianceSettings, MemberRole, MemberSpecialty, MembershipStatus } from "@/lib/member-types";
 import { AllianceSidebar, DashboardTopbar, MissionHero } from "@/components/dashboard-chrome";
@@ -29,13 +29,14 @@ function updateNotice(update: { membershipStatus: MembershipStatus } | { role: M
   return "User is pending approval.";
 }
 
-function MemberActions({ member, canChangeRole, currentMemberEmail, onStatus, onRole, onDelete }: Readonly<{
+function MemberActions({ member, canChangeRole, currentMemberEmail, onStatus, onRole, onDelete, onEdit }: Readonly<{
   member: ManagedMember;
   canChangeRole: boolean;
   currentMemberEmail: string;
   onStatus: (email: string, status: MembershipStatus) => void;
   onRole: (email: string, role: MemberRole) => void;
   onDelete: (member: AllianceMember) => void;
+  onEdit: (member: AllianceMember) => void;
 }>) {
   const { t } = useLocale();
   const canManage = canChangeRole || member.role === "user";
@@ -43,10 +44,13 @@ function MemberActions({ member, canChangeRole, currentMemberEmail, onStatus, on
   if (member.protectedAdmin || isCurrentMember || !canManage) return null;
 
 
+  const editButton = <button aria-label={t("members.edit_member_profile")} className="member-icon-action" data-tooltip={t("members.edit_member_profile")} onClick={() => onEdit(member)} type="button"><Pencil size={14} /></button>;
+
   if (member.role === "admin") return <div className="member-page-actions">
     <select aria-label={t("members.role_for_email", { email: member.email })} onChange={(event) => onRole(member.email, event.target.value as MemberRole)} value={member.role}>
       {(Object.keys(roleLabels) as MemberRole[]).map((role) => <option key={role} value={role}>{t(roleLabels[role])}</option>)}
     </select>
+    {editButton}
     <button aria-label={t("common.delete_email", { email: member.email })} className="member-icon-action delete-member" data-tooltip={t("admin.delete_administrator")} onClick={() => onDelete(member)} type="button"><Trash2 size={14} /></button>
   </div>;
 
@@ -58,6 +62,7 @@ function MemberActions({ member, canChangeRole, currentMemberEmail, onStatus, on
       {member.membershipStatus === "blocked"
         ? <button aria-label={t("common.unblock_email", { email: member.email })} className="member-icon-action approval-button" data-tooltip={t("members.unblock_user")} onClick={() => onStatus(member.email, "pending")} type="button"><UserRoundCheck size={14} /></button>
         : <button aria-label={t("common.block_email", { email: member.email })} className="member-icon-action block-member" data-tooltip={t("members.block_user")} onClick={() => onStatus(member.email, "blocked")} type="button"><Ban size={14} /></button>}
+      {editButton}
       <button aria-label={t("common.delete_email", { email: member.email })} className="member-icon-action delete-member" data-tooltip={t("members.delete_user")} onClick={() => onDelete(member)} type="button"><Trash2 size={14} /></button>
     </div>
   );
@@ -85,6 +90,7 @@ export function MembersPage({ memberActivity, currentMember, alliance, missionCo
   const [notice, setNotice] = useState("");
   const [adminOpen, setAdminOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [editingMember, setEditingMember] = useState<ManagedMember | null>(null);
   const canChangeRole = pageMember.role === "admin";
 
   useEffect(() => {
@@ -189,18 +195,20 @@ export function MembersPage({ memberActivity, currentMember, alliance, missionCo
 
         {loadingMembers ? <LoadingSpinner /> : visibleMembers.length === 0 ? <p className="messages-empty">{emptyMessage}</p> : viewMode === "list" ? <div className="members-table-wrap">
           <table className="members-table">
-            <thead><tr><th>{t("members.member_column_heading")}</th><th>{t("profile.friend_code_column_heading")}</th><th>{t("profile.platforms_column_heading")}</th><th>{t("profile.specialty_column_heading")}</th><th>{t("common.status_column_heading")}</th><th>{t("members.role_column_heading")}</th><th>{t("common.actions_column_heading")}</th></tr></thead>
+            <thead><tr><th>{t("members.member_column_heading")}</th><th>{t("profile.friend_code_column_heading")}</th><th>{t("profile.telegram_name_label")}</th><th>{t("profile.discord_name_label")}</th><th>{t("profile.platforms_column_heading")}</th><th>{t("profile.specialty_column_heading")}</th><th>{t("common.status_column_heading")}</th><th>{t("members.role_column_heading")}</th><th>{t("common.actions_column_heading")}</th></tr></thead>
             <tbody>
               {visibleMembers.map((member) => <tr key={member.email}>
                 <td><div className="member-page-identity"><span className="member-admin-avatar">{member.image ? <span style={{ backgroundImage: `url("${member.image}")` }} /> : (member.nmsName || member.name).slice(0, 1).toUpperCase()}</span><span><strong>{member.nmsName || t("common.nms_name_incomplete_label")}</strong><small>{member.email}</small></span></div></td>
                 <td className="member-code-cell">{member.nmsCode ? formatNmsFriendCode(member.nmsCode) : t("common.incomplete")}</td>
+                <td>{member.telegramName || "-"}</td>
+                <td>{member.discordName || "-"}</td>
                 <td>{member.platforms.length ? member.platforms.join(", ") : t("common.not_selected")}</td>
                 <td>{member.specialty ? t(specialtyLabels[member.specialty]) : t("common.not_selected")}</td>
                 <td>{member.protectedAdmin
                   ? <span className="badge badge--protected">{t("common.protected")}</span>
                   : <span className={`badge badge--member-status badge--member-status-${member.membershipStatus}`}>{t(statusLabels[member.membershipStatus])}</span>}</td>
                 <td>{t(roleLabels[member.role])}</td>
-                <td><MemberActions canChangeRole={canChangeRole} currentMemberEmail={pageMember.email} member={member} onDelete={(target) => void deleteMember(target)} onRole={(email, role) => void patchMember(email, { role })} onStatus={(email, membershipStatus) => void patchMember(email, { membershipStatus })} /></td>
+                <td><MemberActions onEdit={(target) => setEditingMember(target as ManagedMember)} canChangeRole={canChangeRole} currentMemberEmail={pageMember.email} member={member} onDelete={(target) => void deleteMember(target)} onRole={(email, role) => void patchMember(email, { role })} onStatus={(email, membershipStatus) => void patchMember(email, { membershipStatus })} /></td>
               </tr>)}
             </tbody>
           </table>
@@ -217,6 +225,8 @@ export function MembersPage({ memberActivity, currentMember, alliance, missionCo
             </div>
             <dl className="member-card-details">
               <div><dt>{t("profile.friend_code_label")}</dt><dd>{member.nmsCode ? formatNmsFriendCode(member.nmsCode) : t("common.incomplete")}</dd></div>
+              <div><dt>{t("profile.telegram_name_label")}</dt><dd>{member.telegramName || "-"}</dd></div>
+              <div><dt>{t("profile.discord_name_label")}</dt><dd>{member.discordName || "-"}</dd></div>
               <div><dt>{t("profile.platforms_label")}</dt><dd>{member.platforms.length ? member.platforms.join(", ") : t("common.not_selected")}</dd></div>
               <div><dt>{t("profile.specialty_label")}</dt><dd>{member.specialty ? t(specialtyLabels[member.specialty]) : t("common.not_selected")}</dd></div>
               <div><dt>{t("members.role_label")}</dt><dd>{t(roleLabels[member.role])}</dd></div>
@@ -226,7 +236,7 @@ export function MembersPage({ memberActivity, currentMember, alliance, missionCo
                 {member.nmsName && memberActivity.missionOwnerIds.includes(member.publicId) && <Link aria-label={t("members.find_member_s_missions", { member: member.nmsName || member.name })} className="member-icon-action member-link-action" data-tooltip={t("members.user_missions")} href={`/missions?search=${encodeURIComponent(member.nmsName)}`}><Crosshair size={14} /></Link>}
                 {member.nmsName && memberActivity.stationOwnerIds.includes(member.publicId) && <Link aria-label={t("stations.find_member_s_stations", { member: member.nmsName || member.name })} className="member-icon-action member-link-action member-station-filter" data-tooltip={t("stations.user_stations")} href={`/stations?search=${encodeURIComponent(member.nmsName)}`}><Orbit size={14} /></Link>}
               </div>
-              <MemberActions canChangeRole={canChangeRole} currentMemberEmail={pageMember.email} member={member} onDelete={(target) => void deleteMember(target)} onRole={(email, role) => void patchMember(email, { role })} onStatus={(email, membershipStatus) => void patchMember(email, { membershipStatus })} />
+              <MemberActions onEdit={(target) => setEditingMember(target as ManagedMember)} canChangeRole={canChangeRole} currentMemberEmail={pageMember.email} member={member} onDelete={(target) => void deleteMember(target)} onRole={(email, role) => void patchMember(email, { role })} onStatus={(email, membershipStatus) => void patchMember(email, { membershipStatus })} />
             </div>
           </article>)}
         </div>}
@@ -235,7 +245,8 @@ export function MembersPage({ memberActivity, currentMember, alliance, missionCo
         </main>
       </section>
       {adminOpen && pageMember.role === "admin" && <AdminPanel onClose={() => setAdminOpen(false)} onSaved={setAllianceSettings} />}
-      {profileOpen && <MemberProfilePanel member={pageMember} onClose={() => setProfileOpen(false)} onSaved={(profile) => setPageMember((current) => ({ ...current, nmsName: profile.nmsName, nmsCode: profile.nmsCode, platforms: profile.platforms, specialty: profile.specialty, simpleView: profile.simpleView }))} />}
+      {editingMember && <MemberProfilePanel editMember key={editingMember.email} member={editingMember} onClose={() => setEditingMember(null)} onSaved={(updated) => { setMembers((current) => current.map((item) => item.email === updated.email ? { ...item, ...updated } : item)); setEditingMember(null); }} />}
+      {profileOpen && <MemberProfilePanel member={pageMember} onClose={() => setProfileOpen(false)} onSaved={(profile) => setPageMember((current) => ({ ...current, nmsName: profile.nmsName, nmsCode: profile.nmsCode, telegramName: profile.telegramName, discordName: profile.discordName, platforms: profile.platforms, specialty: profile.specialty, simpleView: profile.simpleView }))} />}
     </div>
   );
 }

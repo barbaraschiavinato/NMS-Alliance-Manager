@@ -702,7 +702,7 @@ select { appearance: none; padding-right: 29px; background-image: linear-gradien
 .member-card-details > div { display: flex; justify-content: space-between; gap: 10px; padding: 8px 0; border-top: 1px solid #394548; font-size: 9px; }
 .member-card-details dt { color: #b4bfbe; }
 .member-card-details dd { margin: 0; color: #f1eee7; text-align: right; overflow-wrap: anywhere; }
-.member-card-actions { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-top: 10px; border-top: 1px solid #394548; }
+.member-card-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; padding-top: 10px; border-top: 1px solid #394548; }
 .member-cards-empty { grid-column: 1 / -1; padding: 22px 0; color: #b4bfbe; text-align: center; font-size: 10px; }
 .members-table { width: 100%; min-width: 880px; border-collapse: collapse; text-align: left; }
 .members-table th { height: 39px; padding: 0 11px; color: #e0e5e1; border-bottom: 1px solid #3a4548; font-family: "SFMono-Regular", Consolas, monospace; font-size: 8px; letter-spacing: .65px; white-space: nowrap; }
@@ -1248,3 +1248,9 @@ body:has(.sidebar-compact) .dialog-heading .icon-button svg { width: 26px; heigh
 .planet-race-icon { display: inline-block; width: 12px; height: 11px; margin: 0 4px 0 2px; vertical-align: -2px; background: var(--lime); -webkit-mask: var(--race-icon) center / contain no-repeat; mask: var(--race-icon) center / contain no-repeat; }
 .sidebar-compact ~ .main-panel .planet-race-icon { width: 15px; height: 14px; }
 .planet-race-unknown { margin: 0 4px 0 2px; color: var(--lime); font-weight: 700; }
+
+.member-card-actions > .member-page-actions:first-child { order: 2; flex-basis: 100%; }
+.member-card-actions > .member-page-actions:not(:first-child) { display: flex; flex: 1 1 0; min-width: 0; }
+.member-card-actions > .member-page-actions:not(:first-child) select { flex: 1 1 0; min-width: 0; max-width: none; }
+.member-card { grid-template-rows: auto auto 1fr; }
+.member-card .member-card-actions { align-self: end; }

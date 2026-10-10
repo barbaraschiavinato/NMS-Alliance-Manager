@@ -663,7 +663,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
               const canEditStation = canSeeAll ||
                 (station.createdByMemberId ?? station.ownerId) === pageMember.publicId;
               const canCreateMission = canCreateMissionFromStation(station, pageMember, canCreateMissions);
-              const stationOwner = canSeeAll && <StationOwnerCell onOpenProfile={(memberId) => setProfileTarget({
+              const stationOwner = <StationOwnerCell onOpenProfile={(memberId) => setProfileTarget({
                 memberId,
                 messageContext: {
                   type: "planet",
@@ -682,7 +682,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
                     <StationSystemCoreInfo key={`${station.portal}:${station.galaxy}`} galaxy={station.galaxy} portal={station.portal} />
                   </span>
                 </button>}
-                {viewMode === "cards" && stationOwner && <div className="station-card-owner">{stationOwner}</div>}
+                {viewMode === "cards" && <div className="station-card-owner">{stationOwner}</div>}
                 <div className="station-portal-code"><strong className="station-name">{stationDisplayName}</strong><GlyphStrip address={station.portal} /><code>{station.portal}</code>{viewMode === "list" && stationOwner}</div>
                 <div className="station-planet-info-list">
                   {station.planet

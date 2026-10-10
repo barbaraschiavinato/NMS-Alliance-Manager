@@ -113,11 +113,13 @@ export function OfflinePlayersPage({ memberActivity, currentMember, alliance, mi
             {notice && <p className="address-validation address-valid"><Check size={14} />{t(notice)}</p>}
             {loading ? <LoadingSpinner /> : offline.length === 0 ? <p className="messages-empty">{t("members.no_offline_players")}</p> : <div className="members-table-wrap">
               <table className="members-table offline-table">
-                <thead><tr><th>{t("members.member_column_heading")}</th><th>{t("profile.friend_code_column_heading")}</th><th>{t("profile.platforms_column_heading")}</th><th>{t("profile.specialty_column_heading")}</th><th>{t("common.actions_column_heading")}</th></tr></thead>
+                <thead><tr><th>{t("members.member_column_heading")}</th><th>{t("profile.friend_code_column_heading")}</th><th>{t("profile.telegram_name_label")}</th><th>{t("profile.discord_name_label")}</th><th>{t("profile.platforms_column_heading")}</th><th>{t("profile.specialty_column_heading")}</th><th>{t("common.actions_column_heading")}</th></tr></thead>
                 <tbody>
                   {offline.map((player) => <tr key={player.publicId}>
                     <td><strong>{player.nmsName}</strong></td>
                     <td className="member-code-cell">{formatNmsFriendCode(player.nmsCode)}</td>
+                    <td>{player.telegramName || "-"}</td>
+                    <td>{player.discordName || "-"}</td>
                     <td>{player.platforms.join(", ")}</td>
                     <td>{player.specialty ? t(specialtyLabels[player.specialty]) : ""}</td>
                     <td><div className="member-page-actions">
@@ -142,9 +144,9 @@ export function OfflinePlayersPage({ memberActivity, currentMember, alliance, mi
         </main>
       </section>
       {adminOpen && pageMember.role === "admin" && <AdminPanel onClose={() => setAdminOpen(false)} onSaved={setAllianceSettings} />}
-      {profileOpen && <MemberProfilePanel member={pageMember} onClose={() => setProfileOpen(false)} onSaved={(profile) => setPageMember((current) => ({ ...current, nmsName: profile.nmsName, nmsCode: profile.nmsCode, platforms: profile.platforms, specialty: profile.specialty, simpleView: profile.simpleView }))} />}
+      {profileOpen && <MemberProfilePanel member={pageMember} onClose={() => setProfileOpen(false)} onSaved={(profile) => setPageMember((current) => ({ ...current, nmsName: profile.nmsName, nmsCode: profile.nmsCode, telegramName: profile.telegramName, discordName: profile.discordName, platforms: profile.platforms, specialty: profile.specialty, simpleView: profile.simpleView }))} />}
       {editing && <MemberProfilePanel editOffline key={editing.publicId} member={editing} onClose={() => setEditing(null)} onSaved={(updated) => { setAll((current) => current.map((item) => item.publicId === updated.publicId ? updated : item)); setNotice("members.offline_player_updated"); }} />}
-      {addOpen && <MemberProfilePanel createOffline member={{ ...pageMember, nmsName: "", nmsCode: "", platforms: [], specialty: "" }} onClose={() => setAddOpen(false)} onSaved={(created) => { setAll((current) => [...current, created]); setNotice("members.offline_player_created"); }} />}
+      {addOpen && <MemberProfilePanel createOffline member={{ ...pageMember, nmsName: "", nmsCode: "", telegramName: "", discordName: "", platforms: [], specialty: "" }} onClose={() => setAddOpen(false)} onSaved={(created) => { setAll((current) => [...current, created]); setNotice("members.offline_player_created"); }} />}
     </div>
   );
 }
