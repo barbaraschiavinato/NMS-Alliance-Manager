@@ -1,0 +1,250 @@
+.mission-card-system .station-card-system-core { flex-basis: 100%; }
+.station-list-empty.station-list-loading { padding: 0; border: 0; }
+.station-list-section { width: min(1180px, 100%); margin: 0 auto; }
+.station-dialog { width: min(560px, 100%); }
+.station-toolbar-actions { min-width: 0; gap: 8px; }
+.station-toolbar-actions .station-export-button { width: 32px; height: 32px; position: relative; display: grid; place-items: center; padding: 0; color: #cbd6ce; border: 1px solid #394548; border-radius: 3px; background: #171e21; cursor: pointer; }
+.station-export-button:hover:not(:disabled) { color: var(--lime); border-color: var(--lime); }
+.station-export-button:disabled { cursor: wait; opacity: .65; }
+.station-toolbar-actions .station-export-button[data-tooltip]::after { position: absolute; z-index: 30; right: 0; bottom: calc(100% + 7px); padding: 6px 8px; color: #f1eee7; border: 1px solid #394548; border-radius: 3px; background: #111719; box-shadow: 0 4px 14px #0008; content: attr(data-tooltip); font-family: "Raleway", sans-serif; font-size: 9px; font-weight: 500; line-height: 1.2; opacity: 0; pointer-events: none; transform: translateY(3px); transition: opacity .12s, transform .12s; white-space: nowrap; }
+.station-toolbar-actions .station-export-button[data-tooltip]:hover::after,
+.station-toolbar-actions .station-export-button[data-tooltip]:focus-visible::after { opacity: 1; transform: translateY(0); }
+.station-list { margin: 0; padding: 0; list-style: none; }
+.station-list li { min-height: 48px; display: grid; grid-template-columns: minmax(215px, 235px) minmax(0, 1fr) minmax(30px, max-content); align-items: center; gap: 12px; padding: 10px 3px; border-bottom: 1px solid #e5e9e2; }
+.station-list-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 12px; border-top: 0; }
+.station-list-cards li { min-height: 0; grid-template-columns: minmax(0, 1fr) max-content; align-items: start; gap: 10px; padding: 14px; color: #f1eee7; border: 1px solid #394548; border-radius: 4px; background: #171e21; }
+.station-card-title { min-width: 0; display: flex; grid-column: 1; grid-row: 1; align-items: center; gap: 10px; padding: 0; color: #f1eee7; border: 0; background: transparent; cursor: pointer; text-align: left; }
+.station-card-planet-image { width: 58px; height: 58px; flex: 0 0 58px; border: 1px solid #394548; border-radius: 3px; object-fit: cover; }
+.station-card-title-copy { min-width: 0; display: grid; align-content: center; gap: 5px; }
+.station-card-title-copy > span { color: #a4adae; font-size: 8px; }
+.station-card-title-copy > strong { max-width: 100%; overflow: hidden; color: var(--lime); font-size: 14px; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
+.station-card-system-core { color: #a4adae; font-size: 8px; line-height: 1.4; }
+.station-card-title:hover > strong { color: #ff8400; }
+.station-list-cards .station-card-owner { min-width: 0; grid-column: 2; grid-row: 1; justify-self: end; }
+.station-list-cards .station-card-owner .station-owner-card { justify-items: end; margin: 0; }
+.station-list-cards .station-card-owner .station-owner-link { justify-content: flex-end; }
+.station-list-cards .station-portal-code { grid-column: 1 / -1; grid-row: 2; display: grid; grid-template-columns: minmax(0, 1fr) max-content; align-items: start; gap: 4px; padding-top: 10px; border-top: 1px solid #354044; }
+.station-list-cards .station-portal-code > code { grid-column: 2; grid-row: 1; align-self: start; text-align: right; }
+.station-list-cards .station-planet-info-list { grid-column: 1 / -1; grid-row: 3; }
+.station-list-cards .station-planet-info { grid-template-columns: minmax(0, 1fr); }
+.station-list-cards .station-planet-open { display: none; }
+.station-list-cards .station-planet-unknown { display: none; }
+.station-card-no-planet { margin: 0; color: #a4adae; font-size: 9px; }
+.station-list:not(.station-list-cards) .station-name { color: var(--lime); font-size: 10px; }
+.station-list-cards .station-name { display: none; }
+.station-portal-code { min-width: 0; display: grid; justify-items: start; gap: 4px; }
+.station-owner { color: #b4bfbe; font-size: 8px; line-height: 1.3; overflow-wrap: anywhere; }
+.station-owner-card { min-width: 0; display: grid; justify-items: start; gap: 5px; margin-top: 4px; }
+.station-owner-card > small { color: #aab4b4; font-family: "SFMono-Regular", Consolas, monospace; font-size: 7px; letter-spacing: .5px; }
+.station-owner-link { min-width: 0; max-width: 100%; font-size: 9px; }
+.station-actions .station-notes-action { color: #e4b478; }
+.station-notes-dialog { width: min(460px, 100%); }
+.station-notes-content { margin: 0; color: #d4dad6; font-size: 11px; line-height: 1.6; text-align: left; white-space: pre-wrap; overflow-wrap: anywhere; }
+.station-list code { color: var(--lime); font-family: "SFMono-Regular", Consolas, monospace; font-size: 9px; }
+.station-planet-info-list { min-width: 0; display: grid; gap: 7px; }
+.station-card-footer { min-width: 0; grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 2px; padding-top: 10px; border-top: 1px solid #354044; }
+.station-system-status { min-width: 0; display: flex; align-items: center; gap: 5px; }
+.station-system-status > strong { color: #a4adae; font-family: "SFMono-Regular", Consolas, monospace; font-size: 7px; letter-spacing: .4px; text-transform: uppercase; }
+.station-planet-info { min-width: 0; display: grid; grid-template-columns: 135px minmax(0, 1fr); align-items: center; gap: 9px; padding: 5px 0; border-bottom: 1px solid #354044; }
+.station-planet-info:last-child { border-bottom: 0; }
+.station-planet-open { min-width: 0; display: grid; justify-items: start; gap: 3px; padding: 0; color: inherit; border: 0; background: transparent; cursor: pointer; text-align: left; }
+.station-planet-open > span { color: #a4adae; font-size: 8px; }
+.station-planet-open > strong { overflow: hidden; color: var(--lime); font-size: 9px; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
+.station-planet-open:hover > strong { color: #ff8400; text-decoration: underline; text-underline-offset: 2px; }
+.station-planet-info dl { min-width: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px 8px; margin: 0; }
+.station-planet-info dl > div { min-width: 0; display: flex; flex-wrap: wrap; gap: 3px; }
+.station-planet-info dt { color: #a4adae; font-size: 7px; }
+.station-planet-info dd { min-width: 0; margin: 0; color: #d4dad6; font-size: 8px; overflow-wrap: anywhere; }
+.station-planet-unknown { color: #879188; font-size: 9px; }
+.station-actions { display: flex; align-items: center; justify-content: flex-end; gap: 5px; }
+.station-missions-link { color: #72d1c4; }
+.station-actions [data-tooltip] { position: relative; }
+.station-actions [data-tooltip]::after { position: absolute; z-index: 30; right: 0; bottom: calc(100% + 7px); padding: 6px 8px; color: #f1eee7; border: 1px solid #394548; border-radius: 3px; background: #111719; box-shadow: 0 4px 14px #0008; content: attr(data-tooltip); font-size: 9px; font-weight: 500; line-height: 1.2; opacity: 0; pointer-events: none; text-transform: none; transform: translateY(3px); transition: opacity .12s, transform .12s; white-space: nowrap; }
+.station-actions [data-tooltip]:hover::after,
+.station-actions [data-tooltip]:focus-visible::after { opacity: 1; transform: translateY(0); }
+.station-mission-lock { max-width: 92px; color: #889289; font-size: 7px; line-height: 1.3; text-align: right; }
+.station-list-empty { margin: 0; padding: 22px 0; color: #78847b; border-top: 1px solid #dfe4dc; border-bottom: 1px solid #e5e9e2; font-size: 10px; }
+.station-list-section > p.station-list-empty { border-top: 0; border-bottom: 0; }
+.station-list-empty-no-saved { padding-bottom: 0; }
+@media (max-width: 720px) {
+  .station-list li { grid-template-columns: minmax(0, 1fr) minmax(34px, max-content); align-items: start; gap: 8px; }
+}
+
+@media (max-width: 720px) {
+  .station-portal-code { grid-column: 1; grid-row: 1; }
+}
+
+@media (max-width: 720px) {
+  .station-planet-info-list { grid-column: 1; grid-row: 2; }
+}
+
+@media (max-width: 720px) {
+  .station-list-cards { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 720px) {
+  .station-list-cards li { grid-template-columns: minmax(0, 1fr) max-content; gap: 10px; padding: 12px; }
+}
+
+@media (max-width: 720px) {
+  .station-list-cards .station-portal-code { grid-column: 1 / -1; grid-row: 2; }
+}
+
+@media (max-width: 720px) {
+  .station-list-cards .station-planet-info-list { grid-column: 1 / -1; grid-row: 3; }
+}
+
+@media (max-width: 720px) {
+  .station-card-footer { grid-row: auto; }
+}
+
+@media (max-width: 720px) {
+  .station-card-footer .station-actions { grid-column: auto; grid-row: auto; flex-direction: row; align-items: center; }
+}
+
+@media (max-width: 720px) {
+  .station-system-status { flex-wrap: wrap; }
+}
+
+@media (max-width: 720px) {
+  .station-mission-lock { max-width: 58px; }
+}
+
+@media (max-width: 720px) {
+  .station-planet-info { grid-template-columns: minmax(0, 1fr) auto; gap: 6px; }
+}
+
+@media (max-width: 720px) {
+  .station-planet-info dl { grid-column: 1 / span 2; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+.sidebar-compact ~ .main-panel .station-card-title-copy > span { font-size: 11px; }
+.sidebar-compact ~ .main-panel .station-card-title-copy > strong { font-size: 17px; }
+.sidebar-compact ~ .main-panel .station-card-no-planet { font-size: 12px; }
+.sidebar-compact ~ .main-panel .station-card-planet-image { width: 84px; height: 84px; flex-basis: 84px; }
+.sidebar-compact ~ .main-panel .station-portal-code > code { display: none; }
+.sidebar-compact ~ .main-panel .station-planet-info dt { font-size: 11px; }
+.sidebar-compact ~ .main-panel .station-planet-info dd { font-size: 14px; }
+.sidebar-compact ~ .main-panel .station-planet-info { grid-template-columns: minmax(0, 1fr); padding: 8px 0; }
+.sidebar-compact ~ .main-panel .station-system-status > strong { font-size: 11px; }
+.sidebar-compact ~ .main-panel .station-owner-link { font-size: 14px; }
+.sidebar-compact ~ .main-panel .station-owner-card > small { font-size: 10px; }
+.sidebar-compact ~ .main-panel .station-mission-lock { display: none; }
+body:has(.sidebar-compact) .station-notes-dialog { width: min(760px, 100%); padding: 32px; }
+body:has(.sidebar-compact) .station-notes-content { font-size: 17px; }
+body:has(.sidebar-compact) .station-dialog { width: min(760px, 100%); padding: 32px; }
+body:has(.sidebar-compact) .station-dialog input, body:has(.sidebar-compact) .station-dialog select, body:has(.sidebar-compact) .station-dialog textarea { min-height: 44px; font-size: 16px; }
+body:has(.sidebar-compact) .station-dialog textarea { min-height: 110px; }
+@media (max-width: 950px) {
+  .sidebar-compact ~ .main-panel .station-list-cards { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 950px) {
+  .sidebar-compact ~ .main-panel .station-list-cards li { padding: 12px; }
+}
+
+@media (max-width: 950px) {
+  .sidebar-compact ~ .main-panel .station-system-status { flex-wrap: wrap; }
+}
+
+.station-list li.station-is-new { position: relative; }
+.station-new-ribbon-clip { position: absolute; z-index: 2; top: 0; left: 0; width: 96px; height: 96px; overflow: hidden; pointer-events: none; }
+.station-new-ribbon { position: absolute; top: 10px; left: -26px; width: 90px; padding: 2px 0; color: #10130f; background: var(--lime); font-size: 10px; font-weight: 750; letter-spacing: 0.06em; text-align: center; text-transform: uppercase; transform: rotate(-45deg); pointer-events: none; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35); }
+.sidebar-compact ~ .main-panel .station-new-ribbon { top: 19px; left: -27px; width: 110px; font-size: 12px; }
+.station-mission-disabled { position: relative; color: #4f6f6a; cursor: default; }
+.station-mission-disabled::before { content: ""; position: absolute; left: 4px; right: 4px; top: 50%; height: 2px; background: currentColor; transform: rotate(-45deg); z-index: 1; }
+.station-mission-disabled:hover { color: #4f6f6a; border-color: #394548; background: #1a2124; }
+.station-card-footer:not(:has(.member-icon-action, .station-system-status)) { margin-top: 0; padding-top: 0; border-top: 0; }
+.station-list-cards li { grid-template-rows: auto auto 1fr auto; }
+.station-list-cards .station-card-footer { align-self: end; }
+@media (max-width: 720px) {
+  .main-panel .station-list-cards .station-portal-code > code { grid-column: 1 / -1; grid-row: 2; text-align: left; }
+}
+
+@media (max-width: 720px) {
+  .main-panel .station-list-cards li { grid-template-rows: auto auto auto 1fr auto; }
+}
+
+@media (max-width: 720px) {
+  .main-panel .station-list-cards .station-card-title { grid-column: 1 / -1; }
+}
+
+@media (max-width: 720px) {
+  .main-panel .station-list-cards .station-card-owner { grid-column: 1 / -1; grid-row: 2; justify-self: stretch; }
+}
+
+@media (max-width: 720px) {
+  .main-panel .station-list-cards .station-card-owner .station-owner-card { justify-items: start; }
+}
+
+@media (max-width: 720px) {
+  .main-panel .station-list-cards .station-card-owner .station-owner-link { justify-content: flex-start; }
+}
+
+@media (max-width: 720px) {
+  .main-panel .station-list-cards .station-portal-code { grid-row: 3; }
+}
+
+@media (max-width: 720px) {
+  .main-panel .station-list-cards .station-planet-info-list { grid-row: 4; }
+}
+
+@media (max-width: 720px) {
+  .main-panel .station-list-cards .station-card-owner .station-owner-card { display: flex; flex-wrap: nowrap; align-items: center; gap: 8px; }
+}
+
+@media (max-width: 720px) {
+  .main-panel .station-list-cards .station-card-owner .station-owner-card > small { flex: 0 0 auto; }
+}
+
+@media (max-width: 720px) {
+  .main-panel .station-list-cards .station-card-owner .station-owner-link { flex: 1 1 auto; min-width: 0; }
+}
+
+@media (max-width: 720px) {
+  .main-panel .station-list-cards .station-card-owner .station-owner-card { justify-content: flex-end; }
+}
+
+@media (max-width: 720px) {
+  .main-panel .station-list-cards .station-card-owner .station-owner-link { flex: 0 1 auto; justify-content: flex-end; }
+}
+
+.station-new-ribbon.station-completed-ribbon { color: #fff; background: #2e9e5b; font-size: 8px; letter-spacing: .04em; }
+.sidebar-compact ~ .main-panel .station-new-ribbon.station-completed-ribbon { font-size: 10px; }
+.station-new-ribbon.station-available-ribbon { color: #10130f; background: var(--lime); font-size: 8px; letter-spacing: .04em; }
+.sidebar-compact ~ .main-panel .station-new-ribbon.station-available-ribbon { font-size: 10px; }
+.station-owner-link > span:last-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.station-owner-card { grid-template-columns: minmax(0, 1fr); max-width: 100%; }
+.station-card-owner { min-width: 0; }
+.station-owner-link { display: inline-flex; max-width: 100%; min-width: 0; }
+.main-panel .station-owner-link { flex-wrap: nowrap; }
+.main-panel .station-card-owner .station-owner-card { width: 100%; }
+.station-portal-code > .station-owner-card { width: 100%; }
+.station-list-cards li { grid-template-columns: minmax(0, 1fr) fit-content(35%); }
+.station-list-cards .station-card-owner { max-width: 100%; }
+.station-list-cards .station-card-owner .station-owner-card { width: 100%; justify-items: end; }
+.station-list-cards .station-card-owner .station-owner-link { max-width: 100%; }
+@media (max-width: 950px) {
+  .station-list-cards li { grid-template-columns: minmax(0, 1fr) fit-content(35%); }
+}
+
+.sidebar-compact ~ .main-panel .station-card-footer .station-actions { margin-left: auto; justify-content: flex-end; }
+@media (max-width: 950px) {
+  .main-panel.main-panel .station-list-cards .station-card-extended .station-portal-code > code { grid-column: 1 / -1; grid-row: 2; text-align: left; }
+}
+
+@media (max-width: 950px) {
+  .main-panel.main-panel .station-card-extended .station-card-footer { flex-wrap: wrap; justify-content: flex-start; gap: 10px; }
+}
+
+@media (max-width: 950px) {
+  .main-panel.main-panel .station-card-extended .station-system-status { flex: 1 1 100%; width: 100%; flex-wrap: nowrap; justify-content: space-between; gap: 6px; }
+}
+
+@media (max-width: 950px) {
+  .main-panel.main-panel .station-card-extended .station-card-footer .station-actions { flex: 1 1 100%; width: 100%; margin-left: 0; justify-content: flex-start; flex-wrap: wrap; }
+}
+
+@media (max-width: 950px) {
+  .main-panel.main-panel .station-card-extended .station-actions .station-edit-action { order: 1; margin-left: auto; }
+}

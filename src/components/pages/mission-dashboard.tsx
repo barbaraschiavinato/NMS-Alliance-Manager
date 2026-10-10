@@ -361,7 +361,7 @@ export function MissionDashboard({ currentMember, alliance: initialAlliance, ini
     <main className="app-shell">
       <Sidebar activeSection="missioni" currentMember={member} missionCount={missions.length} settings={alliance} stationCount={sidebarStationCount} offlineCount={sidebarOfflineCount} userCount={sidebarUserCount} />
       <section className="main-panel" id="missioni">
-        <Header currentMember={member} onAdminOpen={() => setAdminOpen(true)} onProfileOpen={() => setProfileOpen(true)} settings={alliance} />
+        <Header currentMember={member} onAdminOpen={() => setAdminOpen(true)} onProfileOpen={() => setProfileOpen(true)} onProfileSaved={(profile) => setMember((current) => ({ ...current, ...profile }))} settings={alliance} />
         <Hero settings={alliance} subtitle="Coordinate the next frontier, one expedition at a time." title="Mission log">
           {canManage && <HeroAddButton label="New mission" onClick={() => openMission(null)} />}
         </Hero>

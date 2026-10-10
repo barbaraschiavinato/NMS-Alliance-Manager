@@ -419,7 +419,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
     <div className="app-shell">
       <Sidebar activeSection="stazioni" currentMember={pageMember} missionCount={missionCount} settings={allianceSettings} stationCount={loading ? sidebarStationCount : stations.length} offlineCount={sidebarOfflineCount} userCount={sidebarUserCount} />
       <section className="main-panel">
-        <Header currentMember={pageMember} onAdminOpen={() => setAdminOpen(true)} onProfileOpen={() => setProfileOpen(true)} sectionTitle={t("stations.stations")} settings={allianceSettings} />
+        <Header currentMember={pageMember} onAdminOpen={() => setAdminOpen(true)} onProfileOpen={() => setProfileOpen(true)} onProfileSaved={(profile) => setPageMember((current) => ({ ...current, ...profile }))} sectionTitle={t("stations.stations")} settings={allianceSettings} />
         <Hero
           subtitle={t(canSeeAll || canCreateOwnSpecialtyMission ? "admin.browse_alliance_registered_portals_and_their_planets" : "stations.register_portals_for_systems_you_have_discovered")}
           settings={allianceSettings}

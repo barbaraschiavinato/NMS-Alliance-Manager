@@ -280,7 +280,7 @@ export function MessagesPage({ currentMember, alliance, missionCount, stationCou
   return <div className="app-shell">
     <Sidebar activeSection="messaggi" currentMember={member} missionCount={missionCount} settings={settings} stationCount={stationCount} offlineCount={offlineCount} userCount={userCount} />
     <section className="main-panel">
-      <Header currentMember={member} onAdminOpen={() => setAdminOpen(true)} onProfileOpen={() => setProfileOpen(true)} sectionTitle="messages.messages" settings={settings} />
+      <Header currentMember={member} onAdminOpen={() => setAdminOpen(true)} onProfileOpen={() => setProfileOpen(true)} onProfileSaved={(profile) => setMember((current) => ({ ...current, ...profile }))} sectionTitle="messages.messages" settings={settings} />
       <Hero settings={settings} subtitle={t("messages.page_description")} title="messages.messages" />
       <main className="content-wrap messages-page">
         <Tabs className="member-filter-tabs" items={(["received", "sent", ...(isAdmin ? ["all" as const] : [])] as MessageTab[]).filter((key) => key === tab || key === "received" || (key === "sent" ? sentMessages.length : messages.length) > 0).map((key) => ({

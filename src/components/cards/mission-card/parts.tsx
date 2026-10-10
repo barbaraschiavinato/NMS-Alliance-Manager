@@ -230,9 +230,13 @@ export function MissionNotesButton({ mission, onView }: Readonly<{
 
 export type PlanetNotes = Readonly<{ title: string; portal: string; notes: string[] }>;
 export const planetNotesRequests = new Map<string, Promise<string[]>>();
+const planetNotesCache = new Map<string, Readonly<{ notes: string[]; expiresAt: number }>>();
+const planetNotesCacheMs = 30_000;
 
 export function readPlanetNotes(mission: Mission): Promise<string[]> {
   const key = mission.id;
+  const cached = planetNotesCache.get(key);
+  if (cached && cached.expiresAt > Date.now()) return Promise.resolve(cached.notes);
   const cachedRequest = planetNotesRequests.get(key);
   if (cachedRequest) return cachedRequest;
 
@@ -248,6 +252,7 @@ export function readPlanetNotes(mission: Mission): Promise<string[]> {
     return typeof note === "string" && note.trim() ? [note.trim()] : [];
   }).then((notes) => {
     if (planetNotesRequests.get(key) === request) planetNotesRequests.delete(key);
+    planetNotesCache.set(key, { notes, expiresAt: Date.now() + planetNotesCacheMs });
     return notes;
   }).catch((error: unknown) => {
     if (planetNotesRequests.get(key) === request) planetNotesRequests.delete(key);
@@ -270,8 +275,8 @@ export function PlanetNotesButton({ mission, onView }: Readonly<{
       .then((notes) => {
         if (active) setHasNotes(notes.length > 0);
       })
-      .catch((error: unknown) => {
-        if (active) console.error("Unable to load planet notes", error);
+      .catch(() => {
+        if (active) setHasNotes(false);
       });
     return () => {
       active = false;
@@ -285,7 +290,7 @@ export function PlanetNotesButton({ mission, onView }: Readonly<{
     data-tooltip={t("planet.view_planet_notes")}
     onClick={() => void readPlanetNotes(mission)
       .then((notes) => onView({ title: mission.title, portal: mission.systemAddress, notes }))
-      .catch((error: unknown) => console.error("Unable to open planet notes", error))}
+      .catch(() => undefined)}
     type="button"
   ><Info size={14} /></button>;
 }

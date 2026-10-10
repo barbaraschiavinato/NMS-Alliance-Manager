@@ -104,7 +104,7 @@ export function OfflinePlayersPage({ memberActivity, currentMember, alliance, mi
     <div className="app-shell">
       <Sidebar activeSection="offline" currentMember={pageMember} missionCount={missionCount} settings={allianceSettings} stationCount={sidebarStationCount} offlineCount={loading ? sidebarOfflineCount : all.filter((member) => member.offline).length} userCount={sidebarUserCount} />
       <section className="main-panel">
-        <Header currentMember={pageMember} onAdminOpen={() => setAdminOpen(true)} onProfileOpen={() => setProfileOpen(true)} sectionTitle={t("members.offline_players")} settings={allianceSettings} />
+        <Header currentMember={pageMember} onAdminOpen={() => setAdminOpen(true)} onProfileOpen={() => setProfileOpen(true)} onProfileSaved={(profile) => setPageMember((current) => ({ ...current, ...profile }))} sectionTitle={t("members.offline_players")} settings={allianceSettings} />
         <Hero settings={allianceSettings} subtitle={t("members.offline_players_description")} title={t("members.offline_players")}>
           <HeroAddButton label="members.add_offline_player" onClick={() => setAddOpen(true)} />
         </Hero>

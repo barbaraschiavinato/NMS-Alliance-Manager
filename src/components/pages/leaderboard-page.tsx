@@ -40,7 +40,7 @@ export function LeaderboardPage({ currentMember, alliance, boards, missionCount,
   return <div className="app-shell">
     <Sidebar activeSection="classifica" currentMember={member} missionCount={missionCount} settings={settings} stationCount={stationCount} offlineCount={offlineCount} userCount={userCount} />
     <section className="main-panel">
-      <Header currentMember={member} onAdminOpen={() => setAdminOpen(true)} onProfileOpen={() => setProfileOpen(true)} sectionTitle="leaderboard.title" settings={settings} />
+      <Header currentMember={member} onAdminOpen={() => setAdminOpen(true)} onProfileOpen={() => setProfileOpen(true)} onProfileSaved={(profile) => setMember((current) => ({ ...current, ...profile }))} sectionTitle="leaderboard.title" settings={settings} />
       <Hero settings={settings} subtitle={t("leaderboard.description")} title="leaderboard.title" />
       <main className="content-wrap leaderboard-page">
         {[boards.filter((board) => !board.role), boards.filter((board) => board.role)].map((group, groupIndex) => <div className={"leaderboard-widgets"} key={groupIndex}>

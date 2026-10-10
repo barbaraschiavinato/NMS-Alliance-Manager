@@ -458,6 +458,8 @@ export const translations: TranslationCatalog = {
     "profile.no_specialty_specified": "Specializzazione non indicata",
     "profile.no_platforms_specified": "Nessuna piattaforma indicata",
     "profile.simple_view": "Vista semplice",
+    "navigation.switch_to_simple_view": "Passa alla vista semplice",
+    "navigation.switch_to_extended_view": "Passa alla vista admin",
     "profile.message_mission_only_notice": "Confermo che questo messaggio riguarda solo la missione o il pianeta. Per tutte le altre comunicazioni userò Telegram o Discord.",
     "profile.friend_code_label": "Codice amico",
     "profile.platforms_label": "Piattaforme",

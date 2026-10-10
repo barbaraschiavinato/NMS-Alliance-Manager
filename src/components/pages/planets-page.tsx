@@ -212,7 +212,7 @@ export function PlanetsPage({ alliance, currentMember, planets, almanacLookupFai
         settings={allianceSettings}
       />
       <section className="main-panel">
-        <Header currentMember={pageMember} onAdminOpen={() => setAdminOpen(true)} onProfileOpen={() => setProfileOpen(true)} sectionTitle="navigation.planets" settings={allianceSettings} />
+        <Header currentMember={pageMember} onAdminOpen={() => setAdminOpen(true)} onProfileOpen={() => setProfileOpen(true)} onProfileSaved={(profile) => setPageMember((current) => ({ ...current, ...profile }))} sectionTitle="navigation.planets" settings={allianceSettings} />
         <Hero settings={allianceSettings} subtitle={t("planet.missions_planets_description")} title={t("navigation.planets")} />
         <main className="content-wrap planets-page">
           {almanacLookupFailed && <p className="form-error">{t("planet.almanac_partial_lookup_failed")}</p>}

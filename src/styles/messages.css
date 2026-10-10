@@ -1,0 +1,41 @@
+.messages-page { display: grid; gap: 14px; }
+.messages-loading { min-height: 120px; display: grid; place-items: center; }
+.messages-empty { margin: 0; padding: 22px; color: #a4adae; border: 1px solid #394548; border-radius: 4px; background: #171e21; font-size: 11px; }
+.message-thread-controls { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+.message-thread-controls button { display: inline-flex; align-items: center; gap: 6px; min-height: 29px; padding: 0 9px; color: #a4adae; border: 1px solid #394548; border-radius: 3px; background: #1a2124; cursor: pointer; font-size: 9px; }
+.message-thread-controls button:hover { color: var(--lime); border-color: var(--lime); }
+.messages-list { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.message-tree-node { min-width: 0; }
+.message-card { min-width: 0; padding: 15px; border: 1px solid #394548; border-radius: 4px; background: #171e21; }
+.message-thread-children { display: grid; gap: 8px; margin: 9px 0 0 12px; padding: 0 0 0 12px; border-left: 1px solid #596541; list-style: none; }
+.message-thread-children .message-card { background: #141a1d; }
+.message-card-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 6px; color: #a4adae; font-size: 8px; }
+.message-card-main-heading { display: flex; min-width: 0; flex-direction: column; align-items: flex-start; gap: 4px; }
+.message-card-subject { display: flex; min-width: 0; align-items: center; gap: 8px; }
+.message-card-tools { display: flex; flex: 0 0 auto; align-items: center; justify-content: flex-end; gap: 8px; margin-left: auto; }
+.message-subject-link { position: relative; flex: 0 0 29px; color: var(--lime); }
+.message-subject-link[data-tooltip]::after { position: absolute; z-index: 30; right: 0; bottom: calc(100% + 7px); padding: 6px 8px; color: #f1eee7; border: 1px solid #394548; border-radius: 3px; background: #111719; box-shadow: 0 4px 14px #0008; content: attr(data-tooltip); font-size: 9px; font-weight: 500; line-height: 1.2; opacity: 0; pointer-events: none; text-transform: none; transform: translateY(3px); transition: opacity .12s, transform .12s; white-space: nowrap; }
+.message-subject-link[data-tooltip]:hover::after, .message-subject-link[data-tooltip]:focus-visible::after { opacity: 1; transform: translateY(0); }
+.message-subject-type { color: var(--lime); font-family: var(--font-accent); font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+.message-card-heading h2 { min-width: 0; margin: 0; color: var(--ink); font-family: var(--font-accent); font-size: 14px; font-weight: 700; overflow-wrap: anywhere; }
+.message-participants, .message-reference { margin: 0; color: #a4adae; font-size: 9px; line-height: 1.5; overflow-wrap: anywhere; }
+.message-participants strong { color: #d4dad6; }
+.message-body { margin: 12px 0 0; padding-top: 10px; color: #d4dad6; border-top: 1px solid #354044; font-size: 11px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
+.message-card-actions { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
+.message-reply-button { margin-left: auto; }
+.message-reply-form { display: grid; gap: 10px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #354044; }
+.reply-submit { color: var(--lime); }
+.reply-submit:hover:not(:disabled) { color: #ff9b33; }
+.message-reply-actions { display: flex; justify-content: space-between; gap: 8px; }
+.message-acknowledgement { display: flex; align-items: flex-start; gap: 8px; color: var(--ink); font-size: 10px; line-height: 1.4; cursor: pointer; }
+.message-acknowledgement input { width: 14px; height: 14px; margin-top: 1px; flex: 0 0 14px; accent-color: var(--lime); }
+.message-thread-toggle { width: auto; min-width: 29px; display: inline-flex; gap: 4px; padding: 0 8px; font-size: 10px; }
+.message-unread { border-left: 3px solid var(--lime); }
+body:has(.sidebar-compact) .member-card-dialog .message-acknowledgement { font-size: 15px; }
+.sidebar-compact ~ .main-panel .message-card { padding: 20px; }
+.sidebar-compact ~ .main-panel .message-card-heading { font-size: 12px; }
+.sidebar-compact ~ .main-panel .message-card-heading h2 { font-size: 18px; }
+.sidebar-compact ~ .main-panel .message-participants, .sidebar-compact ~ .main-panel .message-reference { font-size: 14px; }
+.sidebar-compact ~ .main-panel .message-body { font-size: 17px; }
+.sidebar-compact ~ .main-panel .messages-empty { font-size: 16px; }
+.sidebar-compact ~ .main-panel .message-thread-toggle { font-size: 14px; }

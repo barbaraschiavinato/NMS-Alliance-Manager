@@ -145,7 +145,7 @@ export function HelpRequestsPage({ currentMember, alliance, missionCount, statio
   return <div className="app-shell">
     <Sidebar activeSection="aiuto" currentMember={member} missionCount={missionCount} settings={settings} stationCount={stationCount} offlineCount={offlineCount} userCount={userCount} />
     <section className="main-panel">
-      <Header currentMember={member} onAdminOpen={() => setAdminOpen(true)} onProfileOpen={() => setProfileOpen(true)} sectionTitle="help.help_requests" settings={settings} />
+      <Header currentMember={member} onAdminOpen={() => setAdminOpen(true)} onProfileOpen={() => setProfileOpen(true)} onProfileSaved={(profile) => setMember((current) => ({ ...current, ...profile }))} sectionTitle="help.help_requests" settings={settings} />
       <Hero settings={settings} subtitle={t("help.page_description")} title="help.help_requests" />
       <main className="content-wrap messages-page">
         <MessageList empty={requests.length === 0} emptyLabel={t("help.no_requests")} error={error} loading={loading}>

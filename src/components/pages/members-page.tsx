@@ -105,7 +105,7 @@ export function MembersPage({ memberActivity, currentMember, alliance, missionCo
     <div className="app-shell">
       <Sidebar activeSection="utenti" currentMember={pageMember} missionCount={missionCount} settings={allianceSettings} stationCount={sidebarStationCount} offlineCount={sidebarOfflineCount} userCount={loadingMembers ? sidebarUserCount : members.length} />
       <section className="main-panel">
-        <Header currentMember={pageMember} onAdminOpen={() => setAdminOpen(true)} onProfileOpen={() => setProfileOpen(true)} sectionTitle="Users" settings={allianceSettings} />
+        <Header currentMember={pageMember} onAdminOpen={() => setAdminOpen(true)} onProfileOpen={() => setProfileOpen(true)} onProfileSaved={(profile) => setPageMember((current) => ({ ...current, ...profile }))} sectionTitle="Users" settings={allianceSettings} />
         <Hero
           subtitle="Approve requests, manage access, and review NMS profiles."
           settings={allianceSettings}
