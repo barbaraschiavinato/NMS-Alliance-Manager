@@ -35,7 +35,8 @@ export default async function LeaderboardRoute() {
     isModerator ? readAllStationPortals() : readStationPortals(member.publicId),
   ]);
   const stationsByMember = new Map<string, number>();
-  for (const station of await readAllStationPortals()) {
+  const allStations = await readAllStationPortals();
+  for (const station of allStations) {
     stationsByMember.set(station.ownerId, (stationsByMember.get(station.ownerId) ?? 0) + 1);
   }
   const missionsByMember = new Map<string, number>();
@@ -46,6 +47,12 @@ export default async function LeaderboardRoute() {
   // Lo stato dei task non registra chi lo ha spuntato: il merito va all'assegnatario della missione del ruolo su quel pianeta.
   const planetStatuses = await readPlanetSystemStatuses();
   const tasksByMember = new Map<string, Map<string, number>>();
+  const creditedTasks = new Set<string>();
+  const addTask = (task: string, memberId: string) => {
+    const counts = tasksByMember.get(task) ?? new Map<string, number>();
+    counts.set(memberId, (counts.get(memberId) ?? 0) + 1);
+    tasksByMember.set(task, counts);
+  };
   for (const mission of missions) {
     const assigneeId = mission.assignedMemberId;
     const assignee = accessData.members.find((candidate) => candidate.publicId === assigneeId);
@@ -54,9 +61,16 @@ export default async function LeaderboardRoute() {
     for (const task of statuses) {
       if (task === "data_error") continue;
       if (!coveredSpecialties(mission.targetSpecialty).includes(missionSystemStatusRoles[task])) continue;
-      const counts = tasksByMember.get(task) ?? new Map<string, number>();
-      counts.set(assigneeId, (counts.get(assigneeId) ?? 0) + 1);
-      tasksByMember.set(task, counts);
+      const creditKey = `${mission.galaxy}:${mission.systemAddress.toUpperCase()}:${task}`;
+      if (!creditedTasks.has(creditKey)) addTask(task, assigneeId);
+      creditedTasks.add(creditKey);
+    }
+  }
+  // Senza una missione che copra il task, il merito va allo scopritore della stazione.
+  for (const station of allStations) {
+    for (const task of planetStatuses[`${station.galaxy}:${station.portal.toUpperCase()}`] ?? []) {
+      if (task === "data_error" || creditedTasks.has(`${station.galaxy}:${station.portal.toUpperCase()}:${task}`)) continue;
+      addTask(task, station.ownerId);
     }
   }
   const buildEntries = (counts: ReadonlyMap<string, number>) => accessData.members
