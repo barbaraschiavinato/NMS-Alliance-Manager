@@ -136,13 +136,13 @@ function StationOwnerCell({ station, onOpenProfile, ownerLabel }: Readonly<{
 
   return <div className="station-owner-card">
     <small>{ownerLabel}</small>
-    <button className="assignee-cell mission-member-link station-owner-link" onClick={() => onOpenProfile(station.ownerId)} type="button">
+    <button aria-label={name} className="assignee-cell mission-member-link station-owner-link" data-tooltip={name} onClick={() => onOpenProfile(station.ownerId)} type="button">
       <span aria-hidden="true" className={`assignee-avatar ${station.ownerImage && !imageFailed ? "assignee-avatar-image" : ""}`}>
         {station.ownerImage && !imageFailed
           ? <Image alt="" height={21} onError={() => setImageFailed(true)} src={station.ownerImage} unoptimized width={21} />
           : initials}
       </span>
-      {name}
+      <span className="assignee-name">{name}</span>
     </button>
   </div>;
 }

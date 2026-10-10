@@ -1286,3 +1286,82 @@ body:has(.sidebar-compact) .dialog-heading .icon-button svg { width: 26px; heigh
   .main-panel .station-list-cards .station-card-owner .station-owner-card { justify-content: flex-end; }
   .main-panel .station-list-cards .station-card-owner .station-owner-link { flex: 0 1 auto; justify-content: flex-end; }
 }
+
+@media (max-width: 720px) {
+  .main-panel .banner-add { width: 40px; height: 40px; padding: 0; gap: 0; }
+  .main-panel .banner-add .banner-add-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .main-panel .banner-add svg { width: 20px; height: 20px; }
+}
+
+@media (max-width: 720px) {
+  .main-panel .banner-add[data-tooltip]::after { position: absolute; z-index: 30; right: 0; bottom: calc(100% + 7px); padding: 6px 8px; color: #f1eee7; border: 1px solid #394548; border-radius: 3px; background: #111719; box-shadow: 0 4px 14px #0008; content: attr(data-tooltip); font-family: var(--font-accent); font-size: 9px; font-weight: 500; letter-spacing: .05em; line-height: 1.2; opacity: 0; pointer-events: none; transform: translateY(3px); transition: opacity .12s, transform .12s; white-space: nowrap; }
+  .main-panel .banner-add[data-tooltip]:hover::after,
+  .main-panel .banner-add[data-tooltip]:focus-visible::after { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 720px) {
+  body :is(.station-dialog, .mission-dialog) .glyph-keypad.glyph-keypad { width: 100%; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 4px; }
+  body :is(.station-dialog, .mission-dialog) .glyph-keypad.glyph-keypad button { width: auto; height: auto; aspect-ratio: 1; padding: 12%; }
+  body :is(.station-dialog, .mission-dialog) .glyph-keypad.glyph-keypad img { width: 100%; height: 100%; }
+  body :is(.station-dialog, .mission-dialog) .glyph-strip-large.glyph-strip-large { gap: 2px; padding: 4px; }
+  body :is(.station-dialog, .mission-dialog) .glyph-strip-large.glyph-strip-large .glyph-slot { width: auto; height: auto; flex: 1 1 0; min-width: 0; aspect-ratio: 5 / 6; }
+  body :is(.station-dialog, .mission-dialog) .glyph-strip-large.glyph-strip-large img { width: 88%; height: auto; aspect-ratio: 1; }
+}
+
+@media (max-width: 720px) {
+  .main-panel :is(.mission-card-people, .station-card-owner) .mission-member-link .assignee-name { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+}
+
+@media (max-width: 720px) {
+  .main-panel .station-owner-card .mission-member-link .assignee-name { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+}
+
+@media (max-width: 720px) {
+  .main-panel.main-panel .mission-card-system .glyph-strip,
+  .main-panel.main-panel .planet-mission-card-copy .glyph-strip,
+  .main-panel.main-panel .station-list-cards .station-portal-code > .glyph-strip { display: flex; width: 100%; max-width: 100%; min-height: 0; gap: 2px; }
+  .main-panel.main-panel .mission-card-system .glyph-slot,
+  .main-panel.main-panel .planet-mission-card-copy .glyph-slot,
+  .main-panel.main-panel .station-list-cards .station-portal-code .glyph-slot { width: auto; height: auto; flex: 1 1 0; min-width: 0; aspect-ratio: 14 / 15; }
+  .main-panel.main-panel .mission-card-system .glyph-strip img,
+  .main-panel.main-panel .planet-mission-card-copy .glyph-strip img,
+  .main-panel.main-panel .station-list-cards .station-portal-code .glyph-strip img { width: 90%; height: auto; aspect-ratio: 1; }
+  .main-panel .planet-mission-card-copy { flex: 1 1 0; }
+}
+
+@media (max-width: 720px) {
+  .main-panel.main-panel .mission-card-actions { flex-wrap: wrap; gap: 10px; }
+  .main-panel.main-panel .mission-card-actions > .mission-card-action-buttons { flex: 1 1 100%; flex-wrap: wrap; justify-content: flex-end; margin-left: 0; }
+}
+
+@media (max-width: 720px) {
+  .main-panel.main-panel .mission-card-action-buttons > .claim-button { flex: 1 1 100%; width: 100%; }
+}
+
+@media (max-width: 720px) {
+  .main-panel.main-panel .mission-card-progress > .badge--priority { display: none; }
+  .main-panel.main-panel .mission-card-progress .progress-cell { width: 100%; min-width: 0; flex: 1 1 100%; justify-content: stretch; }
+  .main-panel.main-panel .mission-card-progress .progress-track { flex: 1 1 auto; width: auto; }
+  .main-panel.main-panel .mission-card-progress .progress-cell-editable input[type="range"] { flex: 1 1 auto; width: auto; min-width: 0; }
+}
+
+@media (max-width: 720px) {
+  .main-panel.main-panel .mission-card { position: relative; }
+  .main-panel.main-panel .mission-card-heading > .badge--specialty { position: absolute; top: 15px; right: 15px; z-index: 2; }
+}
+
+@media (max-width: 720px) {
+  .main-panel.main-panel .mission-card-actions { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .main-panel.main-panel .mission-card-actions > .mission-system-progress { width: 100%; display: flex; justify-content: space-between; gap: 6px; }
+  .main-panel.main-panel .mission-card-actions .mission-system-progress-group { flex: 1 1 0; min-width: 0; display: flex; justify-content: space-evenly; }
+  .main-panel.main-panel .mission-card-actions .mission-system-progress-item { flex: 1 1 0; width: auto; min-width: 0; }
+  .main-panel.main-panel .mission-card-actions > .mission-card-action-buttons { width: 100%; }
+}
+
+@media (max-width: 720px) {
+  .sidebar-compact ~ .main-panel .toolbar-actions:not(.station-toolbar-actions):not(.member-toolbar-actions) { display: none; }
+}
+
+@media (max-width: 720px) {
+  .sidebar-compact ~ .main-panel .filter-tab { font-size: 12px; }
+}

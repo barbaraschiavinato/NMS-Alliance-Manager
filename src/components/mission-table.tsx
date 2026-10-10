@@ -134,10 +134,10 @@ function AssigneeCell({ mission, members, currentMember, onOpenProfile }: Readon
 
   const content = <>
     <MemberAvatar image={image} key={image || "fallback"} label={mission.assignedTo || "—"} />
-    {name}
+    <span className="assignee-name">{name}</span>
   </>;
   return memberId
-    ? <button className="assignee-cell mission-member-link" onClick={() => onOpenProfile(memberId, { type: "mission", missionCode: mission.id, subjectLabel: mission.title })} type="button">{content}</button>
+    ? <button aria-label={name} className="assignee-cell mission-member-link" data-tooltip={name} onClick={() => onOpenProfile(memberId, { type: "mission", missionCode: mission.id, subjectLabel: mission.title })} type="button">{content}</button>
     : <span className="assignee-cell">{content}</span>;
 }
 
@@ -153,11 +153,11 @@ function DiscovererCell({ memberId, name, image, portal, galaxy, onOpenProfile }
   const label = name || t("common.not_specified");
   const content = <>
     <MemberAvatar image={image} key={image || "fallback"} label={label} />
-    {label}
+    <span className="assignee-name">{label}</span>
   </>;
 
   return memberId
-    ? <button className="assignee-cell mission-member-link" onClick={() => onOpenProfile(memberId, { type: "planet", portal, galaxy, subjectLabel: "" })} type="button">{content}</button>
+    ? <button aria-label={label} className="assignee-cell mission-member-link" data-tooltip={label} onClick={() => onOpenProfile(memberId, { type: "planet", portal, galaxy, subjectLabel: "" })} type="button">{content}</button>
     : <span className="assignee-cell">{content}</span>;
 }
 

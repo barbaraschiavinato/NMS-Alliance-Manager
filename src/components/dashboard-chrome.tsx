@@ -219,7 +219,7 @@ export function MissionHero({
             </div>
           </div>
         </div>
-        {showCreate && onCreate && <button className="banner-add" onClick={onCreate} type="button"><CirclePlus size={17} /> {t(actionLabel)}</button>}
+        {showCreate && onCreate && <button aria-label={t(actionLabel)} className="banner-add" data-tooltip={t(actionLabel)} onClick={onCreate} type="button"><CirclePlus size={17} /> <span className="banner-add-label">{t(actionLabel)}</span></button>}
       </div>
     </section>
   );
