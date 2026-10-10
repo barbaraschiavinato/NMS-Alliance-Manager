@@ -11,6 +11,7 @@ import {
   Orbit,
   Send,
   Settings2,
+  Trophy,
   LogOut,
   UserRound,
   UsersRound,
@@ -62,7 +63,7 @@ export function AllianceSidebar({ missionCount, stationCount, planetCount, userC
   offlineCount?: number;
   currentMember: AllianceMember;
   settings: AllianceSettings;
-  activeSection: "missioni" | "pianeti" | "utenti" | "offline" | "stazioni" | "messaggi" | "aiuto";
+  activeSection: "missioni" | "pianeti" | "utenti" | "offline" | "stazioni" | "messaggi" | "aiuto" | "classifica";
 }>) {
   const { t } = useLocale();
   const resetSearch = useRequestSearchReset();
@@ -126,6 +127,7 @@ export function AllianceSidebar({ missionCount, stationCount, planetCount, userC
         <Link className={`nav-item ${activeSection === "pianeti" ? "active" : ""}`} href="/planets" data-tooltip={t("navigation.planets")} onClick={resetSearch}><Eclipse size={17} /><span>{t("navigation.planets")}</span>{shownPlanetCount !== null && Number.isFinite(shownPlanetCount) && <span className="nav-count">{shownPlanetCount}</span>}</Link>
         {(currentMember.role === "admin" || currentMember.role === "moderator") && <Link className={`nav-item ${activeSection === "utenti" ? "active" : ""}`} href="/users" data-tooltip={t("members.users")} onClick={resetSearch}><UsersRound size={17} /><span>{t("members.users")}</span><span className="nav-count">{userCount ?? 0}</span></Link>}
         {(currentMember.role === "admin" || currentMember.role === "moderator") && <Link className={`nav-item ${activeSection === "offline" ? "active" : ""}`} href="/offline-players" data-tooltip={t("members.offline_players")} onClick={resetSearch}><UserRoundX size={17} /><span>{t("members.offline_players")}</span><span className="nav-count">{offlineCount ?? 0}</span></Link>}
+        <Link className={`nav-item ${activeSection === "classifica" ? "active" : ""}`} href="/leaderboard" data-tooltip={t("leaderboard.title")} onClick={resetSearch}><Trophy size={17} /><span>{t("leaderboard.title")}</span></Link>
         <Link className={`nav-item ${activeSection === "aiuto" ? "active" : ""}`} href="/help-requests" data-tooltip={t("help.help_requests")} onClick={resetSearch}><Siren size={17} /><span>{t("help.help_requests")}</span><span className={helpCount > 0 ? "nav-count nav-unread nav-unread-active" : "nav-count nav-unread"}>{helpCount}</span></Link>
         <Link className={`nav-item ${activeSection === "messaggi" ? "active" : ""}`} href="/messages" data-tooltip={t("messages.messages")} onClick={resetSearch}><Mail size={17} /><span>{t("messages.messages")}</span><span aria-label={t("messages.unread_count", { count: unreadCount })} className={unreadCount > 0 ? "nav-count nav-unread nav-unread-active" : "nav-count nav-unread"} title={t("messages.unread_count", { count: unreadCount })}>{unreadCount}</span></Link>
       </nav>

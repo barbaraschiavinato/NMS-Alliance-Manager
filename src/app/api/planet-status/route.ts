@@ -34,6 +34,11 @@ export async function GET(request: Request) {
           .filter((mission) => canViewMission(mission, member))
           .map((mission) => `${mission.galaxy}:${mission.systemAddress.toUpperCase()}`),
       );
+      if (member.specialty === "ranger") {
+        for (const station of await readStationPortals(member.publicId)) {
+          visibleKeys.add(`${station.galaxy}:${station.portal.toUpperCase()}`);
+        }
+      }
       return NextResponse.json({
         planets: Object.fromEntries(Object.entries(statuses).filter(([key]) =>
           hasRole(member, "moderator") || visibleKeys.has(key),

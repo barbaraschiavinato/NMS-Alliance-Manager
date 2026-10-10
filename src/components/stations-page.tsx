@@ -244,6 +244,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
   const [search, setSearch] = useNavigationSearchState(initialSearch);
   const [adminOpen, setAdminOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const isRanger = pageMember.specialty === "ranger";
   const canSeeAll = pageMember.role === "moderator" || pageMember.role === "admin";
   const canCreateMissions = canSeeAll;
   const canCreateOwnSpecialtyMission = !canSeeAll &&
@@ -385,7 +386,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
   }, [initialCreateStation]);
 
   useEffect(() => {
-    if (!canSeeAll) return;
+    if (!canSeeAll && !isRanger) return;
     const controller = new AbortController();
     fetch("/api/planet-status", { cache: "no-store", signal: controller.signal })
       .then(async (response) => {
@@ -402,7 +403,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
         if (!controller.signal.aborted) setError(error_ instanceof Error ? error_.message : t("errors.request_failed"));
       });
     return () => controller.abort();
-  }, [canSeeAll, t]);
+  }, [canSeeAll, isRanger, t]);
 
   async function toggleStationSystemStatus(portal: string, stationGalaxy: number, status: MissionSystemStatus, checked: boolean) {
     const key = planetSystemStatusKey(portal, stationGalaxy);
@@ -692,8 +693,7 @@ export function StationsPage({ currentMember, alliance, missionCount, initialSea
                       : <button className="station-planet-open station-planet-unknown" onClick={() => setSelectedStation({ portal: station.portal, galaxy: station.galaxy })} type="button"><GalaxyLabel galaxy={station.galaxy} /><strong>{t("planet.no_almanac_data_open_details")}</strong></button>}
                 </div>
                 <div className="station-card-footer">
-                  {canSeeAll && planetStatusesLoaded && <div className="station-system-status">
-                    <strong>{t("system.system_status")}</strong>
+                  {(canSeeAll || (pageMember.specialty === "ranger" && station.ownerId === pageMember.publicId)) && planetStatusesLoaded && <div className="station-system-status">
                     <MissionSystemProgress
                       disabled={savingStatusKeys.includes(statusKey)}
                       editable
