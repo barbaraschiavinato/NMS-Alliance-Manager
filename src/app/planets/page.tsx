@@ -6,6 +6,7 @@ import { PendingApproval } from "@/components/pages/pending-approval";
 import { getCurrentMember, hasRole } from "@/lib/authorization";
 import { readAccessData } from "@/lib/access-store";
 import { canViewMission, isDifferentPlanetInSameSystem } from "@/lib/missions";
+import { availableMissionSpecialties, canCreateMissionFromStation } from "@/lib/station-mission-availability";
 import { serializeMission } from "@/lib/mission-view";
 import { getSystemPlanetAddresses } from "@/lib/planet-addresses";
 import { almanacSystemLabel, lookupAlmanacPlanets } from "@/lib/almanac-lookup";
@@ -183,16 +184,17 @@ export default async function PlanetsRoute() {
                       mission.galaxy === associatedStation.galaxy &&
                       mission.systemAddress.slice(1).toUpperCase() === associatedStation.portal.slice(1).toUpperCase(),
                   ),
-                  hasVisibleMissions: visibleMissions.some(
-                    (mission) =>
-                      mission.galaxy === associatedStation.galaxy &&
-                      (mission.systemAddress.toUpperCase() === associatedStation.portal.toUpperCase() ||
-                        isDifferentPlanetInSameSystem(
-                          mission.systemAddress,
-                          mission.galaxy,
-                          associatedStation.portal,
-                          associatedStation.galaxy,
-                        )),
+                  canCreateMission: canCreateMissionFromStation(
+                    {
+                      ownerId: associatedStation.ownerId,
+                      availableSpecialties: availableMissionSpecialties(
+                        missions,
+                        associatedStation.portal,
+                        associatedStation.galaxy,
+                      ),
+                    },
+                    member,
+                    canManage,
                   ),
                 },
               }

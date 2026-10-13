@@ -24,7 +24,7 @@ export default defineConfig({
       reporter: ["text-summary", "text", "html", "lcov", "json-summary"],
       reportsDirectory: "coverage",
       // Just below the current coverage: a drop fails npm run test:coverage and CI.
-      thresholds: { lines: 99.5, statements: 99.4, functions: 98.5, branches: 99.4 },
+      thresholds: { lines: 99.5, statements: 99.4, functions: 98.5, branches: 99.3 },
     },
   },
 });

@@ -6,7 +6,6 @@ import {
   cachedPlanetImageUrl,
   cachedPlanetTitle,
   cachedPlanetType,
-  canCreateMissionFromStation,
   parsePlanetSystemStatuses,
   parseStations,
   stationOwnerName,
@@ -14,6 +13,7 @@ import {
   type StationCardProps,
   type StationEntry,
 } from "@/components/cards/station-card/parts";
+import { canCreateMissionFromStation } from "@/lib/station-mission-availability";
 import type { AllianceMember } from "@/lib/member-types";
 import type { Locale } from "@/lib/translations";
 import { makeMember } from "../../helpers/members";

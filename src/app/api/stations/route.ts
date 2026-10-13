@@ -6,9 +6,8 @@ import {
   coveredSpecialties,
   decodePortalAddress,
   isDifferentPlanetInSameSystem,
-  missionSpecialties,
-  type MissionSpecialty,
 } from "@/lib/missions";
+import { availableMissionSpecialties } from "@/lib/station-mission-availability";
 import { isEmailAddress } from "@/lib/member-types";
 import {
   addStationPortal,
@@ -319,23 +318,7 @@ async function readStations(member: AllianceMember) {
           ((mission.status === "pending" && !mission.assignedMemberId && !mission.assignedTo.trim()) ||
             mission.assignedMemberId === member.publicId),
       );
-    const completedSpecialties = new Set<MissionSpecialty>();
-    for (const mission of matchingMissions) {
-      if (mission.targetSpecialty === "all") {
-        completedSpecialties.add("builder");
-        completedSpecialties.add("ranger");
-        completedSpecialties.add("explorer");
-      } else {
-        completedSpecialties.add(mission.targetSpecialty);
-      }
-    }
-    const availableSpecialties =
-      completedSpecialties.size === 0
-        ? [...missionSpecialties]
-        : missionSpecialties.filter(
-            (specialty) =>
-              specialty !== "all" && specialty !== "explorer_builder" && !completedSpecialties.has(specialty),
-          );
+    const availableSpecialties = availableMissionSpecialties(matchingMissions, station.portal, station.galaxy);
 
     return {
       ...station,

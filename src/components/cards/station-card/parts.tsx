@@ -8,6 +8,7 @@ import type { AllianceMember } from "@/lib/access-store";
 import { galaxyLabel } from "@/lib/galaxies";
 import { missionSpecialties, type MissionSpecialty } from "@/lib/missions";
 import { isMissionSystemStatus, type MissionSystemStatus, type PlanetSystemStatuses } from "@/lib/planet-system-status";
+export { canCreateMissionFromStation } from "@/lib/station-mission-availability";
 import { useLocale } from "@/components/providers/locale-provider";
 
 export type CachedPlanet = Readonly<{ galaxy: number; response: Record<string, unknown> }>;
@@ -45,18 +46,6 @@ export function GalaxyLabel({ galaxy }: Readonly<{ galaxy: number }>) {
       {foreign && <AlertTriangle size={9} />}
       {galaxyLabel(galaxy)}
     </span>
-  );
-}
-
-export function canCreateMissionFromStation(station: StationEntry, member: AllianceMember, canManage: boolean) {
-  if (canManage) return station.availableSpecialties.length > 0;
-  if (member.specialty === "explorer" || member.specialty === "builder") {
-    return station.availableSpecialties.some((specialty) => specialty === member.specialty);
-  }
-  return (
-    member.specialty === "ranger" &&
-    station.ownerId === member.publicId &&
-    station.availableSpecialties.some((specialty) => ["explorer_builder", "explorer", "builder"].includes(specialty))
   );
 }
 
