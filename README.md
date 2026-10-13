@@ -42,7 +42,7 @@ The sign-in screen shows one button for each account of the selected set (define
 
 Profiles are editable from the profile panel and the changes persist across sign-ins, so the specialty can be changed there. Data is saved in `data/`.
 
-**Test set** (`npm run dev:test`): nine fixed accounts, one for every role and specialty combination, named `test-<role>-<specialty>@local` (for example `test-moderator-builder@local`). Their profile cannot be edited from the panel and is reset to the values in `testLocalAccounts` on every sign-in (the simplified view toggle still works). Data is saved in `data-test/`, which is recreated on every start from `fixtures/test-data/`, so the development data is never touched and every run starts from the same populated state: 13 members (the 9 test accounts, 2 offline players, 1 pending and 1 blocked member), 9 missions covering every status and specialty, 5 stations with their system task status, a help request with a reply and two private messages. The set is chosen with `LOCAL_AUTH_SET=test`, and the data folder with `NMS_DATA_DIR`. `src/lib/test-data.test.ts` loads the fixtures with the real store readers, so a fixture the app cannot read fails the tests: keep them valid when you edit them.
+**Test set** (`npm run dev:test`): nine fixed accounts, one for every role and specialty combination, named `test-<role>-<specialty>@local` (for example `test-moderator-builder@local`). Their profile cannot be edited from the panel and is reset to the values in `testLocalAccounts` on every sign-in (the simplified view toggle still works). Data is saved in `data-test/`, which is recreated on every start from `fixtures/test-data/`, so the development data is never touched and every run starts from the same populated state: 13 members (the 9 test accounts, 2 offline players, 1 pending and 1 blocked member), 9 missions covering every status and specialty, 5 stations with their system task status, a help request with a reply and two private messages. The set is chosen with `LOCAL_AUTH_SET=test`, and the data folder with `NMS_DATA_DIR`. `tests/stores/test-data.test.ts` loads the fixtures with the real store readers, so a fixture the app cannot read fails the tests: keep them valid when you edit them.
 
 In both sets the accounts are already approved and have a complete profile; role and approval are restored on every sign-in. Google accounts are not affected. In this mode the Google variables and `ALLIANCE_ADMIN_EMAIL` are not needed, and data is always saved in local files, even if a Blob store is configured. The mode is ignored in production (`NODE_ENV=production`, so also with `npm run build` / `npm start`) and on Vercel.
 
@@ -81,8 +81,9 @@ All sections are shown as cards. Regular users always use the simplified view; a
 ## Development and verification
 
 ```bash
-npm test               # unit tests (Vitest)
-npm run test:coverage  # tests with a coverage report for src/lib in coverage/ (git-ignored)
+npm test               # all tests (Vitest)
+npm run test:watch     # tests in watch mode
+npm run test:coverage  # tests with a coverage report in coverage/ (git-ignored, open coverage/index.html)
 npm run lint           # ESLint
 npm run format         # Prettier (write)
 npm run format:check   # Prettier (check only)
@@ -90,7 +91,9 @@ npm run build          # production build, includes the TypeScript type check
 npm run audit:prod     # npm audit on the production dependencies only
 ```
 
-Unit tests live next to the code (`*.test.ts` / `*.test.tsx`). `src/lib/nms-core/` is vendored third-party code and is excluded from tests, coverage and formatting. The existing code is not fully formatted with Prettier yet, so format only the files you create or edit.
+All tests live in `tests/`, mirroring the source: pure logic, stores, API routes, components and pages. `src/lib/nms-core/` is vendored third-party code and is excluded from tests, coverage and formatting. The existing code is not fully formatted with Prettier yet, so format only the files you create or edit.
+
+GitHub CI runs lint, tests with coverage and the build on every push to `main` and every pull request, plus `npm run audit:prod`. The coverage summary appears on the job page and the HTML report is uploaded as the `coverage-report` artifact.
 
 The `CI` GitHub Actions workflow (`.github/workflows/ci.yml`) runs the tests and `npm run audit:prod` on every pull request.
 

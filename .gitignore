@@ -12,3 +12,4 @@ npm-debug.log*
 # TypeScript incremental cache
 *.tsbuildinfo
 next-env.d.ts
+.DS_Store
