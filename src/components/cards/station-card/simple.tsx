@@ -46,13 +46,19 @@ export function StationCardSimple({
   const createdTime = station.createdAt ? Date.parse(station.createdAt) : Number.NaN;
   const isNewStation =
     !station.hasMissions && Number.isFinite(createdTime) && renderedAt - createdTime < 7 * 24 * 60 * 60 * 1000;
+  const canEditStation = canSeeAll || station.ownerId === member.publicId;
+  const canCreateMission = canCreateMissionFromStation(station, member, canCreateMissions);
+  const showCreateMissionPrompt = canCreateMission && member.specialty !== "ranger";
   const newRibbon = isNewStation && (
     <span className="station-new-ribbon-clip">
       <span className="station-new-ribbon">{t("stations.new_badge")}</span>
     </span>
   );
-  const canEditStation = canSeeAll || station.ownerId === member.publicId;
-  const canCreateMission = canCreateMissionFromStation(station, member, canCreateMissions);
+  const createMissionRibbon = showCreateMissionPrompt && (
+    <span className="station-mission-ribbon-clip">
+      <span className="station-mission-create-ribbon">{t("stations.create_mission_ribbon")}</span>
+    </span>
+  );
   const stationOwner = (
     <StationOwnerCell
       onOpenProfile={(memberId) =>
@@ -71,8 +77,9 @@ export function StationCardSimple({
     />
   );
   return (
-    <li className={isNewStation ? "station-is-new" : undefined}>
+    <li className={`${isNewStation ? "station-is-new " : ""}${canCreateMission ? "station-can-create-mission" : ""}`}>
       {newRibbon}
+      {createMissionRibbon}
       {
         <button
           className={`station-card-title${planetImageUrl ? " station-card-title-with-image" : ""}`}
@@ -120,6 +127,7 @@ export function StationCardSimple({
               editable
               editableRoles={canSeeAll ? editableSystemStatusRoles(member) : ["ranger"]}
               onToggle={(status, checked) => onToggleStatus(station, status, checked)}
+              pulseRoles={[member.specialty]}
               statuses={planetStatuses[statusKey] ?? []}
             />
           </div>
@@ -128,7 +136,9 @@ export function StationCardSimple({
           {canCreateMission && (
             <button
               aria-label={t("stations.create_mission_from_portal", { portal: station.portal })}
-              className="member-icon-action create-station-mission"
+              className={`member-icon-action create-station-mission${
+                member.specialty === "ranger" ? "" : " station-create-mission-pulse"
+              }`}
               data-tooltip={t("stations.create_mission_from_station")}
               onClick={() => onCreateMission(station)}
               type="button"

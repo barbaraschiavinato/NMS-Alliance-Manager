@@ -136,6 +136,7 @@ export function MissionCardSimple({
           editable={canUpdateSystemStatus}
           editableRoles={editableSystemStatusRoles(currentMember)}
           onToggle={(status, checked) => onToggleSystemStatus(mission, status, checked)}
+          pulseRoles={[currentMember.specialty ?? ""]}
           statuses={statuses}
         />
         <div className="mission-card-action-buttons">

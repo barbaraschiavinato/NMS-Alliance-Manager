@@ -35,6 +35,60 @@ describe("guide page", () => {
     expect(screen.getAllByRole("heading", { name: "Esempi di card" }).length).toBeGreaterThan(0);
     expect(screen.getAllByRole("article").length).toBeGreaterThan(5);
   });
+
+  it("uses explorer and builder tasks in the matching third-method examples", async () => {
+    mockFetch({});
+    const { container } = renderPage(await GuideContent({ alliance: defaultAlliance, standalone: false }));
+
+    const thirdMethods = [...container.querySelectorAll(".guide-station-instructions")].filter((paragraph) =>
+      paragraph.textContent?.includes("Terzo metodo"),
+    );
+    expect(thirdMethods).toHaveLength(2);
+    const explorerExample = thirdMethods[0].closest("li");
+    const builderExample = thirdMethods[1].closest("li");
+    expect(explorerExample).not.toBeNull();
+    expect(builderExample).not.toBeNull();
+
+    const mapped = t("system.mapped", undefined, "it");
+    const stationClaimed = t("system.station_claimed", undefined, "it");
+    const buildingsBuilt = t("system.buildings_built", undefined, "it");
+    expect(within(explorerExample as HTMLElement).getByRole("checkbox", { name: mapped })).toBeInTheDocument();
+    expect(
+      within(explorerExample as HTMLElement)
+        .getByRole("checkbox", { name: mapped })
+        .closest("label"),
+    ).toHaveClass("mission-system-progress-item-pulse");
+    expect(
+      within(explorerExample as HTMLElement).queryByRole("checkbox", { name: stationClaimed }),
+    ).not.toBeInTheDocument();
+
+    expect(within(builderExample as HTMLElement).getByRole("checkbox", { name: buildingsBuilt })).toBeInTheDocument();
+    expect(
+      within(builderExample as HTMLElement)
+        .getByRole("checkbox", { name: buildingsBuilt })
+        .closest("label"),
+    ).toHaveClass("mission-system-progress-item-pulse");
+    expect(
+      within(builderExample as HTMLElement).queryByRole("checkbox", { name: stationClaimed }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("explains the fourth method with the station link and mission creation icon", async () => {
+    mockFetch({});
+    const { container } = renderPage(await GuideContent({ alliance: defaultAlliance, standalone: false }));
+
+    const fourthMethods = [...container.querySelectorAll(".guide-numbered-list-spaced")].filter((item) =>
+      item.textContent?.includes("Quarto metodo"),
+    );
+    expect(fourthMethods).toHaveLength(2);
+
+    for (const method of fourthMethods) {
+      expect(method.textContent).toContain("missione disponibile per la tua specializzazione");
+      expect(method.textContent).toContain("puoi crearti una missione.");
+      expect(method.querySelector('[aria-label="Crea una missione"]')).not.toBeNull();
+      expect(method.textContent).not.toContain("ti verrà assegnata automaticamente");
+    }
+  });
 });
 
 describe("guide content inside the app", () => {

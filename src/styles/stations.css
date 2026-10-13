@@ -57,9 +57,28 @@
 .station-planet-info dd { min-width: 0; margin: 0; color: #d4dad6; font-size: 8px; overflow-wrap: anywhere; }
 .station-planet-unknown { color: #879188; font-size: 9px; }
 .station-actions { display: flex; align-items: center; justify-content: flex-end; gap: 5px; }
+.station-header-add-pulse { animation: station-header-add-pulse 1.8s ease-in-out infinite; }
+@keyframes station-header-add-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 #ff840000; transform: scale(1); }
+  50% { box-shadow: 0 0 0 6px #ff840033; transform: scale(1.035); }
+}
 .station-missions-link { color: #72d1c4; }
-.member-icon-action.create-station-mission:not(.station-mission-disabled) { color: #72d1c4; }
+.member-icon-action.create-station-mission:not(.station-mission-disabled) {
+  color: #72d1c4;
+}
+.member-icon-action.station-create-mission-pulse:not(.station-mission-disabled) {
+  animation: station-create-mission-pulse 1.8s ease-in-out infinite;
+}
 .member-icon-action.create-station-mission:not(.station-mission-disabled):hover { border-color: #72d1c4; background: #1f3a37; }
+@keyframes station-create-mission-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 #72d1c400; transform: scale(1); }
+  50% { box-shadow: 0 0 0 4px #72d1c433; transform: scale(1.08); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .member-icon-action.station-create-mission-pulse:not(.station-mission-disabled) {
+    animation: none;
+  }
+}
 .station-actions .member-icon-action.delete-member { color: #ef8067; }
 .station-actions .member-icon-action.delete-member:hover:not(:disabled) { border-color: #ef8067; background: #3a2724; }
 .station-actions [data-tooltip] { position: relative; }
@@ -154,7 +173,11 @@ body:has(.sidebar-compact) .station-dialog textarea { min-height: 110px; }
 .station-list li.station-is-new { position: relative; }
 .station-new-ribbon-clip { position: absolute; z-index: 2; top: 0; left: 0; width: 96px; height: 96px; overflow: hidden; pointer-events: none; }
 .station-new-ribbon { position: absolute; top: 10px; left: -26px; width: 90px; padding: 2px 0; color: #10130f; background: var(--lime); font-size: 10px; font-weight: 750; letter-spacing: 0.06em; text-align: center; text-transform: uppercase; transform: rotate(-45deg); pointer-events: none; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35); }
+.station-list li.station-can-create-mission { position: relative; }
+.station-mission-ribbon-clip { position: absolute; z-index: 2; top: 0; right: 0; width: 96px; height: 96px; overflow: hidden; border-radius: 0 4px 0 0; pointer-events: none; }
+.station-mission-create-ribbon { position: absolute; top: 14px; right: -30px; width: 110px; padding: 2px 0; color: #10211e; background: #72d1c4; font-size: 8px; font-weight: 750; letter-spacing: 0.04em; text-align: center; text-transform: uppercase; transform: rotate(45deg); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35); }
 .sidebar-compact ~ .main-panel .station-new-ribbon { top: 19px; left: -27px; width: 110px; font-size: 12px; }
+.sidebar-compact ~ .main-panel .station-mission-create-ribbon { top: 19px; right: -32px; width: 125px; font-size: 10px; }
 .station-mission-disabled { position: relative; color: #4f6f6a; cursor: default; }
 .station-mission-disabled::before { content: ""; position: absolute; left: 4px; right: 4px; top: 50%; height: 2px; background: currentColor; transform: rotate(-45deg); z-index: 1; }
 .station-mission-disabled:hover { color: #4f6f6a; border-color: #394548; background: #1a2124; }

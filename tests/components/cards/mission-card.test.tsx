@@ -151,7 +151,9 @@ describe.each([
     const { user, props } = renderMissionCard({ currentMember: viewer(), mission: target });
     expect(screen.getByText("Available")).toBeInTheDocument();
     expect(screen.getByText("Not assigned")).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Claim" }));
+    const claimButton = screen.getByRole("button", { name: "Claim" });
+    expect(claimButton).toHaveClass("claim-button-pulse");
+    await user.click(claimButton);
     expect(props.onClaim).toHaveBeenCalledWith(target);
   });
 
@@ -173,13 +175,17 @@ describe("MissionCard row actions", () => {
     const target = assignedToMe({ status: "pending" });
     const { user, props } = renderMissionCard({ mission: target });
     expect(screen.queryByText("Available")).not.toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Start mission" }));
+    const startButton = screen.getByRole("button", { name: "Start mission" });
+    expect(startButton).toHaveClass("claim-button-start-pulse");
+    await user.click(startButton);
     expect(props.onStart).toHaveBeenCalledWith(target);
   });
 
   it("keeps completion disabled until the assignee's system tasks are done", () => {
     renderMissionCard({ mission: assignedToMe(), systemStatuses: { "0:0123456789AB": ["mapped"] } });
-    expect(screen.getByRole("button", { name: "Complete mission" })).toBeDisabled();
+    const completeButton = screen.getByRole("button", { name: "Complete mission" });
+    expect(completeButton).toBeDisabled();
+    expect(completeButton).not.toHaveClass("claim-button-complete-pulse");
   });
 
   it("lets the assignee complete a mission once its tasks are done", async () => {
@@ -188,7 +194,9 @@ describe("MissionCard row actions", () => {
       mission: target,
       systemStatuses: { "0:0123456789AB": ["mapped", "planets_classified", "data_uploaded"] },
     });
-    await user.click(screen.getByRole("button", { name: "Complete mission" }));
+    const completeButton = screen.getByRole("button", { name: "Complete mission" });
+    expect(completeButton).toHaveClass("claim-button-complete-pulse");
+    await user.click(completeButton);
     expect(props.onComplete).toHaveBeenCalledWith(target);
   });
 

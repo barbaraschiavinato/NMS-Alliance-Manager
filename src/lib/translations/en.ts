@@ -355,6 +355,7 @@ export const translations: TranslationCatalog = {
     "stations.error_unable_to_export_stations": "Unable to export stations.",
     "stations.add_station": "Add station",
     "stations.create_station_from_mission": "Create a station for this mission",
+    "stations.create_mission_ribbon": "Create mission",
     "stations.space_stations": "Space stations",
     "stations.my_stations": "My stations",
     "stations.register_portals_for_systems_you_have_discovered": "Register portals for systems you have discovered.",
@@ -474,6 +475,7 @@ export const translations: TranslationCatalog = {
     "profile.no_specialty_specified": "No specialty specified",
     "profile.no_platforms_specified": "No platforms specified",
     "profile.simple_view": "Simple view",
+    "profile.enable_pulse_effects": "Show pulse effects",
     "navigation.switch_to_simple_view": "Switch to simple view",
     "navigation.switch_to_extended_view": "Switch to admin view",
     "profile.message_mission_only_notice":

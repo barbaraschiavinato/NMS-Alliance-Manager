@@ -50,7 +50,8 @@ Colori delle specializzazioni:
 - codice amico NMS, 13 caratteri alfanumerici (i trattini sono ignorati);
 - una o più piattaforme: PC, SteamOS, PlayStation, Xbox, Nintendo Switch, Mac;
 - specializzazione: Costruttore, Ranger o Esploratore;
-- contatti Telegram e Discord, opzionali.
+- contatti Telegram e Discord, opzionali;
+- l'opzione **Mostra le pulsazioni**, che puoi deselezionare per disattivare le animazioni di pulsazione nell'app.
 
 Senza profilo completo non puoi prendere missioni né ricevere assegnazioni. Un banner ti avvisa.
 

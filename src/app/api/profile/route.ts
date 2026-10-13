@@ -18,6 +18,7 @@ function profileFieldsChanged(member: AllianceMember, input: Parameters<typeof u
     (input.telegramName ?? "").trim() !== (member.telegramName ?? "") ||
     (input.discordName ?? "").trim() !== (member.discordName ?? "") ||
     input.specialty !== member.specialty ||
+    (input.pulseEffectsEnabled !== undefined && input.pulseEffectsEnabled !== (member.pulseEffectsEnabled !== false)) ||
     platforms.size !== member.platforms.length ||
     member.platforms.some((platform) => !platforms.has(platform))
   );
@@ -33,6 +34,7 @@ export async function GET() {
     platforms: member.platforms,
     specialty: member.specialty,
     simpleView: member.simpleView === true,
+    pulseEffectsEnabled: member.pulseEffectsEnabled !== false,
     role: member.role,
   });
 }
@@ -65,6 +67,7 @@ export async function PATCH(request: Request) {
     platforms: updated.platforms,
     specialty: updated.specialty,
     simpleView: updated.simpleView === true,
+    pulseEffectsEnabled: updated.pulseEffectsEnabled !== false,
     role: updated.role,
   });
 }

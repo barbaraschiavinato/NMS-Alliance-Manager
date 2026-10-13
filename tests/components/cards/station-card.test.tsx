@@ -296,6 +296,30 @@ describe.each([
     expect(screen.getByRole("button", { name: `Create mission from ${portal}` })).toBeInTheDocument();
   });
 
+  it("prompts non-rangers to create missions from eligible stations", () => {
+    renderStation({
+      member: viewer({ specialty: "explorer" }),
+      station: station({ availableSpecialties: ["explorer"] }),
+    });
+
+    expect(screen.getByRole("button", { name: `Create mission from ${portal}` })).toHaveClass(
+      "station-create-mission-pulse",
+    );
+    expect(screen.getByText("Create mission")).toBeInTheDocument();
+  });
+
+  it("keeps the ranger mission action without pulsing or a ribbon", () => {
+    renderStation({
+      member: viewer({ specialty: "ranger" }),
+      station: station({ ownerId: "viewer", availableSpecialties: ["explorer"] }),
+    });
+
+    expect(screen.getByRole("button", { name: `Create mission from ${portal}` })).not.toHaveClass(
+      "station-create-mission-pulse",
+    );
+    expect(screen.queryByText("Create mission")).not.toBeInTheDocument();
+  });
+
   it("shows station notes", async () => {
     const target = station({ name: "Haven", note: "Bring a hazmat suit" });
     const { user, props } = renderStation({ member: viewer(), station: target });

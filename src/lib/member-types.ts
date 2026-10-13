@@ -44,6 +44,7 @@ export type AllianceMember = {
   lastLogin: string;
   offline?: boolean;
   simpleView?: boolean;
+  pulseEffectsEnabled?: boolean;
 };
 
 export type AllianceSettings = {

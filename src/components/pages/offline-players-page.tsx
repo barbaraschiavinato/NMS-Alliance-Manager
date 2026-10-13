@@ -135,7 +135,7 @@ export function OfflinePlayersPage({
   }
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell${pageMember.pulseEffectsEnabled === false ? " pulse-effects-disabled" : ""}`}>
       <Sidebar
         activeSection="offline"
         currentMember={pageMember}

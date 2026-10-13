@@ -153,7 +153,7 @@ export function MissionRowAction({
   if (mission.assignedMemberId === currentMember.publicId && mission.status === "pending") {
     return (
       <button
-        className="claim-button claim-button-progress mission-action-button"
+        className="claim-button claim-button-progress claim-button-start-pulse mission-action-button"
         onClick={() => onStart(mission)}
         type="button"
       >
@@ -164,7 +164,7 @@ export function MissionRowAction({
   if (mission.assignedMemberId === currentMember.publicId && mission.status !== "completed") {
     return (
       <button
-        className="claim-button mission-action-button"
+        className={`claim-button mission-action-button${tasksDone ? " claim-button-complete-pulse" : ""}`}
         disabled={!tasksDone}
         onClick={() => onComplete(mission)}
         type="button"
@@ -176,7 +176,7 @@ export function MissionRowAction({
   if (!mission.assignedMemberId && !mission.assignedTo.trim()) {
     return (
       <button
-        className="claim-button claim-button-take mission-action-button"
+        className="claim-button claim-button-take claim-button-pulse mission-action-button"
         onClick={() => onClaim(mission)}
         type="button"
       >

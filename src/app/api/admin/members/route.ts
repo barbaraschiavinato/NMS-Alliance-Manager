@@ -27,10 +27,14 @@ export async function GET() {
     return NextResponse.json({ error: "Permesso moderator richiesto." }, { status: 403 });
   const protectedAdminEmail = process.env.ALLIANCE_ADMIN_EMAIL?.trim().toLowerCase();
   return NextResponse.json(
-    (await readAccessData()).members.map((profile) => ({
-      ...profile,
-      protectedAdmin: profile.email.trim().toLowerCase() === protectedAdminEmail,
-    })),
+    (await readAccessData()).members.map((profile) => {
+      const visibleProfile = { ...profile };
+      delete visibleProfile.pulseEffectsEnabled;
+      return {
+        ...visibleProfile,
+        protectedAdmin: profile.email.trim().toLowerCase() === protectedAdminEmail,
+      };
+    }),
   );
 }
 
@@ -58,7 +62,9 @@ export async function PATCH(request: Request) {
     if (!target || target.offline || (member.role === "moderator" && target.role !== "user")) {
       return NextResponse.json({ error: "Utente non trovato o non modificabile." }, { status: 404 });
     }
-    const updated = await updateMemberProfile(target.email, input);
+    const profileInput = { ...input };
+    delete profileInput.pulseEffectsEnabled;
+    const updated = await updateMemberProfile(target.email, profileInput);
     if (!updated) return NextResponse.json({ error: "Utente non trovato o non modificabile." }, { status: 404 });
     if (typeof updated === "string")
       return NextResponse.json({ error: profileConflictMessages[updated] }, { status: 409 });

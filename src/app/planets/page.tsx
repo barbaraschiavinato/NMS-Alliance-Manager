@@ -183,6 +183,17 @@ export default async function PlanetsRoute() {
                       mission.galaxy === associatedStation.galaxy &&
                       mission.systemAddress.slice(1).toUpperCase() === associatedStation.portal.slice(1).toUpperCase(),
                   ),
+                  hasVisibleMissions: visibleMissions.some(
+                    (mission) =>
+                      mission.galaxy === associatedStation.galaxy &&
+                      (mission.systemAddress.toUpperCase() === associatedStation.portal.toUpperCase() ||
+                        isDifferentPlanetInSameSystem(
+                          mission.systemAddress,
+                          mission.galaxy,
+                          associatedStation.portal,
+                          associatedStation.galaxy,
+                        )),
+                  ),
                 },
               }
             : {}),

@@ -156,7 +156,7 @@ export function HelpRequestsPage({
   }
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell${member.pulseEffectsEnabled === false ? " pulse-effects-disabled" : ""}`}>
       <Sidebar
         activeSection="aiuto"
         currentMember={member}

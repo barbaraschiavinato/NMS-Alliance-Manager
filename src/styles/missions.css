@@ -47,6 +47,13 @@
 .mission-system-progress-item { width: 20px; height: 24px; position: relative; z-index: 0; display: grid; flex: 0 0 20px; place-items: center; cursor: default; outline: none; }
 .mission-system-progress-item-editable { cursor: pointer; }
 .mission-system-progress-item input { position: absolute; z-index: 2; inset: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; opacity: 0; }
+.mission-system-progress-item-pulse .mission-system-progress-square { animation: mission-system-task-pulse 1.6s ease-in-out infinite; }
+.pulse-effects-disabled :is(.station-header-add-pulse, .station-create-mission-pulse, .claim-button-pulse, .claim-button-start-pulse, .claim-button-complete-pulse),
+.pulse-effects-disabled .mission-system-progress-item-pulse .mission-system-progress-square { animation: none !important; }
+@keyframes mission-system-task-pulse {
+  0%, 100% { filter: brightness(1); transform: scale(1); }
+  50% { filter: brightness(1.7); transform: scale(1.4); }
+}
 .mission-system-progress-item:hover, .mission-system-progress-item:focus-visible { z-index: 6; }
 .mission-system-progress-item:has(input:focus-visible) { z-index: 6; }
 .mission-system-progress-square { width: 8px; height: 8px; display: block; border: 1px solid #556265; border-radius: 1px; background: #20282b; }
@@ -335,8 +342,35 @@ body:has(.sidebar-compact) .mission-notes-content { font-size: 17px; }
 .mission-action-button.claim-button-reopen:hover { border-color: #ef8067; background: #3a2724; }
 .mission-action-button.claim-button-take { color: #f2c94c; border-color: #6b5a24; background: #2a2412; }
 .mission-action-button.claim-button-take:hover { border-color: #f2c94c; background: #3a3118; }
+.mission-action-button.claim-button-pulse { animation: mission-claim-pulse 1.6s ease-in-out infinite; }
+@keyframes mission-claim-pulse {
+  0%, 100% {
+    color: #f2c94c;
+    border-color: #6b5a24;
+    background: #2a2412;
+    box-shadow: 0 0 0 0 #f2c94c00;
+    transform: scale(1);
+  }
+  50% {
+    color: #f2c94c;
+    border-color: #b89a35;
+    background: #393018;
+    box-shadow: 0 0 0 4px #f2c94c44;
+    transform: scale(1.04);
+  }
+}
 .mission-action-button.claim-button-progress { color: #6cb4f5; border-color: #2c4f73; background: #121f2d; }
 .mission-action-button.claim-button-progress:hover { border-color: #6cb4f5; background: #192b3f; }
+.mission-action-button.claim-button-start-pulse { animation: mission-start-pulse 1.6s ease-in-out infinite; }
+@keyframes mission-start-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 #6cb4f500; transform: scale(1); }
+  50% { box-shadow: 0 0 0 4px #6cb4f444; transform: scale(1.04); }
+}
+.mission-action-button.claim-button-complete-pulse { animation: mission-complete-pulse 1.6s ease-in-out infinite; }
+@keyframes mission-complete-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 #72d1c400; transform: scale(1); }
+  50% { box-shadow: 0 0 0 4px #72d1c444; transform: scale(1.04); }
+}
 .mission-system-progress-item-labeled { width: auto; flex: 0 1 auto; display: inline-flex; gap: 5px; padding: 0 4px; }
 .mission-system-progress-item-labeled .mission-system-progress-tooltip { display: none; }
 .mission-system-progress-label { color: var(--muted); font-size: 9px; white-space: nowrap; }

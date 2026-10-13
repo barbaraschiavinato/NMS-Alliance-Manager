@@ -52,11 +52,19 @@ describe("MissionSystemProgress", () => {
   });
 
   it("offers every step as a checkbox to moderators (no role restriction)", () => {
-    renderWithLocale(<MissionSystemProgress editable onToggle={vi.fn()} statuses={["renamed"]} />);
+    renderWithLocale(
+      <MissionSystemProgress editable pulseRoles={["ranger"]} onToggle={vi.fn()} statuses={["renamed"]} />,
+    );
     const boxes = screen.getAllByRole("checkbox");
     expect(boxes).toHaveLength(7);
     expect(screen.getByRole("checkbox", { name: "System renamed" })).toBeChecked();
     expect(screen.getByRole("checkbox", { name: "Mapped" })).not.toBeChecked();
+    expect(screen.getByRole("checkbox", { name: "Station claimed" }).closest("label")).toHaveClass(
+      "mission-system-progress-item-pulse",
+    );
+    expect(screen.getByRole("checkbox", { name: "Mapped" }).closest("label")).not.toHaveClass(
+      "mission-system-progress-item-pulse",
+    );
   });
 
   it("restricts editable steps to the given roles and toggles them", async () => {
@@ -70,6 +78,12 @@ describe("MissionSystemProgress", () => {
       "Planets classified",
       "Data uploaded",
     ]);
+    expect(screen.getByRole("checkbox", { name: "Mapped" }).closest("label")).not.toHaveClass(
+      "mission-system-progress-item-pulse",
+    );
+    expect(screen.getByRole("checkbox", { name: "Planets classified" }).closest("label")).toHaveClass(
+      "mission-system-progress-item-pulse",
+    );
     expect(screen.queryByRole("checkbox", { name: "Station claimed" })).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("checkbox", { name: "Planets classified" }));
@@ -84,7 +98,10 @@ describe("MissionSystemProgress", () => {
     );
     const boxes = screen.getAllByRole("checkbox");
     expect(boxes).toHaveLength(2);
-    for (const box of boxes) expect(box).toBeDisabled();
+    for (const box of boxes) {
+      expect(box).toBeDisabled();
+      expect(box.closest("label")).not.toHaveClass("mission-system-progress-item-pulse");
+    }
   });
 });
 

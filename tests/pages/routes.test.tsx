@@ -433,7 +433,7 @@ describe("planets route", () => {
       paradise: true,
       blackMarket: true,
       createdAt: "2026-01-02T00:00:00.000Z",
-      station: { portal: "1234567890AB", name: "Home Base", hasMissions: true },
+      station: { portal: "1234567890AB", name: "Home Base", hasMissions: true, hasVisibleMissions: true },
     });
     expect(planets[0].almanacSearchIndex).toContain("Verdant");
     expect(planets[0].almanacSearchIndex).not.toContain("Yellow");
@@ -446,6 +446,31 @@ describe("planets route", () => {
       expect.objectContaining({ id: "m1", system: "Yellow · Trading · Low · Gek", systemLabelFromAlmanac: true }),
       expect.objectContaining({ id: "m2", system: "" }),
     ]);
+  });
+
+  it("marks station links without a pulse when their missions are not visible to the member", async () => {
+    const hiddenMission = makeMission({
+      id: "hidden-builder-mission",
+      systemAddress: "1234567890AB",
+      targetSpecialty: "builder",
+    });
+    vi.mocked(readMissions).mockResolvedValue([hiddenMission]);
+    vi.mocked(lookupAlmanacPlanets).mockImplementation(
+      async (targets) =>
+        new Map(
+          targets.map(({ portal, galaxy }) => [
+            `${portal}:${galaxy}`,
+            portal === "1234567890AB" ? { planet: verdant, failed: false } : { planet: null, failed: false },
+          ]),
+        ),
+    );
+    signIn(user);
+
+    const element = await PlanetsRoute();
+    const { planets } = props(element) as { planets: Record<string, unknown>[] };
+    expect(planets[0]).toMatchObject({
+      station: { portal: "1234567890AB", hasMissions: true, hasVisibleMissions: false },
+    });
   });
 
   it("flags failed almanac lookups and keeps the other planets", async () => {

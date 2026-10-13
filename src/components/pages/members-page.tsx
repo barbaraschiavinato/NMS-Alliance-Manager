@@ -121,7 +121,7 @@ export function MembersPage({
   }
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell${pageMember.pulseEffectsEnabled === false ? " pulse-effects-disabled" : ""}`}>
       <Sidebar
         activeSection="utenti"
         currentMember={pageMember}

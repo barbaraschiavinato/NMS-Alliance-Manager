@@ -68,6 +68,29 @@ afterEach(() => {
 });
 
 describe("StationsPage as a member", () => {
+  it("disables pulse animations when the member preference is off", async () => {
+    mockFetch(stationRoutes([]));
+    const { container } = renderStations(makeMember({ ...ranger, pulseEffectsEnabled: false }));
+
+    expect(container.querySelector(".app-shell")).toHaveClass("pulse-effects-disabled");
+    expect(await screen.findByRole("button", { name: t("stations.add_station") })).toHaveClass(
+      "station-header-add-pulse",
+    );
+  });
+
+  it("pulses the add-station action for every specialty", async () => {
+    mockFetch(stationRoutes([]));
+    const { unmount } = renderStations();
+    const addStation = await screen.findByRole("button", { name: t("stations.add_station") });
+    expect(addStation).toHaveClass("station-header-add-pulse");
+
+    unmount();
+    renderStations(makeMember({ publicId: "explorer-1", specialty: "explorer", simpleView: false }));
+    expect(await screen.findByRole("button", { name: t("stations.add_station") })).toHaveClass(
+      "station-header-add-pulse",
+    );
+  });
+
   it("shows the empty archive and the load error", async () => {
     mockFetch(stationRoutes([], { "GET /api/stations": json({ error: "Stations offline." }, 500) }));
     renderStations();

@@ -104,10 +104,20 @@ export function Hero({
   );
 }
 
-export function HeroAddButton({ label, onClick }: Readonly<{ label: string; onClick: () => void }>) {
+export function HeroAddButton({
+  label,
+  onClick,
+  className,
+}: Readonly<{ label: string; onClick: () => void; className?: string }>) {
   const { t } = useLocale();
   return (
-    <button aria-label={t(label)} className="banner-add" data-tooltip={t(label)} onClick={onClick} type="button">
+    <button
+      aria-label={t(label)}
+      className={`banner-add${className ? ` ${className}` : ""}`}
+      data-tooltip={t(label)}
+      onClick={onClick}
+      type="button"
+    >
       <CirclePlus size={17} /> <span className="banner-add-label">{t(label)}</span>
     </button>
   );

@@ -3,12 +3,21 @@ import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AddStationButtonExample } from "@/components/guide/add-station-button-example";
 import { MessageTabsExample } from "@/components/guide/message-tabs-example";
-import { ExplorerMissionExamples } from "@/components/guide/mission-examples";
+import {
+  BuilderMissionProgressExamples,
+  ExplorerMissionExamples,
+  ExplorerMissionProgressExamples,
+} from "@/components/guide/mission-examples";
 import { MissionTabsExample } from "@/components/guide/mission-tabs-example";
 import { PlanetFiltersExample } from "@/components/guide/planet-filters-example";
 import { createPlanetListExamplePlanet } from "@/components/guide/planet-list-example";
 import { PlanetListExampleView } from "@/components/guide/planet-list-example-view";
-import { RangerStationExamples } from "@/components/guide/station-examples";
+import {
+  BuilderOwnStationExample,
+  ExplorerOwnStationExample,
+  RangerOwnStationExample,
+  RangerStationExamples,
+} from "@/components/guide/station-examples";
 import { StationFormExample } from "@/components/guide/station-form-example";
 import { guideStationInit } from "@/components/guide/station-init";
 import { StationTabsExample } from "@/components/guide/station-tabs-example";
@@ -39,6 +48,7 @@ describe("guide tab and button examples", () => {
   it("renders an add-station button that does nothing", () => {
     const { container } = renderWithLocale(<AddStationButtonExample />);
     const button = screen.getByRole("button", { name: tr("stations.add_station") });
+    expect(button).toHaveClass("station-header-add-pulse");
     const before = container.innerHTML;
     fireEvent.click(button);
     expect(container.innerHTML).toBe(before);
@@ -87,6 +97,46 @@ describe("PlanetFiltersExample", () => {
 });
 
 describe("mission examples", () => {
+  it.each([
+    [
+      "explorer",
+      ExplorerMissionProgressExamples,
+      "Mapped",
+      ["Planets classified", "Data uploaded"],
+      ["Station claimed", "System renamed"],
+    ],
+    [
+      "builder",
+      BuilderMissionProgressExamples,
+      "Buildings built",
+      ["Bases uploaded"],
+      ["Station claimed", "System renamed"],
+    ],
+  ] as const)(
+    "pulses only the %s tasks in the progress examples",
+    (_specialty, Example, checkedTask, pulsingTasks, rangerTasks) => {
+      renderWithLocale(<Example sample={guideStationInit} />);
+      const taskExample = screen.getByText("Spunta i task").closest("figure");
+      expect(taskExample).not.toBeNull();
+      expect(within(taskExample as HTMLElement).getByRole("checkbox", { name: checkedTask })).toBeChecked();
+      expect(
+        within(taskExample as HTMLElement)
+          .getByRole("checkbox", { name: checkedTask })
+          .closest("label"),
+      ).not.toHaveClass("mission-system-progress-item-pulse");
+      for (const taskLabel of pulsingTasks) {
+        expect(
+          within(taskExample as HTMLElement)
+            .getByRole("checkbox", { name: taskLabel })
+            .closest("label"),
+        ).toHaveClass("mission-system-progress-item-pulse");
+      }
+      for (const taskLabel of rangerTasks) {
+        expect(within(taskExample as HTMLElement).queryByRole("checkbox", { name: taskLabel })).toBeNull();
+      }
+    },
+  );
+
   it("falls back to the portal as title and the default thumbnail without Almanac name and image", () => {
     const { container } = renderWithLocale(
       <ExplorerMissionExamples sample={{ portal: guideStationInit.portal, galaxy: 0, response: {} }} />,
@@ -119,6 +169,27 @@ describe("mission examples", () => {
 });
 
 describe("station examples", () => {
+  it.each([
+    ["explorer", ExplorerOwnStationExample, ["Mapped", "Planets classified", "Data uploaded"], "Station claimed"],
+    ["builder", BuilderOwnStationExample, ["Buildings built", "Bases uploaded"], "Station claimed"],
+  ] as const)("shows only %s tasks on its own-station example", (_specialty, Example, taskLabels, rangerTask) => {
+    renderWithLocale(<Example sample={guideStationInit} />);
+    for (const taskLabel of taskLabels) {
+      expect(screen.getByRole("checkbox", { name: taskLabel })).toBeInTheDocument();
+      expect(screen.getByRole("checkbox", { name: taskLabel }).closest("label")).toHaveClass(
+        "mission-system-progress-item-pulse",
+      );
+    }
+    expect(screen.queryByRole("checkbox", { name: rangerTask })).not.toBeInTheDocument();
+  });
+
+  it("keeps the ranger's own-station example on ranger tasks", () => {
+    renderWithLocale(<RangerOwnStationExample sample={guideStationInit} />);
+    expect(screen.getByRole("checkbox", { name: "Station claimed" })).toBeInTheDocument();
+    expect(screen.getByRole("checkbox", { name: "System renamed" })).toBeInTheDocument();
+    expect(screen.queryByRole("checkbox", { name: "Mapped" })).not.toBeInTheDocument();
+  });
+
   it("renders inert station cards", () => {
     renderWithLocale(<RangerStationExamples sample={guideStationInit} />);
     const cards = screen.getAllByRole("listitem");
