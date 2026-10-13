@@ -509,7 +509,7 @@ export function StationsPage({
   }
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell${pageMember.pulseEffectsEnabled === false ? " pulse-effects-disabled" : ""}`}>
       <Sidebar
         activeSection="stazioni"
         currentMember={pageMember}
@@ -537,7 +537,11 @@ export function StationsPage({
           settings={allianceSettings}
           title={t(canSeeAll || canCreateOwnSpecialtyMission ? "stations.space_stations" : "stations.my_stations")}
         >
-          <HeroAddButton label={t("stations.add_station")} onClick={openAddStation} />
+          <HeroAddButton
+            className="station-header-add-pulse"
+            label={t("stations.add_station")}
+            onClick={openAddStation}
+          />
         </Hero>
         <main className="content-wrap stations-page">
           {(error || notice) && (

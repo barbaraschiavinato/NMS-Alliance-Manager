@@ -31,8 +31,10 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import {
+  BuilderOwnStationExample,
   ExplorerAvailableStationExample,
   ExplorerBuilderStationExamples,
+  ExplorerOwnStationExample,
   RangerOwnStationExample,
   RangerStationExamples,
 } from "@/components/guide/station-examples";
@@ -522,7 +524,7 @@ export async function GuideContent({
                 </p>
                 <AddStationButtonExample />
                 <p>Dopo l&apos;invio, comparirà la scheda della tua stazione, come nell&apos;esempio qui sotto.</p>
-                <RangerOwnStationExample sample={sample} />
+                <ExplorerOwnStationExample sample={sample} />
                 <p>
                   Spunta i task che hai già completato e creati una missione cliccando su{" "}
                   <span
@@ -541,7 +543,7 @@ export async function GuideContent({
                   <Eclipse aria-hidden="true" size={14} />
                   Pianeti
                 </span>
-                , filtra in base alle caratteristiche che ti interessano e clicca su{" "}
+                , filtra in base alle caratteristiche che ti interessano e clicca sul link{" "}
                 <span
                   aria-label="Apri la stazione associata"
                   className="guide-icon guide-quick-mission-icon"
@@ -551,16 +553,17 @@ export async function GuideContent({
                   <Orbit aria-hidden="true" size={16} />
                 </span>
                 <p>
-                  Il link ti porterà alla scheda della stazione per quel sistema. Se c&apos;è l&apos;icona{" "}
+                  Se il link pulsa, per quel sistema c&apos;è una missione disponibile per la tua specializzazione.
+                  Cliccalo per aprire la scheda della stazione. Cliccando sull&apos;icona{" "}
                   <span
-                    aria-label="Assegnati la missione"
+                    aria-label="Crea una missione"
                     className="guide-icon guide-quick-mission-icon guide-quick-mission-icon-spaced-right"
                     style={{ color: "#72d1c4", borderColor: "#72d1c4" }}
-                    title="Assegnati la missione"
+                    title="Crea una missione"
                   >
                     <CirclePlus aria-hidden="true" size={16} />
                   </span>{" "}
-                  puoi assegnarti la missione.
+                  puoi crearti una missione.
                 </p>
               </li>
             </ol>
@@ -615,7 +618,7 @@ export async function GuideContent({
                 </p>
                 <AddStationButtonExample />
                 <p>Dopo l&apos;invio, comparirà la scheda della tua stazione, come nell&apos;esempio qui sotto.</p>
-                <RangerOwnStationExample sample={sample} />
+                <BuilderOwnStationExample sample={sample} />
                 <p>
                   Spunta i task che hai già completato e creati una missione cliccando su{" "}
                   <span
@@ -634,7 +637,7 @@ export async function GuideContent({
                   <Eclipse aria-hidden="true" size={14} />
                   Pianeti
                 </span>
-                , filtra in base alle caratteristiche che ti interessano e clicca su{" "}
+                , filtra in base alle caratteristiche che ti interessano e clicca sul link{" "}
                 <span
                   aria-label="Apri la stazione associata"
                   className="guide-icon guide-quick-mission-icon"
@@ -644,16 +647,17 @@ export async function GuideContent({
                   <Orbit aria-hidden="true" size={16} />
                 </span>
                 <p>
-                  Il link ti porterà alla scheda della stazione per quel sistema. Se c&apos;è l&apos;icona{" "}
+                  Se il link pulsa, per quel sistema c&apos;è una missione disponibile per la tua specializzazione.
+                  Cliccalo per aprire la scheda della stazione. Cliccando sull&apos;icona{" "}
                   <span
-                    aria-label="Assegnati la missione"
+                    aria-label="Crea una missione"
                     className="guide-icon guide-quick-mission-icon guide-quick-mission-icon-spaced-right"
                     style={{ color: "#72d1c4", borderColor: "#72d1c4" }}
-                    title="Assegnati la missione"
+                    title="Crea una missione"
                   >
                     <CirclePlus aria-hidden="true" size={16} />
                   </span>{" "}
-                  puoi assegnarti la missione.
+                  puoi crearti una missione.
                 </p>
               </li>
             </ol>

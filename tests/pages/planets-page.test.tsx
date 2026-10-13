@@ -51,6 +51,7 @@ function planet(overrides: Partial<PlanetDestination> = {}): PlanetDestination {
       galaxy: 0,
       name: "Home Base",
       createdAt: "2026-01-01T00:00:00.000Z",
+      hasVisibleMissions: false,
     },
     ...overrides,
   };
@@ -112,9 +113,33 @@ describe("PlanetsPage", () => {
     expect(
       screen.getByRole("link", { name: t("planet.open_station_in_stations", { station: "Home Base" }) }),
     ).toHaveAttribute("href", "/stations?search=1234567890AB");
+    expect(
+      screen.getByRole("link", { name: t("planet.open_station_in_stations", { station: "Home Base" }) }),
+    ).not.toHaveClass("station-create-mission-pulse");
     expect(screen.getByText(t("planet.paradise"))).toBeInTheDocument();
     expect(screen.getByText(t("planet.dissonant"))).toBeInTheDocument();
     await waitFor(() => expect(window.localStorage.getItem("nms-planet-count")).toBe("2"));
+  });
+
+  it("pulses the station link when the member can see missions for that station", () => {
+    mockFetch({});
+    renderPlanets({
+      planets: [
+        planet({
+          station: {
+            id: "me:1234567890AB:0",
+            portal: "1234567890AB",
+            galaxy: 0,
+            name: "Home Base",
+            hasVisibleMissions: true,
+          },
+        }),
+      ],
+    });
+
+    expect(
+      screen.getByRole("link", { name: t("planet.open_station_in_stations", { station: "Home Base" }) }),
+    ).toHaveClass("station-create-mission-pulse");
   });
 
   it("searches the almanac values", async () => {

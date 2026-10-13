@@ -50,6 +50,7 @@ export function MemberProfilePanel({
   const [platforms, setPlatforms] = useState<NmsPlatform[]>(member.platforms);
   const [specialty, setSpecialty] = useState<MemberSpecialty | "">(member.specialty);
   const [simpleView, setSimpleView] = useState(member.simpleView === true);
+  const [pulseEffectsEnabled, setPulseEffectsEnabled] = useState(member.pulseEffectsEnabled !== false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const offlineMode = createOffline || editOffline;
@@ -82,7 +83,7 @@ export function MemberProfilePanel({
           discordName,
           platforms,
           specialty,
-          ...(offlineMode || editMember ? {} : { simpleView }),
+          ...(offlineMode || editMember ? {} : { simpleView, pulseEffectsEnabled }),
           ...(editMember ? { action: "profile", email: member.email } : {}),
           ...(editOffline ? { action: "update", offlineId: member.publicId } : {}),
         }),
@@ -234,6 +235,16 @@ export function MemberProfilePanel({
             <label className="message-acknowledgement">
               <input checked={simpleView} onChange={(event) => setSimpleView(event.target.checked)} type="checkbox" />
               <span>{t("profile.simple_view")}</span>
+            </label>
+          )}
+          {!offlineMode && !editMember && (
+            <label className="message-acknowledgement">
+              <input
+                checked={pulseEffectsEnabled}
+                onChange={(event) => setPulseEffectsEnabled(event.target.checked)}
+                type="checkbox"
+              />
+              <span>{t("profile.enable_pulse_effects")}</span>
             </label>
           )}
           {error && (

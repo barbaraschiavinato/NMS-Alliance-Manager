@@ -79,14 +79,19 @@ describe("authorization shared by every method", () => {
 
 describe("GET /api/admin/members", () => {
   it("lists every member to moderators and flags the protected admin", async () => {
+    const privatePreferenceMember = makeMember({ pulseEffectsEnabled: false });
+    seedMembers([...castMembers(cast), privatePreferenceMember]);
     signInAs(cast.moderator);
     const response = await (await routes()).GET();
     expect(response.status).toBe(200);
     const body = (await response.json()) as { publicId: string; protectedAdmin: boolean; membershipStatus: string }[];
-    expect(body).toHaveLength(castMembers(cast).length);
+    expect(body).toHaveLength(castMembers(cast).length + 1);
     expect(body.find((entry) => entry.publicId === cast.rootAdmin.publicId)?.protectedAdmin).toBe(true);
     expect(body.filter((entry) => entry.protectedAdmin)).toHaveLength(1);
     expect(body.find((entry) => entry.publicId === cast.pending.publicId)?.membershipStatus).toBe("pending");
+    expect(body.find((entry) => entry.publicId === privatePreferenceMember.publicId)).not.toHaveProperty(
+      "pulseEffectsEnabled",
+    );
   });
 
   it("works for admins too", async () => {
@@ -133,6 +138,20 @@ describe("PATCH /api/admin/members", () => {
         specialty: "builder",
         telegramName: "tg",
       });
+    });
+
+    it("does not let admins change a member's personal pulse preference", async () => {
+      signInAs(cast.admin);
+      const response = await patch({
+        action: "profile",
+        email: cast.user.email,
+        ...validProfile({ pulseEffectsEnabled: false }),
+      });
+
+      expect(response.status).toBe(200);
+      expect(readMembers().find((member) => member.publicId === cast.user.publicId)).not.toHaveProperty(
+        "pulseEffectsEnabled",
+      );
     });
 
     it("is refused to fixed test-set accounts", async () => {

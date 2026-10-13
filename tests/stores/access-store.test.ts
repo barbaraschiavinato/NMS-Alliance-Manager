@@ -151,6 +151,7 @@ describe("readAccessData (local filesystem)", () => {
           offline: true,
           specialty: "ranger",
           membershipStatus: "blocked",
+          pulseEffectsEnabled: false,
         },
       ],
     });
@@ -189,6 +190,7 @@ describe("readAccessData (local filesystem)", () => {
         lastLogin: "",
         offline: true,
         simpleView: false,
+        pulseEffectsEnabled: false,
       },
     ]);
   });
@@ -869,6 +871,7 @@ describe("isMemberProfileInput", () => {
     const { isMemberProfileInput } = await load();
     expect(isMemberProfileInput(profile())).toBe(true);
     expect(isMemberProfileInput(profile({ telegramName: "t", discordName: "d", simpleView: false }))).toBe(true);
+    expect(isMemberProfileInput(profile({ pulseEffectsEnabled: false }))).toBe(true);
     expect(isMemberProfileInput({ ...profile(), platforms: [] })).toBe(true);
   });
 
@@ -889,6 +892,7 @@ describe("isMemberProfileInput", () => {
     ["a discord name over 40 characters", { ...profile(), discordName: "d".repeat(41) }],
     ["an unknown specialty", { ...profile(), specialty: "pilot" }],
     ["a non-boolean simpleView", { ...profile(), simpleView: "yes" }],
+    ["a non-boolean pulseEffectsEnabled", { ...profile(), pulseEffectsEnabled: "yes" }],
   ])("rejects %s", async (_label, value) => {
     const { isMemberProfileInput } = await load();
     expect(isMemberProfileInput(value)).toBe(false);
@@ -962,6 +966,24 @@ describe("updateMemberProfile", () => {
     expect(await updateMemberProfile(admin.email, profile({ nmsName: "A", nmsCode: admin.nmsCode }))).toMatchObject({
       simpleView: true,
     });
+  });
+
+  it("stores disabled pulse effects and restores the enabled default", async () => {
+    const member = makeMember();
+    seedMembers([member]);
+    const { updateMemberProfile } = await load();
+
+    const disabled = await updateMemberProfile(
+      member.email,
+      profile({ nmsName: member.nmsName, nmsCode: member.nmsCode, pulseEffectsEnabled: false }),
+    );
+    expect(disabled).toMatchObject({ pulseEffectsEnabled: false });
+
+    const enabled = await updateMemberProfile(
+      member.email,
+      profile({ nmsName: member.nmsName, nmsCode: member.nmsCode, pulseEffectsEnabled: true }),
+    );
+    expect(enabled).not.toHaveProperty("pulseEffectsEnabled");
   });
 });
 

@@ -412,7 +412,7 @@ export function MissionDashboard({
   }
 
   return (
-    <main className="app-shell">
+    <main className={`app-shell${member.pulseEffectsEnabled === false ? " pulse-effects-disabled" : ""}`}>
       <Sidebar
         activeSection="missioni"
         currentMember={member}

@@ -164,7 +164,7 @@ describe("AdminPanel", () => {
 });
 
 describe("MemberProfilePanel", () => {
-  it("saves the own profile including the simple view preference", async () => {
+  it("saves the own profile including the display preferences", async () => {
     const moderator = makeMember({
       role: "moderator",
       simpleView: false,
@@ -179,6 +179,7 @@ describe("MemberProfilePanel", () => {
     const { user } = renderPage(<MemberProfilePanel member={moderator} onClose={onClose} onSaved={onSaved} />);
 
     expect(screen.getByText(moderator.email)).toBeInTheDocument();
+    expect(screen.getByRole("checkbox", { name: t("profile.enable_pulse_effects") })).toBeChecked();
     const name = screen.getByRole("textbox", { name: t("common.in_game_name") });
     await user.clear(name);
     await user.type(name, "Moddy");
@@ -187,6 +188,7 @@ describe("MemberProfilePanel", () => {
     await user.click(screen.getByRole("checkbox", { name: "PC" }));
     await user.click(screen.getByRole("radio", { name: t("common.builder") }));
     await user.click(screen.getByRole("checkbox", { name: t("profile.simple_view") }));
+    await user.click(screen.getByRole("checkbox", { name: t("profile.enable_pulse_effects") }));
     await user.click(screen.getByRole("button", { name: t("profile.save_profile") }));
 
     expect(await screen.findByText(t("profile.profile_saved"))).toBeInTheDocument();
@@ -198,6 +200,7 @@ describe("MemberProfilePanel", () => {
       platforms: ["Xbox"],
       specialty: "builder",
       simpleView: true,
+      pulseEffectsEnabled: false,
     });
     expect(onSaved).toHaveBeenCalledWith(expect.objectContaining({ nmsName: "Moddy" }));
     expect(onClose).not.toHaveBeenCalled();
@@ -210,6 +213,7 @@ describe("MemberProfilePanel", () => {
     const { user } = renderPage(<MemberProfilePanel member={member} onClose={onClose} onSaved={vi.fn()} />);
 
     expect(screen.queryByRole("checkbox", { name: t("profile.simple_view") })).not.toBeInTheDocument();
+    expect(screen.getByRole("checkbox", { name: t("profile.enable_pulse_effects") })).toBeChecked();
     const save = screen.getByRole("button", { name: t("profile.save_profile") });
     const code = screen.getByPlaceholderText("BMPE-S0B9-RCDMT");
     await user.type(code, "abcd efgh");
@@ -239,6 +243,7 @@ describe("MemberProfilePanel", () => {
     expect(screen.getByText(t("members.offline_player_hint"))).toBeInTheDocument();
     expect(screen.getByText(/· opzionale/)).toBeInTheDocument();
     expect(screen.queryByRole("checkbox", { name: t("profile.simple_view") })).not.toBeInTheDocument();
+    expect(screen.queryByRole("checkbox", { name: t("profile.enable_pulse_effects") })).not.toBeInTheDocument();
     const save = screen.getByRole("button", { name: t("profile.save_profile") });
     await user.type(screen.getByRole("textbox", { name: t("common.in_game_name") }), "Offline Joe");
     await user.click(screen.getByRole("radio", { name: t("common.ranger") }));

@@ -13,12 +13,14 @@ export function MissionSystemProgress({
   statuses,
   editable,
   editableRoles = null,
+  pulseRoles = editableRoles,
   disabled = false,
   onToggle,
 }: Readonly<{
   statuses: MissionSystemStatus[];
   editable: boolean;
   editableRoles?: readonly string[] | null;
+  pulseRoles?: readonly string[] | null;
   disabled?: boolean;
   onToggle: (status: MissionSystemStatus, checked: boolean) => void;
 }>) {
@@ -46,18 +48,21 @@ export function MissionSystemProgress({
               .map((status) => {
                 const itemEditable = editable && (!editableRoles || editableRoles.includes(statusRoles[status]));
                 if (editable && !itemEditable) return null;
+                const isChecked = statuses.includes(status);
+                const shouldPulse =
+                  itemEditable && pulseRoles?.includes(statusRoles[status]) && !disabled && !isChecked;
                 const tooltip = t(hasDataError ? "system.data_error" : status);
                 return (
                   <label
                     aria-label={tooltip}
-                    className={`mission-system-progress-item${itemEditable ? " mission-system-progress-item-editable" : ""}${showLabels ? " mission-system-progress-item-labeled" : ""}`}
+                    className={`mission-system-progress-item${itemEditable ? " mission-system-progress-item-editable" : ""}${shouldPulse ? " mission-system-progress-item-pulse" : ""}${showLabels ? " mission-system-progress-item-labeled" : ""}`}
                     key={status}
                     title={tooltip}
                   >
                     {itemEditable && (
                       <input
                         aria-label={tooltip}
-                        checked={statuses.includes(status)}
+                        checked={isChecked}
                         disabled={disabled}
                         onChange={(event) => onToggle(status, event.target.checked)}
                         type="checkbox"
@@ -68,7 +73,7 @@ export function MissionSystemProgress({
                       className={
                         hasDataError
                           ? "mission-system-progress-square mission-system-progress-square-error"
-                          : `mission-system-progress-square mission-system-progress-square-${statusRoles[status]}${statuses.includes(status) ? " mission-system-progress-square-done" : ""}`
+                          : `mission-system-progress-square mission-system-progress-square-${statusRoles[status]}${isChecked ? " mission-system-progress-square-done" : ""}`
                       }
                     />
                     <span aria-hidden="true" className="mission-system-progress-tooltip">

@@ -124,6 +124,7 @@ function normalizeMember(value: unknown): AllianceMember | null {
     lastLogin: typeof member.lastLogin === "string" ? member.lastLogin : "",
     ...(member.offline === true ? { offline: true } : {}),
     simpleView: role === "user" || (typeof member.simpleView === "boolean" && member.simpleView),
+    ...(member.pulseEffectsEnabled === false ? { pulseEffectsEnabled: false } : {}),
   };
 }
 
@@ -362,6 +363,7 @@ export type MemberProfileInput = {
   platforms: NmsPlatform[];
   specialty: MemberSpecialty;
   simpleView?: boolean;
+  pulseEffectsEnabled?: boolean;
 };
 
 function contactFields(profile: MemberProfileInput) {
@@ -397,7 +399,8 @@ export function isMemberProfileInput(value: unknown, allowEmptyCode = false): va
       (typeof profile.discordName === "string" && profile.discordName.trim().length <= 40)) &&
     profile.platforms.every((platform) => nmsPlatforms.includes(platform as NmsPlatform)) &&
     memberSpecialties.includes(profile.specialty as MemberSpecialty) &&
-    (profile.simpleView === undefined || typeof profile.simpleView === "boolean")
+    (profile.simpleView === undefined || typeof profile.simpleView === "boolean") &&
+    (profile.pulseEffectsEnabled === undefined || typeof profile.pulseEffectsEnabled === "boolean")
   );
 }
 
@@ -414,6 +417,10 @@ export async function updateMemberProfile(email: string, profile: MemberProfileI
   member.platforms = [...new Set(profile.platforms)];
   member.specialty = profile.specialty;
   if (profile.simpleView !== undefined && member.role !== "user") member.simpleView = profile.simpleView;
+  if (profile.pulseEffectsEnabled !== undefined) {
+    if (profile.pulseEffectsEnabled) delete member.pulseEffectsEnabled;
+    else member.pulseEffectsEnabled = false;
+  }
   await writeAccessData(data);
   return member;
 }

@@ -210,7 +210,7 @@ export function PlanetsPage({
   const hasActiveCriteria = Boolean(searchQuery || hasActiveFilters);
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell${pageMember.pulseEffectsEnabled === false ? " pulse-effects-disabled" : ""}`}>
       <Sidebar
         activeSection="pianeti"
         currentMember={pageMember}

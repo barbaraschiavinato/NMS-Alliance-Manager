@@ -58,6 +58,7 @@ describe("GET /api/profile", () => {
       platforms: ["PC", "Mac"],
       specialty: "explorer",
       simpleView: true,
+      pulseEffectsEnabled: true,
       role: "user",
     });
   });
@@ -106,6 +107,7 @@ describe("PATCH /api/profile", () => {
     ["a long Telegram name", profile({ telegramName: "t".repeat(41) })],
     ["a non-string Discord name", profile({ discordName: 3 })],
     ["a non-boolean simple view", profile({ simpleView: "yes" })],
+    ["a non-boolean pulse preference", profile({ pulseEffectsEnabled: "yes" })],
   ])("rejects %s", async (_label, body) => {
     signInAs(cast.user);
     expect((await patch(body)).status).toBe(400);
@@ -150,6 +152,7 @@ describe("PATCH /api/profile", () => {
         { platforms: ["PC", "Mac"] },
         { specialty: "builder" },
         { telegramName: "tg" },
+        { pulseEffectsEnabled: false },
       ]) {
         const response = await patch(unchangedProfile(member, overrides));
         expect(response.status).toBe(403);
@@ -205,6 +208,7 @@ describe("PATCH /api/profile", () => {
       platforms: ["PlayStation"],
       specialty: "ranger",
       simpleView: true,
+      pulseEffectsEnabled: true,
       role: "user",
     });
     const stored = readMembers().find((member) => member.publicId === cast.pending.publicId);
@@ -230,6 +234,25 @@ describe("PATCH /api/profile", () => {
     signInAs(cast.simpleAdmin);
     expect((await patch(profile({ nmsName: "Back", nmsCode: "BBBBBBBBBBBBB", simpleView: false }))).status).toBe(200);
     expect(readMembers().find((member) => member.publicId === cast.simpleAdmin.publicId)?.simpleView).toBe(false);
+  });
+
+  it("saves and returns the pulse preference, enabled by default", async () => {
+    signInAs(cast.user);
+    expect(await (await (await routes()).GET()).json()).toMatchObject({ pulseEffectsEnabled: true });
+
+    const disabled = await patch(profile({ pulseEffectsEnabled: false }));
+    expect(disabled.status).toBe(200);
+    expect(await disabled.json()).toMatchObject({ pulseEffectsEnabled: false });
+    expect(readMembers().find((member) => member.publicId === cast.user.publicId)).toMatchObject({
+      pulseEffectsEnabled: false,
+    });
+
+    const enabled = await patch(profile({ pulseEffectsEnabled: true }));
+    expect(enabled.status).toBe(200);
+    expect(await enabled.json()).toMatchObject({ pulseEffectsEnabled: true });
+    expect(readMembers().find((member) => member.publicId === cast.user.publicId)).not.toHaveProperty(
+      "pulseEffectsEnabled",
+    );
   });
 
   it("returns 409 when the name or friend code belongs to someone else", async () => {

@@ -47,6 +47,14 @@ const explorer: AllianceMember = {
   specialty: "explorer",
 };
 
+const builder: AllianceMember = {
+  ...ranger,
+  publicId: "guide-builder",
+  name: "Costruttore",
+  nmsName: "Costruttore",
+  specialty: "builder",
+};
+
 const explorerScenarios: Scenario[] = [
   {
     title: "Tua stazione (sei il proprietario), senza missioni associate",
@@ -144,6 +152,18 @@ export function RangerOwnStationExample({ sample }: Readonly<{ sample: Sample }>
   return <StationExamples member={ranger} sample={sample} scenarios={[rangerScenarios[0]]} showCaption={false} />;
 }
 
+export function ExplorerOwnStationExample({ sample }: Readonly<{ sample: Sample }>) {
+  return (
+    <StationExamples canSeeAll member={explorer} sample={sample} scenarios={[rangerScenarios[0]]} showCaption={false} />
+  );
+}
+
+export function BuilderOwnStationExample({ sample }: Readonly<{ sample: Sample }>) {
+  return (
+    <StationExamples canSeeAll member={builder} sample={sample} scenarios={[rangerScenarios[0]]} showCaption={false} />
+  );
+}
+
 export function ExplorerBuilderStationExamples({ sample }: Readonly<{ sample: Sample }>) {
   return <StationExamples member={explorer} sample={sample} scenarios={explorerScenarios} />;
 }
@@ -157,7 +177,14 @@ function StationExamples({
   sample,
   scenarios,
   showCaption = true,
-}: Readonly<{ member: AllianceMember; sample: Sample; scenarios: Scenario[]; showCaption?: boolean }>) {
+  canSeeAll = false,
+}: Readonly<{
+  member: AllianceMember;
+  sample: Sample;
+  scenarios: Scenario[];
+  showCaption?: boolean;
+  canSeeAll?: boolean;
+}>) {
   return (
     <div className="guide-examples">
       {scenarios.map((scenario) => {
@@ -185,7 +212,7 @@ function StationExamples({
             <ul className="station-list station-list-cards">
               <StationCardSimple
                 canCreateMissions={false}
-                canSeeAll={false}
+                canSeeAll={canSeeAll}
                 member={member}
                 onCreateMission={noop}
                 onEdit={noop}
