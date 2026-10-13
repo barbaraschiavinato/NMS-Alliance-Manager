@@ -119,7 +119,7 @@ export function PlanetStationHeading({
         <Link
           aria-label={t("planet.open_station_in_stations", { station: station.name || station.portal })}
           className={`member-icon-action member-station-filter planet-station-link${
-            station.hasVisibleMissions ? " station-create-mission-pulse" : ""
+            station.canCreateMission ? " station-create-mission-pulse" : ""
           }`}
           data-tooltip={t("planet.open_station_in_stations", { station: station.name || station.portal })}
           href={`/stations?search=${encodeURIComponent(station.portal)}`}

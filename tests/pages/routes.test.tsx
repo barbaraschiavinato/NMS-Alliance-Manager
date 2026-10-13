@@ -433,7 +433,7 @@ describe("planets route", () => {
       paradise: true,
       blackMarket: true,
       createdAt: "2026-01-02T00:00:00.000Z",
-      station: { portal: "1234567890AB", name: "Home Base", hasMissions: true, hasVisibleMissions: true },
+      station: { portal: "1234567890AB", name: "Home Base", hasMissions: true, canCreateMission: false },
     });
     expect(planets[0].almanacSearchIndex).toContain("Verdant");
     expect(planets[0].almanacSearchIndex).not.toContain("Yellow");
@@ -448,7 +448,7 @@ describe("planets route", () => {
     ]);
   });
 
-  it("marks station links without a pulse when their missions are not visible to the member", async () => {
+  it("marks station links according to whether the member can create a mission from the station", async () => {
     const hiddenMission = makeMission({
       id: "hidden-builder-mission",
       systemAddress: "1234567890AB",
@@ -469,7 +469,7 @@ describe("planets route", () => {
     const element = await PlanetsRoute();
     const { planets } = props(element) as { planets: Record<string, unknown>[] };
     expect(planets[0]).toMatchObject({
-      station: { portal: "1234567890AB", hasMissions: true, hasVisibleMissions: false },
+      station: { portal: "1234567890AB", hasMissions: true, canCreateMission: true },
     });
   });
 

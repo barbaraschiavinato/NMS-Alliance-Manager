@@ -36,7 +36,7 @@ export type PlanetDestination = Readonly<{
     name?: string;
     createdAt?: string;
     hasMissions?: boolean;
-    hasVisibleMissions?: boolean;
+    canCreateMission?: boolean;
   }>;
 }>;
 
