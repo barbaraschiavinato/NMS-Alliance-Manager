@@ -60,6 +60,7 @@ Each `src/app/<section>/page.tsx` is a thin server component. It loads access da
 - Missions model and validation: `src/lib/missions.ts`. Member types and friend-code validation: `src/lib/member-types.ts`. Demo seed: `src/lib/seed.ts`.
 - System addresses are 12 hex glyphs plus a galaxy index (0–255) (`galaxies.ts`, `planet-addresses.ts`, `components/shared/portal-address-field.tsx`). Glyph images are in `public/glyphs/`.
 - Addresses are verified against the external NMS Almanac API (`almanac-lookup.ts`, limited to 500 requests/hour). Responses are cached permanently by portal code and galaxy through `almanac-store.ts`. A 404 or an unavailable API must not block saving. `systemVerified` is reset when the address or galaxy changes.
+- Flora, fauna, and mineral discovery counts belong to the planet, not the mission. Planet cards and their guide examples reuse the already-loaded Almanac data through `almanacDiscoveryCounts` (`src/lib/almanac-discovery-counts.ts`), without additional requests. Hide missing counts, keep zero visible, and never derive discovery totals from resource-list lengths.
 - `src/lib/nms-core/` is vendored MIT JS (pinned upstream commit), loaded client-side to compute planet count and star type. Don't edit it casually.
 - **Specialty workflows (documented in `src/components/guide/guide-content.tsx`):**
   - Mission targets include `all`, `explorer_builder`, the individual member specialties, and `other`. An `all` mission covers Ranger, Explorer, and Builder tasks; `explorer_builder` covers Explorer and Builder tasks.

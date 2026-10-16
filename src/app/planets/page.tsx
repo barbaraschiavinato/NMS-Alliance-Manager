@@ -12,6 +12,7 @@ import { getSystemPlanetAddresses } from "@/lib/planet-addresses";
 import { almanacSystemLabel, lookupAlmanacPlanets } from "@/lib/almanac-lookup";
 import { readAllStationPortals, readStationPortals } from "@/lib/stations-store";
 import { readMissions, writeMissions } from "@/lib/store";
+import { almanacDiscoveryCounts, type AlmanacDiscoveryCounts } from "@/lib/almanac-discovery-counts";
 
 export const dynamic = "force-dynamic";
 
@@ -213,6 +214,7 @@ export default async function PlanetsRoute() {
           systemFacts: { label: string; value: string }[];
           planetType?: string;
           economyStars?: number;
+          discoveryCounts: AlmanacDiscoveryCounts;
           plants: string[];
           minerals: string[];
           valuables: string[];
@@ -271,6 +273,7 @@ export default async function PlanetsRoute() {
                 almanacSearchIndex: almanacSearchValues(almanac).join(" "),
                 almanacFacts,
                 systemFacts,
+                discoveryCounts: almanacDiscoveryCounts(band),
                 ...(planetType ? { planetType } : {}),
                 ...(economyStars !== undefined ? { economyStars } : {}),
                 plants: almanacResourceNames(carries, ["plant", "consumable"]),

@@ -125,6 +125,8 @@ Descritta sopra per ogni specializzazione. Il nome della pagina è "Le mie stazi
 ### `Eclipse` Dettaglio pianeta
 Mostra i dati del pianeta e, tramite l'icona sirena, permette di inviare una **richiesta d'aiuto** (vedi [Richieste d'aiuto](#richieste-daiuto)).
 
+Nella pagina **Pianeti**, le card mostrano anche le icone di flora, fauna e minerali con i conteggi disponibili in Almanac. I valori mancanti non vengono mostrati; un conteggio pari a zero resta visibile.
+
 <a id="classifica"></a>
 
 ### `Trophy` Classifica

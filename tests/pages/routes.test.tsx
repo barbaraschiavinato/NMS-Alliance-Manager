@@ -364,6 +364,9 @@ describe("planets route", () => {
       headline: { word: "Verdant" },
       band: {
         type: { word: "Lush" },
+        flora: { note: "19 plants" },
+        fauna: { note: "0 species" },
+        minerals: { word: "23" },
         size: { word: "Large" },
         star: { word: "Yellow" },
         economy: { word: "Trading", stars: 2.7, black_market: true },
@@ -425,6 +428,7 @@ describe("planets route", () => {
       almanacName: "Verdant",
       imageUrl: "https://nmsalmanac.com/api/planets/verdant.png",
       planetType: "Lush",
+      discoveryCounts: { flora: 19, fauna: 0, minerals: 23 },
       economyStars: 2,
       plants: ["Star Bulb"],
       minerals: ["Copper"],

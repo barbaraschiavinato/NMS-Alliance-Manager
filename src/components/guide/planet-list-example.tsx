@@ -2,6 +2,7 @@ import { getSystemPlanetAddresses } from "@/lib/planet-addresses";
 import { PlanetListExampleView } from "./planet-list-example-view";
 import { guideStationInit } from "./station-init";
 import type { PlanetDestination } from "@/components/cards/planet-destination-card";
+import { almanacDiscoveryCounts } from "@/lib/almanac-discovery-counts";
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   return value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : null;
@@ -73,6 +74,7 @@ export async function createPlanetListExamplePlanet(): Promise<PlanetDestination
     almanacSearchIndex: `${name} ${guideStationInit.portal}`,
     almanacFacts,
     systemFacts,
+    discoveryCounts: almanacDiscoveryCounts(band),
     ...(word(band?.type) ? { planetType: word(band?.type) } : {}),
     ...(typeof economy?.stars === "number" ? { economyStars: economy.stars } : {}),
     plants: resourceNames(response.carries, ["plant", "consumable"]),
