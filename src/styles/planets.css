@@ -15,7 +15,7 @@
 .planet-card-image { width: 144px; height: 144px; object-fit: cover; background: transparent; }
 .planet-card-intro h3 { margin: 0; color: var(--lime); font-size: 20px; font-weight: 650; text-transform: capitalize; }
 .planet-card-intro p { margin: 8px 0; color: #68766d; font-size: 10px; }
-.planet-paradise-flag { display: inline-flex; padding: 4px 7px; color: #496d43; background: #e9f1e2; font-size: 8px; font-weight: 650; }
+.planet-paradise-flag { display: inline-flex; padding: 4px 7px; color: #fff; background: #2e9e5b; font-size: 8px; font-weight: 650; }
 .planet-dissonant-flag { display: inline-flex; margin-left: 4px; padding: 4px 7px; color: #fff; background: #8e4dcc; font-size: 8px; font-weight: 650; }
 .planet-intro-code { display: block; margin-top: 10px; color: #8b968d; font-family: "SFMono-Regular", Consolas, monospace; font-size: 8px; }
 .planet-card-section { padding-top: 12px; border-top: 1px solid var(--line); }
@@ -122,7 +122,6 @@
 .mission-dialog .planet-fact-row dd { color: var(--muted); }
 .mission-dialog .planet-fact-row,
 .mission-dialog .planet-sky-row { border-color: #354044; }
-.mission-dialog .planet-paradise-flag { color: var(--lime); background: #352719; }
 .mission-dialog .planet-card-section,
 .mission-dialog .planet-resources-section,
 .mission-dialog .planet-resource-group { border-color: #354044; }
