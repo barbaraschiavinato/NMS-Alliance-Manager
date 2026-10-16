@@ -31,6 +31,36 @@ function makePlanet(overrides: Partial<PlanetDestination> = {}): PlanetDestinati
 }
 
 describe("PlanetDestinationCard", () => {
+  it.each(["en", "it"] as const)("shows discovery counts with translated tooltips in %s", (locale) => {
+    renderWithLocale(
+      <PlanetDestinationCard
+        onOpen={vi.fn()}
+        planet={makePlanet({ discoveryCounts: { flora: 19, fauna: 12, minerals: 23 } })}
+      />,
+      { locale },
+    );
+    for (const label of ["Flora: 19", "Fauna: 12", `${locale === "it" ? "Minerali" : "Minerals"}: 23`]) {
+      expect(screen.getByRole("img", { name: label })).toHaveAttribute("data-tooltip", label);
+    }
+  });
+
+  it("keeps zero visible and omits unavailable counts without changing the planet action", async () => {
+    const onOpen = vi.fn();
+    const planet = makePlanet({ discoveryCounts: { fauna: 0 } });
+    const { user } = renderWithLocale(<PlanetDestinationCard onOpen={onOpen} planet={planet} />);
+    expect(screen.getByRole("img", { name: "Fauna: 0" })).toHaveTextContent("0");
+    expect(screen.queryByRole("img", { name: /Flora|Minerals/ })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button"));
+    expect(onOpen).toHaveBeenCalledWith(planet);
+  });
+
+  it.each([undefined, {}])("hides the counter row when no discovery counts are available: %j", (discoveryCounts) => {
+    const { container } = renderWithLocale(
+      <PlanetDestinationCard onOpen={vi.fn()} planet={makePlanet({ discoveryCounts })} />,
+    );
+    expect(container.querySelector(".planet-discovery-counts")).toBeNull();
+  });
+
   it("exports conflict levels", () => {
     expect(conflictLevels.Outlaw).toBe(3);
     expect(conflictLevels.None).toBe(0);

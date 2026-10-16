@@ -2,6 +2,8 @@
 
 import Image from "next/image";
 import { Droplet, Globe2, Moon } from "lucide-react";
+import type { AlmanacDiscoveryCounts } from "@/lib/almanac-discovery-counts";
+import { PlanetDiscoveryCounts } from "@/components/shared/planet-discovery-counts";
 import { GlyphStrip } from "@/components/shared/portal-address-field";
 import { useLocale } from "@/components/providers/locale-provider";
 
@@ -23,6 +25,7 @@ export type PlanetDestination = Readonly<{
   systemFacts: { label: string; value: string }[];
   planetType?: string;
   economyStars?: number;
+  discoveryCounts?: AlmanacDiscoveryCounts;
   plants: string[];
   minerals: string[];
   valuables: string[];
@@ -111,6 +114,7 @@ export function PlanetDestinationCard({
                 ))}
             </span>
           )}
+          <PlanetDiscoveryCounts counts={planet.discoveryCounts} />
         </span>
         <PlanetWaterIndicator
           label={tv}

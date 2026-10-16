@@ -61,11 +61,109 @@ afterEach(() => {
 });
 
 describe("PlanetCard", () => {
+  it.each(["en", "it"] as const)(
+    "shows translated planet labels and preserves condition descriptions in %s",
+    (locale) => {
+      mockFetch({});
+      renderPage(
+        <PlanetCard
+          galaxy={0}
+          onClose={vi.fn()}
+          portal="1234567890AB"
+          title="Mission planet"
+          initialPlanetData={{
+            ...lushPlanet,
+            lines: {
+              ...lushPlanet.lines,
+              band: { ...lushPlanet.lines.band, sentinels: { word: "Corrupted", ink: "exotic" } },
+            },
+          }}
+        />,
+        { locale },
+      );
+      const intro = document.querySelector(".planet-card-intro");
+      expect(screen.getByText(t("planet.dissonant", undefined, locale))).toHaveClass("planet-dissonant-flag");
+      expect(screen.getByText(t("planet.paradise", undefined, locale))).toHaveClass("planet-paradise-flag");
+      expect(intro).toContainElement(screen.getByText(t("planet.dissonant", undefined, locale)));
+      expect(intro).toContainElement(screen.getByText(t("planet.paradise", undefined, locale)));
+      expect(screen.getByText(locale === "it" ? "Corrotte" : "Corrupted")).toBeInTheDocument();
+    },
+  );
+
+  it("shows the dissonant label independently of paradise", () => {
+    mockFetch({});
+    renderCard({
+      initialPlanetData: {
+        paradise: false,
+        lines: {
+          band: { sentinels: { word: "Corrupted", ink: "exotic" } },
+        },
+      },
+    });
+    expect(screen.getByText(t("planet.dissonant"))).toHaveClass("planet-dissonant-flag");
+    expect(screen.queryByText(t("planet.paradise"))).not.toBeInTheDocument();
+  });
+
+  it.each([undefined, { word: "High", ink: "red" }])(
+    "does not show the dissonant label for ordinary or missing sentinels",
+    (sentinels) => {
+      mockFetch({});
+      renderCard({ initialPlanetData: { lines: { band: { sentinels } } } });
+      expect(screen.queryByText(t("planet.dissonant"))).not.toBeInTheDocument();
+    },
+  );
+
+  it("shows discovery counts before the portal code without additional requests", () => {
+    const { fetchMock } = mockFetch({});
+    const { container } = renderCard({
+      initialPlanetData: {
+        lines: {
+          band: {
+            flora: { note: "19 plants" },
+            fauna: { note: "0 species" },
+            minerals: { word: "23" },
+          },
+        },
+      },
+    });
+    const intro = container.querySelector(".planet-card-intro");
+    expect(intro).not.toBeNull();
+    const counts = container.querySelector(".planet-card-intro .planet-discovery-counts");
+    expect(counts?.nextElementSibling).toHaveClass("planet-intro-code");
+    for (const label of [`${t("planet.flora")}: 19`, `${t("planet.fauna")}: 0`, `${t("planet.minerals")}: 23`]) {
+      expect(screen.getByRole("img", { name: label })).toHaveAttribute("data-tooltip", label);
+    }
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    {},
+    { lines: { band: { flora: { word: "Bountiful" }, fauna: { note: "Unknown" }, minerals: { word: "-1" } } } },
+  ])("omits discovery counters when Almanac has no valid totals", (initialPlanetData) => {
+    mockFetch({});
+    const { container } = renderCard({ initialPlanetData });
+    expect(container.querySelector(".planet-discovery-counts")).toBeNull();
+    expect(container.querySelector(".planet-intro-code")).toHaveTextContent("1234567890AB");
+  });
+
   it("loads every planet in the system and switches between them", async () => {
     const { calls } = mockFetch({
       "/api/missions/planet": ({ url }: { url: URL }) => {
         const address = url.searchParams.get("address");
-        if (address === "1234567890AB") return { planet: lushPlanet };
+        if (address === "1234567890AB")
+          return {
+            planet: {
+              ...lushPlanet,
+              lines: {
+                ...lushPlanet.lines,
+                band: {
+                  ...lushPlanet.lines.band,
+                  flora: { note: "19 plants" },
+                  sentinels: { word: "Corrupted", ink: "exotic" },
+                },
+              },
+            },
+          };
         if (address === "2234567890AB") return { planet: barrenPlanet };
         return json({ error: "missing" }, 404);
       },
@@ -77,8 +175,10 @@ describe("PlanetCard", () => {
     expect(screen.getByText("Find the caves")).toBeInTheDocument();
     expect(screen.getByText("Euclid · Alpha")).toBeInTheDocument();
     expect(screen.getByText(t("planet.paradise"))).toBeInTheDocument();
+    expect(screen.getByText(t("planet.dissonant"))).toBeInTheDocument();
     expect(screen.getByText("Caves, Arches")).toBeInTheDocument();
     expect(screen.getByText("Ample · ★★☆")).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: `${t("planet.flora")}: 19` })).toBeInTheDocument();
     expect(screen.getByLabelText(`${t("common.day")} #AABBCC`)).toBeInTheDocument();
     expect(screen.getByText("Copper")).toBeInTheDocument();
     expect(screen.getByText("Mystery")).toBeInTheDocument();
@@ -93,6 +193,15 @@ describe("PlanetCard", () => {
     await user.click(within(tabs).getByRole("button", { name: "Barren" }));
     expect(within(tabs).getByRole("button", { name: "Barren" })).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByText("2234567890AB", { selector: ".planet-intro-code" })).toBeInTheDocument();
+    expect(screen.queryByRole("img", { name: `${t("planet.flora")}: 19` })).not.toBeInTheDocument();
+    expect(document.querySelector(".planet-discovery-counts")).toBeNull();
+    expect(screen.queryByText(t("planet.dissonant"))).not.toBeInTheDocument();
+    expect(screen.queryByText(t("planet.paradise"))).not.toBeInTheDocument();
+    await user.click(within(tabs).getByRole("button", { name: "Verdant Moon" }));
+    expect(screen.getByRole("img", { name: `${t("planet.flora")}: 19` })).toBeInTheDocument();
+    expect(screen.getByText(t("planet.dissonant"))).toBeInTheDocument();
+    expect(screen.getByText(t("planet.paradise"))).toBeInTheDocument();
+    expect(calls).toHaveLength(2);
   });
 
   it("shows the empty and error messages", async () => {

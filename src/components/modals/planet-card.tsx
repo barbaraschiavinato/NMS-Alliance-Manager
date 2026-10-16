@@ -2,6 +2,8 @@ import Image from "next/image";
 import { useEffect, useState, type SubmitEvent } from "react";
 import { Siren, X } from "lucide-react";
 import { GlyphStrip } from "@/components/shared/portal-address-field";
+import { PlanetDiscoveryCounts } from "@/components/shared/planet-discovery-counts";
+import { almanacDiscoveryCounts } from "@/lib/almanac-discovery-counts";
 import { galaxyLabel } from "@/lib/galaxies";
 import { useLocale } from "@/components/providers/locale-provider";
 
@@ -408,6 +410,10 @@ export function PlanetCard({
                   )}
                   {contextLabel && <p>{contextLabel}</p>}
                   {planet.paradise === true && <span className="planet-paradise-flag">{t("planet.paradise")}</span>}
+                  {asRecord(band?.sentinels)?.ink === "exotic" && (
+                    <span className="planet-dissonant-flag">{t("planet.dissonant")}</span>
+                  )}
+                  <PlanetDiscoveryCounts counts={almanacDiscoveryCounts(band)} />
                   <span className="planet-intro-code">{selectedPortal}</span>
                 </div>
               </section>

@@ -41,6 +41,7 @@ describe("createPlanetListExamplePlanet", () => {
       almanacSearchIndex: "2123456789AB 2123456789AB",
       almanacFacts: [],
       systemFacts: [],
+      discoveryCounts: {},
       plants: [],
       minerals: [],
       valuables: [],
@@ -68,6 +69,9 @@ describe("createPlanetListExamplePlanet", () => {
         headline: { word: "Verdant" },
         band: {
           type: { word: "Lush" },
+          flora: { note: "19 plants" },
+          fauna: { note: "12 species" },
+          minerals: { word: "23" },
           size: { word: 7 },
           weather: "Calm",
           economy: { word: "Trading", stars: 2, black_market: true },
@@ -88,6 +92,7 @@ describe("createPlanetListExamplePlanet", () => {
       ],
       systemFacts: [{ label: "common.economy", value: "Trading" }],
       planetType: "Lush",
+      discoveryCounts: { flora: 19, fauna: 12, minerals: 23 },
       economyStars: 2,
       plants: ["Faecium"],
       minerals: ["Copper"],
@@ -108,6 +113,29 @@ describe("createPlanetListExamplePlanet", () => {
 });
 
 describe("PlanetListExample", () => {
+  it("shows the Almanac discovery counts on all three example cards", async () => {
+    useSample("1123456789AB", {
+      lines: {
+        headline: { word: "Verdant" },
+        band: {
+          flora: { note: "19 plants" },
+          fauna: { note: "0 species" },
+          minerals: { word: "23" },
+        },
+      },
+    });
+    const planet = await createPlanetListExamplePlanet();
+    renderWithLocale(<PlanetListExample planet={planet} />);
+
+    const cards = screen.getAllByRole("button", { name: /Verdant/ });
+    expect(cards).toHaveLength(3);
+    for (const card of cards) {
+      for (const label of ["Flora: 19", "Fauna: 0", "Minerals: 23"]) {
+        expect(within(card).getByRole("img", { name: label })).toHaveAttribute("data-tooltip", label);
+      }
+    }
+  });
+
   it("renders the example cards and the inline planet card for the sample", async () => {
     useSample("1123456789AB", { name: "Station Name", lines: { headline: { word: "Verdant" } } });
     const planet = await createPlanetListExamplePlanet();

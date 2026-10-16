@@ -15,7 +15,8 @@
 .planet-card-image { width: 144px; height: 144px; object-fit: cover; background: transparent; }
 .planet-card-intro h3 { margin: 0; color: var(--lime); font-size: 20px; font-weight: 650; text-transform: capitalize; }
 .planet-card-intro p { margin: 8px 0; color: #68766d; font-size: 10px; }
-.planet-paradise-flag { display: inline-flex; padding: 4px 7px; color: #496d43; background: #e9f1e2; font-size: 8px; font-weight: 650; }
+.planet-paradise-flag { display: inline-flex; padding: 4px 7px; color: #fff; background: #2e9e5b; font-size: 8px; font-weight: 650; }
+.planet-dissonant-flag { display: inline-flex; margin-left: 4px; padding: 4px 7px; color: #fff; background: #8e4dcc; font-size: 8px; font-weight: 650; }
 .planet-intro-code { display: block; margin-top: 10px; color: #8b968d; font-family: "SFMono-Regular", Consolas, monospace; font-size: 8px; }
 .planet-card-section { padding-top: 12px; border-top: 1px solid var(--line); }
 .planet-card-section h4 { margin: 0 0 12px; color: #69786e; font-family: "SFMono-Regular", Consolas, monospace; font-size: 8px; letter-spacing: .8px; text-transform: uppercase; }
@@ -95,6 +96,13 @@
 .planet-mission-card-copy .planet-mission-facts { display: flex; flex-wrap: wrap; gap: 4px 10px; overflow: visible; white-space: normal; }
 .planet-mission-facts > span { color: #a4adae; font-size: 8px; }
 .planet-mission-facts b { color: #75847a; font-weight: 600; }
+.planet-discovery-counts { display: flex; flex-wrap: wrap; gap: 12px; color: #a4adae; font-size: 9px; }
+.planet-mission-card-copy .planet-discovery-counts { overflow: visible; padding-right: 56px; white-space: normal; }
+.planet-card-intro .planet-discovery-counts { margin: 8px 0; font-size: 12px; }
+.planet-discovery-counts > span { position: relative; display: inline-flex; align-items: center; gap: 4px; }
+.planet-discovery-counts svg { color: var(--lime); }
+.planet-discovery-counts [data-tooltip]::after { position: absolute; z-index: 30; left: 0; bottom: calc(100% + 7px); padding: 6px 8px; color: #f1eee7; border: 1px solid #394548; border-radius: 3px; background: #111719; box-shadow: 0 4px 14px #0008; content: attr(data-tooltip); font-size: 9px; line-height: 1.2; opacity: 0; pointer-events: none; white-space: nowrap; }
+.planet-discovery-counts [data-tooltip]:hover::after { opacity: 1; }
 .planet-system-tabs { display: flex; flex-wrap: wrap; gap: 6px; }
 .planet-system-tabs button { padding: 6px 9px; color: #c4ccca; border: 1px solid #354044; border-radius: 5px; background: #171d1f; cursor: pointer; font-size: 11px; }
 .planet-system-tabs button.selected { color: var(--lime); border-color: var(--lime); }
@@ -114,7 +122,6 @@
 .mission-dialog .planet-fact-row dd { color: var(--muted); }
 .mission-dialog .planet-fact-row,
 .mission-dialog .planet-sky-row { border-color: #354044; }
-.mission-dialog .planet-paradise-flag { color: var(--lime); background: #352719; }
 .mission-dialog .planet-card-section,
 .mission-dialog .planet-resources-section,
 .mission-dialog .planet-resource-group { border-color: #354044; }

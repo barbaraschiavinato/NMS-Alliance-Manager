@@ -124,6 +124,9 @@ Descritta sopra per ogni specializzazione. Il nome della pagina è "Le mie stazi
 
 ### `Eclipse` Dettaglio pianeta
 Mostra i dati del pianeta e, tramite l'icona sirena, permette di inviare una **richiesta d'aiuto** (vedi [Richieste d'aiuto](#richieste-daiuto)).
+Le etichette **Paradiso** e **Dissonante** compaiono quando indicate dai dati Almanac, senza sostituire le descrizioni delle condizioni del pianeta.
+
+Nella pagina **Pianeti**, le card mostrano anche le icone di flora, fauna e minerali con i conteggi disponibili in Almanac. Gli stessi contatori compaiono nel dettaglio pianeta, prima del codice portale, e si aggiornano selezionando un altro pianeta. I valori mancanti non vengono mostrati; un conteggio pari a zero resta visibile.
 
 <a id="classifica"></a>
 
