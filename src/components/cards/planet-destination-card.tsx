@@ -1,8 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { Droplet, Gem, Globe2, Leaf, Moon, PawPrint } from "lucide-react";
+import { Droplet, Globe2, Moon } from "lucide-react";
 import type { AlmanacDiscoveryCounts } from "@/lib/almanac-discovery-counts";
+import { PlanetDiscoveryCounts } from "@/components/shared/planet-discovery-counts";
 import { GlyphStrip } from "@/components/shared/portal-address-field";
 import { useLocale } from "@/components/providers/locale-provider";
 
@@ -80,7 +81,6 @@ export function PlanetDestinationCard({
   onOpen,
 }: Readonly<{ planet: PlanetDestination; onOpen: (planet: PlanetDestination) => void }>) {
   const { t, tv } = useLocale();
-  const discoveryCounts = planet.discoveryCounts ?? {};
   return (
     <div>
       {planet.dissonant && (
@@ -114,30 +114,7 @@ export function PlanetDestinationCard({
                 ))}
             </span>
           )}
-          {Object.keys(discoveryCounts).length > 0 && (
-            <span className="planet-discovery-counts">
-              {(
-                [
-                  { key: "flora", label: "planet.flora", Icon: Leaf },
-                  { key: "fauna", label: "planet.fauna", Icon: PawPrint },
-                  { key: "minerals", label: "planet.minerals", Icon: Gem },
-                ] as const
-              ).map(({ key, label, Icon }) => {
-                const count = discoveryCounts[key];
-                return count !== undefined ? (
-                  <span
-                    aria-label={`${t(label)}: ${count}`}
-                    data-tooltip={`${t(label)}: ${count}`}
-                    key={key}
-                    role="img"
-                  >
-                    <Icon aria-hidden="true" size={13} />
-                    {count}
-                  </span>
-                ) : null;
-              })}
-            </span>
-          )}
+          <PlanetDiscoveryCounts counts={planet.discoveryCounts} />
         </span>
         <PlanetWaterIndicator
           label={tv}
