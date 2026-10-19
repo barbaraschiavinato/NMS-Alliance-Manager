@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import path from "node:path";
 import { localDataPath } from "@/lib/local-data-path";
 import { getBlobAuthOptions } from "@/lib/blob-config";
+import { normalizeAlmanacPlanet } from "@/lib/almanac-normalize";
 
 type AlmanacResponse = Record<string, unknown>;
 type AlmanacResponseIndex = Record<string, Record<string, AlmanacResponse>>;
@@ -82,24 +83,46 @@ function serialized<T>(task: () => Promise<T>): Promise<T> {
 
 export async function readAlmanacResponse(portalCode: string, galaxy: number): Promise<AlmanacResponse | null> {
   const index = await readAlmanacIndex();
-  return index[portalCode.toUpperCase()]?.[String(galaxy)] ?? null;
+  const response = index[portalCode.toUpperCase()]?.[String(galaxy)];
+  if (!response) return null;
+  const normalized = await normalizeAlmanacPlanet(response);
+  if (normalized !== response) await writeAlmanacResponse(portalCode, galaxy, normalized);
+  return normalized;
 }
 
 export async function readAlmanacResponses(portalCodes: string[]): Promise<Record<string, CachedAlmanacPlanet[]>> {
   const index = await readAlmanacIndex();
-  return Object.fromEntries(
-    portalCodes.map((portalCode) => {
-      const responses = Object.entries(index[portalCode.toUpperCase()] ?? {})
-        .flatMap(([galaxy, response]) => {
-          const galaxyIndex = Number(galaxy);
-          return Number.isInteger(galaxyIndex) && galaxyIndex >= 0 && galaxyIndex <= 255
-            ? [{ galaxy: galaxyIndex, response }]
-            : [];
-        })
-        .sort((left, right) => left.galaxy - right.galaxy);
-      return [portalCode.toUpperCase(), responses];
-    }),
+  const results: Record<string, CachedAlmanacPlanet[]> = Object.fromEntries(
+    await Promise.all(
+      portalCodes.map(async (portalCode) => {
+        const responses = Object.entries(index[portalCode.toUpperCase()] ?? {})
+          .flatMap(([galaxy, response]) => {
+            const galaxyIndex = Number(galaxy);
+            return Number.isInteger(galaxyIndex) && galaxyIndex >= 0 && galaxyIndex <= 255
+              ? [{ galaxy: galaxyIndex, response }]
+              : [];
+          })
+          .sort((left, right) => left.galaxy - right.galaxy);
+        return [
+          portalCode.toUpperCase(),
+          await Promise.all(
+            responses.map(async (entry) => ({
+              ...entry,
+              response: await normalizeAlmanacPlanet(entry.response),
+            })),
+          ),
+        ];
+      }),
+    ),
   );
+  await writeAlmanacResponses(
+    Object.entries(results).flatMap(([portalCode, entries]) =>
+      entries
+        .filter((entry) => entry.response !== index[portalCode]?.[String(entry.galaxy)])
+        .map((entry) => ({ portalCode, galaxy: entry.galaxy, response: entry.response })),
+    ),
+  );
+  return results;
 }
 
 export async function writeAlmanacResponse(
@@ -107,16 +130,28 @@ export async function writeAlmanacResponse(
   galaxy: number,
   response: AlmanacResponse,
 ): Promise<void> {
+  const normalized = await normalizeAlmanacPlanet(response);
   await serialized(async () => {
     const index = await readAlmanacIndex();
     const canonicalCode = portalCode.toUpperCase();
     index[canonicalCode] ??= {};
-    index[canonicalCode][String(galaxy)] = response;
+    index[canonicalCode][String(galaxy)] = normalized;
     await writeAlmanacIndex(index);
   });
 }
 export async function readAlmanacCache(): Promise<(portalCode: string, galaxy: number) => AlmanacResponse | null> {
   const index = await readAlmanacIndex();
+  const migrated: { portalCode: string; galaxy: number; response: AlmanacResponse }[] = [];
+  await Promise.all(
+    Object.entries(index).flatMap(([portalCode, galaxies]) =>
+      Object.entries(galaxies).map(async ([galaxy, response]) => {
+        const normalized = await normalizeAlmanacPlanet(response);
+        galaxies[galaxy] = normalized;
+        if (normalized !== response) migrated.push({ portalCode, galaxy: Number(galaxy), response: normalized });
+      }),
+    ),
+  );
+  await writeAlmanacResponses(migrated);
   return (portalCode, galaxy) => index[portalCode.toUpperCase()]?.[String(galaxy)] ?? null;
 }
 
@@ -124,9 +159,15 @@ export async function writeAlmanacResponses(
   entries: ReadonlyArray<Readonly<{ portalCode: string; galaxy: number; response: AlmanacResponse }>>,
 ): Promise<void> {
   if (entries.length === 0) return;
+  const normalizedEntries = await Promise.all(
+    entries.map(async (entry) => ({
+      ...entry,
+      response: await normalizeAlmanacPlanet(entry.response),
+    })),
+  );
   await serialized(async () => {
     const index = await readAlmanacIndex();
-    for (const { portalCode, galaxy, response } of entries) {
+    for (const { portalCode, galaxy, response } of normalizedEntries) {
       const canonicalCode = portalCode.toUpperCase();
       index[canonicalCode] ??= {};
       index[canonicalCode][String(galaxy)] = response;

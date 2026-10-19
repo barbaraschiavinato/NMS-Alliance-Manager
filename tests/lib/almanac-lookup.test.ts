@@ -3,6 +3,7 @@ import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { almanacSystemLabel, lookupAlmanacPlanet, lookupAlmanacPlanets } from "@/lib/almanac-lookup";
 import { writeDataFile } from "../helpers/members";
+import { almanacWords, structuredPlanet, structuredSystem } from "../helpers/almanac";
 
 const cachePath = () => path.join(process.cwd(), "data", "almanac.json");
 const readCache = () => JSON.parse(readFileSync(cachePath(), "utf8")) as Record<string, Record<string, unknown>>;
@@ -34,6 +35,24 @@ afterEach(() => {
 });
 
 describe("lookupAlmanacPlanet", () => {
+  it("normalizes the new API format and stores a reusable display response", async () => {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      return Response.json(
+        url.includes("/systems/") ? structuredSystem : url.includes("/words.") ? almanacWords : structuredPlanet,
+      );
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    const result = await lookupAlmanacPlanet(structuredPlanet.portal, 0);
+    expect(result).toMatchObject({
+      lines: { headline: { word: "Test World" }, band: { sentinels: { ink: "exotic" }, flora: { note: "19 plants" } } },
+    });
+    expect(readCache()[structuredPlanet.portal]["0"]).toEqual(result);
+    fetchMock.mockClear();
+    expect(await lookupAlmanacPlanet(structuredPlanet.portal, 0)).toEqual(result);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it("returns cached responses without calling the API", async () => {
     writeDataFile("almanac.json", { "0123456789AB": { "3": { portal: "0123456789AB", cached: true } } });
     const fetchMock = stubAlmanac();

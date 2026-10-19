@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentMember } from "@/lib/authorization";
 import { readAlmanacResponse, writeAlmanacResponse } from "@/lib/almanac-store";
 import { decodePortalAddress } from "@/lib/missions";
+import { normalizeAlmanacPlanet } from "@/lib/almanac-normalize";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -71,10 +72,16 @@ export async function GET(request: Request) {
     const found = isRecord(result) && typeof result.portal === "string" && result.portal.toUpperCase() === address;
     if (!found) throw new Error("NMS Almanac returned an unexpected response");
 
-    await writeAlmanacResponse(address, galaxy, result);
+    const normalized = await normalizeAlmanacPlanet(result);
+    await writeAlmanacResponse(address, galaxy, normalized);
 
     return NextResponse.json(
-      { found: true, systemLabel: almanacSystemLabel(result), planetType: almanacPlanetType(result), cached: false },
+      {
+        found: true,
+        systemLabel: almanacSystemLabel(normalized),
+        planetType: almanacPlanetType(normalized),
+        cached: false,
+      },
       {
         headers: { "Cache-Control": "no-store" },
       },
