@@ -1,6 +1,7 @@
 import { mkdirSync, readdirSync, writeFileSync } from "node:fs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { writeDataFile } from "../helpers/members";
+import { almanacWords, structuredPlanet, structuredSystem } from "../helpers/almanac";
 import {
   blobMock,
   blobReadOptions,
@@ -26,6 +27,73 @@ beforeEach(() => {
 });
 
 describe("reading (local filesystem)", () => {
+  it.each(["single", "batch", "cache"])(
+    "recovers and persists an expired dictionary through the %s reader",
+    async (reader) => {
+      writeDataFile(fileName, {
+        [structuredPlanet.portal]: { 0: { ...structuredPlanet, words: "words.en.expired.json" } },
+      });
+      const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.includes("words.en.expired.json")) return new Response("", { status: 404 });
+        return Response.json(
+          url.includes("/planets/") ? structuredPlanet : url.includes("/systems/") ? structuredSystem : almanacWords,
+        );
+      });
+      vi.stubGlobal("fetch", fetchMock);
+      vi.spyOn(console, "info").mockImplementation(() => undefined);
+      const { readAlmanacResponse, readAlmanacResponses, readAlmanacCache } = await load();
+      if (reader === "single") await readAlmanacResponse(structuredPlanet.portal, 0);
+      else if (reader === "batch") await readAlmanacResponses([structuredPlanet.portal]);
+      else await readAlmanacCache();
+      expect(readDataFile(fileName)).toMatchObject({
+        [structuredPlanet.portal]: {
+          0: { words: structuredPlanet.words, lines: { headline: { word: "Test World" } } },
+        },
+      });
+      fetchMock.mockClear();
+      await readAlmanacResponse(structuredPlanet.portal, 0);
+      await readAlmanacResponses([structuredPlanet.portal]);
+      await readAlmanacCache();
+      expect(fetchMock).not.toHaveBeenCalled();
+    },
+  );
+
+  it("adapts structured data already cached by the former client through every reader", async () => {
+    writeDataFile(fileName, { [structuredPlanet.portal]: { 0: structuredPlanet } });
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) =>
+      Response.json(String(input).includes("/systems/") ? structuredSystem : almanacWords),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const { readAlmanacResponse, readAlmanacResponses, readAlmanacCache } = await load();
+    const normalized = await readAlmanacResponse(structuredPlanet.portal, 0);
+    expect(normalized).toMatchObject({ lines: { headline: { word: "Test World" } } });
+    expect((await readAlmanacResponses([structuredPlanet.portal]))[structuredPlanet.portal][0].response).toEqual(
+      normalized,
+    );
+    expect((await readAlmanacCache())(structuredPlanet.portal, 0)).toEqual(normalized);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("persists adapted structured responses through individual and batch writes", async () => {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) =>
+      Response.json(String(input).includes("/systems/") ? structuredSystem : almanacWords),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const { writeAlmanacResponse, writeAlmanacResponses, readAlmanacResponse } = await load();
+    await writeAlmanacResponse(structuredPlanet.portal, 0, structuredPlanet);
+    await writeAlmanacResponses([
+      { portalCode: "2234567890AB", galaxy: 0, response: { ...structuredPlanet, portal: "2234567890AB" } },
+    ]);
+    expect(readDataFile(fileName)).toMatchObject({
+      [structuredPlanet.portal]: { 0: { lines: { band: { minerals: { word: "23" } } } } },
+      "2234567890AB": { 0: { lines: { band: { fauna: { note: "0 species" } } } } },
+    });
+    fetchMock.mockClear();
+    expect(await readAlmanacResponse(structuredPlanet.portal, 0)).toHaveProperty("lines");
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it("returns nothing when the cache file does not exist", async () => {
     const { readAlmanacResponse, readAlmanacResponses, readAlmanacCache } = await load();
     expect(await readAlmanacResponse("0123456789AB", 0)).toBeNull();

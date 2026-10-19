@@ -5,6 +5,7 @@ import { signInAs } from "../../helpers/auth";
 import { jsonRequest } from "../../helpers/http";
 import { makeMember, seedMembers, writeDataFile } from "../../helpers/members";
 import { PORTAL, corruptDataFile, resetData } from "./fixtures";
+import { almanacWords, structuredPlanet, structuredSystem } from "../../helpers/almanac";
 
 vi.mock("@/auth", async () => (await import("../../helpers/auth")).authMock);
 
@@ -43,6 +44,29 @@ beforeEach(() => {
 });
 
 describe("GET /api/missions/verify-system", () => {
+  it("verifies and caches structured API responses using normalized planet and system labels", async () => {
+    fetchMock.mockImplementation(async (input) => {
+      const url = String(input);
+      return Response.json(
+        url.includes("/systems/")
+          ? structuredSystem
+          : url.includes("/words.")
+            ? almanacWords
+            : { ...structuredPlanet, portal: PORTAL },
+      );
+    });
+    signInAs(user);
+    const response = await verify(`address=${PORTAL}&galaxy=0`);
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({
+      found: true,
+      systemLabel: "Yellow · Trading · Low · Gek",
+      planetType: "Test World",
+      cached: false,
+    });
+    expect(readCache()[PORTAL]["0"]).toHaveProperty("lines");
+  });
+
   it("requires a session", async () => {
     expect((await verify(`address=${PORTAL}&galaxy=0`)).status).toBe(401);
     expect(fetchMock).not.toHaveBeenCalled();

@@ -4,6 +4,7 @@ import {
   writeAlmanacResponse,
   writeAlmanacResponses,
 } from "@/lib/almanac-store";
+import { normalizeAlmanacPlanet } from "@/lib/almanac-normalize";
 
 async function fetchAlmanacPlanet(address: string, galaxy: number): Promise<Record<string, unknown> | null> {
   const response = await fetch(`https://nmsalmanac.com/api/planets/${address}?galaxy=${galaxy + 1}`, {
@@ -29,7 +30,7 @@ async function fetchAlmanacPlanet(address: string, galaxy: number): Promise<Reco
     console.error("NMS Almanac returned invalid planet data", { address, galaxy });
     throw new Error("planet.almanac_lookup_failed");
   }
-  return planet as Record<string, unknown>;
+  return normalizeAlmanacPlanet(planet as Record<string, unknown>);
 }
 
 export async function lookupAlmanacPlanet(portal: string, galaxy: number): Promise<Record<string, unknown> | null> {
