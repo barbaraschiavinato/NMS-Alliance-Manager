@@ -60,6 +60,8 @@ Server errors captured by Next.js are logged through `src/instrumentation.ts` wi
 
 The Planets page reads an unmodified cache snapshot and normalizes only the requested planets, in batches of at most six. An individual cache migration or upstream request failure is logged and shown through the existing partial-loading warning, without hiding healthy planets or deleting the failed cache entry. Successful migrations are saved even if another planet fails; cache read and write errors are logged explicitly. Cache-only consumers do not trigger a global migration or network requests. Station batch reads likewise isolate individual enrichment failures.
 
+Almanac image paths may include a 1-based `?galaxy=` query. Image normalization preserves that query and adds the leading slash expected by the UI, including for already adapted cache entries, without fetching metadata.
+
 If after signing in with Google you get a 500 error with a log asking for the Blob configuration, check that the store is connected to the project and that `BLOB_STORE_ID` or `NMS_STORE_ID` is present in the **Production** environment, then redeploy. Profile registration requires storage even before the account is approved.
 
 ## Access and roles

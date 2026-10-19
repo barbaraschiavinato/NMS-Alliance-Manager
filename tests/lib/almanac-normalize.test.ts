@@ -15,6 +15,28 @@ function stubDocuments(words: unknown = almanacWords, system: unknown = structur
 }
 
 describe("normalizeAlmanacPlanet", () => {
+  it.each([undefined, {}])("normalizes galaxy image queries in raw and already adapted planets: %j", async (lines) => {
+    const fetchMock = stubDocuments();
+    const { normalizeAlmanacPlanet } = await import("@/lib/almanac-normalize");
+    const disc = "planets/20B705693DD3/disc.8d7140a1.webp?galaxy=10";
+    const result = await normalizeAlmanacPlanet({ ...structuredPlanet, lines, pictures: { disc } });
+    expect(result.pictures).toEqual({ disc: `/${disc}` });
+    if (lines) expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    "planets/../disc.webp?galaxy=10",
+    "planets/x.webp?galaxy=0",
+    "planets/x.webp?galaxy=257",
+    "planets/x.webp?galaxy=10&other=value",
+    "https://other.example/disc.webp?galaxy=10",
+    "/planets/x.webp?galaxy=10",
+  ])("preserves unsupported or already absolute image paths: %s", async (disc) => {
+    const { normalizeAlmanacPictures } = await import("@/lib/almanac-normalize");
+    const planet = { pictures: { disc } };
+    expect(normalizeAlmanacPictures(planet)).toBe(planet);
+  });
+
   it("preserves legacy responses without network requests", async () => {
     const fetchMock = stubDocuments();
     const { normalizeAlmanacPlanet } = await import("@/lib/almanac-normalize");
