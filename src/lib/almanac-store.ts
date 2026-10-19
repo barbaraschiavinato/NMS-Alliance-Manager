@@ -105,23 +105,37 @@ export async function readAlmanacResponses(portalCodes: string[]): Promise<Recor
           .sort((left, right) => left.galaxy - right.galaxy);
         return [
           portalCode.toUpperCase(),
-          await Promise.all(
-            responses.map(async (entry) => ({
-              ...entry,
-              response: await normalizeAlmanacPlanet(entry.response),
-            })),
-          ),
+          (
+            await Promise.all(
+              responses.map(async (entry) => {
+                try {
+                  return { ...entry, response: await normalizeAlmanacPlanet(entry.response) };
+                } catch (error) {
+                  console.error(
+                    "Unable to normalize cached NMS Almanac planet",
+                    { portalCode, galaxy: entry.galaxy },
+                    error,
+                  );
+                  return null;
+                }
+              }),
+            )
+          ).filter((entry) => entry !== null),
         ];
       }),
     ),
   );
-  await writeAlmanacResponses(
-    Object.entries(results).flatMap(([portalCode, entries]) =>
-      entries
-        .filter((entry) => entry.response !== index[portalCode]?.[String(entry.galaxy)])
-        .map((entry) => ({ portalCode, galaxy: entry.galaxy, response: entry.response })),
-    ),
-  );
+  try {
+    await writeAlmanacResponses(
+      Object.entries(results).flatMap(([portalCode, entries]) =>
+        entries
+          .filter((entry) => entry.response !== index[portalCode]?.[String(entry.galaxy)])
+          .map((entry) => ({ portalCode, galaxy: entry.galaxy, response: entry.response })),
+      ),
+    );
+  } catch (error) {
+    console.error("Unable to save migrated NMS Almanac planets", error);
+  }
   return results;
 }
 
@@ -141,17 +155,6 @@ export async function writeAlmanacResponse(
 }
 export async function readAlmanacCache(): Promise<(portalCode: string, galaxy: number) => AlmanacResponse | null> {
   const index = await readAlmanacIndex();
-  const migrated: { portalCode: string; galaxy: number; response: AlmanacResponse }[] = [];
-  await Promise.all(
-    Object.entries(index).flatMap(([portalCode, galaxies]) =>
-      Object.entries(galaxies).map(async ([galaxy, response]) => {
-        const normalized = await normalizeAlmanacPlanet(response);
-        galaxies[galaxy] = normalized;
-        if (normalized !== response) migrated.push({ portalCode, galaxy: Number(galaxy), response: normalized });
-      }),
-    ),
-  );
-  await writeAlmanacResponses(migrated);
   return (portalCode, galaxy) => index[portalCode.toUpperCase()]?.[String(galaxy)] ?? null;
 }
 

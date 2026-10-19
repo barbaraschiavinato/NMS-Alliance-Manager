@@ -27,37 +27,60 @@ beforeEach(() => {
 });
 
 describe("reading (local filesystem)", () => {
-  it.each(["single", "batch", "cache"])(
-    "recovers and persists an expired dictionary through the %s reader",
-    async (reader) => {
-      writeDataFile(fileName, {
-        [structuredPlanet.portal]: { 0: { ...structuredPlanet, words: "words.en.expired.json" } },
-      });
-      const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
-        const url = String(input);
-        if (url.includes("words.en.expired.json")) return new Response("", { status: 404 });
-        return Response.json(
-          url.includes("/planets/") ? structuredPlanet : url.includes("/systems/") ? structuredSystem : almanacWords,
-        );
-      });
-      vi.stubGlobal("fetch", fetchMock);
-      vi.spyOn(console, "info").mockImplementation(() => undefined);
-      const { readAlmanacResponse, readAlmanacResponses, readAlmanacCache } = await load();
-      if (reader === "single") await readAlmanacResponse(structuredPlanet.portal, 0);
-      else if (reader === "batch") await readAlmanacResponses([structuredPlanet.portal]);
-      else await readAlmanacCache();
-      expect(readDataFile(fileName)).toMatchObject({
-        [structuredPlanet.portal]: {
-          0: { words: structuredPlanet.words, lines: { headline: { word: "Test World" } } },
-        },
-      });
-      fetchMock.mockClear();
-      await readAlmanacResponse(structuredPlanet.portal, 0);
-      await readAlmanacResponses([structuredPlanet.portal]);
-      await readAlmanacCache();
-      expect(fetchMock).not.toHaveBeenCalled();
-    },
-  );
+  it.each(["single", "batch"])("recovers and persists an expired dictionary through the %s reader", async (reader) => {
+    writeDataFile(fileName, {
+      [structuredPlanet.portal]: { 0: { ...structuredPlanet, words: "words.en.expired.json" } },
+    });
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes("words.en.expired.json")) return new Response("", { status: 404 });
+      return Response.json(
+        url.includes("/planets/") ? structuredPlanet : url.includes("/systems/") ? structuredSystem : almanacWords,
+      );
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    vi.spyOn(console, "info").mockImplementation(() => undefined);
+    const { readAlmanacResponse, readAlmanacResponses, readAlmanacCache } = await load();
+    if (reader === "single") await readAlmanacResponse(structuredPlanet.portal, 0);
+    else if (reader === "batch") await readAlmanacResponses([structuredPlanet.portal]);
+    expect(readDataFile(fileName)).toMatchObject({
+      [structuredPlanet.portal]: {
+        0: { words: structuredPlanet.words, lines: { headline: { word: "Test World" } } },
+      },
+    });
+    fetchMock.mockClear();
+    await readAlmanacResponse(structuredPlanet.portal, 0);
+    await readAlmanacResponses([structuredPlanet.portal]);
+    await readAlmanacCache();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("reads raw cache entries without migrations or network requests", async () => {
+    const raw = { ...structuredPlanet, words: "words.en.expired.json" };
+    writeDataFile(fileName, { [structuredPlanet.portal]: { 0: raw } });
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    const { readAlmanacCache } = await load();
+    expect((await readAlmanacCache())(structuredPlanet.portal, 0)).toEqual(raw);
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(readDataFile(fileName)).toEqual({ [structuredPlanet.portal]: { 0: raw } });
+  });
+
+  it("keeps healthy batch entries when a cached planet cannot be normalized", async () => {
+    const raw = { ...structuredPlanet, words: "invalid" };
+    writeDataFile(fileName, { [structuredPlanet.portal]: { 0: raw, 1: { name: "Healthy" } } });
+    const log = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const { readAlmanacResponses } = await load();
+    expect(await readAlmanacResponses([structuredPlanet.portal])).toEqual({
+      [structuredPlanet.portal]: [{ galaxy: 1, response: { name: "Healthy" } }],
+    });
+    expect(log).toHaveBeenCalledWith(
+      "Unable to normalize cached NMS Almanac planet",
+      { portalCode: structuredPlanet.portal, galaxy: 0 },
+      expect.any(Error),
+    );
+    expect(readDataFile(fileName)).toEqual({ [structuredPlanet.portal]: { 0: raw, 1: { name: "Healthy" } } });
+  });
 
   it("adapts structured data already cached by the former client through every reader", async () => {
     writeDataFile(fileName, { [structuredPlanet.portal]: { 0: structuredPlanet } });
