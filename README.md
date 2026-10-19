@@ -56,6 +56,8 @@ In production the app rejects storage operations if OIDC authentication or a rea
 
 `vercel.json` limits automatic deployments to the `main` branch, so pull requests and other branches do not create Vercel previews. If your production branch is not `main`, change it there.
 
+Server errors captured by Next.js are logged through `src/instrumentation.ts` with the prefix `[NMS server error]`, the error digest (when available), route context and the original error. After deploying, reproduce the failure and search the production deployment's **Runtime Logs**, not Build Logs, for that prefix or digest. Request headers, cookies and query parameters are not included. These diagnostics stay server-side; the production browser still receives the sanitized error.
+
 If after signing in with Google you get a 500 error with a log asking for the Blob configuration, check that the store is connected to the project and that `BLOB_STORE_ID` or `NMS_STORE_ID` is present in the **Production** environment, then redeploy. Profile registration requires storage even before the account is approved.
 
 ## Access and roles
