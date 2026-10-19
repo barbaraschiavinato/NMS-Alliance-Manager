@@ -4,7 +4,7 @@ import { randomUUID } from "node:crypto";
 import path from "node:path";
 import { localDataPath } from "@/lib/local-data-path";
 import { getBlobAuthOptions } from "@/lib/blob-config";
-import { normalizeAlmanacPlanet } from "@/lib/almanac-normalize";
+import { normalizeAlmanacPictures, normalizeAlmanacPlanet } from "@/lib/almanac-normalize";
 
 type AlmanacResponse = Record<string, unknown>;
 type AlmanacResponseIndex = Record<string, Record<string, AlmanacResponse>>;
@@ -155,6 +155,11 @@ export async function writeAlmanacResponse(
 }
 export async function readAlmanacCache(): Promise<(portalCode: string, galaxy: number) => AlmanacResponse | null> {
   const index = await readAlmanacIndex();
+  for (const galaxies of Object.values(index)) {
+    for (const [galaxy, response] of Object.entries(galaxies)) {
+      galaxies[galaxy] = normalizeAlmanacPictures(response);
+    }
+  }
   return (portalCode, galaxy) => index[portalCode.toUpperCase()]?.[String(galaxy)] ?? null;
 }
 

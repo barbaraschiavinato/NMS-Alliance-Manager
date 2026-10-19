@@ -56,8 +56,29 @@ function fact(value: string | undefined): AlmanacRecord {
   return value === undefined ? {} : { word: value };
 }
 
+export function normalizeAlmanacPictures(planet: AlmanacRecord): AlmanacRecord {
+  const pictures = record(planet.pictures);
+  let changed = false;
+  const normalized = Object.fromEntries(
+    Object.entries(pictures).map(([key, value]) => {
+      if (
+        typeof value === "string" &&
+        /^planets\/[a-zA-Z0-9/_.-]+(?:\?galaxy=(?:[1-9]\d{0,2}))?$/.test(value) &&
+        !value.includes("..") &&
+        (!value.includes("?") || Number(value.split("=")[1]) <= 256)
+      ) {
+        changed = true;
+        return [key, `/${value}`];
+      }
+      return [key, value];
+    }),
+  );
+  return changed ? { ...planet, pictures: normalized } : planet;
+}
+
 // Adapt the structured API to the display shape used by existing cached planets and UI consumers.
 export async function normalizeAlmanacPlanet(planet: AlmanacRecord, allowRefresh = true): Promise<AlmanacRecord> {
+  planet = normalizeAlmanacPictures(planet);
   if (planet.kind !== "planet" || planet.lines !== undefined) return planet;
   if (
     typeof planet.words !== "string" ||
@@ -135,21 +156,13 @@ export async function normalizeAlmanacPlanet(planet: AlmanacRecord, allowRefresh
         return [{ name: item.name, kind: typeof item.type === "string" ? item.type : "other" }];
       })
     : [];
-  const normalizedPictures = Object.fromEntries(
-    Object.entries(pictures).map(([key, value]) => [
-      key,
-      typeof value === "string" && /^planets\/[a-zA-Z0-9/_.-]+$/.test(value) && !value.includes("..")
-        ? `/${value}`
-        : value,
-    ]),
-  );
   return {
     ...planet,
     ...(name ? { name } : {}),
     dialable: system.dialable,
     sky: colours.sky,
     tints: { terrain: colours.terrain },
-    pictures: normalizedPictures,
+    pictures,
     carries,
     lines: {
       headline: fact(name),

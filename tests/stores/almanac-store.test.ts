@@ -27,6 +27,20 @@ beforeEach(() => {
 });
 
 describe("reading (local filesystem)", () => {
+  it("repairs already adapted image paths on every reader without fetching metadata", async () => {
+    const disc = "planets/20B705693DD3/disc.8d7140a1.webp?galaxy=10";
+    writeDataFile(fileName, { "20B705693DD3": { 9: { kind: "planet", lines: {}, pictures: { disc } } } });
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    const { readAlmanacCache, readAlmanacResponse, readAlmanacResponses } = await load();
+    expect((await readAlmanacCache())("20B705693DD3", 9)).toMatchObject({ pictures: { disc: `/${disc}` } });
+    expect(await readAlmanacResponse("20B705693DD3", 9)).toMatchObject({ pictures: { disc: `/${disc}` } });
+    expect((await readAlmanacResponses(["20B705693DD3"]))["20B705693DD3"][0].response).toMatchObject({
+      pictures: { disc: `/${disc}` },
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it.each(["single", "batch"])("recovers and persists an expired dictionary through the %s reader", async (reader) => {
     writeDataFile(fileName, {
       [structuredPlanet.portal]: { 0: { ...structuredPlanet, words: "words.en.expired.json" } },
@@ -55,13 +69,16 @@ describe("reading (local filesystem)", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it("reads raw cache entries without migrations or network requests", async () => {
+  it("reads raw cache entries with image-only repairs and no network requests or writes", async () => {
     const raw = { ...structuredPlanet, words: "words.en.expired.json" };
     writeDataFile(fileName, { [structuredPlanet.portal]: { 0: raw } });
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
     const { readAlmanacCache } = await load();
-    expect((await readAlmanacCache())(structuredPlanet.portal, 0)).toEqual(raw);
+    expect((await readAlmanacCache())(structuredPlanet.portal, 0)).toEqual({
+      ...raw,
+      pictures: { disc: "/planets/1234567890AB/disc.test.webp" },
+    });
     expect(fetchMock).not.toHaveBeenCalled();
     expect(readDataFile(fileName)).toEqual({ [structuredPlanet.portal]: { 0: raw } });
   });
