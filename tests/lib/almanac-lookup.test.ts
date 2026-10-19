@@ -119,6 +119,48 @@ describe("lookupAlmanacPlanet", () => {
 });
 
 describe("lookupAlmanacPlanets", () => {
+  it("isolates cached planet errors, ignores unrelated raw records and persists successful migrations", async () => {
+    vi.resetModules();
+    const { lookupAlmanacPlanets: lookup } = await import("@/lib/almanac-lookup");
+    const invalid = { ...structuredPlanet, words: "invalid" };
+    writeDataFile("almanac.json", {
+      [structuredPlanet.portal]: { 0: structuredPlanet },
+      "2123456789AB": { 0: invalid },
+      "3123456789AB": { 0: invalid },
+      "4123456789AB": { 0: { name: "Healthy" } },
+    });
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) =>
+      Response.json(String(input).includes("/systems/") ? structuredSystem : almanacWords),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const results = await lookup([
+      { portal: structuredPlanet.portal, galaxy: 0 },
+      { portal: "2123456789AB", galaxy: 0 },
+      { portal: "4123456789AB", galaxy: 0 },
+    ]);
+    expect(results.get(`${structuredPlanet.portal}:0`)).toMatchObject({ failed: false, planet: { lines: {} } });
+    expect(results.get("2123456789AB:0")).toEqual({ planet: null, failed: true });
+    expect(results.get("4123456789AB:0")).toEqual({ planet: { name: "Healthy" }, failed: false });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(readCache()[structuredPlanet.portal]["0"]).toHaveProperty("lines");
+    expect(readCache()["2123456789AB"]["0"]).toEqual(invalid);
+    expect(readCache()["3123456789AB"]["0"]).toEqual(invalid);
+    expect(console.error).toHaveBeenCalledWith(
+      "Unable to load NMS Almanac planet",
+      { address: "2123456789AB", galaxy: 0 },
+      expect.any(Error),
+    );
+  });
+
+  it("returns explicit failures instead of crashing when the cache cannot be read", async () => {
+    mkdirSync(cachePath(), { recursive: true });
+    const fetchMock = stubAlmanac();
+    const results = await lookupAlmanacPlanets([{ portal: "0123456789ab", galaxy: 0 }]);
+    expect(results.get("0123456789AB:0")).toEqual({ planet: null, failed: true });
+    expect(console.error).toHaveBeenCalledWith("Unable to read NMS Almanac cache", expect.any(Error));
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it("combines cached, fetched, missing and failed planets", async () => {
     writeDataFile("almanac.json", { "0123456789AB": { "0": { portal: "0123456789AB", cached: true } } });
     const fetchMock = stubAlmanac({

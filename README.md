@@ -58,6 +58,8 @@ In production the app rejects storage operations if OIDC authentication or a rea
 
 Server errors captured by Next.js are logged through `src/instrumentation.ts` with the prefix `[NMS server error]`, the error digest (when available), route context and the original error. After deploying, reproduce the failure and search the production deployment's **Runtime Logs**, not Build Logs, for that prefix or digest. Request headers, cookies and query parameters are not included. These diagnostics stay server-side; the production browser still receives the sanitized error.
 
+The Planets page reads an unmodified cache snapshot and normalizes only the requested planets, in batches of at most six. An individual cache migration or upstream request failure is logged and shown through the existing partial-loading warning, without hiding healthy planets or deleting the failed cache entry. Successful migrations are saved even if another planet fails; cache read and write errors are logged explicitly. Cache-only consumers do not trigger a global migration or network requests. Station batch reads likewise isolate individual enrichment failures.
+
 If after signing in with Google you get a 500 error with a log asking for the Blob configuration, check that the store is connected to the project and that `BLOB_STORE_ID` or `NMS_STORE_ID` is present in the **Production** environment, then redeploy. Profile registration requires storage even before the account is approved.
 
 ## Access and roles

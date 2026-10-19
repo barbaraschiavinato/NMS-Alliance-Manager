@@ -49,14 +49,23 @@ export type AlmanacLookupResult = Readonly<{ planet: Record<string, unknown> | n
 export async function lookupAlmanacPlanets(
   targets: ReadonlyArray<Readonly<{ portal: string; galaxy: number }>>,
 ): Promise<Map<string, AlmanacLookupResult>> {
-  const getCached = await readAlmanacCache();
+  let getCached: Awaited<ReturnType<typeof readAlmanacCache>>;
+  try {
+    getCached = await readAlmanacCache();
+  } catch (error) {
+    console.error("Unable to read NMS Almanac cache", error);
+    return new Map(
+      targets.map(({ portal, galaxy }) => [`${portal.toUpperCase()}:${galaxy}`, { planet: null, failed: true }]),
+    );
+  }
   const results = new Map<string, AlmanacLookupResult>();
   const missing: { address: string; galaxy: number; key: string }[] = [];
   for (const { portal, galaxy } of targets) {
     const address = portal.toUpperCase();
     const key = `${address}:${galaxy}`;
     const cached = getCached(address, galaxy);
-    if (cached) results.set(key, { planet: cached, failed: false });
+    if (cached && !(cached.kind === "planet" && cached.lines === undefined))
+      results.set(key, { planet: cached, failed: false });
     else if (!results.has(key) && !missing.some((item) => item.key === key)) missing.push({ address, galaxy, key });
   }
 
@@ -65,10 +74,12 @@ export async function lookupAlmanacPlanets(
     await Promise.all(
       missing.slice(index, index + 6).map(async ({ address, galaxy, key }) => {
         try {
-          const planet = await fetchAlmanacPlanet(address, galaxy);
+          const cached = getCached(address, galaxy);
+          const planet = cached ? await normalizeAlmanacPlanet(cached) : await fetchAlmanacPlanet(address, galaxy);
           results.set(key, { planet, failed: false });
           if (planet) fetched.push({ portalCode: address, galaxy, response: planet });
-        } catch {
+        } catch (error) {
+          console.error("Unable to load NMS Almanac planet", { address, galaxy }, error);
           results.set(key, { planet: null, failed: true });
         }
       }),
