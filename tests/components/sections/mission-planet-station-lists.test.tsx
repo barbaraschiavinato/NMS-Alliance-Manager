@@ -16,7 +16,7 @@ vi.mock("next/image", async () => (await import("../helpers")).nextImageModule);
 vi.mock("next/link", async () => (await import("../helpers")).nextLinkModule);
 vi.mock("@/lib/nms-core/system.js", () => ({
   systemAttributes: () => ({ star_type: 0 }),
-  planetSeeds: () => ({ planet_seeds: [1] }),
+  planetSeeds: () => ({ planet_seeds: [BigInt(1)] }),
 }));
 // Il dialog profilo è coperto dai test dei modali: qui basta sapere quando viene aperto.
 vi.mock("@/components/modals/member-card-dialog", () => ({
@@ -116,6 +116,20 @@ describe("MissionList", () => {
     expect(props.onFilterChange).toHaveBeenCalledWith("in_progress");
     await user.type(screen.getByRole("textbox"), "q");
     expect(props.onSearchChange).toHaveBeenCalledWith("q");
+  });
+
+  it("paginates missions after 50 and resets after changing filters", async () => {
+    const missions = Array.from({ length: 51 }, (_, index) =>
+      makeMission({ id: `page-${index}`, title: `Mission ${index}` }),
+    );
+    const { user, props, rerender } = renderMissions({ missions });
+    expect(screen.getAllByRole("article")).toHaveLength(50);
+    expect(screen.queryByText("Mission 50")).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Next page" }));
+    expect(screen.getAllByRole("article")).toHaveLength(1);
+    expect(screen.getByText("Mission 50")).toBeInTheDocument();
+    rerender(<MissionList {...props} search="new" />);
+    expect(screen.getAllByRole("article")).toHaveLength(50);
   });
 
   it("keeps the selected tab visible even with no missions, in Italian", () => {
@@ -532,6 +546,19 @@ describe("StationList", () => {
       "z",
     );
     expect(props.onSearchChange).toHaveBeenCalledWith("z");
+  });
+
+  it("paginates stations after 50 and resets after changing tabs", async () => {
+    const stations = Array.from({ length: 51 }, (_, index) =>
+      station({ portal: index.toString(16).toUpperCase().padStart(12, "0"), name: `Station ${index}` }),
+    );
+    const { user, props, rerender } = renderStations({ stations, visibleStations: stations });
+    expect(screen.getAllByRole("listitem")).toHaveLength(50);
+    await user.click(screen.getByRole("button", { name: "Next page" }));
+    expect(screen.getAllByRole("listitem")).toHaveLength(1);
+    expect(screen.getAllByText("Station 50").length).toBeGreaterThan(0);
+    rerender(<StationList {...props} activeStationTab="mine" />);
+    expect(screen.getAllByRole("listitem")).toHaveLength(50);
   });
 
   it("offers the My stations tab when the viewer can choose", async () => {

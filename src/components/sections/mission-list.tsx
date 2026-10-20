@@ -10,6 +10,8 @@ import { MemberCardDialog, type MemberMessageContext } from "@/components/modals
 import { LoadingSpinner } from "@/components/shared/loading-spinner";
 import { useLocale } from "@/components/providers/locale-provider";
 import type { StationOwnerOption } from "@/components/modals/mission-form";
+import { Pagination, usePagination } from "@/components/shared/pagination";
+import { listPageSize } from "@/lib/pagination";
 
 export type MissionFilter = "all" | MissionStatus | "pending_assigned" | "pending_unassigned";
 type MissionCounts = Record<MissionFilter, number>;
@@ -80,6 +82,7 @@ export function MissionList({
   loading?: boolean;
 }>) {
   const { t } = useLocale();
+  const pagination = usePagination(missions, listPageSize, JSON.stringify([filter, search, showAll]));
   const [profileTarget, setProfileTarget] = useState<{ memberId: string; messageContext: MemberMessageContext } | null>(
     null,
   );
@@ -176,7 +179,7 @@ export function MissionList({
         </div>
       </div>
       <div className="mission-card-grid">
-        {missions.map((mission) => (
+        {pagination.items.map((mission) => (
           <MissionCard
             requestedSpecialty={requestedSpecialty}
             canManage={canManage}
@@ -212,11 +215,12 @@ export function MissionList({
           <p className="mission-cards-empty">{t("missions.no_missions_match_the_filters")}</p>
         )}
       </div>
+      <Pagination {...pagination} />
       {!simpleView && (
         <div className="table-footer">
           <span>
             <span className="footer-live" />
-            {t("missions.showing_visible_of_total_missions", { visible: missions.length, total: counts.all })}
+            {t("missions.showing_visible_of_total_missions", { visible: pagination.items.length, total: counts.all })}
           </span>
         </div>
       )}

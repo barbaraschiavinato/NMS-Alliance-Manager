@@ -25,6 +25,8 @@ for (const key of [
   "AUTH_GOOGLE_SECRET",
   "AUTH_URL",
   "ALLIANCE_ADMIN_EMAIL",
+  "NEXT_PUBLIC_LIST_PAGE_SIZE",
+  "NEXT_PUBLIC_PLANET_SYSTEMS_PAGE_SIZE",
 ])
   delete process.env[key];
 
