@@ -48,6 +48,8 @@ In both sets the accounts are already approved and have a complete profile; role
 
 ## Deploying to Vercel
 
+Mission and Station lists paginate after 50 items; Planets paginates after 20 systems, keeping each system's planets together. Set `NEXT_PUBLIC_LIST_PAGE_SIZE` and `NEXT_PUBLIC_PLANET_SYSTEMS_PAGE_SIZE` to positive integers to override these defaults. Empty or unset values use the defaults; invalid values throw an explicit configuration error. These public settings are inlined at build time: restart development after editing `.env.local`, or rebuild/redeploy for production. Search and filters apply before pagination and reset it to the first page. Pagination limits rendered cards, not server-side Almanac loading or export results.
+
 1. Import the repository into Vercel and create a private Blob Store from the project's Storage panel.
 2. In the store's **Projects** tab choose **Connect to Project** and enable **Production**. Vercel configures `BLOB_STORE_ID`; the app also supports `NMS_STORE_ID`. The SDK automatically retrieves and refreshes the OIDC token provided by Vercel: do not copy it manually, and no read-write token is needed. Blob and OIDC are also available on the Hobby plan, within the plan's limits. For environments without OIDC you can use `NMS_READ_WRITE_TOKEN` (or `BLOB_READ_WRITE_TOKEN`).
 3. Deploy, or **Redeploy** if you have just connected the store or changed the variables. The service uses the private file `alliance-manager/missions.json` in the Blob store; it does not use the Function's ephemeral filesystem.

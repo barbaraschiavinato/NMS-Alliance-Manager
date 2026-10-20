@@ -102,6 +102,37 @@ afterEach(() => {
 });
 
 describe("PlanetsPage", () => {
+  it("paginates 20 systems without splitting their planets and searches across all pages", async () => {
+    mockFetch({});
+    const planets = Array.from({ length: 21 }, (_, index) => {
+      const portal = `1${index.toString(16).toUpperCase().padStart(11, "0")}`;
+      return planet({
+        id: `${portal}:0`,
+        portal,
+        planetPortal: portal,
+        almanacName: `World ${index}`,
+        almanacSearchIndex: `UniqueWorld${index}`,
+        station: { id: `station-${index}`, portal, galaxy: 0, name: `Station ${index}` },
+      });
+    });
+    planets.push({
+      ...planets[0],
+      id: "moon",
+      planetPortal: `2${planets[0].planetPortal.slice(1)}`,
+      almanacName: "Companion",
+    });
+    const { user, container } = renderPlanets({ planets });
+    expect(container.querySelectorAll(".planet-station-group")).toHaveLength(20);
+    expect(screen.getByText("Companion")).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Station 20" })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Next page" }));
+    expect(container.querySelectorAll(".planet-station-group")).toHaveLength(1);
+    expect(screen.getByRole("heading", { name: "Station 20" })).toBeInTheDocument();
+    await user.type(screen.getByRole("searchbox"), "UniqueWorld0");
+    expect(screen.getByRole("heading", { name: "Station 0" })).toBeInTheDocument();
+    expect(screen.queryByRole("navigation", { name: "Pagination" })).not.toBeInTheDocument();
+  });
+
   it("groups the planets by station and stores the planet count", async () => {
     mockFetch({});
     renderPlanets();

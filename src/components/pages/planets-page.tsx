@@ -12,6 +12,8 @@ import type { PlanetDestination } from "@/components/cards/planet-destination-ca
 import { PlanetCard } from "@/components/modals/planet-card";
 import type { AllianceMember, AllianceSettings } from "@/lib/access-store";
 import { useLocale } from "@/components/providers/locale-provider";
+import { Pagination, usePagination } from "@/components/shared/pagination";
+import { planetSystemsPageSize } from "@/lib/pagination";
 import {
   emptyPlanetFilterValues,
   hasActivePlanetFilters,
@@ -161,7 +163,7 @@ export function PlanetsPage({
   const planetGroups = useMemo(() => {
     const groups = new Map<string, { station: PlanetDestination["station"]; planets: PlanetDestination[] }>();
     for (const planet of sortedPlanets) {
-      const key = planet.station?.id ?? "unassociated";
+      const key = `${planet.galaxy}:${planet.planetPortal.slice(1).toUpperCase()}`;
       const group = groups.get(key) ?? { station: planet.station, planets: [] };
       group.planets.push(planet);
       groups.set(key, group);
@@ -205,6 +207,7 @@ export function PlanetsPage({
     });
   }, [filteredPlanetGroups, searchQuery]);
   const filteredPlanets = visiblePlanetGroups.flatMap((group) => group.planets);
+  const pagination = usePagination(visiblePlanetGroups, planetSystemsPageSize, JSON.stringify([searchQuery, filters]));
   const hasActiveFilters = hasActivePlanetFilters(filters);
   const resetFilters = () => setFilters(emptyPlanetFilterValues);
   const hasActiveCriteria = Boolean(searchQuery || hasActiveFilters);
@@ -263,8 +266,9 @@ export function PlanetsPage({
               )}
             </p>
           ) : (
-            <PlanetList renderedAt={renderedAt} groups={visiblePlanetGroups} onOpen={setSelectedPlanet} />
+            <PlanetList renderedAt={renderedAt} groups={pagination.items} onOpen={setSelectedPlanet} />
           )}
+          <Pagination {...pagination} />
         </main>
       </section>
       {selectedPlanet && (

@@ -2,6 +2,10 @@ import type { TranslationCatalog } from "../translations";
 
 export const translations: TranslationCatalog = {
   common: {
+    "common.pagination": "Paginazione",
+    "common.previous_page": "Pagina precedente",
+    "common.next_page": "Pagina successiva",
+    "common.page_of_total": "Pagina {page} di {total}",
     "common.moderator": "Moderatore",
     "common.operations": "Operazioni",
     "missions.create_ranger_mission": "Richiedi intervento Ranger",

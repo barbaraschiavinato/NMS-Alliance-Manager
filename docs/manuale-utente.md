@@ -106,6 +106,8 @@ Hanno lo stesso funzionamento, ciascuno con le proprie voci.
 
 ## 4. Pagina per pagina
 
+Missioni e Stazioni mostrano fino a 50 elementi per pagina; Pianeti mostra fino a 20 sistemi per pagina, senza dividere i pianeti di un sistema tra pagine diverse. Quando ci sono più pagine, usa **Pagina precedente** e **Pagina successiva**. Ricerca e filtri si applicano all'intero elenco e riportano alla prima pagina.
+
 <a id="stazioni"></a>
 
 ### `Orbit` Stazioni

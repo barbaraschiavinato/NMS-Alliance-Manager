@@ -387,3 +387,44 @@ body:has(.sidebar-compact) .dialog-heading .icon-button svg { width: 26px; heigh
 @media (max-width: 950px) {
   .main-panel.main-panel .station-card-extended .station-actions:has(.station-edit-action) .delete-member { margin-left: 0; }
 }
+.list-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-block: 20px;
+}
+.pagination-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 8px 14px;
+  border: 1px solid var(--lime);
+  border-radius: 4px;
+  background: #25362a;
+  color: var(--lime);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pagination-button:not(:disabled):hover {
+  background: var(--lime);
+  color: #213329;
+}
+
+.pagination-button:focus-visible {
+  outline: 2px solid var(--lime);
+  outline-offset: 3px;
+}
+
+.pagination-button:disabled {
+  border-color: #475154;
+  background: transparent;
+  color: #899295;
+  opacity: .55;
+  cursor: not-allowed;
+}

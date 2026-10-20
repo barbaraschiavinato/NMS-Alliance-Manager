@@ -143,7 +143,10 @@ export function PlanetList({
   return (
     <div className="planet-station-groups">
       {groups.map(({ station, planets: groupPlanets }) => (
-        <section className="planet-station-group" key={station?.id ?? "unassociated"}>
+        <section
+          className="planet-station-group"
+          key={`${groupPlanets[0].galaxy}:${groupPlanets[0].planetPortal.slice(1).toUpperCase()}`}
+        >
           <PlanetStationHeading planets={groupPlanets} renderedAt={renderedAt} station={station} />
           <div className="planet-mission-list">
             {groupPlanets.map((planet) => (

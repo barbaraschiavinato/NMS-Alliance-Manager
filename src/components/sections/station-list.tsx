@@ -10,6 +10,8 @@ import { type MemberMessageContext } from "@/components/modals/member-card-dialo
 import type { AllianceMember } from "@/lib/access-store";
 import { type MissionSystemStatus, type PlanetSystemStatuses } from "@/lib/planet-system-status";
 import { useLocale } from "@/components/providers/locale-provider";
+import { Pagination, usePagination } from "@/components/shared/pagination";
+import { listPageSize } from "@/lib/pagination";
 
 export function StationList({
   stations,
@@ -73,6 +75,11 @@ export function StationList({
   onViewNote: (station: StationEntry) => void;
 }>) {
   const { t } = useLocale();
+  const pagination = usePagination(
+    visibleStations,
+    listPageSize,
+    JSON.stringify([activeStationTab, stationFilter, search]),
+  );
   return (
     <section aria-label={t("stations.my_space_stations")} className="station-list-section">
       <div className="toolbar members-toolbar station-toolbar sticky-list-controls">
@@ -166,7 +173,7 @@ export function StationList({
       )}
       {visibleStations.length > 0 && (
         <ul className="station-list station-list-cards">
-          {visibleStations.map((station) => (
+          {pagination.items.map((station) => (
             <StationCard
               canCreateMissions={canCreateMissions}
               canSeeAll={canSeeAll}
@@ -188,6 +195,7 @@ export function StationList({
           ))}
         </ul>
       )}
+      <Pagination {...pagination} />
     </section>
   );
 }
