@@ -222,7 +222,7 @@ describe("SystemAddressField", () => {
     );
     const lookup = { address: validAddress, galaxy: 2, status: "found", systemLabel: "Alpha", planetType: "Lush" };
     expect(onLookupResolved).toHaveBeenCalledWith(lookup);
-    expect(onStateChange).toHaveBeenLastCalledWith({ valid: true, lookup });
+    await waitFor(() => expect(onStateChange).toHaveBeenLastCalledWith({ valid: true, lookup }));
   });
 
   it("reports an address unknown to the Almanac", async () => {
