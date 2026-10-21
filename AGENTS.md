@@ -73,6 +73,20 @@ Each `src/app/<section>/page.tsx` is a thin server component. It loads access da
 - **Requests that conflict with documented rules:** Before implementing a request that would change or violate an established domain rule in this file or the user guide, explain the specific conflict and likely impact to the user in their language, then ask for explicit confirmation. Do not make the conflicting change until they confirm. If the conflict is uncertain, inspect the relevant code and documentation first; do not treat requests that merely extend the rules as conflicts.
 - Everything about files and development is written in English: code comments, test names, scripts, config and workflow files, commit messages and developer docs. Only user-facing text (UI strings and `docs/manuale-utente.md`) is Italian.
 
+### Taxi service and member profiles
+
+- `/taxi` and `/help-requests` share `request-board-route.tsx`, `HelpRequestsPage` and `broadcast-request-handlers.ts`. Taxi requests use `/api/taxi-requests` and `subjectType: "taxi"` in the existing private-message document. Keep taxi, help and private-message feeds and thread operations isolated.
+- All approved members may read and reply. Creating a taxi request requires a valid NMS friend code, enforced server-side with `isValidNmsFriendCode`. Without it, the hero action opens My NMS Profile and the page explains the requirement. This restriction does not apply to replies.
+- Authors may delete their own broadcast requests or replies; moderators/admins may delete any. Deleting a request removes all its replies. Simple view enforces user-level permissions. Private messages instead allow deletion by either participant or an admin, including descendant replies.
+- Destination galaxy is required (stored 0–255, displayed 1–256). Both destination and meeting selectors use the same searchable combobox with a visible toggle, mouse/keyboard navigation and 16px input/option text. Arbitrary search text is not a valid choice.
+- Meeting choices are Offline (default), arrange in replies, alliance hub (third, when configured), then all alliance stations, regardless of destination galaxy. `meetingPoint` distinguishes `offline`, `arrange`, `hub` and `station`. Older entries without it retain their saved station or mean arrange in replies.
+- Resolve meeting coordinates server-side: station IDs against the station store, hub against `alliance.portalCode` and `alliance.galaxy`. Persist a snapshot so configuration changes do not move existing meetings. Reject unconfigured hubs and conflicting meeting-kind/station-ID payloads.
+- Show meeting details after the request title, including the "Meeting:" prefix for Offline and arrange choices. Station links use the station blue (`#6cb4ff`) and Orbit icon. Link the hub only when an alliance station matches its galaxy and portal system (ignore the first glyph with `portalSearchMatches`); hide the portal code in the hub link label.
+- The sidebar order is Taxi service, Messages, Help requests. Taxi and help counters count root requests, not replies; refresh on change events, visibility changes and the periodic interval.
+- All approved members may see formatted friend codes (`formatNmsFriendCode`) in member profiles. Preserve separate restrictions on role, email and contact fields. `MemberProfileLink` opens the existing profile dialog from message participants and broadcast authors; without a message context the dialog is read-only and hides the message action.
+- Keep the taxi guide examples illustrative and inert: hero button, request form, request with a reply, then read-only member profile with the friend code highlighted. Explain that either the requester or responder name opens their NMS profile.
+- Dedicated taxi tests live in `tests/api/taxi-requests.test.ts` and `tests/pages/taxi-page.test.tsx`; also cover storage, route access, sidebar counters and guide examples in the existing matching suites.
+
 ### i18n
 
 - Italian is the primary language and English is also supported. The locale is chosen client-side (browser language, then a selector stored in the browser), and URLs never change.

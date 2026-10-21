@@ -6,6 +6,11 @@ import { localDataPath } from "@/lib/local-data-path";
 import { getBlobAuthOptions } from "@/lib/blob-config";
 import { readAccessData } from "@/lib/access-store";
 
+export type MeetingStation = Readonly<{ portal: string; galaxy: number; name?: string }>;
+export type TaxiStationOption = MeetingStation & Readonly<{ id: string }>;
+export type BroadcastKind = "help" | "taxi";
+export type TaxiMeetingPoint = "offline" | "arrange" | "hub" | "station";
+
 export type PrivateMessage = Readonly<{
   id: string;
   threadId?: string;
@@ -14,7 +19,9 @@ export type PrivateMessage = Readonly<{
   recipientMemberId?: string;
   body: string;
   subject?: string;
-  subjectType?: "planet" | "mission" | "help";
+  subjectType?: "planet" | "mission" | "help" | "taxi";
+  meetingStation?: MeetingStation;
+  meetingPoint?: TaxiMeetingPoint;
   portal?: string;
   galaxy?: number;
   planetNumber?: number;
@@ -48,13 +55,31 @@ function parseMessages(value: unknown): StoredPrivateMessage[] {
       (message.senderEmail !== undefined && typeof message.senderEmail !== "string") ||
       (message.recipientEmail !== undefined && typeof message.recipientEmail !== "string") ||
       (!message.senderMemberId && !message.senderEmail) ||
-      (!message.recipientMemberId && !message.recipientEmail && message.subjectType !== "help") ||
+      (!message.recipientMemberId &&
+        !message.recipientEmail &&
+        message.subjectType !== "help" &&
+        message.subjectType !== "taxi") ||
       typeof message.body !== "string" ||
+      (message.meetingPoint !== undefined &&
+        message.meetingPoint !== "offline" &&
+        message.meetingPoint !== "arrange" &&
+        message.meetingPoint !== "hub" &&
+        message.meetingPoint !== "station") ||
       (message.subject !== undefined && (typeof message.subject !== "string" || message.subject.length > 160)) ||
       (message.subjectType !== undefined &&
         message.subjectType !== "planet" &&
         message.subjectType !== "mission" &&
-        message.subjectType !== "help") ||
+        message.subjectType !== "help" &&
+        message.subjectType !== "taxi") ||
+      (message.meetingStation !== undefined &&
+        (!message.meetingStation ||
+          typeof message.meetingStation !== "object" ||
+          typeof message.meetingStation.portal !== "string" ||
+          !/^[0-9A-F]{12}$/i.test(message.meetingStation.portal) ||
+          !Number.isInteger(message.meetingStation.galaxy) ||
+          message.meetingStation.galaxy < 0 ||
+          message.meetingStation.galaxy > 255 ||
+          (message.meetingStation.name !== undefined && typeof message.meetingStation.name !== "string"))) ||
       (message.portal !== undefined &&
         (typeof message.portal !== "string" || !/^[0-9A-F]{12}$/i.test(message.portal))) ||
       (message.galaxy !== undefined &&
@@ -117,24 +142,29 @@ export async function readPrivateMessages(): Promise<PrivateMessage[]> {
   return readMessages();
 }
 
-export async function readHelpRequests(): Promise<PrivateMessage[]> {
-  return (await readMessages()).filter((message) => message.subjectType === "help");
+export async function readHelpRequests(kind: BroadcastKind = "help"): Promise<PrivateMessage[]> {
+  return (await readMessages()).filter((message) => message.subjectType === kind);
 }
 
-export async function deleteHelpRequest(requestId: string): Promise<boolean> {
+export async function deleteHelpRequest(requestId: string, kind: BroadcastKind = "help"): Promise<boolean> {
   const messages = await readMessages();
   const retained = messages.filter(
-    (message) => !(message.subjectType === "help" && (message.id === requestId || message.threadId === requestId)),
+    (message) => !(message.subjectType === kind && (message.id === requestId || message.threadId === requestId)),
   );
   if (retained.length === messages.length) return false;
   await writeMessages(retained);
   return true;
 }
 
-export async function saveHelpReply(senderMemberId: string, body: string, requestId: string): Promise<boolean> {
+export async function saveHelpReply(
+  senderMemberId: string,
+  body: string,
+  requestId: string,
+  kind: BroadcastKind = "help",
+): Promise<boolean> {
   const messages = await readMessages();
   const request = messages.find(
-    (message) => message.id === requestId && message.subjectType === "help" && !message.replyToId,
+    (message) => message.id === requestId && message.subjectType === kind && !message.replyToId,
   );
   if (!request) return false;
   messages.push({
@@ -143,7 +173,7 @@ export async function saveHelpReply(senderMemberId: string, body: string, reques
     replyToId: request.id,
     senderMemberId: senderMemberId.trim(),
     body,
-    subjectType: "help",
+    subjectType: kind,
     createdAt: new Date().toISOString(),
   });
   await writeMessages(messages);
@@ -218,7 +248,15 @@ export async function savePrivateMessage(
 export async function saveHelpRequest(
   senderMemberId: string,
   body: string,
-  context: Readonly<{ subject: string; portal: string; galaxy: number }>,
+  context:
+    | Readonly<{ subject: string; portal: string; galaxy: number }>
+    | Readonly<{
+        subject: string;
+        galaxy: number;
+        meetingStation?: MeetingStation;
+        meetingPoint?: TaxiMeetingPoint;
+        subjectType: "taxi";
+      }>,
 ): Promise<void> {
   const messages = await readMessages();
   const id = randomUUID();
@@ -228,9 +266,7 @@ export async function saveHelpRequest(
     senderMemberId: senderMemberId.trim(),
     body,
     subjectType: "help",
-    subject: context.subject,
-    portal: context.portal,
-    galaxy: context.galaxy,
+    ...context,
     createdAt: new Date().toISOString(),
   });
   await writeMessages(messages);

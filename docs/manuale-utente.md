@@ -48,6 +48,7 @@ Colori delle specializzazioni:
 **Profilo.** Si apre dall'header ed è modificabile solo dal proprietario. Contiene:
 - nome in gioco;
 - codice amico NMS, 13 caratteri alfanumerici (i trattini sono ignorati);
+- nelle schede NMS, il codice amico è visibile a tutti i membri approvati, anche in vista semplice, nel formato `XXXX-XXXX-XXXXX`;
 - una o più piattaforme: PC, SteamOS, PlayStation, Xbox, Nintendo Switch, Mac;
 - specializzazione: Costruttore, Ranger o Esploratore;
 - contatti Telegram e Discord, opzionali;
@@ -55,7 +56,7 @@ Colori delle specializzazioni:
 
 Senza profilo completo non puoi prendere missioni né ricevere assegnazioni. Un banner ti avvisa.
 
-**Navigazione.** Dalla sidebar vedi Classifica, Richieste d'aiuto, Messaggi e Missioni/Stazioni se visibili per la tua specializzazione. I contatori mostrano i messaggi e le richieste non letti. Sono presenti anche i link alla community (Discord/Telegram). Nell'header trovi lingua, profilo, vista (solo per moderatori/admin) ed esci.
+**Navigazione.** Dalla sidebar vedi Classifica, Servizio taxi, Messaggi, Richieste d'aiuto e Missioni/Stazioni se visibili per la tua specializzazione. I contatori mostrano i messaggi e le richieste non letti. Sono presenti anche i link alla community (Discord/Telegram). Nell'header trovi lingua, profilo, vista (solo per moderatori/admin) ed esci.
 
 ## 2. Come funziona una missione
 
@@ -135,20 +136,36 @@ Nella pagina **Pianeti**, le card mostrano anche le icone di flora, fauna e mine
 ### `Trophy` Classifica
 Mostra la posizione dei membri per punti: stazioni scoperte, missioni completate e voci spuntate, più i totali dell'alleanza (pianeti, membri, stazioni, missioni, task). È solo in lettura.
 
-<a id="richieste-daiuto"></a>
+### `CarTaxiFront` Servizio taxi
 
-### `Siren` Richieste d'aiuto
-- Elenco delle richieste di tutti gli alleati, con eventuali risposte.
-- Si invia dalla scheda di un pianeta: scrivi il messaggio (max 2000 caratteri), spunta la conferma e premi "Invia richiesta".
-- Tutti possono rispondere.
-- Si può eliminare solo la propria richiesta (con le risposte). Chi ha il ruolo moderatore/admin può eliminare quelle altrui.
+Chiedi un passaggio o aiuta un alleato rispondendo alla sua richiesta.
+Il contatore nel menu mostra il numero di richieste taxi (senza contare le risposte) e si aggiorna automaticamente.
+
+- Premi **Richiedi un taxi**, scegli la **galassia di destinazione**, il **punto d'incontro** e scrivi un messaggio.
+- Per creare una richiesta serve un codice amico NMS valido in **Il mio profilo NMS**. Se manca, il pulsante apre il profilo per completarlo. Puoi comunque leggere e rispondere.
+- Il punto d'incontro parte da **Offline**. Puoi scegliere **Da concordare nelle risposte**, **Hub dell'alleanza** (se configurato) o una stazione. Clicca sul campo o sulla freccia per aprire l'elenco e scrivi per cercare.
+- **Clicca sul nome del richiedente o di chi risponde** per aprire la scheda NMS e trovare il suo **codice amico**.
+- Il link del punto d'incontro apre la pagina Stazioni. Per l'hub compare se esiste una stazione nello stesso sistema e nella stessa galassia.
+- Tutti i membri approvati possono vedere le richieste e rispondere.
+- Puoi eliminare le tue richieste e risposte; moderatori/admin possono eliminare anche quelle altrui. Eliminando una richiesta vengono eliminate tutte le sue risposte.
+- Le richieste taxi restano separate dalle Richieste d'aiuto e dai messaggi privati.
 
 <a id="messaggi"></a>
 
 ### `Mail` Messaggi
+- I nomi di mittente e destinatario sono cliccabili e aprono la scheda NMS in sola consultazione. I nomi senza un membro associato restano testo normale.
 - Si scrive dal profilo di un membro (cliccando il suo nome). Il messaggio deve riguardare un **pianeta** o una **missione**. Prima dell'invio bisogna confermare che serve solo per quello, perché per il resto si usa Telegram o Discord.
 - Si può scrivere solo a membri approvati e non offline. Max 2000 caratteri.
 - Vedi i messaggi ricevuti e inviati, raggruppati in conversazioni. Puoi rispondere e segnare come letto. Puoi eliminare un messaggio solo se sei mittente o destinatario.
+
+<a id="richieste-daiuto"></a>
+
+### `Siren` Richieste d'aiuto
+- Clicca il nome dell'autore di una richiesta o risposta per consultarne la scheda NMS.
+- Elenco delle richieste di tutti gli alleati, con eventuali risposte.
+- Si invia dalla scheda di un pianeta: scrivi il messaggio (max 2000 caratteri), spunta la conferma e premi "Invia richiesta".
+- Tutti possono rispondere.
+- Si può eliminare solo la propria richiesta (con le risposte). Chi ha il ruolo moderatore/admin può eliminare quelle altrui.
 
 <a id="profilo"></a>
 

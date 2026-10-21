@@ -221,9 +221,9 @@ body:has(.sidebar-compact) .planet-notes-list li { font-size: 17px; }
   .sidebar-compact ~ .main-panel .planet-resource-groups { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
-.planet-help-button { width: 36px; height: 36px; flex: none; margin-left: auto; color: #f5c518; border-color: #f5c518; }
+.planet-help-button { width: 36px; height: 36px; flex: none; margin-left: auto; color: #ff4d4f; border-color: #ff4d4f; }
 .planet-help-button svg { width: 20px; height: 20px; }
-.planet-help-button:hover { color: #ffdd55; border-color: #ffdd55; }
+.planet-help-button:hover { color: #ff7577; border-color: #ff7577; }
 .planet-help-form { display: grid; gap: 8px; margin-top: 10px; }
 .planet-station-new { margin-left: 8px; padding: 2px 6px; color: #10130f; background: var(--lime); font-size: 10px; font-weight: 750; letter-spacing: 0.06em; text-transform: uppercase; vertical-align: middle; }
 .sidebar-compact ~ .main-panel .planet-station-new { font-size: 12px; }

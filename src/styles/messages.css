@@ -1,4 +1,5 @@
 .messages-page { display: grid; gap: 14px; }
+.taxi-profile-notice { max-width: 320px; margin: 0 0 10px; color: var(--ink); font-size: 14px; line-height: 1.5; }
 .main-panel .messages-page > .sticky-list-controls { background: #0a0f11; }
 .messages-loading { min-height: 120px; display: grid; place-items: center; }
 .messages-empty { margin: 0; padding: 22px; color: #a4adae; border: 1px solid #394548; border-radius: 4px; background: #171e21; font-size: 11px; }
@@ -40,3 +41,45 @@ body:has(.sidebar-compact) .member-card-dialog .message-acknowledgement { font-s
 .sidebar-compact ~ .main-panel .message-body { font-size: 17px; }
 .sidebar-compact ~ .main-panel .messages-empty { font-size: 16px; }
 .sidebar-compact ~ .main-panel .message-thread-toggle { font-size: 14px; }
+.member-profile-link {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.member-profile-link:hover,
+.member-profile-link:focus-visible {
+  color: var(--lime);
+}
+
+.member-profile-link:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+}
+.message-meeting-station {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #6cb4ff;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.message-meeting-station:hover,
+.message-meeting-station:focus-visible {
+  color: #6cb4ff;
+}
+.taxi-combobox { position: relative; min-width: 0; font-size: 16px; }
+.field .taxi-combobox input { width: 100%; min-height: 44px; padding-right: 44px; font-size: 16px; }
+.taxi-combobox-toggle { position: absolute; top: 0; right: 0; bottom: 0; display: grid; width: 40px; place-items: center; padding: 0; border: 0; border-left: 1px solid #596541; border-radius: 0 3px 3px 0; color: var(--lime); background: #242d26; cursor: pointer; }
+.taxi-combobox-toggle:hover { background: #35412b; }
+.taxi-combobox-toggle:focus-visible { outline: 2px solid var(--lime); outline-offset: 2px; }
+.taxi-combobox-options { position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 10; max-height: 240px; overflow-y: auto; border: 1px solid #596541; border-radius: 4px; background: #171e21; box-shadow: 0 6px 18px #0008; }
+.taxi-combobox-options [role="option"], .taxi-combobox-options p { margin: 0; padding: 10px 12px; color: var(--ink); font-size: inherit; line-height: 1.5; overflow-wrap: anywhere; }
+.taxi-combobox-options [role="option"] { cursor: pointer; }
+.taxi-combobox-options [role="option"]:hover, .taxi-combobox-options [data-active="true"] { color: var(--lime); background: #2d3927; }
+.taxi-combobox-options [aria-selected="true"] { font-weight: 700; }

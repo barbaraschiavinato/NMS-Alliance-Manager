@@ -1,30 +1,55 @@
 import { MessageSquareText, Send } from "lucide-react";
 
-export function MessageComposerExamples() {
+export function MemberProfileExample({
+  highlightFriendCode = false,
+  readOnly = false,
+}: Readonly<{ highlightFriendCode?: boolean; readOnly?: boolean }>) {
   return (
-    <div className="guide-message-composer-examples">
-      <figure className="guide-example">
-        <figcaption>Profilo del membro</figcaption>
-        <div className="mission-dialog member-card-dialog guide-message-profile-example" inert>
-          <div className="dialog-heading">
-            <div>
-              <span className="eyebrow">PROFILO MEMBRO</span>
-              <h2>Profilo NMS</h2>
-            </div>
+    <figure className="guide-example">
+      <figcaption>Profilo del membro</figcaption>
+      <div className="mission-dialog member-card-dialog guide-message-profile-example" inert>
+        <div className="dialog-heading">
+          <div>
+            <span className="eyebrow">PROFILO MEMBRO</span>
+            <h2>Profilo NMS</h2>
           </div>
-          <div className="profile-identity">
-            <span className="profile-google-avatar">A</span>
-            <span>
-              <strong>Alleato NMS</strong>
-              <small>Nome in gioco</small>
-            </span>
+        </div>
+        <div className="profile-identity">
+          <span className="profile-google-avatar">A</span>
+          <span>
+            <strong>Alleato NMS</strong>
+            <small>Nome in gioco</small>
+          </span>
+        </div>
+        <dl className="member-card-details">
+          <div>
+            <dt>Specializzazione</dt>
+            <dd>Esploratore</dd>
           </div>
+          <div>
+            <dt>Piattaforme</dt>
+            <dd>PC, PlayStation</dd>
+          </div>
+          <div className={highlightFriendCode ? "guide-friend-code-highlight" : undefined}>
+            <dt>Codice amico NMS</dt>
+            <dd>ABCD-EFGH-JKLMN</dd>
+          </div>
+        </dl>
+        {!readOnly && (
           <button className="primary-button member-message-open" type="button">
             <MessageSquareText aria-hidden="true" size={15} />
             Lascia un messaggio
           </button>
-        </div>
-      </figure>
+        )}
+      </div>
+    </figure>
+  );
+}
+
+export function MessageComposerExamples() {
+  return (
+    <div className="guide-message-composer-examples">
+      <MemberProfileExample />
       <figure className="guide-example">
         <figcaption>Modulo per scrivere un messaggio</figcaption>
         <div className="mission-dialog member-card-dialog guide-message-form-example" inert>

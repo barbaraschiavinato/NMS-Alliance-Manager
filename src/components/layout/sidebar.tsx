@@ -3,7 +3,19 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { BookOpen, Crosshair, Eclipse, Siren, Mail, Orbit, Send, Trophy, UsersRound, UserRoundX } from "lucide-react";
+import {
+  BookOpen,
+  Crosshair,
+  Eclipse,
+  Siren,
+  Mail,
+  Orbit,
+  Send,
+  Trophy,
+  UsersRound,
+  UserRoundX,
+  CarTaxiFront,
+} from "lucide-react";
 import type { AllianceMember, AllianceSettings } from "@/lib/access-store";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useRequestSearchReset } from "@/components/shared/navigation-search-reset";
@@ -57,7 +69,7 @@ export function Sidebar({
   currentMember: AllianceMember;
   settings: AllianceSettings;
   activeSection:
-    "missioni" | "pianeti" | "utenti" | "offline" | "stazioni" | "messaggi" | "aiuto" | "classifica" | "guida";
+    "missioni" | "pianeti" | "utenti" | "offline" | "stazioni" | "messaggi" | "aiuto" | "taxi" | "classifica" | "guida";
 }>) {
   const { t } = useLocale();
   const resetSearch = useRequestSearchReset();
@@ -65,6 +77,7 @@ export function Sidebar({
   const shownPlanetCount = planetCount ?? (storedPlanetCount === null ? null : Number(storedPlanetCount));
   const [unreadCount, setUnreadCount] = useState(0);
   const [helpCount, setHelpCount] = useState(0);
+  const [taxiCount, setTaxiCount] = useState(0);
   useEffect(() => {
     const controller = new AbortController();
     async function loadUnread() {
@@ -77,23 +90,28 @@ export function Sidebar({
         // Il contatore è solo informativo.
       }
     }
-    async function loadHelpCount() {
+    async function loadRequestCount(kind: "help" | "taxi", setCount: (count: number) => void) {
       try {
-        const response = await fetch("/api/help-requests?count=1", { cache: "no-store", signal: controller.signal });
+        const response = await fetch(`/api/${kind}-requests?count=1`, { cache: "no-store", signal: controller.signal });
         const body: unknown = await response.json();
         if (response.ok && body && typeof body === "object" && "count" in body && typeof body.count === "number")
-          setHelpCount(body.count);
+          setCount(body.count);
       } catch {
         // Il contatore è solo informativo.
       }
     }
+    const loadHelpCount = () => loadRequestCount("help", setHelpCount);
+    const loadTaxiCount = () => loadRequestCount("taxi", setTaxiCount);
     void loadUnread();
     void loadHelpCount();
+    void loadTaxiCount();
     window.addEventListener("help-requests-changed", loadHelpCount);
+    window.addEventListener("taxi-requests-changed", loadTaxiCount);
     function refreshCounters() {
       if (document.visibilityState !== "visible") return;
       void loadUnread();
       void loadHelpCount();
+      void loadTaxiCount();
     }
     const interval = window.setInterval(refreshCounters, counterRefreshMs);
     document.addEventListener("visibilitychange", refreshCounters);
@@ -104,6 +122,7 @@ export function Sidebar({
       document.removeEventListener("visibilitychange", refreshCounters);
       window.removeEventListener("messages-unread-changed", loadUnread);
       window.removeEventListener("help-requests-changed", loadHelpCount);
+      window.removeEventListener("taxi-requests-changed", loadTaxiCount);
     };
   }, []);
   const displayName = currentMember.nmsName || currentMember.name;
@@ -191,15 +210,15 @@ export function Sidebar({
           <span>{t("leaderboard.title")}</span>
         </Link>
         <Link
-          className={`nav-item ${activeSection === "aiuto" ? "active" : ""}`}
-          href="/help-requests"
-          data-tooltip={t("help.help_requests")}
+          className={`nav-item ${activeSection === "taxi" ? "active" : ""}`}
+          href="/taxi"
+          data-tooltip={t("taxi.title")}
           onClick={resetSearch}
         >
-          <Siren size={17} />
-          <span>{t("help.help_requests")}</span>
-          <span className={helpCount > 0 ? "nav-count nav-unread nav-unread-active" : "nav-count nav-unread"}>
-            {helpCount}
+          <CarTaxiFront size={17} />
+          <span>{t("taxi.title")}</span>
+          <span className={taxiCount > 0 ? "nav-count nav-unread nav-unread-active" : "nav-count nav-unread"}>
+            {taxiCount}
           </span>
         </Link>
         <Link
@@ -216,6 +235,18 @@ export function Sidebar({
             title={t("messages.unread_count", { count: unreadCount })}
           >
             {unreadCount}
+          </span>
+        </Link>
+        <Link
+          className={`nav-item ${activeSection === "aiuto" ? "active" : ""}`}
+          href="/help-requests"
+          data-tooltip={t("help.help_requests")}
+          onClick={resetSearch}
+        >
+          <Siren size={17} />
+          <span>{t("help.help_requests")}</span>
+          <span className={helpCount > 0 ? "nav-count nav-unread nav-unread-active" : "nav-count nav-unread"}>
+            {helpCount}
           </span>
         </Link>
         <Link

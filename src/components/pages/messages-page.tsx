@@ -14,6 +14,7 @@ import { AdminPanel } from "@/components/modals/admin-panel";
 import { MemberProfilePanel } from "@/components/modals/member-profile-panel";
 import type { AllianceMember, AllianceSettings } from "@/lib/access-store";
 import { useLocale } from "@/components/providers/locale-provider";
+import { MemberProfileLink } from "@/components/shared/member-profile-link";
 
 type MessageEntry = Readonly<{
   id: string;
@@ -257,10 +258,18 @@ export function MessagesPage({
         participants={
           <>
             {t("messages.from")}{" "}
-            <strong className={sentByCurrentMember ? "current-member" : undefined}>{message.senderName}</strong>
+            <MemberProfileLink
+              memberId={message.senderMemberId}
+              name={message.senderName}
+              current={sentByCurrentMember}
+            />
             {" · "}
             {t("messages.to")}{" "}
-            <strong className={receivedByCurrentMember ? "current-member" : undefined}>{message.recipientName}</strong>
+            <MemberProfileLink
+              memberId={message.recipientMemberId}
+              name={message.recipientName}
+              current={receivedByCurrentMember}
+            />
           </>
         }
         subjectActions={

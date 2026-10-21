@@ -42,6 +42,21 @@ afterEach(() => {
 });
 
 describe("MessagesPage", () => {
+  it("opens sender and recipient profiles from message participants", async () => {
+    const { requests } = mockFetch({
+      "GET /api/messages": [message()],
+      "GET /api/members": makeMember({ publicId: "friend", nmsName: "Profile loaded" }),
+    });
+    const { user } = renderMessages();
+    await user.click(await screen.findByRole("button", { name: "Friend" }));
+    expect(await screen.findByText("Profile loaded")).toBeInTheDocument();
+    expect(requests("GET", "/api/members")[0].url.searchParams.get("id")).toBe("friend");
+    await user.click(within(screen.getByRole("dialog")).getByRole("button", { name: t("common.close") }));
+    await user.click(screen.getByRole("button", { name: "Me" }));
+    await screen.findByText("Profile loaded");
+    expect(requests("GET", "/api/members")[1].url.searchParams.get("id")).toBe("me");
+  });
+
   it("shows the empty state and the load error", async () => {
     mockFetch({ "GET /api/messages": [] });
     renderMessages();

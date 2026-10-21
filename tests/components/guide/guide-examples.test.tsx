@@ -3,6 +3,8 @@ import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AddStationButtonExample } from "@/components/guide/add-station-button-example";
 import { MessageTabsExample } from "@/components/guide/message-tabs-example";
+import { MessageComposerExamples } from "@/components/guide/message-composer-examples";
+import { TaxiExamples } from "@/components/guide/taxi-examples";
 import {
   BuilderMissionProgressExamples,
   ExplorerMissionExamples,
@@ -45,6 +47,38 @@ function selectedTabs() {
 }
 
 describe("guide tab and button examples", () => {
+  it("illustrates the taxi button, request and read-only member profile with a highlighted friend code", () => {
+    const { container } = renderWithLocale(<TaxiExamples />, { locale: "it" });
+    expect(screen.getByRole("button", { name: "Richiedi un taxi" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Taxi verso Eissentam" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Alleato NMS" })).toHaveClass("member-profile-link");
+    const responder = screen.getByRole("button", { name: "Pilota NMS" });
+    expect(responder).toHaveClass("member-profile-link");
+    expect(responder.closest(".message-thread-children")).not.toBeNull();
+    expect(screen.getByText(/clicca sul nome del mittente o di chi ha risposto/)).toBeInTheDocument();
+    const code = screen.getByText("ABCD-EFGH-JKLMN");
+    expect(code.parentElement).toHaveClass("guide-friend-code-highlight");
+    expect(screen.queryByRole("button", { name: "Lascia un messaggio" })).not.toBeInTheDocument();
+    expect(container.querySelector(".messages-list")).toHaveAttribute("inert");
+    const form = screen.getByText("Modulo per richiedere un taxi").closest("figure")!;
+    expect(within(form).getByDisplayValue("10 · Eissentam")).toHaveAttribute("readonly");
+    expect(within(form).getByDisplayValue("Hub dell'alleanza · Euclide · 0123456789AB")).toHaveAttribute("readonly");
+    expect(within(form).getByRole("checkbox")).toBeChecked();
+    expect(within(form).getByRole("button", { name: "Invia richiesta" })).toBeInTheDocument();
+    expect(form.querySelector(".guide-taxi-form-example")).toHaveAttribute("inert");
+    const figures = Array.from(container.querySelectorAll("figure"));
+    expect(figures[1]).toBe(form);
+    expect(figures[2].textContent).toContain("Richiesta taxi e risposta");
+  });
+  it("shows member profile details and a formatted friend code in the guide", () => {
+    renderWithLocale(<MessageComposerExamples />);
+    const profile = screen.getByText("Profilo del membro").closest("figure")!;
+    expect(within(profile).getByText("Esploratore")).toBeInTheDocument();
+    expect(within(profile).getByText("PC, PlayStation")).toBeInTheDocument();
+    expect(within(profile).getByText("ABCD-EFGH-JKLMN")).toBeInTheDocument();
+    expect(profile.querySelector(".member-card-dialog")).toHaveAttribute("inert");
+  });
+
   it("renders an add-station button that does nothing", () => {
     const { container } = renderWithLocale(<AddStationButtonExample />);
     const button = screen.getByRole("button", { name: tr("stations.add_station") });

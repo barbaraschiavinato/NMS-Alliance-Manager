@@ -59,7 +59,7 @@ describe("GET /api/members", () => {
       }
     });
 
-    it("hides contacts, friend code, role and email from other users and simple-view admins", async () => {
+    it("shows friend codes but hides contacts, role and email from other users and simple-view admins", async () => {
       const target = makeMember({
         telegramName: "tg",
         discordName: "dc",
@@ -76,6 +76,7 @@ describe("GET /api/members", () => {
           name: target.name,
           image: "",
           nmsName: target.nmsName,
+          nmsCode: target.nmsCode,
           platforms: ["PC", "Mac"],
           specialty: "ranger",
           offline: false,
@@ -83,13 +84,13 @@ describe("GET /api/members", () => {
       }
     });
 
-    it("shows a member their own contacts but not their friend code", async () => {
+    it("shows a member their own contacts and friend code", async () => {
       const self = makeMember({ telegramName: "my-tg" });
       seedMembers([...castMembers(cast), self]);
       signInAs(self);
       const body = (await (await getMembers(`?id=${self.publicId}`)).json()) as Record<string, unknown>;
       expect(body).toMatchObject({ telegramName: "my-tg", discordName: "" });
-      expect(body).not.toHaveProperty("nmsCode");
+      expect(body).toHaveProperty("nmsCode", self.nmsCode);
       expect(body).not.toHaveProperty("role");
     });
 

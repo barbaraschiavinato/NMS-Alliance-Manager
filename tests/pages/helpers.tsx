@@ -51,6 +51,7 @@ export function mockFetch(pageRoutes: Routes = {}) {
   const routes: Routes = {
     "/api/messages?count=unread": { count: 0 },
     "/api/help-requests?count=1": { count: 0 },
+    "/api/taxi-requests?count=1": { count: 0 },
     ...pageRoutes,
   };
   const calls: FetchCall[] = [];

@@ -107,6 +107,12 @@ The `CI` GitHub Actions workflow (`.github/workflows/ci.yml`) runs the tests and
 
 The initial demo data is defined in `src/lib/seed.ts`. The CRUD endpoints are `/api/missions` and `/api/missions/[id]`.
 
+## Taxi service
+
+The authenticated `/taxi` board uses `/api/taxi-requests` and stores requests and replies in the existing private message document with `subjectType: "taxi"`. It shares board handlers and UI with Help Requests, but the feeds and thread operations are isolated by type. All approved members may read and reply; only authors or moderators/admins may delete. Simple view continues to enforce user-level permissions.
+
+The hero opens a message dialog with a required destination galaxy (0–255 internally) and a meeting point: Offline (preselected), arrange in the replies, the alliance hub (third, when configured), or a station from all alliance stations. Both selectors share the same searchable combobox, with a consistent 16px font for inputs and options. Clicking either field or its visible arrow opens a scrollable list. Galaxies can be filtered by their displayed number (1–256) or name; meeting stations by name, portal and galaxy. Arrow keys, Enter and Escape navigate, select and close the list; only listed choices can be submitted. The server validates the meeting kind and resolves station identifiers against the station store, persisting a minimal meeting-point snapshot (portal, galaxy, optional name), rather than trusting client-supplied station details. The hub uses `alliance.portalCode` and `alliance.galaxy`, resolved server-side and snapshotted on creation; subsequent configuration changes do not alter existing requests. The destination and meeting galaxy are independent. Existing messages retain their format; older taxi entries without a meeting kind are interpreted as arrange in replies or their saved station. Legacy email migrations preserve meeting metadata. There are no extra production files or storage credentials.
+
 ## System addresses
 
 Every mission requires a full portal address of 12 hexadecimal glyphs (`0`-`F`) and a galaxy index (`0`-`255`). The interface shows the decoded `Planet / System / Y / Z / X` parameters and flags reserved or invalid values. The glyph PNGs are in `public/glyphs/` and come from [NMS Galactic Map](https://github.com/elegra1965-source/nms-galactic-map/tree/main/glyphs). They are No Man's Sky images, owned by their respective holders and not covered by the source repository's software license; this fan-made project is not affiliated with or endorsed by Hello Games.

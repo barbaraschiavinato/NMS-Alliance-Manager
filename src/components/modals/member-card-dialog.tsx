@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { CircleAlert, MessageSquareText, Send, X } from "lucide-react";
 import type { MemberRole, MemberSpecialty, NmsPlatform } from "@/lib/member-types";
+import { formatNmsFriendCode } from "@/lib/member-types";
 import { useLocale } from "@/components/providers/locale-provider";
 import type { SubmitEvent } from "react";
 
@@ -42,7 +43,7 @@ export function MemberCardDialog({
   onClose,
 }: Readonly<{
   memberId: string;
-  messageContext: MemberMessageContext;
+  messageContext?: MemberMessageContext;
   onClose: () => void;
 }>) {
   const { t } = useLocale();
@@ -55,7 +56,7 @@ export function MemberCardDialog({
   const [messageSent, setMessageSent] = useState(false);
   const [sending, setSending] = useState(false);
   const [acknowledged, setAcknowledged] = useState(false);
-  const [subjectLabel, setSubjectLabel] = useState(messageContext.subjectLabel);
+  const [subjectLabel, setSubjectLabel] = useState(messageContext?.subjectLabel ?? "");
 
   useEffect(() => {
     const controller = new AbortController();
@@ -76,7 +77,7 @@ export function MemberCardDialog({
   }, [memberId, t]);
 
   useEffect(() => {
-    if (messageContext.type !== "planet") return;
+    if (messageContext?.type !== "planet") return;
     const controller = new AbortController();
     const params = new URLSearchParams({
       recipientId: memberId,
@@ -181,7 +182,7 @@ export function MemberCardDialog({
               {profile.nmsCode && (
                 <div>
                   <dt>{t("profile.nms_friend_code_label")}</dt>
-                  <dd>{profile.nmsCode}</dd>
+                  <dd>{formatNmsFriendCode(profile.nmsCode)}</dd>
                 </div>
               )}
               {profile.role && (
@@ -191,7 +192,7 @@ export function MemberCardDialog({
                 </div>
               )}
             </dl>
-            {!profile.offline && (
+            {!profile.offline && messageContext && (
               <button
                 aria-label={t("profile.leave_a_message")}
                 className="primary-button member-message-open"
