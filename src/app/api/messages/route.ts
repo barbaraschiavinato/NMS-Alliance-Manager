@@ -44,6 +44,7 @@ export async function GET(request: Request) {
     const visibleMessages = messages.filter(
       (message) =>
         message.subjectType !== "help" &&
+        message.subjectType !== "taxi" &&
         (wantsAll || message.senderMemberId === member.publicId || message.recipientMemberId === member.publicId),
     );
     const membersById = new Map(accessData.members.map((profile) => [profile.publicId, profile]));

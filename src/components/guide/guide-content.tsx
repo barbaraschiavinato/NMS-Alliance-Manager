@@ -2,11 +2,13 @@ import Link from "next/link";
 import { Hero } from "@/components/layout/hero";
 import { AddStationButtonExample } from "@/components/guide/add-station-button-example";
 import { MessageComposerExamples } from "@/components/guide/message-composer-examples";
+import { TaxiExamples } from "@/components/guide/taxi-examples";
 import { MessageTabsExample } from "@/components/guide/message-tabs-example";
 import { translate } from "@/lib/translations";
 import { readAccessData } from "@/lib/access-store";
 import {
   BookOpen,
+  CarTaxiFront,
   CirclePlus,
   Compass,
   Crosshair,
@@ -192,7 +194,7 @@ const buttons: ReadonlyArray<{
     label: "Richiedi aiuto",
     specialty: ["ranger", "explorer", "builder"],
     icon: Siren,
-    color: "#f5c518",
+    color: "#ff4d4f",
     meaning: "Invia una richiesta d'aiuto per il pianeta.",
   },
 ];
@@ -240,10 +242,10 @@ const sections = [
     tasks: "Vedi la posizione dei membri e i totali dell'alleanza.",
   },
   {
-    name: "Richieste d'aiuto",
-    icon: Siren,
+    name: "Servizio taxi",
+    icon: CarTaxiFront,
     color: "#f5c518",
-    tasks: "Consulti le richieste di tutti e rispondi. Le richieste si inviano dalla scheda di un pianeta",
+    tasks: "Richiedi un passaggio verso una galassia e concorda il punto d'incontro con gli alleati.",
   },
   {
     name: "Messaggi",
@@ -251,6 +253,12 @@ const sections = [
     color: "#8f9bff",
     tasks:
       "Leggi e rispondi ai messaggi privati, segnali come letti o li elimini. Si scrivono dal profilo di un membro, su una stazione o una missione",
+  },
+  {
+    name: "Richieste d'aiuto",
+    icon: Siren,
+    color: "#ff4d4f",
+    tasks: "Consulti le richieste di tutti e rispondi. Le richieste si inviano dalla scheda di un pianeta",
   },
   {
     name: "Guida",
@@ -417,15 +425,21 @@ export async function GuideContent({
             </a>
           </li>
           <li>
-            <a className="guide-index-help" href="#richieste-aiuto">
-              <Siren aria-hidden="true" size={15} />
-              Richieste d&apos;aiuto
+            <a className="guide-index-help" href="#servizio-taxi">
+              <CarTaxiFront aria-hidden="true" size={15} />
+              Servizio taxi
             </a>
           </li>
           <li>
             <a className="guide-index-messages" href="#messaggi">
               <Mail aria-hidden="true" size={15} />
               Messaggi
+            </a>
+          </li>
+          <li>
+            <a className="guide-index-help" href="#richieste-aiuto">
+              <Siren aria-hidden="true" size={15} />
+              Richieste d&apos;aiuto
             </a>
           </li>
         </ul>
@@ -1131,8 +1145,39 @@ export async function GuideContent({
             </ul>
             <p>La pagina è di sola lettura.</p>
           </section>
-          <section id="richieste-aiuto">
+          <section id="servizio-taxi">
             <h2 style={{ color: "#f5c518" }}>
+              <CarTaxiFront aria-hidden="true" size={20} />
+              Servizio taxi
+            </h2>
+            <p>
+              Chiedi un passaggio con «Richiedi un taxi»: scegli la galassia, il punto d&apos;incontro e scrivi un
+              messaggio. Per inviare la richiesta devi aver inserito il codice amico nel tuo profilo NMS.
+            </p>
+            <ul>
+              <li>Le richieste e le risposte sono visibili a tutti i membri approvati, anche in vista semplice.</li>
+              <li>
+                Clicca sul nome del richiedente o di chi risponde per aprire la scheda NMS e trovare il suo codice
+                amico.
+              </li>
+              <li>
+                Il punto d&apos;incontro parte da «Offline». Puoi scegliere «Da concordare nelle risposte», l&apos;hub
+                dell&apos;alleanza (se configurato) o una stazione. Scrivi nei campi per cercare; il link alla stazione
+                apre la pagina Stazioni.
+              </li>
+              <li>
+                Puoi rispondere per organizzare il viaggio e cancellare le tue richieste o risposte. Moderatori e admin
+                possono eliminare anche quelle altrui.
+              </li>
+              <li>
+                Eliminando una richiesta, elimini tutte le sue risposte. Le richieste taxi non compaiono nei messaggi
+                privati o nelle Richieste d&apos;aiuto.
+              </li>
+            </ul>
+            <TaxiExamples />
+          </section>
+          <section id="richieste-aiuto">
+            <h2 style={{ color: "#ff4d4f" }}>
               <Siren aria-hidden="true" size={20} />
               Richieste d&apos;aiuto
             </h2>
@@ -1141,7 +1186,7 @@ export async function GuideContent({
               <span
                 aria-label="Richiedi aiuto"
                 className="guide-icon guide-help-icon"
-                style={{ color: "#f5c518", borderColor: "#f5c518" }}
+                style={{ color: "#ff4d4f", borderColor: "#ff4d4f" }}
                 title="Richiedi aiuto"
               >
                 <Siren aria-hidden="true" size={16} />
@@ -1167,6 +1212,7 @@ export async function GuideContent({
                 missione.
               </li>
               <li>Puoi rispondere alle richieste; le risposte compaiono sotto quella originale.</li>
+              <li>Clicca il nome dell&apos;autore di una richiesta o risposta per consultarne la scheda NMS.</li>
               <li>
                 Puoi eliminare le tue richieste e risposte; moderatori e admin possono eliminare anche quelle degli
                 altri. Eliminando una richiesta, elimini anche le sue risposte.
@@ -1195,6 +1241,13 @@ export async function GuideContent({
               , apri il profilo e premi «Lascia un messaggio».
             </p>
             <MessageComposerExamples />
+            <p>
+              La scheda NMS mostra specializzazione, piattaforme e codice amico nel formato XXXX-XXXX-XXXXX. Il codice
+              amico è visibile a tutti i membri approvati, anche in vista semplice. Puoi aprire la scheda anche dai nomi
+              di mittente e destinatario nei messaggi e dagli autori delle richieste d&apos;aiuto e delle risposte: in
+              questi casi è in sola consultazione, senza il pulsante «Lascia un messaggio». I nomi senza un membro
+              associato non sono cliccabili.
+            </p>
             <p>
               Qui trovi i messaggi inviati e ricevuti, organizzati in conversazioni. La pagina offre i tab{" "}
               <strong className="guide-tab-name">Ricevuti</strong> e{" "}

@@ -9,6 +9,7 @@ export function MessageCard({
   unread,
   subjectActions,
   title,
+  titleDetails,
   participants,
   createdAt,
   formattedDate,
@@ -26,6 +27,7 @@ export function MessageCard({
   unread?: boolean;
   subjectActions?: ReactNode;
   title?: string;
+  titleDetails?: ReactNode;
   participants: ReactNode;
   createdAt: string;
   formattedDate: string;
@@ -53,6 +55,7 @@ export function MessageCard({
             <div className="message-card-subject">
               {subjectActions}
               {title !== undefined && <h2>{title}</h2>}
+              {titleDetails}
             </div>
             <p className="message-participants">{participants}</p>
           </div>
@@ -119,6 +122,7 @@ export function MessageReplyForm({
   sending,
   onCancel,
   onSubmit,
+  acknowledgementLabel = "profile.message_mission_only_notice",
 }: Readonly<{
   subject: string;
   rows: number;
@@ -130,6 +134,7 @@ export function MessageReplyForm({
   sending: boolean;
   onCancel: () => void;
   onSubmit: (event: SubmitEvent<HTMLFormElement>) => void;
+  acknowledgementLabel?: string;
 }>) {
   const { t } = useLocale();
 
@@ -153,7 +158,7 @@ export function MessageReplyForm({
           required
           type="checkbox"
         />
-        <span>{t("profile.message_mission_only_notice")}</span>
+        <span>{t(acknowledgementLabel)}</span>
       </label>
       {error && (
         <p className="form-error">

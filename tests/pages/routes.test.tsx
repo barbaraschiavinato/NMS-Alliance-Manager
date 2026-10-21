@@ -2,6 +2,7 @@ import type { ReactElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import HelpRequestsRoute from "@/app/help-requests/page";
+import TaxiRoute from "@/app/taxi/page";
 import RootLayout, { metadata } from "@/app/layout";
 import LeaderboardRoute from "@/app/leaderboard/page";
 import Loading from "@/app/loading";
@@ -134,6 +135,7 @@ const sectionRoutes: [string, () => Promise<ReactElement>, unknown][] = [
   ["stations", () => StationsRoute({ searchParams: Promise.resolve({}) }), StationsPage],
   ["messages", () => MessagesRoute(), MessagesPage],
   ["help requests", () => HelpRequestsRoute(), HelpRequestsPage],
+  ["taxi", () => TaxiRoute(), HelpRequestsPage],
   ["planets", () => PlanetsRoute(), PlanetsPage],
   ["leaderboard", () => LeaderboardRoute(), LeaderboardPage],
   ["users", () => UsersPage(), MembersPage],
@@ -324,6 +326,7 @@ describe("messages and help requests routes", () => {
   it.each([
     ["messages", MessagesRoute],
     ["help requests", HelpRequestsRoute],
+    ["taxi", TaxiRoute],
   ] as const)("passes the %s counters by role", async (_name, route) => {
     vi.mocked(readMissions).mockResolvedValue([makeMission()]);
     signIn(user);
@@ -333,8 +336,26 @@ describe("messages and help requests routes", () => {
       offlineCount: undefined,
       userCount: undefined,
     });
+
     signIn(moderator);
     expect(props(await route())).toMatchObject({ missionCount: 1, stationCount: 2, offlineCount: 1, userCount: 7 });
+  });
+});
+
+describe("taxi route", () => {
+  it("provides meeting options from every owner's stations without exposing owner records", async () => {
+    signIn(user);
+    const element = props(await TaxiRoute());
+    expect(element.kind).toBe("taxi");
+    expect(element.taxiStations).toEqual(
+      stationList.map((station) => ({
+        id: `${station.ownerId}:${station.portal}:${station.galaxy}`,
+        portal: station.portal,
+        galaxy: station.galaxy,
+        ...(station.name ? { name: station.name } : {}),
+      })),
+    );
+    expect(readAllStationPortals).toHaveBeenCalled();
   });
 });
 

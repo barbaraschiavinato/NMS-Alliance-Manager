@@ -354,7 +354,7 @@ describe("MemberCardDialog", () => {
     nmsName: "Pilot",
     platforms: ["PC", "Xbox"],
     specialty: "ranger",
-    nmsCode: "ABCD-EFGH-JKLMN",
+    nmsCode: "ABCDEFGHJKLMN",
     telegramName: "@pilot",
     discordName: "pilot#1",
     role: "moderator",
@@ -380,6 +380,7 @@ describe("MemberCardDialog", () => {
     expect(screen.getByText(t("profile.loading_profile"))).toBeInTheDocument();
     expect(await screen.findByText("Pilot")).toBeInTheDocument();
     expect(screen.getByText("PC, Xbox")).toBeInTheDocument();
+    expect(screen.getByText("ABCD-EFGH-JKLMN")).toBeInTheDocument();
     expect(screen.getByText("@pilot")).toBeInTheDocument();
     expect(screen.getByText(t("common.moderator"))).toBeInTheDocument();
 

@@ -16,7 +16,8 @@
 .guide-index > ul > li > .guide-index-planets { color: #b48cf2; }
 .guide-index > ul > li > .guide-index-leaderboard { color: #e040c8; }
 .guide-index > ul > li > .guide-index-help { color: #f5c518; }
-.guide-index > ul > li > .guide-index-messages { color: var(--lime); }
+.guide-index > ul > li > .guide-index-help[href="#richieste-aiuto"] { color: #ff4d4f; }
+.guide-index > ul > li > .guide-index-messages { color: #8f9bff; }
 .guide-index > ul > li > .guide-index-specialty-ranger { color: #5fd68a; }
 .guide-index > ul > li > .guide-index-specialty-explorer { color: #4d9bff; }
 .guide-index > ul > li > .guide-index-specialty-builder { color: #ffb45d; }
@@ -51,6 +52,13 @@
 .guide-icon-empty { visibility: hidden; }
 .guide-examples { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; margin: 20px 0; }
 .guide-message-composer-examples { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 20px; margin: 20px 0; }
+.guide-taxi-examples { display: grid; gap: 20px; margin: 20px 0; }
+.guide-taxi-examples .guide-message-composer-examples { max-width: 520px; margin: 0; }
+.guide-taxi-examples .message-card-subject { flex-wrap: wrap; }
+.guide-taxi-examples .guide-taxi-form-example { width: 100%; max-width: 520px; margin: 0; }
+.member-card-details .guide-friend-code-highlight { padding: 12px; border: 2px solid #f5c518; border-radius: 4px; background: #f5c51818; }
+.member-card-details .guide-friend-code-highlight dt { color: #f5c518; }
+.member-card-details .guide-friend-code-highlight dd { color: #fff; font-size: 20px; font-weight: 700; letter-spacing: .05em; }
 .guide-message-composer-examples .mission-dialog { width: 100%; margin: 0; }
 .guide-message-form-example .member-message-form .field textarea { min-height: 80px; }
 .guide-validation-examples { max-width: 560px; grid-template-columns: minmax(0, 1fr); }

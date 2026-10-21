@@ -68,6 +68,26 @@ afterEach(() => {
 });
 
 describe("reading (local filesystem)", () => {
+  it("rejects unknown taxi meeting point kinds", async () => {
+    writeDataFile(fileName, [help({ subjectType: "taxi", meetingPoint: "unknown" })]);
+    const { readPrivateMessages } = await load();
+    await expect(readPrivateMessages()).rejects.toThrow("Invalid private message in storage.");
+  });
+  it.each([
+    null,
+    [],
+    { portal: 1, galaxy: 0 },
+    { portal: "bad", galaxy: 0 },
+    { portal: "0123456789AB", galaxy: -1 },
+    { portal: "0123456789AB", galaxy: 256 },
+    { portal: "0123456789AB", galaxy: 1.5 },
+    { portal: "0123456789AB", galaxy: 0, name: 1 },
+  ])("rejects invalid taxi meeting stations: %j", async (meetingStation) => {
+    writeDataFile(fileName, [help({ subjectType: "taxi", meetingStation })]);
+    const { readPrivateMessages } = await load();
+    await expect(readPrivateMessages()).rejects.toThrow("Invalid private message in storage.");
+  });
+
   it("returns no messages when the file does not exist", async () => {
     const { readPrivateMessages, readHelpRequests } = await load();
     expect(await readPrivateMessages()).toEqual([]);

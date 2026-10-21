@@ -40,6 +40,33 @@ afterEach(() => {
 });
 
 describe("HelpRequestsPage", () => {
+  it("opens profiles for request and reply authors", async () => {
+    const { requests } = mockFetch({
+      "GET /api/help-requests": [
+        helpRequest({
+          replies: [
+            {
+              id: "reply",
+              senderMemberId: "me",
+              senderName: "Me",
+              body: "Coming",
+              createdAt: "2026-03-01T11:00:00.000Z",
+            },
+          ],
+        }),
+      ],
+      "GET /api/members": makeMember({ nmsName: "Profile loaded" }),
+    });
+    const { user } = renderHelp();
+    await user.click(await screen.findByRole("button", { name: "Someone" }));
+    await screen.findByText("Profile loaded");
+    expect(requests("GET", "/api/members")[0].url.searchParams.get("id")).toBe("someone");
+    await user.click(within(screen.getByRole("dialog")).getByRole("button", { name: t("common.close") }));
+    await user.click(screen.getByRole("button", { name: "Me" }));
+    await screen.findByText("Profile loaded");
+    expect(requests("GET", "/api/members")[1].url.searchParams.get("id")).toBe("me");
+  });
+
   it("shows the empty state", async () => {
     mockFetch({ "GET /api/help-requests": [] });
     renderHelp();

@@ -43,8 +43,9 @@ describe("Sidebar", () => {
       "/missions",
       "/planets",
       "/leaderboard",
-      "/help-requests",
+      "/taxi",
       "/messages",
+      "/help-requests",
       "/member-guide",
     ]);
     expect(within(nav).getByRole("link", { name: /Stations/ })).toHaveClass("active");
@@ -54,7 +55,7 @@ describe("Sidebar", () => {
     expect(screen.getByText("Nova")).toBeInTheDocument();
     expect(screen.getByText("Member")).toBeInTheDocument();
     expect(screen.getByText("NO")).toBeInTheDocument();
-    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(3));
   });
 
   it("adds user management links for moderators, in Italian", () => {
@@ -88,6 +89,11 @@ describe("Sidebar", () => {
     renderWithLocale(<Sidebar {...baseProps} currentMember={makeMember()} />);
     expect(await screen.findByLabelText("3 unread")).toHaveClass("nav-unread-active");
     expect(screen.getByRole("link", { name: /Help requests/ })).toHaveTextContent("Help requests5");
+    expect(screen.getByRole("link", { name: /Taxi service/ })).toHaveTextContent("Taxi service5");
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/taxi-requests?count=1",
+      expect.objectContaining({ cache: "no-store" }),
+    );
     expect(fetchMock).toHaveBeenCalledWith(
       "/api/messages?count=unread",
       expect.objectContaining({ cache: "no-store" }),
@@ -107,7 +113,7 @@ describe("Sidebar", () => {
       }),
     );
     renderWithLocale(<Sidebar {...baseProps} currentMember={makeMember()} />);
-    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(3));
     expect(screen.getByLabelText("0 unread")).not.toHaveClass("nav-unread-active");
     expect(screen.getByRole("link", { name: /Help requests/ })).toHaveTextContent("Help requests0");
   });
@@ -122,7 +128,7 @@ describe("Sidebar", () => {
       ),
     );
     renderWithLocale(<Sidebar {...baseProps} currentMember={makeMember()} />);
-    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(3));
     expect(screen.getByLabelText("0 unread")).not.toHaveClass("nav-unread-active");
   });
 
@@ -176,15 +182,17 @@ describe("Sidebar", () => {
       ),
     );
     renderWithLocale(<Sidebar {...baseProps} currentMember={makeMember()} />);
-    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(3));
 
     unread = 2;
     help = 1;
     act(() => {
       window.dispatchEvent(new Event("messages-unread-changed"));
       window.dispatchEvent(new Event("help-requests-changed"));
+      window.dispatchEvent(new Event("taxi-requests-changed"));
     });
     expect(await screen.findByLabelText("2 unread")).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByRole("link", { name: /Taxi service/ })).toHaveTextContent("Taxi service1"));
     await waitFor(() =>
       expect(screen.getByRole("link", { name: /Help requests/ })).toHaveTextContent("Help requests1"),
     );
@@ -199,12 +207,12 @@ describe("Sidebar", () => {
   it("does not refresh counters while the page is hidden", async () => {
     stubCounters();
     renderWithLocale(<Sidebar {...baseProps} currentMember={makeMember()} />);
-    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(3));
     const visibility = vi.spyOn(document, "visibilityState", "get").mockReturnValue("hidden");
     act(() => {
       document.dispatchEvent(new Event("visibilitychange"));
     });
-    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(fetch).toHaveBeenCalledTimes(3);
     visibility.mockRestore();
   });
 
@@ -213,11 +221,11 @@ describe("Sidebar", () => {
     try {
       stubCounters();
       renderWithLocale(<Sidebar {...baseProps} currentMember={makeMember()} />);
-      expect(fetch).toHaveBeenCalledTimes(2);
+      expect(fetch).toHaveBeenCalledTimes(3);
       act(() => {
         vi.advanceTimersByTime(2 * 60 * 1000);
       });
-      expect(fetch).toHaveBeenCalledTimes(4);
+      expect(fetch).toHaveBeenCalledTimes(6);
     } finally {
       vi.useRealTimers();
     }
