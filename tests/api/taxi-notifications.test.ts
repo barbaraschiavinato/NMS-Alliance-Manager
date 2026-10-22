@@ -50,9 +50,18 @@ describe("taxi notification APIs", () => {
   it.each([
     { ...defaultTaxiNotificationSettings },
     { ...defaultTaxiNotificationSettings, telegramEnabled: true, telegramChatId: "-123" },
+    { ...defaultTaxiNotificationSettings, telegramEnabled: true, telegramChatId: "-123", telegramThreadId: "123" },
+    { ...defaultTaxiNotificationSettings, telegramThreadId: "2147483647" },
     { ...defaultTaxiNotificationSettings, pushEnabled: true },
   ])("saves independently enabled channels %j", async (value) => {
     expect((await admin.PATCH(jsonRequest(adminUrl, "PATCH", value))).status).toBe(200);
+    expect((await (await admin.GET()).json()).settings).toEqual(value);
+  });
+  it("clears the Telegram topic without changing the group or other settings", async () => {
+    await admin.PATCH(jsonRequest(adminUrl, "PATCH", { ...settings, telegramThreadId: "123" }));
+    expect((await readTaxiNotifications()).settings.telegramThreadId).toBe("123");
+    await admin.PATCH(jsonRequest(adminUrl, "PATCH", settings));
+    expect((await readTaxiNotifications()).settings).toEqual(settings);
   });
   it("rejects malformed JSON for every mutation endpoint", async () => {
     const malformed = (url: string, method: string) =>
@@ -112,6 +121,9 @@ describe("taxi notification APIs", () => {
     { ...settings, telegramChatId: "123" },
     { ...settings, telegramChatId: "" },
     { ...settings, pushEnabled: 1 },
+    ...[undefined, null, 123, "0", "-1", "1.5", "abc", " 123 ", "01", "2147483648", "9007199254740992"].map(
+      (telegramThreadId) => ({ ...settings, telegramThreadId }),
+    ),
   ])("rejects invalid settings %j", async (value) => {
     expect((await admin.PATCH(jsonRequest(adminUrl, "PATCH", value))).status).toBe(400);
   });

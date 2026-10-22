@@ -13,6 +13,8 @@ export const translations: TranslationCatalog = {
     "taxi_notifications.credentials_missing": "Credenziali mancanti o non valide",
     "taxi_notifications.send_test": "Invia prova",
     "taxi_notifications.telegram_chat_id": "Chat ID del gruppo Telegram Taxi",
+    "taxi_notifications.telegram_topic_id": "ID topic Telegram Taxi (opzionale)",
+    "taxi_notifications.telegram_topic_hint": "Lascia vuoto per inviare senza selezionare un topic Telegram.",
     "taxi_notifications.include_replies": "Notifica anche le risposte Taxi (tutti i canali)",
     "taxi_notifications.save": "Salva notifiche Taxi",
     "taxi_notifications.saved": "Impostazioni notifiche Taxi salvate.",

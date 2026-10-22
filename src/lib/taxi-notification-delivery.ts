@@ -160,6 +160,7 @@ async function sendChannel(
       `https://api.telegram.org/bot${telegramToken()}/sendMessage`,
       {
         chat_id: data.settings.telegramChatId,
+        ...(data.settings.telegramThreadId ? { message_thread_id: Number(data.settings.telegramThreadId) } : {}),
         text: `<b>${escapeTelegramHtml(alert.title)}</b>${responder ? `\n${escapeTelegramHtml(responder.body)}${responder.telegram ? `\nTelegram di chi risponde: @${responder.telegram}` : ""}\n` : ""}${requester ? `\n${escapeTelegramHtml(requester.body)}${requester.telegram ? `\nTelegram del richiedente: @${requester.telegram}` : ""}\n` : ""}\n${escapeTelegramHtml(sharedBody ?? alert.body)}${meetingUrl ? `\n<a href="${escapeTelegramHtml(meetingUrl)}">Scheda stazione del ritrovo</a>` : ""}\n\nApri la richiesta per i dettagli e rispondere.\n<a href="${escapeTelegramHtml(url)}">Vai al dettaglio Taxi</a>`,
         parse_mode: "HTML",
         link_preview_options: { is_disabled: true },

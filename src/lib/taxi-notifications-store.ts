@@ -90,9 +90,23 @@ export async function readTaxiNotifications(): Promise<NotificationData> {
     }
   }
   // Existing installations have no notification document: all channels start disabled.
-  return json === undefined
-    ? { settings: { ...defaultTaxiNotificationSettings }, disabledMembers: [], devices: [] }
-    : parseData(JSON.parse(json));
+  if (json === undefined) return { settings: { ...defaultTaxiNotificationSettings }, disabledMembers: [], devices: [] };
+  const value: unknown = JSON.parse(json);
+  let migrated = false;
+  if (
+    value &&
+    typeof value === "object" &&
+    "settings" in value &&
+    value.settings &&
+    typeof value.settings === "object" &&
+    !("telegramThreadId" in value.settings)
+  ) {
+    value.settings = { ...value.settings, telegramThreadId: "" };
+    migrated = true;
+  }
+  const data = parseData(value);
+  if (migrated) await writeData(data);
+  return data;
 }
 
 async function writeData(data: NotificationData) {
@@ -137,6 +151,7 @@ export async function saveTaxiNotificationSettings(settings: TaxiNotificationSet
       pushEnabled: settings.pushEnabled,
       repliesEnabled: settings.repliesEnabled,
       telegramChatId: settings.telegramChatId,
+      telegramThreadId: settings.telegramThreadId,
     };
   });
 }
