@@ -7,12 +7,15 @@ import { MessageTabsExample } from "@/components/guide/message-tabs-example";
 import { translate } from "@/lib/translations";
 import { readAccessData } from "@/lib/access-store";
 import {
+  Archive,
+  ArchiveRestore,
   BookOpen,
   CarTaxiFront,
   CirclePlus,
   Compass,
   Crosshair,
   Eclipse,
+  ExternalLink,
   FileText,
   Hammer,
   Info,
@@ -81,6 +84,20 @@ const commonButtons: { label: string; icon: LucideIcon; color: string; meaning: 
     meaning: "Elimina la missione, la stazione o il messaggio. Ti viene chiesta una conferma.",
   },
   {
+    label: "Archivia",
+    icon: Archive,
+    color: "#d0d4d0",
+    meaning:
+      "Sposta una richiesta d'aiuto o di taxi e tutte le sue risposte in Archiviati. Non si può più rispondere finché non viene ripristinata. Disponibile per l'autore, i moderatori e gli amministratori.",
+  },
+  {
+    label: "Togli dall'archivio",
+    icon: ArchiveRestore,
+    color: "#d0d4d0",
+    meaning:
+      "Riporta una richiesta archiviata in In corso e permette di rispondere nuovamente. Disponibile per l'autore, i moderatori e gli amministratori.",
+  },
+  {
     label: "Riapri missione",
     icon: RotateCcw,
     color: "#ef8067",
@@ -102,6 +119,20 @@ const buttons: ReadonlyArray<{
   crossed?: boolean;
 }> = [
   {
+    label: "Apri scheda stazione",
+    specialty: ["ranger", "explorer", "builder"],
+    icon: ExternalLink,
+    color: "#6cb4ff",
+    meaning: "Apre la pagina di dettaglio della stazione, con le missioni associate e i pianeti del sistema.",
+  },
+  {
+    label: "Apri scheda missione",
+    specialty: ["ranger", "explorer", "builder"],
+    icon: ExternalLink,
+    color: "#72d1c4",
+    meaning: "Apre la pagina di dettaglio con la missione in alto e i dettagli della stazione e del sistema.",
+  },
+  {
     label: "Vai alla stazione",
     specialty: ["ranger", "explorer", "builder"],
     icon: Orbit,
@@ -113,7 +144,8 @@ const buttons: ReadonlyArray<{
     specialty: ["ranger", "explorer", "builder"],
     icon: Crosshair,
     color: "#72d1c4",
-    meaning: "Porta alla scheda missione collegata.",
+    meaning:
+      "Apre il dettaglio della missione per la tua specializzazione, mostrando prima tutte le missioni associate alla stazione.",
   },
   {
     label: "Crea missione dalla stazione",
@@ -956,8 +988,9 @@ export async function GuideContent({
                 sistema.
               </li>
               <li>
-                Se la missione esiste già, un&apos;icona apre le missioni collegate; se è di un altro membro compare
-                l&apos;icona «+» barrata.
+                Se la missione esiste già, un&apos;icona apre il dettaglio della missione per la tua specializzazione,
+                con le missioni associate alla stazione come primo blocco; se è di un altro membro compare l&apos;icona
+                «+» barrata.
               </li>
             </ul>
             <h5>Esempi di card</h5>
@@ -1163,7 +1196,7 @@ export async function GuideContent({
               <li>
                 Il punto d&apos;incontro parte da «Offline». Puoi scegliere «Da concordare nelle risposte», l&apos;hub
                 dell&apos;alleanza (se configurato) o una stazione. Scrivi nei campi per cercare; il link alla stazione
-                apre la pagina Stazioni.
+                apre la scheda della stazione.
               </li>
               <li>
                 Puoi rispondere per organizzare il viaggio e cancellare le tue richieste o risposte. Moderatori e admin
@@ -1172,6 +1205,12 @@ export async function GuideContent({
               <li>
                 Eliminando una richiesta, elimini tutte le sue risposte. Le richieste taxi non compaiono nei messaggi
                 privati o nelle Richieste d&apos;aiuto.
+              </li>
+              <li>
+                Nei tab «In corso» e «Archiviati», l&apos;autore della richiesta e i moderatori/admin possono archiviare
+                o ripristinare l&apos;intera conversazione. In vista semplice valgono i permessi da utente. Gli
+                archiviati partono chiusi: la freccia mostra messaggio e risposte. Non puoi rispondere finché la
+                richiesta non viene ripristinata. Il contatore nel menu include solo le richieste in corso.
               </li>
             </ul>
             <TaxiExamples />
@@ -1211,7 +1250,13 @@ export async function GuideContent({
                 Ogni richiesta mostra chi l&apos;ha inviata e il contenuto, con eventuali collegamenti al pianeta e alla
                 missione.
               </li>
-              <li>Puoi rispondere alle richieste; le risposte compaiono sotto quella originale.</li>
+              <li>Puoi rispondere alle richieste in corso; le risposte compaiono sotto quella originale.</li>
+              <li>
+                Come nel Servizio taxi, i tab «In corso» e «Archiviati» separano le conversazioni aperte da quelle
+                archiviate. L&apos;autore della richiesta e i moderatori/admin possono archiviare e ripristinare (in
+                vista semplice valgono i permessi da utente). Gli archiviati partono chiusi e non accettano nuove
+                risposte fino al ripristino. Il contatore nel menu include solo le richieste in corso.
+              </li>
               <li>Clicca il nome dell&apos;autore di una richiesta o risposta per consultarne la scheda NMS.</li>
               <li>
                 Puoi eliminare le tue richieste e risposte; moderatori e admin possono eliminare anche quelle degli

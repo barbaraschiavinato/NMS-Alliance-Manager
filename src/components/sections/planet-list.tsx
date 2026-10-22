@@ -1,7 +1,7 @@
 "use client";
 
 import { type CSSProperties } from "react";
-import Link from "next/link";
+import { DetailLink as Link } from "@/components/shared/detail-page";
 import { AlertTriangle, Orbit, Skull } from "lucide-react";
 import { galaxyLabel } from "@/lib/galaxies";
 import {
@@ -10,6 +10,7 @@ import {
   type PlanetDestination,
 } from "@/components/cards/planet-destination-card";
 import { useLocale } from "@/components/providers/locale-provider";
+import { stationDetailHref } from "@/lib/detail-links";
 
 const raceIcons: Record<string, string> = {
   Gek: "/icons/nms-gek.svg",
@@ -21,10 +22,12 @@ export function PlanetStationHeading({
   station,
   planets,
   renderedAt,
+  showStationLink = true,
 }: Readonly<{
   station: PlanetDestination["station"];
   planets: readonly PlanetDestination[];
   renderedAt: number;
+  showStationLink?: boolean;
 }>) {
   const { t, tv } = useLocale();
   const createdTime = station?.createdAt ? Date.parse(station.createdAt) : Number.NaN;
@@ -115,14 +118,14 @@ export function PlanetStationHeading({
           </div>
         )}
       </div>
-      {station && (
+      {station && showStationLink && (
         <Link
           aria-label={t("planet.open_station_in_stations", { station: station.name || station.portal })}
           className={`member-icon-action member-station-filter planet-station-link${
             station.canCreateMission ? " station-create-mission-pulse" : ""
           }`}
           data-tooltip={t("planet.open_station_in_stations", { station: station.name || station.portal })}
-          href={`/stations?search=${encodeURIComponent(station.portal)}`}
+          href={stationDetailHref(station.id, "planets")}
         >
           <Orbit aria-hidden="true" size={15} />
         </Link>
@@ -135,10 +138,12 @@ export function PlanetList({
   groups,
   renderedAt,
   onOpen,
+  showStationLink = true,
 }: Readonly<{
   renderedAt: number;
   groups: { station: PlanetDestination["station"]; planets: PlanetDestination[] }[];
   onOpen: (planet: PlanetDestination) => void;
+  showStationLink?: boolean;
 }>) {
   return (
     <div className="planet-station-groups">
@@ -147,7 +152,12 @@ export function PlanetList({
           className="planet-station-group"
           key={`${groupPlanets[0].galaxy}:${groupPlanets[0].planetPortal.slice(1).toUpperCase()}`}
         >
-          <PlanetStationHeading planets={groupPlanets} renderedAt={renderedAt} station={station} />
+          <PlanetStationHeading
+            planets={groupPlanets}
+            renderedAt={renderedAt}
+            station={station}
+            showStationLink={showStationLink}
+          />
           <div className="planet-mission-list">
             {groupPlanets.map((planet) => (
               <PlanetDestinationCard key={planet.id} onOpen={onOpen} planet={planet} />

@@ -2,6 +2,12 @@
 .section-heading h2 { font-family: var(--font-accent); font-weight: 700; letter-spacing: .148em; text-transform: uppercase; }
 .eyebrow, .table-footer { font-family: "SFMono-Regular", Consolas, monospace; font-size: 9px; font-weight: 600; letter-spacing: .8px; }
 .main-panel { min-width: 0; flex: 1; }
+.detail-back-link { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 20px; color: var(--lime); text-decoration: none; }
+.detail-back-link:hover { text-decoration: underline; }
+.detail-section { min-width: 0; margin-bottom: 32px; padding: 20px; border: 1px solid #394548; border-radius: 8px; background: #171e21; }
+.detail-section > h2 { margin: 0 0 20px; font-size: 20px; color: #e0e5e0; }
+.detail-section .sticky-list-controls { position: static; }
+.detail-section .station-list-cards { grid-template-columns: minmax(0, 1fr); }
 .content-wrap { width: min(1240px, 100%); margin: 0 auto; padding: 27px 40px 20px; }
 .eyebrow { display: flex; align-items: center; gap: 9px; color: #cad8ca; font-size: 8px; letter-spacing: 1px; }
 .primary-button { height: 37px; position: relative; z-index: 2; display: inline-flex; align-items: center; justify-content: center; gap: 9px; padding: 0 13px; color: #213329; border: 0; background: var(--lime); cursor: pointer; font-size: 10px; font-weight: 700; }
@@ -48,7 +54,6 @@
 .row-action-builder { color: #ffb45d; }
 .row-action-delete { color: #a34f43; }
 .row-action-delete:hover, .delete-member:hover { color: #ef8067; }
-.no-row-action { color: #89948c; }
 .empty-state { height: 100px !important; color: #89948c !important; text-align: center; }
 .empty-state svg { margin-right: 8px; vertical-align: middle; }
 .table-footer { min-height: 38px; display: flex; align-items: center; justify-content: space-between; color: #969f97; font-size: 7px; letter-spacing: .45px; }

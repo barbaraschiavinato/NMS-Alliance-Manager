@@ -2,7 +2,13 @@ import { NextResponse } from "next/server";
 import { getCurrentMember, hasRole } from "@/lib/authorization";
 import { readAccessData } from "@/lib/access-store";
 import { decodePortalAddress } from "@/lib/missions";
-import { deleteHelpRequest, readHelpRequests, saveHelpReply, saveHelpRequest } from "@/lib/private-messages-store";
+import {
+  deleteHelpRequest,
+  readHelpRequests,
+  saveHelpReply,
+  saveHelpRequest,
+  setHelpRequestArchived,
+} from "@/lib/private-messages-store";
 import type { BroadcastKind } from "@/lib/private-messages-store";
 import { readAllStationPortals } from "@/lib/stations-store";
 import { galaxyLabel } from "@/lib/galaxies";
@@ -17,7 +23,7 @@ export function createBroadcastRequestHandlers(kind: BroadcastKind) {
 
     try {
       if (new URL(request.url).searchParams.has("count")) {
-        const count = (await readHelpRequests(kind)).filter((entry) => !entry.replyToId).length;
+        const count = (await readHelpRequests(kind)).filter((entry) => !entry.replyToId && !entry.archived).length;
         return NextResponse.json({ count }, { headers: { "Cache-Control": "no-store" } });
       }
       const [requests, accessData] = await Promise.all([readHelpRequests(kind), readAccessData()]);
@@ -35,6 +41,7 @@ export function createBroadcastRequestHandlers(kind: BroadcastKind) {
           meetingPoint: entry.meetingPoint,
           missionCode: entry.missionCode,
           createdAt: entry.createdAt,
+          ...(entry.archived !== undefined ? { archived: entry.archived } : {}),
           senderName: sender?.nmsName || "Former member",
         };
       };
@@ -71,6 +78,9 @@ export function createBroadcastRequestHandlers(kind: BroadcastKind) {
       if (message.length > 2000) return NextResponse.json({ error: "profile.message_text_too_long" }, { status: 400 });
       try {
         const saved = await saveHelpReply(member.publicId, message, replyToId, kind);
+        if (saved === "archived") {
+          return NextResponse.json({ error: "broadcast.archived_read_only" }, { status: 409 });
+        }
         if (!saved) return NextResponse.json({ error: errorKey("request_not_found") }, { status: 404 });
         return NextResponse.json({ ok: true }, { status: 201 });
       } catch (error) {
@@ -179,5 +189,35 @@ export function createBroadcastRequestHandlers(kind: BroadcastKind) {
       return NextResponse.json({ error: errorKey("request_unable_to_delete") }, { status: 503 });
     }
   }
-  return { GET, POST, DELETE };
+  async function PATCH(request: Request) {
+    const member = await getCurrentMember();
+    if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
+    const body: unknown = await request.json().catch(() => null);
+    if (
+      !body ||
+      typeof body !== "object" ||
+      !("id" in body) ||
+      typeof body.id !== "string" ||
+      !body.id.trim() ||
+      !("archived" in body) ||
+      typeof body.archived !== "boolean"
+    ) {
+      return NextResponse.json({ error: errorKey("request_invalid") }, { status: 400 });
+    }
+    try {
+      const existing = (await readHelpRequests(kind)).find((entry) => entry.id === body.id && !entry.replyToId);
+      if (!existing) return NextResponse.json({ error: errorKey("request_not_found") }, { status: 404 });
+      if (existing.senderMemberId !== member.publicId && !hasRole(member, "moderator")) {
+        return NextResponse.json({ error: "broadcast.archive_not_allowed" }, { status: 403 });
+      }
+      if (!(await setHelpRequestArchived(existing.id, body.archived, kind))) {
+        return NextResponse.json({ error: errorKey("request_not_found") }, { status: 404 });
+      }
+      return NextResponse.json({ ok: true });
+    } catch (error) {
+      console.error(`Unable to update ${kind} request archive status`, error);
+      return NextResponse.json({ error: "broadcast.archive_failed" }, { status: 503 });
+    }
+  }
+  return { GET, POST, DELETE, PATCH };
 }

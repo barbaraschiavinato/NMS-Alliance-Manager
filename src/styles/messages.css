@@ -15,9 +15,13 @@
 .message-card-main-heading { display: flex; min-width: 0; flex-direction: column; align-items: flex-start; gap: 4px; }
 .message-card-subject { display: flex; min-width: 0; align-items: center; gap: 8px; }
 .message-card-tools { display: flex; flex: 0 0 auto; align-items: center; justify-content: flex-end; gap: 8px; margin-left: auto; }
+.message-card-tools .member-icon-action.delete-member { color: #ef8067; }
+.message-card-tools .member-icon-action.delete-member:hover:not(:disabled) { border-color: #ef8067; background: #3a2724; }
 .message-subject-link { position: relative; flex: 0 0 29px; color: var(--lime); }
-.message-subject-link[data-tooltip]::after { position: absolute; z-index: 30; right: 0; bottom: calc(100% + 7px); padding: 6px 8px; color: #f1eee7; border: 1px solid #394548; border-radius: 3px; background: #111719; box-shadow: 0 4px 14px #0008; content: attr(data-tooltip); font-size: 9px; font-weight: 500; line-height: 1.2; opacity: 0; pointer-events: none; text-transform: none; transform: translateY(3px); transition: opacity .12s, transform .12s; white-space: nowrap; }
-.message-subject-link[data-tooltip]:hover::after, .message-subject-link[data-tooltip]:focus-visible::after { opacity: 1; transform: translateY(0); }
+.message-card .member-icon-action[data-tooltip] { position: relative; }
+.message-card .member-icon-action[data-tooltip]::after { position: absolute; z-index: 30; right: 0; bottom: calc(100% + 7px); padding: 6px 8px; color: #f1eee7; border: 1px solid #394548; border-radius: 3px; background: #111719; box-shadow: 0 4px 14px #0008; content: attr(data-tooltip); font-size: 9px; font-weight: 500; line-height: 1.2; opacity: 0; pointer-events: none; text-transform: none; transform: translateY(3px); transition: opacity .12s, transform .12s; white-space: nowrap; }
+.message-card .member-icon-action[data-tooltip]:hover::after, .message-card .member-icon-action[data-tooltip]:focus-visible::after { opacity: 1; transform: translateY(0); }
+.message-card .message-thread-toggle[data-tooltip]::after, .message-reply-actions .delete-member[data-tooltip]::after { right: auto; left: 0; }
 .message-subject-type { color: var(--lime); font-family: var(--font-accent); font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
 .message-card-heading h2 { min-width: 0; margin: 0; color: var(--ink); font-family: var(--font-accent); font-size: 14px; font-weight: 700; overflow-wrap: anywhere; }
 .message-participants, .message-reference { margin: 0; color: #a4adae; font-size: 9px; line-height: 1.5; overflow-wrap: anywhere; }

@@ -13,7 +13,7 @@ export function MessageCard({
   participants,
   createdAt,
   formattedDate,
-  toolsBefore,
+  toolsAfterDate,
   onDelete,
   deleteLabel,
   deleting,
@@ -23,6 +23,7 @@ export function MessageCard({
   onReply,
   form,
   thread,
+  disclosure,
 }: Readonly<{
   unread?: boolean;
   subjectActions?: ReactNode;
@@ -31,7 +32,7 @@ export function MessageCard({
   participants: ReactNode;
   createdAt: string;
   formattedDate: string;
-  toolsBefore?: ReactNode;
+  toolsAfterDate?: ReactNode;
   onDelete?: () => void;
   deleteLabel: string;
   deleting?: boolean;
@@ -41,6 +42,7 @@ export function MessageCard({
   onReply?: () => void;
   form?: ReactNode;
   thread?: ReactNode;
+  disclosure?: Readonly<{ collapsed: boolean; onToggle: () => void }>;
 }>) {
   const { t } = useLocale();
   const toggleLabel = toggle
@@ -53,6 +55,18 @@ export function MessageCard({
         <div className="message-card-heading">
           <div className="message-card-main-heading">
             <div className="message-card-subject">
+              {disclosure && (
+                <button
+                  aria-expanded={!disclosure.collapsed}
+                  aria-label={t(disclosure.collapsed ? "broadcast.expand" : "broadcast.collapse")}
+                  className="member-icon-action"
+                  data-tooltip={t(disclosure.collapsed ? "broadcast.expand" : "broadcast.collapse")}
+                  onClick={disclosure.onToggle}
+                  type="button"
+                >
+                  {disclosure.collapsed ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
+                </button>
+              )}
               {subjectActions}
               {title !== undefined && <h2>{title}</h2>}
               {titleDetails}
@@ -60,12 +74,13 @@ export function MessageCard({
             <p className="message-participants">{participants}</p>
           </div>
           <div className="message-card-tools">
-            {toolsBefore}
             <time dateTime={createdAt}>{formattedDate}</time>
+            {toolsAfterDate}
             {onDelete && (
               <button
                 aria-label={deleteLabel}
                 className="member-icon-action delete-member"
+                data-tooltip={deleteLabel}
                 disabled={deleting}
                 onClick={onDelete}
                 title={deleteLabel}
@@ -76,35 +91,41 @@ export function MessageCard({
             )}
           </div>
         </div>
-        <p className="message-body">{body}</p>
-        {replies}
-        <div className="message-card-actions">
-          {toggle && (
-            <button
-              aria-expanded={!toggle.collapsed}
-              aria-label={toggleLabel}
-              className="member-icon-action message-thread-toggle"
-              onClick={toggle.onToggle}
-              title={toggleLabel}
-              type="button"
-            >
-              {toggle.collapsed ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
-              <span className="thread-count">{toggle.count}</span>
-            </button>
-          )}
-          {onReply && (
-            <button
-              aria-label={t("messages.reply")}
-              className="member-icon-action message-reply-button"
-              onClick={onReply}
-              title={t("messages.reply")}
-              type="button"
-            >
-              <Reply size={14} />
-            </button>
-          )}
-        </div>
-        {form}
+        {!disclosure?.collapsed && (
+          <>
+            <p className="message-body">{body}</p>
+            {replies}
+            <div className="message-card-actions">
+              {toggle && (
+                <button
+                  aria-expanded={!toggle.collapsed}
+                  aria-label={toggleLabel}
+                  className="member-icon-action message-thread-toggle"
+                  data-tooltip={toggleLabel}
+                  onClick={toggle.onToggle}
+                  title={toggleLabel}
+                  type="button"
+                >
+                  {toggle.collapsed ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
+                  <span className="thread-count">{toggle.count}</span>
+                </button>
+              )}
+              {onReply && (
+                <button
+                  aria-label={t("messages.reply")}
+                  className="member-icon-action message-reply-button"
+                  data-tooltip={t("messages.reply")}
+                  onClick={onReply}
+                  title={t("messages.reply")}
+                  type="button"
+                >
+                  <Reply size={14} />
+                </button>
+              )}
+            </div>
+            {form}
+          </>
+        )}
       </article>
       {thread}
     </li>
@@ -170,6 +191,7 @@ export function MessageReplyForm({
         <button
           aria-label={t("common.cancel")}
           className="member-icon-action delete-member"
+          data-tooltip={t("common.cancel")}
           onClick={onCancel}
           title={t("common.cancel")}
           type="button"
@@ -179,6 +201,7 @@ export function MessageReplyForm({
         <button
           aria-label={t("messages.send_reply")}
           className="member-icon-action reply-submit"
+          data-tooltip={t("messages.send_reply")}
           disabled={sending || !value.trim() || !acknowledged}
           title={t("messages.send_reply")}
           type="submit"

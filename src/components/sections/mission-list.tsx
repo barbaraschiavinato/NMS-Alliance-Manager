@@ -12,6 +12,7 @@ import { useLocale } from "@/components/providers/locale-provider";
 import type { StationOwnerOption } from "@/components/modals/mission-form";
 import { Pagination, usePagination } from "@/components/shared/pagination";
 import { listPageSize } from "@/lib/pagination";
+import type { DetailOrigin } from "@/lib/detail-links";
 
 export type MissionFilter = "all" | MissionStatus | "pending_assigned" | "pending_unassigned";
 type MissionCounts = Record<MissionFilter, number>;
@@ -52,6 +53,11 @@ export function MissionList({
   members,
   planetStatuses,
   loading = false,
+  compact = false,
+  assigneeActionsOnly = false,
+  fullWidth = false,
+  detailMissionId,
+  detailOrigin,
 }: Readonly<{
   missions: Mission[];
   counts: MissionCounts;
@@ -80,6 +86,11 @@ export function MissionList({
   members: AllianceMember[];
   planetStatuses: PlanetSystemStatuses;
   loading?: boolean;
+  compact?: boolean;
+  assigneeActionsOnly?: boolean;
+  fullWidth?: boolean;
+  detailMissionId?: string;
+  detailOrigin?: DetailOrigin;
 }>) {
   const { t } = useLocale();
   const pagination = usePagination(missions, listPageSize, JSON.stringify([filter, search, showAll]));
@@ -140,47 +151,52 @@ export function MissionList({
 
   return (
     <section className="mission-section">
-      <div className="toolbar sticky-list-controls">
-        <Tabs
-          items={(["all", "in_progress", "pending_assigned", "pending_unassigned", "completed"] as MissionFilter[])
-            .filter((item) => item === "all" || item === filter || counts[item] > 0)
-            .map((item) => ({
-              key: item,
-              label: t(missionFilterLabels[item]),
-              count: counts[item],
-              selected: filter === item,
-              onSelect: () => onFilterChange(item),
-            }))}
-          label={t("common.filter_by_status")}
-        />
-        <div className="toolbar-actions mission-toolbar-actions">
-          <label className="search-field">
-            <Search size={15} />
-            <input
-              aria-label={t("planet.search_missions_planets_users_or_mission_type")}
-              onChange={(event) => onSearchChange(event.target.value)}
-              placeholder={t("members.search_missions_users_or_type")}
-              ref={searchInput}
-              value={search}
-            />
-          </label>
-          {onScopeChange && (
-            <button
-              aria-label={t(showAll ? "missions.showing_all" : "missions.showing_mine")}
-              aria-pressed={showAll}
-              className={showAll ? "member-icon-action scope-toggle selected" : "member-icon-action scope-toggle"}
-              data-tooltip={t(showAll ? "missions.showing_all" : "missions.showing_mine")}
-              onClick={() => onScopeChange(!showAll)}
-              type="button"
-            >
-              {showAll ? <Eye size={15} /> : <EyeOff size={15} />}
-            </button>
-          )}
+      {!compact && (
+        <div className="toolbar sticky-list-controls">
+          <Tabs
+            items={(["all", "in_progress", "pending_assigned", "pending_unassigned", "completed"] as MissionFilter[])
+              .filter((item) => item === "all" || item === filter || counts[item] > 0)
+              .map((item) => ({
+                key: item,
+                label: t(missionFilterLabels[item]),
+                count: counts[item],
+                selected: filter === item,
+                onSelect: () => onFilterChange(item),
+              }))}
+            label={t("common.filter_by_status")}
+          />
+          <div className="toolbar-actions mission-toolbar-actions">
+            <label className="search-field">
+              <Search size={15} />
+              <input
+                aria-label={t("planet.search_missions_planets_users_or_mission_type")}
+                onChange={(event) => onSearchChange(event.target.value)}
+                placeholder={t("members.search_missions_users_or_type")}
+                ref={searchInput}
+                value={search}
+              />
+            </label>
+            {onScopeChange && (
+              <button
+                aria-label={t(showAll ? "missions.showing_all" : "missions.showing_mine")}
+                aria-pressed={showAll}
+                className={showAll ? "member-icon-action scope-toggle selected" : "member-icon-action scope-toggle"}
+                data-tooltip={t(showAll ? "missions.showing_all" : "missions.showing_mine")}
+                onClick={() => onScopeChange(!showAll)}
+                type="button"
+              >
+                {showAll ? <Eye size={15} /> : <EyeOff size={15} />}
+              </button>
+            )}
+          </div>
         </div>
-      </div>
-      <div className="mission-card-grid">
-        {pagination.items.map((mission) => (
+      )}
+      <div className={`mission-card-grid${fullWidth ? " mission-card-grid-full-width" : ""}`}>
+        {(compact ? missions : pagination.items).map((mission) => (
           <MissionCard
+            hideDetailLink={mission.id === detailMissionId}
+            detailOrigin={detailOrigin}
+            assigneeActionsOnly={assigneeActionsOnly}
             requestedSpecialty={requestedSpecialty}
             canManage={canManage}
             stationOwners={stationOwners}
@@ -215,8 +231,8 @@ export function MissionList({
           <p className="mission-cards-empty">{t("missions.no_missions_match_the_filters")}</p>
         )}
       </div>
-      <Pagination {...pagination} />
-      {!simpleView && (
+      {!compact && <Pagination {...pagination} />}
+      {!compact && !simpleView && (
         <div className="table-footer">
           <span>
             <span className="footer-live" />

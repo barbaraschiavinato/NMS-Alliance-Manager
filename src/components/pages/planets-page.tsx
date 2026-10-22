@@ -61,6 +61,7 @@ export function PlanetsPage({
   stationCount,
   offlineCount,
   userCount,
+  embedded = false,
 }: Readonly<{
   alliance: AllianceSettings;
   currentMember: AllianceMember;
@@ -70,12 +71,13 @@ export function PlanetsPage({
   stationCount: number;
   offlineCount?: number;
   userCount?: number;
+  embedded?: boolean;
 }>) {
   const { t, systemLabel } = useLocale();
   const [renderedAt] = useState(() => Date.now());
   useEffect(() => {
-    if (!almanacLookupFailed) storePlanetCount(planets.length);
-  }, [almanacLookupFailed, planets.length]);
+    if (!embedded && !almanacLookupFailed) storePlanetCount(planets.length);
+  }, [almanacLookupFailed, embedded, planets.length]);
   const [pageMember, setPageMember] = useState(currentMember);
   const [allianceSettings, setAllianceSettings] = useState(alliance);
   const [adminOpen, setAdminOpen] = useState(false);
@@ -212,47 +214,60 @@ export function PlanetsPage({
   const resetFilters = () => setFilters(emptyPlanetFilterValues);
   const hasActiveCriteria = Boolean(searchQuery || hasActiveFilters);
 
+  const Content = embedded ? "div" : "main";
   return (
-    <div className={`app-shell${pageMember.pulseEffectsEnabled === false ? " pulse-effects-disabled" : ""}`}>
-      <Sidebar
-        activeSection="pianeti"
-        currentMember={pageMember}
-        missionCount={missionCount}
-        stationCount={stationCount}
-        planetCount={planets.length}
-        offlineCount={offlineCount}
-        userCount={userCount}
-        settings={allianceSettings}
-      />
-      <section className="main-panel">
-        <Header
+    <div
+      className={
+        embedded ? undefined : `app-shell${pageMember.pulseEffectsEnabled === false ? " pulse-effects-disabled" : ""}`
+      }
+    >
+      {!embedded && (
+        <Sidebar
+          activeSection="pianeti"
           currentMember={pageMember}
-          onAdminOpen={() => setAdminOpen(true)}
-          onProfileOpen={() => setProfileOpen(true)}
-          onProfileSaved={(profile) => setPageMember((current) => ({ ...current, ...profile }))}
-          sectionTitle="navigation.planets"
+          missionCount={missionCount}
+          stationCount={stationCount}
+          planetCount={planets.length}
+          offlineCount={offlineCount}
+          userCount={userCount}
           settings={allianceSettings}
         />
-        <Hero
-          settings={allianceSettings}
-          subtitle={t("planet.missions_planets_description")}
-          title={t("navigation.planets")}
-        />
-        <main className="content-wrap planets-page">
-          {almanacLookupFailed && <p className="form-error">{t("planet.almanac_partial_lookup_failed")}</p>}
-          <div className="planet-sticky-filters">
-            <PlanetFilters
-              hasActiveFilters={hasActiveFilters}
-              onChange={updateFilter}
-              onSearchChange={setSearch}
-              onToggle={() => setFiltersOpen((open) => !open)}
-              open={filtersOpen}
-              options={filterOptions}
-              search={search}
-              values={filters}
+      )}
+      <section className={embedded ? undefined : "main-panel"}>
+        {!embedded && (
+          <>
+            <Header
+              currentMember={pageMember}
+              onAdminOpen={() => setAdminOpen(true)}
+              onProfileOpen={() => setProfileOpen(true)}
+              onProfileSaved={(profile) => setPageMember((current) => ({ ...current, ...profile }))}
+              sectionTitle="navigation.planets"
+              settings={allianceSettings}
             />
-            <PlanetActiveFilters onChange={updateFilter} onReset={resetFilters} values={filters} />
-          </div>
+            <Hero
+              settings={allianceSettings}
+              subtitle={t("planet.missions_planets_description")}
+              title={t("navigation.planets")}
+            />
+          </>
+        )}
+        <Content className={embedded ? "planets-page" : "content-wrap planets-page"}>
+          {almanacLookupFailed && <p className="form-error">{t("planet.almanac_partial_lookup_failed")}</p>}
+          {!embedded && (
+            <div className="planet-sticky-filters">
+              <PlanetFilters
+                hasActiveFilters={hasActiveFilters}
+                onChange={updateFilter}
+                onSearchChange={setSearch}
+                onToggle={() => setFiltersOpen((open) => !open)}
+                open={filtersOpen}
+                options={filterOptions}
+                search={search}
+                values={filters}
+              />
+              <PlanetActiveFilters onChange={updateFilter} onReset={resetFilters} values={filters} />
+            </div>
+          )}
           {filteredPlanets.length === 0 ? (
             <p className="station-list-empty">
               {t(
@@ -266,10 +281,15 @@ export function PlanetsPage({
               )}
             </p>
           ) : (
-            <PlanetList renderedAt={renderedAt} groups={pagination.items} onOpen={setSelectedPlanet} />
+            <PlanetList
+              renderedAt={renderedAt}
+              groups={pagination.items}
+              onOpen={setSelectedPlanet}
+              showStationLink={!embedded}
+            />
           )}
           <Pagination {...pagination} />
-        </main>
+        </Content>
       </section>
       {selectedPlanet && (
         <PlanetCard

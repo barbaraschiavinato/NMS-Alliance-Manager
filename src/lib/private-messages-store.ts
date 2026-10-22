@@ -27,6 +27,7 @@ export type PrivateMessage = Readonly<{
   planetNumber?: number;
   missionCode?: string;
   unread?: boolean;
+  archived?: boolean;
   createdAt: string;
 }>;
 
@@ -94,6 +95,7 @@ function parseMessages(value: unknown): StoredPrivateMessage[] {
           message.planetNumber > 6)) ||
       (message.missionCode !== undefined && typeof message.missionCode !== "string") ||
       (message.unread !== undefined && typeof message.unread !== "boolean") ||
+      (message.archived !== undefined && typeof message.archived !== "boolean") ||
       typeof message.createdAt !== "string"
     ) {
       throw new Error("Invalid private message in storage.");
@@ -156,17 +158,33 @@ export async function deleteHelpRequest(requestId: string, kind: BroadcastKind =
   return true;
 }
 
+export async function setHelpRequestArchived(
+  requestId: string,
+  archived: boolean,
+  kind: BroadcastKind,
+): Promise<boolean> {
+  const messages = await readMessages();
+  const index = messages.findIndex(
+    (message) => message.id === requestId && message.subjectType === kind && !message.replyToId,
+  );
+  if (index < 0) return false;
+  messages[index] = { ...messages[index], archived };
+  await writeMessages(messages);
+  return true;
+}
+
 export async function saveHelpReply(
   senderMemberId: string,
   body: string,
   requestId: string,
   kind: BroadcastKind = "help",
-): Promise<boolean> {
+): Promise<boolean | "archived"> {
   const messages = await readMessages();
   const request = messages.find(
     (message) => message.id === requestId && message.subjectType === kind && !message.replyToId,
   );
   if (!request) return false;
+  if (request.archived) return "archived";
   messages.push({
     id: randomUUID(),
     threadId: request.id,

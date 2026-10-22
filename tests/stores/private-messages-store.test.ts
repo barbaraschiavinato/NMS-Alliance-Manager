@@ -229,6 +229,21 @@ describe("legacy email migration", () => {
 });
 
 describe("help requests", () => {
+  it("rejects invalid archive flags", async () => {
+    writeDataFile(fileName, [help({ archived: "true" })]);
+    await expect((await load()).readPrivateMessages()).rejects.toThrow("Invalid private message in storage.");
+  });
+
+  it("only archives roots of the requested broadcast kind", async () => {
+    writeDataFile(fileName, [help(), help({ id: "reply", replyToId: "h1" }), message()]);
+    const { setHelpRequestArchived, readPrivateMessages } = await load();
+    for (const id of ["missing", "reply", "m1"]) {
+      expect(await setHelpRequestArchived(id, true, "help")).toBe(false);
+    }
+    expect(await setHelpRequestArchived("h1", true, "taxi")).toBe(false);
+    expect(await setHelpRequestArchived("h1", true, "help")).toBe(true);
+    expect((await readPrivateMessages())[0].archived).toBe(true);
+  });
   it("saves a help request with a new thread", async () => {
     const { saveHelpRequest, readHelpRequests } = await load();
     await saveHelpRequest(" sender ", "body", { subject: "Need help", portal: "0123456789AB", galaxy: 2 });

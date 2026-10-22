@@ -61,9 +61,9 @@
 .member-card-details .guide-friend-code-highlight dd { color: #fff; font-size: 20px; font-weight: 700; letter-spacing: .05em; }
 .guide-message-composer-examples .mission-dialog { width: 100%; margin: 0; }
 .guide-message-form-example .member-message-form .field textarea { min-height: 80px; }
-.guide-validation-examples { max-width: 560px; grid-template-columns: minmax(0, 1fr); }
 .guide-example { margin: 0; }
 .guide-add-station-button-example { margin-bottom: 16px; }
+.guide-root .guide-page .banner-add { position: relative; inset: auto; }
 .guide-example figcaption { margin-bottom: 6px; color: #d0d4d0; font-size: 13px; }
 .guide-examples .planet-mission-list { grid-template-columns: minmax(0, 1fr); }
 .guide-example .station-list-cards { display: block; margin-top: 0; }

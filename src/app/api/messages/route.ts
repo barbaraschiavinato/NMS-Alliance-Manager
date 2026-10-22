@@ -9,7 +9,8 @@ import {
   readPrivateMessages,
   savePrivateMessage,
 } from "@/lib/private-messages-store";
-import { readStationPortals } from "@/lib/stations-store";
+import { readAllStationPortals, readStationPortals } from "@/lib/stations-store";
+import { isSameSystem, stationDetailHref } from "@/lib/detail-links";
 import { readMissions } from "@/lib/store";
 import { isEmailAddress } from "@/lib/member-types";
 
@@ -48,13 +49,27 @@ export async function GET(request: Request) {
         (wantsAll || message.senderMemberId === member.publicId || message.recipientMemberId === member.publicId),
     );
     const membersById = new Map(accessData.members.map((profile) => [profile.publicId, profile]));
+    const stations = visibleMessages.some((message) => message.subjectType === "planet")
+      ? hasRole(member, "moderator") ||
+        member.specialty === "ranger" ||
+        member.specialty === "explorer" ||
+        member.specialty === "builder"
+        ? await readAllStationPortals()
+        : (await readStationPortals(member.publicId)).map((station) => ({ ...station, ownerId: member.publicId }))
+      : [];
     const responseMessages = visibleMessages
       .toSorted((left, right) => right.createdAt.localeCompare(left.createdAt))
       .map((message) => {
         const sender = message.senderMemberId ? membersById.get(message.senderMemberId) : undefined;
         const recipient = message.recipientMemberId ? membersById.get(message.recipientMemberId) : undefined;
+        const identity =
+          message.subjectType === "planet" && message.portal !== undefined && message.galaxy !== undefined
+            ? { portal: message.portal, galaxy: message.galaxy }
+            : null;
+        const station = identity ? stations.find((entry) => isSameSystem(entry, identity)) : undefined;
         return {
           ...message,
+          ...(station ? { stationHref: stationDetailHref(station, "messages") } : {}),
           senderName: [sender?.nmsName, sender?.name].find((name) => name && !isEmailAddress(name)) || "Former member",
           recipientName:
             [recipient?.nmsName, recipient?.name].find((name) => name && !isEmailAddress(name)) || "Former member",

@@ -102,6 +102,22 @@ afterEach(() => {
 });
 
 describe("PlanetsPage", () => {
+  it("renders an embedded system without page chrome or changing the global planet counter", () => {
+    mockFetch({});
+    window.localStorage.setItem("nms-planet-count", "123");
+    const before = { ...window.localStorage };
+    const { container } = renderPlanets({ embedded: true });
+    expect(screen.getByRole("heading", { name: "Home Base" })).toBeInTheDocument();
+    expect(screen.getByText("Verdant")).toBeInTheDocument();
+    expect(container.querySelector(".app-shell")).toBeNull();
+    expect(container.querySelector("main")).toBeNull();
+    expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: t("planet.open_station_in_stations", { station: "Home Base" }) }),
+    ).not.toBeInTheDocument();
+    expect({ ...window.localStorage }).toEqual(before);
+  });
+
   it("paginates 20 systems without splitting their planets and searches across all pages", async () => {
     mockFetch({});
     const planets = Array.from({ length: 21 }, (_, index) => {
@@ -142,7 +158,7 @@ describe("PlanetsPage", () => {
     expect(screen.getByRole("img", { name: t("planet.black_market") })).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: t("planet.open_station_in_stations", { station: "Home Base" }) }),
-    ).toHaveAttribute("href", "/stations?search=1234567890AB");
+    ).toHaveAttribute("href", "/stations/me%3A1234567890AB%3A0?from=planets");
     expect(
       screen.getByRole("link", { name: t("planet.open_station_in_stations", { station: "Home Base" }) }),
     ).not.toHaveClass("station-create-mission-pulse");

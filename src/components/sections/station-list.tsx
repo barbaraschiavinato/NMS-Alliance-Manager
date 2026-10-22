@@ -12,6 +12,7 @@ import { type MissionSystemStatus, type PlanetSystemStatuses } from "@/lib/plane
 import { useLocale } from "@/components/providers/locale-provider";
 import { Pagination, usePagination } from "@/components/shared/pagination";
 import { listPageSize } from "@/lib/pagination";
+import { isSameSystem } from "@/lib/detail-links";
 
 export function StationList({
   stations,
@@ -43,6 +44,9 @@ export function StationList({
   onEdit,
   onRemove,
   onViewNote,
+  compact = false,
+  showDetailLink = !compact,
+  allianceHub,
 }: Readonly<{
   stations: StationEntry[];
   visibleStations: StationEntry[];
@@ -73,6 +77,9 @@ export function StationList({
   onEdit: (station: StationEntry) => void;
   onRemove: (station: StationEntry) => void;
   onViewNote: (station: StationEntry) => void;
+  compact?: boolean;
+  showDetailLink?: boolean;
+  allianceHub?: Readonly<{ portal: string; galaxy: number }>;
 }>) {
   const { t } = useLocale();
   const pagination = usePagination(
@@ -82,85 +89,89 @@ export function StationList({
   );
   return (
     <section aria-label={t("stations.my_space_stations")} className="station-list-section">
-      <div className="toolbar members-toolbar station-toolbar sticky-list-controls">
-        <Tabs
-          className="member-filter-tabs"
-          items={[
-            {
-              key: "all",
-              label: t("stations.filter_all"),
-              count: stationCounts.all,
-              selected: activeStationTab === "all" && stationFilter === "all",
-              onSelect: () => {
-                onTabChange("all");
-                onFilterChange("all");
-              },
-            },
-            ...(canChooseStationView
-              ? [
-                  {
-                    key: "mine",
-                    label: t("stations.my_stations"),
-                    count: ownStationCount,
-                    selected: activeStationTab === "mine",
-                    onSelect: () => onTabChange("mine"),
-                  },
-                ]
-              : []),
-            ...visibleStationFilters
-              .filter((status) => status !== "all")
-              .map((status) => ({
-                key: status,
-                label: t(
-                  status === "pending"
-                    ? "common.pending_status_label"
-                    : status === "in_progress"
-                      ? "stations.filter_in_mission"
-                      : status === "my_missions"
-                        ? "stations.filter_my_missions"
-                        : status === "completed"
-                          ? "stations.filter_mission_completed"
-                          : "stations.filter_with_notes",
-                ),
-                count: stationCounts[status],
-                selected: activeStationTab === "all" && stationFilter === status,
+      {!compact && (
+        <div className="toolbar members-toolbar station-toolbar sticky-list-controls">
+          <Tabs
+            className="member-filter-tabs"
+            items={[
+              {
+                key: "all",
+                label: t("stations.filter_all"),
+                count: stationCounts.all,
+                selected: activeStationTab === "all" && stationFilter === "all",
                 onSelect: () => {
                   onTabChange("all");
-                  onFilterChange(status);
+                  onFilterChange("all");
                 },
-              })),
-          ]}
-          label={t("stations.filter_stations_by_mission_status")}
-        />
-        {
-          <div className="toolbar-actions station-toolbar-actions">
-            <label className="search-field member-search station-search">
-              <Search size={15} />
-              <input
-                aria-label={t("stations.search_stations_by_portal_owner_or_galaxy_or_notes")}
-                onChange={(event) => onSearchChange(event.target.value)}
-                placeholder={t("stations.search_portal_username_galaxy_or_notes")}
-                value={search}
-              />
-            </label>
-            {canSeeAll && (
-              <button
-                aria-label={t(exportingStations ? "stations.exporting_stations" : "stations.export_stations_to_excel")}
-                className="station-export-button"
-                data-tooltip={t(
-                  exportingStations ? "stations.exporting_stations" : "stations.export_stations_to_excel",
-                )}
-                disabled={exportingStations}
-                onClick={onExport}
-                title={t(exportingStations ? "stations.exporting_stations" : "stations.export_stations_to_excel")}
-                type="button"
-              >
-                <FileSpreadsheet aria-hidden="true" size={15} />
-              </button>
-            )}
-          </div>
-        }
-      </div>
+              },
+              ...(canChooseStationView
+                ? [
+                    {
+                      key: "mine",
+                      label: t("stations.my_stations"),
+                      count: ownStationCount,
+                      selected: activeStationTab === "mine",
+                      onSelect: () => onTabChange("mine"),
+                    },
+                  ]
+                : []),
+              ...visibleStationFilters
+                .filter((status) => status !== "all")
+                .map((status) => ({
+                  key: status,
+                  label: t(
+                    status === "pending"
+                      ? "common.pending_status_label"
+                      : status === "in_progress"
+                        ? "stations.filter_in_mission"
+                        : status === "my_missions"
+                          ? "stations.filter_my_missions"
+                          : status === "completed"
+                            ? "stations.filter_mission_completed"
+                            : "stations.filter_with_notes",
+                  ),
+                  count: stationCounts[status],
+                  selected: activeStationTab === "all" && stationFilter === status,
+                  onSelect: () => {
+                    onTabChange("all");
+                    onFilterChange(status);
+                  },
+                })),
+            ]}
+            label={t("stations.filter_stations_by_mission_status")}
+          />
+          {
+            <div className="toolbar-actions station-toolbar-actions">
+              <label className="search-field member-search station-search">
+                <Search size={15} />
+                <input
+                  aria-label={t("stations.search_stations_by_portal_owner_or_galaxy_or_notes")}
+                  onChange={(event) => onSearchChange(event.target.value)}
+                  placeholder={t("stations.search_portal_username_galaxy_or_notes")}
+                  value={search}
+                />
+              </label>
+              {canSeeAll && (
+                <button
+                  aria-label={t(
+                    exportingStations ? "stations.exporting_stations" : "stations.export_stations_to_excel",
+                  )}
+                  className="station-export-button"
+                  data-tooltip={t(
+                    exportingStations ? "stations.exporting_stations" : "stations.export_stations_to_excel",
+                  )}
+                  disabled={exportingStations}
+                  onClick={onExport}
+                  title={t(exportingStations ? "stations.exporting_stations" : "stations.export_stations_to_excel")}
+                  type="button"
+                >
+                  <FileSpreadsheet aria-hidden="true" size={15} />
+                </button>
+              )}
+            </div>
+          }
+        </div>
+      )}
       {loading && (
         <div className="station-list-empty station-list-loading">
           <LoadingSpinner />
@@ -175,6 +186,11 @@ export function StationList({
         <ul className="station-list station-list-cards">
           {pagination.items.map((station) => (
             <StationCard
+              isAllianceHub={Boolean(
+                allianceHub && /^[0-9A-F]{12}$/i.test(allianceHub.portal) && isSameSystem(station, allianceHub),
+              )}
+              showDetailLink={showDetailLink}
+              showAssociatedMissionsLink={!compact}
               canCreateMissions={canCreateMissions}
               canSeeAll={canSeeAll}
               key={`${station.portal}:${station.galaxy}:${station.ownerId}`}
@@ -195,7 +211,7 @@ export function StationList({
           ))}
         </ul>
       )}
-      <Pagination {...pagination} />
+      {!compact && <Pagination {...pagination} />}
     </section>
   );
 }

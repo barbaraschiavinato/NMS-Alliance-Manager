@@ -5,6 +5,7 @@ import {
   FileText,
   Hammer,
   Info,
+  ExternalLink,
   Orbit,
   Pencil,
   RotateCcw,
@@ -14,6 +15,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { DetailLink } from "@/components/shared/detail-page";
 import type { Mission, MissionSpecialty } from "@/lib/missions";
 import type { AllianceMember } from "@/lib/access-store";
 import { type MissionSystemStatus, type PlanetSystemStatuses } from "@/lib/planet-system-status";
@@ -21,6 +23,7 @@ import { useEffect, useRef, useState } from "react";
 import { type MemberMessageContext } from "@/components/modals/member-card-dialog";
 import { useLocale } from "@/components/providers/locale-provider";
 import type { StationOwnerOption } from "@/components/modals/mission-form";
+import { findMissionStation, missionDetailHref, stationDetailHref, type DetailOrigin } from "@/lib/detail-links";
 
 export function asRecord(value: unknown): Record<string, unknown> | null {
   return value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : null;
@@ -61,6 +64,7 @@ export function MissionRowAction({
   onReopen,
   onStart,
   tasksDone = true,
+  assigneeActionsOnly = false,
 }: Readonly<{
   mission: Mission;
   currentMember: AllianceMember;
@@ -74,8 +78,16 @@ export function MissionRowAction({
   onReopen: (mission: Mission) => void;
   onStart: (mission: Mission) => void;
   tasksDone?: boolean;
+  assigneeActionsOnly?: boolean;
 }>) {
   const { t } = useLocale();
+  const canClaimInDetail =
+    !mission.assignedMemberId &&
+    !mission.assignedTo.trim() &&
+    (mission.targetSpecialty === "all" || mission.targetSpecialty === currentMember.specialty);
+  if (assigneeActionsOnly && !canManage && !isMissionAssignee(mission, currentMember) && !canClaimInDetail) {
+    return null;
+  }
   const requestButton = requestedSpecialty && onCreateRanger && (
     <button
       aria-label={t(requestTooltipKeys[requestedSpecialty])}
@@ -112,7 +124,7 @@ export function MissionRowAction({
         </span>
       );
     }
-    return <span className="no-row-action">—</span>;
+    return null;
   }
   if (canManage) {
     return (
@@ -184,7 +196,7 @@ export function MissionRowAction({
       </button>
     );
   }
-  return <span className="no-row-action">—</span>;
+  return null;
 }
 
 export function MissionStationLink({
@@ -199,23 +211,20 @@ export function MissionStationLink({
   stationOwnersLoaded: boolean;
 }>) {
   const { t } = useLocale();
-  const stationExists = stationOwners.some(
-    (station) => station.portal === mission.systemAddress.toUpperCase() && station.galaxy === mission.galaxy,
-  );
+  const station = findMissionStation(mission, stationOwners);
   if (!canManage || !stationOwnersLoaded) return null;
-  if (stationExists) {
-    const params = new URLSearchParams({ search: mission.systemAddress });
+  if (station) {
     const label = t("missions.open_linked_station");
     return (
-      <Link
+      <DetailLink
         aria-label={label}
         className="member-icon-action mission-station-link member-station-filter"
         data-tooltip={label}
-        href={`/stations?${params.toString()}`}
+        href={stationDetailHref(station, "missions")}
         title={label}
       >
         <Orbit size={14} />
-      </Link>
+      </DetailLink>
     );
   }
   const params = new URLSearchParams({
@@ -235,6 +244,20 @@ export function MissionStationLink({
     >
       <CirclePlus size={15} />
     </Link>
+  );
+}
+
+export function MissionDetailLink({ mission, origin }: Readonly<{ mission: Mission; origin?: DetailOrigin }>) {
+  const { t } = useLocale();
+  return (
+    <DetailLink
+      aria-label={t("details.open_mission")}
+      className="member-icon-action mission-detail-link"
+      data-tooltip={t("details.open_mission")}
+      href={missionDetailHref(mission.id, origin)}
+    >
+      <ExternalLink size={14} />
+    </DetailLink>
   );
 }
 
@@ -589,6 +612,9 @@ export function NewMissionRibbon({ mission }: Readonly<{ mission: Mission }>) {
 }
 
 export type MissionCardProps = Readonly<{
+  hideDetailLink?: boolean;
+  detailOrigin?: DetailOrigin;
+  assigneeActionsOnly?: boolean;
   mission: Mission;
   systemStatuses: PlanetSystemStatuses;
   currentMember: AllianceMember;

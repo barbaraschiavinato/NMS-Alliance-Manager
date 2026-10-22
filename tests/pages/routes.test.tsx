@@ -8,11 +8,17 @@ import LeaderboardRoute from "@/app/leaderboard/page";
 import Loading from "@/app/loading";
 import MemberGuideRoute from "@/app/member-guide/page";
 import MessagesRoute from "@/app/messages/page";
+import MessageDetailRoute from "@/app/messages/[id]/page";
+import HelpRequestDetailRoute from "@/app/help-requests/[id]/page";
+import TaxiRequestDetailRoute from "@/app/taxi/[id]/page";
 import MissionsRoute from "@/app/missions/page";
 import OfflinePlayersRoute from "@/app/offline-players/page";
 import Home from "@/app/page";
 import PlanetsRoute from "@/app/planets/page";
 import StationsRoute from "@/app/stations/page";
+import StationDetailRoute from "@/app/stations/[id]/page";
+import MissionDetailRoute from "@/app/missions/[id]/page";
+import { stationId } from "@/lib/detail-links";
 import UsersPage from "@/app/users/page";
 import { GuideAppPage } from "@/components/pages/guide-app-page";
 import { HelpRequestsPage } from "@/components/pages/help-requests-page";
@@ -33,7 +39,7 @@ import { lookupAlmanacPlanets } from "@/lib/almanac-lookup";
 import { readPlanetSystemStatuses } from "@/lib/planet-system-status-store";
 import { readAlmanacCache } from "@/lib/almanac-store";
 import { signInAs } from "../helpers/auth";
-import { makeMember, seedMembers } from "../helpers/members";
+import { makeMember, seedMembers, writeDataFile } from "../helpers/members";
 import { makeMission } from "./helpers";
 
 vi.mock("@/auth", async () => (await import("../helpers/auth")).authMock);
@@ -133,7 +139,43 @@ beforeEach(() => {
 const sectionRoutes: [string, () => Promise<ReactElement>, unknown][] = [
   ["missions", () => MissionsRoute({ searchParams: Promise.resolve({}) }), MissionDashboard],
   ["stations", () => StationsRoute({ searchParams: Promise.resolve({}) }), StationsPage],
+  [
+    "mission detail",
+    () => {
+      vi.mocked(readMissions).mockResolvedValue([makeMission()]);
+      return MissionDetailRoute({ params: Promise.resolve({ id: "mission-1" }) });
+    },
+    StationsPage,
+  ],
+  [
+    "station detail",
+    () => StationDetailRoute({ params: Promise.resolve({ id: stationId(stationList[0]) }) }),
+    StationsPage,
+  ],
   ["messages", () => MessagesRoute(), MessagesPage],
+  ...(
+    [
+      ["message detail", MessageDetailRoute, MessagesPage, "planet"],
+      ["help request detail", HelpRequestDetailRoute, HelpRequestsPage, "help"],
+      ["taxi request detail", TaxiRequestDetailRoute, HelpRequestsPage, "taxi"],
+    ] as const
+  ).map(([name, route, page, subjectType]): [string, () => Promise<ReactElement>, unknown] => [
+    name,
+    () => {
+      writeDataFile("private-messages.json", [
+        {
+          id: "root",
+          senderMemberId: id.mod,
+          recipientMemberId: id.user,
+          subjectType,
+          body: "Selected thread",
+          createdAt: "2026-01-01T00:00:00Z",
+        },
+      ]);
+      return route({ params: Promise.resolve({ id: "root" }) });
+    },
+    page,
+  ]),
   ["help requests", () => HelpRequestsRoute(), HelpRequestsPage],
   ["taxi", () => TaxiRoute(), HelpRequestsPage],
   ["planets", () => PlanetsRoute(), PlanetsPage],
@@ -185,6 +227,89 @@ describe.each(sectionRoutes)("%s route", (_name, route, Page) => {
     const element = await route();
     expect(element.type).toBe(Page);
     expect(props(element).currentMember).toMatchObject({ role: "admin", membershipStatus: "approved" });
+  });
+});
+
+describe("messaging detail routes", () => {
+  it.each([HelpRequestDetailRoute, TaxiRequestDetailRoute])(
+    "rejects broadcast replies whose root no longer exists",
+    async (route) => {
+      signIn(user);
+      writeDataFile("private-messages.json", [
+        {
+          id: "orphan-help",
+          replyToId: "removed",
+          senderMemberId: id.user,
+          subjectType: "help",
+          body: "Reply",
+          createdAt: "2026-01-01T00:00:00Z",
+        },
+        {
+          id: "orphan-taxi",
+          replyToId: "removed",
+          senderMemberId: id.user,
+          subjectType: "taxi",
+          body: "Reply",
+          createdAt: "2026-01-01T00:00:00Z",
+        },
+      ]);
+      const idToOpen = route === HelpRequestDetailRoute ? "orphan-help" : "orphan-taxi";
+      await expect(route({ params: Promise.resolve({ id: idToOpen }) })).rejects.toThrow("NEXT_NOT_FOUND");
+    },
+  );
+  const entries = [
+    { id: "private", senderMemberId: id.user, recipientMemberId: id.builder, subjectType: "mission" },
+    { id: "help", senderMemberId: id.builder, subjectType: "help" },
+    { id: "taxi", senderMemberId: id.builder, subjectType: "taxi", archived: true },
+  ];
+  beforeEach(() => {
+    writeDataFile(
+      "private-messages.json",
+      entries.flatMap((entry) => [
+        { ...entry, body: "Root", createdAt: "2026-01-01T00:00:00Z" },
+        {
+          ...entry,
+          id: `${entry.id}-reply`,
+          replyToId: entry.id,
+          threadId: entry.id,
+          body: "Reply",
+          createdAt: "2026-01-02T00:00:00Z",
+        },
+      ]),
+    );
+  });
+
+  it.each([
+    [MessageDetailRoute, "private"],
+    [HelpRequestDetailRoute, "help"],
+    [TaxiRequestDetailRoute, "taxi"],
+  ] as const)("resolves a reply to its root and rejects missing IDs", async (route, root) => {
+    signIn(user);
+    const element = await route({ params: Promise.resolve({ id: `${root}-reply` }) });
+    expect(props(element).detailRootId).toBe(root);
+    await expect(route({ params: Promise.resolve({ id: "missing" }) })).rejects.toThrow("NEXT_NOT_FOUND");
+  });
+
+  it("enforces private-message participation and effective admin visibility", async () => {
+    for (const member of [moderator, plainUser]) {
+      signIn(member);
+      await expect(MessageDetailRoute({ params: Promise.resolve({ id: "private" }) })).rejects.toThrow(
+        "NEXT_NOT_FOUND",
+      );
+    }
+    signIn(admin);
+    expect(props(await MessageDetailRoute({ params: Promise.resolve({ id: "private" }) })).detailRootId).toBe(
+      "private",
+    );
+  });
+
+  it("keeps private messages and both broadcast kinds isolated", async () => {
+    signIn(admin);
+    await expect(MessageDetailRoute({ params: Promise.resolve({ id: "help" }) })).rejects.toThrow("NEXT_NOT_FOUND");
+    await expect(HelpRequestDetailRoute({ params: Promise.resolve({ id: "taxi" }) })).rejects.toThrow("NEXT_NOT_FOUND");
+    await expect(TaxiRequestDetailRoute({ params: Promise.resolve({ id: "private" }) })).rejects.toThrow(
+      "NEXT_NOT_FOUND",
+    );
   });
 });
 
@@ -319,6 +444,157 @@ describe("stations route", () => {
     const element = await StationsRoute(query({ portal: "XYZ", galaxy: "999", ownerId: id.builder }));
     expect(props(element)).toMatchObject({ initialCreateStation: null, initialStation: null, sidebarStationCount: 1 });
     expect(readStationPortals).toHaveBeenCalledWith(id.plain);
+  });
+});
+
+describe("mission detail route", () => {
+  it.each([
+    ["station-card", true],
+    [undefined, false],
+    ["unknown", false],
+    [["station-card"], false],
+  ] as const)(
+    "uses associated-first layout only for the explicit station-card source %s",
+    async (source, associatedFirst) => {
+      signIn(user);
+      vi.mocked(readMissions).mockResolvedValue([makeMission()]);
+      const element = await MissionDetailRoute({
+        params: Promise.resolve({ id: "mission-1" }),
+        searchParams: Promise.resolve({
+          from: "stations",
+          source: typeof source === "string" || source === undefined ? source : [...source],
+        }),
+      });
+      expect(props(element)).toMatchObject({ detail: { origin: "stations", associatedFirst } });
+    },
+  );
+  it("loads the linked station and scopes planets while defaulting the back link to missions", async () => {
+    signIn(user);
+    const mission = makeMission({ targetSpecialty: "builder", assignedMemberId: id.builder });
+    vi.mocked(readMissions).mockResolvedValue([mission]);
+    const element = await MissionDetailRoute({ params: Promise.resolve({ id: mission.id }) });
+    expect(element.type).toBe(StationsPage);
+    expect(props(element)).toMatchObject({
+      initialStation: stationList[0],
+      detail: { station: stationList[0], missionId: mission.id, origin: "missions" },
+    });
+  });
+
+  it("preserves a validated source section", async () => {
+    signIn(moderator);
+    vi.mocked(readMissions).mockResolvedValue([makeMission()]);
+    const element = await MissionDetailRoute({
+      params: Promise.resolve({ id: "mission-1" }),
+      searchParams: Promise.resolve({ from: "messages" }),
+    });
+    expect(props(element)).toMatchObject({ detail: { origin: "messages" } });
+  });
+
+  it("keeps a visible mission available without its station and does not include unrelated private missions", async () => {
+    signIn(user);
+    vi.mocked(readAllStationPortals).mockResolvedValue([]);
+    vi.mocked(readMissions).mockResolvedValue([
+      makeMission(),
+      makeMission({ id: "private", targetSpecialty: "builder", assignedMemberId: id.builder }),
+    ]);
+    const element = await MissionDetailRoute({ params: Promise.resolve({ id: "mission-1" }) });
+    expect(props(element)).toMatchObject({
+      detail: {
+        station: null,
+        system: { portal: "1234567890AB", galaxy: 0 },
+        missionId: "mission-1",
+        origin: "missions",
+      },
+    });
+  });
+
+  it("rejects missing missions and missions hidden without an accessible station", async () => {
+    signIn(user);
+    await expect(MissionDetailRoute({ params: Promise.resolve({ id: "missing" }) })).rejects.toThrow("NEXT_NOT_FOUND");
+    vi.mocked(readAllStationPortals).mockResolvedValue([]);
+    vi.mocked(readMissions).mockResolvedValue([
+      makeMission({ targetSpecialty: "builder", assignedMemberId: id.builder }),
+    ]);
+    await expect(MissionDetailRoute({ params: Promise.resolve({ id: "mission-1" }) })).rejects.toThrow(
+      "NEXT_NOT_FOUND",
+    );
+  });
+
+  it("does not grant members without a specialty access through another member's station", async () => {
+    signIn(plainUser);
+    vi.mocked(readStationPortals).mockResolvedValue([]);
+    vi.mocked(readMissions).mockResolvedValue([makeMission({ targetSpecialty: "builder" })]);
+    await expect(MissionDetailRoute({ params: Promise.resolve({ id: "mission-1" }) })).rejects.toThrow(
+      "NEXT_NOT_FOUND",
+    );
+  });
+});
+
+describe("station detail route", () => {
+  it.each([
+    ["planets", "planets"],
+    ["missions", "missions"],
+    ["messages", "messages"],
+    ["taxi", "taxi"],
+    ["https://example.com", "stations"],
+    [["planets", "taxi"], "stations"],
+  ])("validates the return origin %j", async (from, expected) => {
+    signIn(moderator);
+    const element = await StationDetailRoute({
+      params: Promise.resolve({ id: stationId(stationList[0]) }),
+      searchParams: Promise.resolve({ from }),
+    });
+    expect(props(element)).toMatchObject({ detail: { origin: expected } });
+  });
+  it("resolves URL-encoded composite IDs received from dynamic route params", async () => {
+    signIn(moderator);
+    const element = await StationDetailRoute({
+      params: Promise.resolve({ id: encodeURIComponent(stationId(stationList[0])) }),
+    });
+    expect(element.type).toBe(StationsPage);
+    const { ownerId, portal, galaxy } = stationList[0];
+    const identity = { ownerId, portal, galaxy };
+    expect(props(element)).toMatchObject({
+      initialStation: identity,
+      detail: { station: identity },
+    });
+  });
+
+  it.each(["invalid", `${id.user}:1234567890AB:256`, `${id.user}:1234567890AC:0`])(
+    "returns not found for invalid or missing stations: %s",
+    async (station) => {
+      signIn(moderator);
+      await expect(StationDetailRoute({ params: Promise.resolve({ id: station }) })).rejects.toThrow("NEXT_NOT_FOUND");
+    },
+  );
+
+  it("does not expose another member's station to members restricted to their own archive", async () => {
+    signIn(plainUser);
+    vi.mocked(readStationPortals).mockResolvedValue([]);
+    await expect(StationDetailRoute({ params: Promise.resolve({ id: stationId(stationList[0]) }) })).rejects.toThrow(
+      "NEXT_NOT_FOUND",
+    );
+  });
+
+  it("scopes Almanac requests by system and galaxy and preserves global sidebar counts", async () => {
+    signIn(moderator);
+    vi.mocked(readMissions).mockResolvedValue([
+      makeMission({ systemAddress: "1234567890AB", galaxy: 0 }),
+      makeMission({ id: "foreign-galaxy", systemAddress: "1234567890AB", galaxy: 2 }),
+      makeMission({ id: "foreign-system", systemAddress: "1234567890AC", galaxy: 0 }),
+    ]);
+    const element = await StationDetailRoute({ params: Promise.resolve({ id: stationId(stationList[0]) }) });
+    expect(element.type).toBe(StationsPage);
+    expect(props(element)).toMatchObject({
+      initialStation: { portal: stationList[0].portal, galaxy: 0, ownerId: id.user },
+      missionCount: 3,
+      sidebarStationCount: 2,
+      detail: { station: { portal: "1234567890AB", galaxy: 0, ownerId: id.user }, planets: [] },
+    });
+    expect(vi.mocked(lookupAlmanacPlanets)).toHaveBeenLastCalledWith([
+      { portal: "1234567890AB", galaxy: 0 },
+      { portal: "2234567890AB", galaxy: 0 },
+    ]);
   });
 });
 

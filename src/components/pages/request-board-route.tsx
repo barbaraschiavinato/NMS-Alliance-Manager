@@ -7,8 +7,11 @@ import { getCurrentMember } from "@/lib/authorization";
 import { readAccessData } from "@/lib/access-store";
 import { readMissions } from "@/lib/store";
 import { readAllStationPortals, readStationPortals } from "@/lib/stations-store";
+import { readHelpRequests } from "@/lib/private-messages-store";
+import { findMessageRoot } from "@/lib/message-thread";
+import { notFound } from "next/navigation";
 
-export async function renderRequestBoard(kind: "help" | "taxi" = "help") {
+export async function renderRequestBoard(kind: "help" | "taxi" = "help", detailId?: string) {
   const accessData = await readAccessData();
   const allianceName = accessData.alliance.name;
   const allianceLogoUrl = accessData.alliance.logoUrl;
@@ -30,6 +33,12 @@ export async function renderRequestBoard(kind: "help" | "taxi" = "help") {
   if (!member) return <LoginScreen allianceLogoUrl={allianceLogoUrl} allianceName={allianceName} />;
   if (member.membershipStatus !== "approved") return <PendingApproval member={member} />;
 
+  let detailRootId: string | undefined;
+  if (detailId !== undefined) {
+    const root = findMessageRoot(await readHelpRequests(kind), detailId);
+    if (!root || root.replyToId) notFound();
+    detailRootId = root.id;
+  }
   const isModerator = member.role === "admin" || member.role === "moderator";
   const [missions, stations] = await Promise.all([
     readMissions(),
@@ -37,6 +46,7 @@ export async function renderRequestBoard(kind: "help" | "taxi" = "help") {
   ]);
   return (
     <HelpRequestsPage
+      detailRootId={detailRootId}
       alliance={accessData.alliance}
       currentMember={member}
       kind={kind}

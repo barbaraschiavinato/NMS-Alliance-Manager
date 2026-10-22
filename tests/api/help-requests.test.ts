@@ -58,6 +58,7 @@ describe("authorization shared by every method", () => {
     GET: async () => getRequests(),
     POST: async () => post({ message: "hi", subject: "s", portal, galaxy: 0 }),
     DELETE: async () => remove({ id: "x" }),
+    PATCH: async () => (await routes()).PATCH(jsonRequest(url, "PATCH", { id: "x", archived: true })),
   };
   for (const [method, call] of Object.entries(calls)) {
     it(`${method} returns 401 without a session or for pending, blocked and offline members`, async () => {
@@ -69,6 +70,73 @@ describe("authorization shared by every method", () => {
       }
     });
   }
+});
+
+describe.each(["help", "taxi"] as const)("%s request archiving", (kind) => {
+  const endpoint = `/api/${kind === "taxi" ? "taxi" : "help"}-requests`;
+  async function handlers() {
+    return kind === "help" ? routes() : import("@/app/api/taxi-requests/route");
+  }
+  async function patch(body: unknown) {
+    return (await handlers()).PATCH(jsonRequest(endpoint, "PATCH", body));
+  }
+  beforeEach(() => {
+    writeDataFile("private-messages.json", [
+      helpEntry({ id: "root", subjectType: kind }),
+      helpEntry({ id: "reply", replyToId: "root", threadId: "root", subjectType: kind }),
+      helpEntry({ id: "other-kind", subjectType: kind === "help" ? "taxi" : "help" }),
+    ]);
+    signInAs(cast.user);
+  });
+
+  it.each(["user", "moderator", "admin"] as const)(
+    "lets %s archive and restore without losing replies",
+    async (role) => {
+      signInAs(cast[role]);
+      expect((await patch({ id: "root", archived: true })).status).toBe(200);
+      expect(storedMessages()).toHaveLength(3);
+      expect(storedMessages()[0].archived).toBe(true);
+      const api = await handlers();
+      const archived = await (await api.GET(new Request(`http://localhost${endpoint}`))).json();
+      expect(archived[0]).toMatchObject({ id: "root", archived: true, replies: [{ id: "reply" }] });
+      expect(await (await api.GET(new Request(`http://localhost${endpoint}?count`))).json()).toEqual({ count: 0 });
+      const response = await api.POST(jsonRequest(endpoint, "POST", { replyToId: "root", message: "New reply" }));
+      expect(response.status).toBe(409);
+      expect(await response.json()).toEqual({ error: "broadcast.archived_read_only" });
+      expect((await patch({ id: "root", archived: false })).status).toBe(200);
+      expect(await (await api.GET(new Request(`http://localhost${endpoint}?count`))).json()).toEqual({ count: 1 });
+      expect((await api.POST(jsonRequest(endpoint, "POST", { replyToId: "root", message: "New reply" }))).status).toBe(
+        201,
+      );
+    },
+  );
+
+  it("requires approval and enforces ownership including simple view", async () => {
+    for (const member of [null, cast.pending, cast.blocked, cast.offline]) {
+      signInAs(member);
+      expect((await patch({ id: "root", archived: true })).status).toBe(401);
+    }
+    signInAs(cast.simpleAdmin);
+    for (const archived of [true, false]) {
+      expect((await patch({ id: "root", archived })).status).toBe(403);
+    }
+    expect(storedMessages()[0]).not.toHaveProperty("archived");
+  });
+
+  it.each(["{", null, [], {}, { id: 3 }, { id: " " }, { id: "root" }, { id: "root", archived: "true" }])(
+    "rejects malformed archive payload %j",
+    async (body) => expect((await patch(body)).status).toBe(400),
+  );
+
+  it.each(["missing", "reply", "other-kind"])("rejects non-root or wrong-kind target %s", async (id) => {
+    expect((await patch({ id, archived: true })).status).toBe(404);
+  });
+
+  it("reports storage failures", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    writeRawDataFile("private-messages.json", "{broken");
+    expect((await patch({ id: "root", archived: true })).status).toBe(503);
+  });
 });
 
 describe("GET /api/help-requests", () => {
