@@ -42,7 +42,7 @@ describe("MessageCard", () => {
           subjectActions={<span>subject action</span>}
           thread={<p>thread slot</p>}
           title="Subject"
-          toolsBefore={<span>tool</span>}
+          toolsAfterDate={<span>tool</span>}
           unread
         />
       </ul>,
@@ -51,7 +51,10 @@ describe("MessageCard", () => {
     expect(screen.getByRole("heading", { level: 2, name: "Subject" })).toBeInTheDocument();
     for (const text of ["form slot", "replies slot", "subject action", "thread slot", "tool"])
       expect(screen.getByText(text)).toBeInTheDocument();
+    expect(screen.getByText("today").nextElementSibling).toBe(screen.getByText("tool"));
+    expect(screen.getByText("tool").nextElementSibling).toBe(screen.getByRole("button", { name: "Delete message" }));
     await user.click(screen.getByRole("button", { name: "Delete message" }));
+    expect(screen.getByRole("button", { name: "Delete message" })).toHaveAttribute("data-tooltip", "Delete message");
     expect(onDelete).toHaveBeenCalledTimes(1);
   });
 
@@ -88,6 +91,7 @@ describe("MessageCard", () => {
     );
     const toggle = screen.getByRole("button", { name: "Show 3 replies" });
     expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(toggle).toHaveAttribute("data-tooltip", "Show 3 replies");
     expect(toggle).toHaveTextContent("3");
     await user.click(toggle);
     expect(onToggle).toHaveBeenCalledTimes(1);
@@ -105,6 +109,7 @@ describe("MessageCard", () => {
       </ul>,
     );
     expect(screen.getByRole("button", { name: "Hide 3 replies" })).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByRole("button", { name: "Hide 3 replies" })).toHaveAttribute("data-tooltip", "Hide 3 replies");
   });
 
   it("offers a reply action, in Italian", async () => {
@@ -124,6 +129,7 @@ describe("MessageCard", () => {
       { locale: "it" },
     );
     expect(screen.getByRole("button", { name: "Mostra 1 risposte" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Rispondi" })).toHaveAttribute("data-tooltip", "Rispondi");
     await user.click(screen.getByRole("button", { name: "Rispondi" }));
     expect(onReply).toHaveBeenCalledTimes(1);
   });
@@ -153,6 +159,8 @@ describe("MessageReplyForm", () => {
     expect(textarea).toHaveFocus();
     expect(textarea).toHaveAttribute("rows", "3");
     expect(screen.getByRole("button", { name: "Send reply" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Send reply" })).toHaveAttribute("data-tooltip", "Send reply");
+    expect(screen.getByRole("button", { name: "Cancel" })).toHaveAttribute("data-tooltip", "Cancel");
 
     await user.type(textarea, "H");
     expect(props.onChange).toHaveBeenCalledWith("H");

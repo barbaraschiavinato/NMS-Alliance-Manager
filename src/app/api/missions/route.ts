@@ -12,17 +12,58 @@ import { readAccessData } from "@/lib/access-store";
 import { readAllStationPortals, readStationPortals } from "@/lib/stations-store";
 import { isValidNmsFriendCode } from "@/lib/member-types";
 import { serializeMission } from "@/lib/mission-view";
+import { findMissionStation, isSameSystem } from "@/lib/detail-links";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(request?: Request) {
   try {
     const member = await getCurrentMember();
     if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
     const [missions, accessData] = await Promise.all([readMissions(), readAccessData()]);
     const canManage = hasRole(member, "moderator");
-    const visibleMissions = canManage ? missions : missions.filter((mission) => canViewMission(mission, member));
+    const params = request ? new URL(request.url).searchParams : new URLSearchParams();
+    let visibleMissions: Mission[];
+    if (params.has("detailMission")) {
+      const selected = missions.find((mission) => mission.id === params.get("detailMission"));
+      if (!selected) return NextResponse.json({ error: "missions.mission_not_found" }, { status: 404 });
+      const stations =
+        canManage || member.specialty === "ranger" || member.specialty === "explorer" || member.specialty === "builder"
+          ? await readAllStationPortals()
+          : await readStationPortals(member.publicId);
+      const station = findMissionStation(selected, stations);
+      if (!station && !canManage && !canViewMission(selected, member)) {
+        return NextResponse.json({ error: "missions.mission_not_found" }, { status: 404 });
+      }
+      visibleMissions = missions.filter(
+        (mission) =>
+          isSameSystem(
+            { portal: mission.systemAddress, galaxy: mission.galaxy },
+            { portal: selected.systemAddress, galaxy: selected.galaxy },
+          ) &&
+          (station || canManage || canViewMission(mission, member)),
+      );
+    } else if (params.has("stationPortal") || params.has("galaxy")) {
+      const portal = params.get("stationPortal")?.toUpperCase() ?? "";
+      const galaxy = params.get("galaxy") ?? "";
+      if (!/^[0-9A-F]{12}$/.test(portal) || !/^\d{1,3}$/.test(galaxy) || Number(galaxy) > 255) {
+        return NextResponse.json({ error: "stations.error_invalid_portal_and_galaxy" }, { status: 400 });
+      }
+      const stations =
+        canManage || member.specialty === "ranger" || member.specialty === "explorer" || member.specialty === "builder"
+          ? await readAllStationPortals()
+          : await readStationPortals(member.publicId);
+      const station = stations.find((entry) => entry.portal === portal && entry.galaxy === Number(galaxy));
+      if (!station) {
+        return NextResponse.json({ error: "stations.error_station_not_found_in_owner_archive" }, { status: 404 });
+      }
+      visibleMissions = missions.filter((mission) =>
+        isSameSystem({ portal: mission.systemAddress, galaxy: mission.galaxy }, station),
+      );
+    } else {
+      visibleMissions = canManage ? missions : missions.filter((mission) => canViewMission(mission, member));
+    }
     return NextResponse.json(visibleMissions.map((mission) => serializeMission(mission, accessData.members)));
   } catch (error) {
     console.error("Unable to read missions", error);

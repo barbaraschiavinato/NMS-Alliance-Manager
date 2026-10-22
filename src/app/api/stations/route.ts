@@ -2,11 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentMember, hasRole } from "@/lib/authorization";
 import { readAccessData, type AllianceMember } from "@/lib/access-store";
 import { readAlmanacResponse, readAlmanacResponses, writeAlmanacResponse } from "@/lib/almanac-store";
-import {
-  coveredSpecialties,
-  decodePortalAddress,
-  isDifferentPlanetInSameSystem,
-} from "@/lib/missions";
+import { coveredSpecialties, decodePortalAddress, isDifferentPlanetInSameSystem } from "@/lib/missions";
 import { availableMissionSpecialties } from "@/lib/station-mission-availability";
 import { isEmailAddress } from "@/lib/member-types";
 import {
@@ -318,6 +314,14 @@ async function readStations(member: AllianceMember) {
           ((mission.status === "pending" && !mission.assignedMemberId && !mission.assignedTo.trim()) ||
             mission.assignedMemberId === member.publicId),
       );
+    const specialtyMission = matchingMissions.find(
+      (mission) =>
+        coveredSpecialties(mission.targetSpecialty).some((specialty) => specialty === ownSpecialty) &&
+        (hasRole(member, "moderator") ||
+          (canOpenOwnSpecialtyMission &&
+            ((mission.status === "pending" && !mission.assignedMemberId && !mission.assignedTo.trim()) ||
+              mission.assignedMemberId === member.publicId))),
+    );
     const availableSpecialties = availableMissionSpecialties(matchingMissions, station.portal, station.galaxy);
 
     return {
@@ -330,6 +334,7 @@ async function readStations(member: AllianceMember) {
       planet: almanacByPortal[station.portal]?.find((entry) => entry.galaxy === station.galaxy)?.response ?? null,
       hasMissions: matchingMissions.length > 0,
       canOpenOwnSpecialtyMission,
+      ...(specialtyMission ? { specialtyMissionId: specialtyMission.id } : {}),
       hasAssignedMission: matchingMissions.some((mission) => mission.assignedMemberId === member.publicId),
       missionStatus:
         matchingMissions.length === 0

@@ -158,6 +158,7 @@ describe("GET /api/stations", () => {
       planet: { portal: P0, lines: { headline: { word: "Eden" } } },
       hasMissions: true,
       canOpenOwnSpecialtyMission: true,
+      specialtyMissionId: "M-1",
       hasAssignedMission: false,
       missionStatus: "in_progress",
       availableSpecialties: ["ranger", "explorer", "other"],
@@ -176,12 +177,25 @@ describe("GET /api/stations", () => {
     expect(assigned).toMatchObject({
       hasAssignedMission: true,
       canOpenOwnSpecialtyMission: true,
+      specialtyMissionId: "M-3",
       missionStatus: "in_progress",
     });
   });
 
   it.todo(
     "treats an explorer_builder mission as covering builder and explorer in availableSpecialties (currently still offered, see report)",
+  );
+
+  it.each(["all", "explorer_builder"] as const)(
+    "links an explorer to a free %s mission covering their specialty",
+    async (targetSpecialty) => {
+      writeDataFile("missions.json", [
+        storedMission({ id: "covered", systemAddress: P0, galaxy: 0, targetSpecialty, status: "pending" }),
+      ]);
+      signInAs(cast.user);
+      const { stations } = await (await getStations()).json();
+      expect(stations[0]).toMatchObject({ canOpenOwnSpecialtyMission: true, specialtyMissionId: "covered" });
+    },
   );
 
   it("reports stations without missions as fully available", async () => {
@@ -208,7 +222,28 @@ describe("GET /api/stations", () => {
     signInAs(cast.user);
     const { stations } = (await (await getStations()).json()) as { stations: StationView[] };
     expect(stations[0]).toMatchObject({ canOpenOwnSpecialtyMission: false, hasAssignedMission: false });
+    expect(stations[0]).not.toHaveProperty("specialtyMissionId");
   });
+
+  it.each(["explorer", "builder", "ranger"] as const)(
+    "selects only the effective manager's %s specialty mission, never an unrelated mission",
+    async (specialty) => {
+      const manager = { ...cast.moderator, specialty, simpleView: false };
+      seedMembers([...castMembers(cast).filter((member) => member.publicId !== manager.publicId), manager]);
+      writeDataFile("missions.json", [
+        storedMission({ id: "wrong-galaxy", systemAddress: P0, galaxy: 1, targetSpecialty: specialty }),
+        storedMission({ id: "wrong-system", systemAddress: Q0, galaxy: 0, targetSpecialty: specialty }),
+        storedMission({ id: "unrelated", systemAddress: P0, galaxy: 0, targetSpecialty: "other" }),
+        storedMission({ id: "matching", systemAddress: P0, galaxy: 0, targetSpecialty: specialty }),
+      ]);
+      signInAs(manager);
+      const { stations } = await (await getStations()).json();
+      expect(stations[0].specialtyMissionId).toBe("matching");
+      writeDataFile("missions.json", [storedMission({ systemAddress: P0, galaxy: 0, targetSpecialty: "other" })]);
+      const unmatched = await (await getStations()).json();
+      expect(unmatched.stations[0]).not.toHaveProperty("specialtyMissionId");
+    },
+  );
 
   it("limits members without a specialty to their own stations", async () => {
     const noSpecialty = makeMember({ specialty: "" });

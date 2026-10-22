@@ -78,6 +78,49 @@ describe("authorization shared by every method", () => {
 });
 
 describe("GET /api/messages", () => {
+  it("resolves station detail links from the current owner, matching system and galaxy", async () => {
+    writeDataFile("stations-v2.json", [
+      { portal, galaxy: 1, ownerId: cast.admin.publicId },
+      { portal: "2123456789AB", galaxy: 0, ownerId: cast.moderator.publicId },
+    ]);
+    writeDataFile("private-messages.json", [
+      message({ id: "linked" }),
+      message({ id: "missing", galaxy: 2 }),
+      message({ id: "no-address", portal: undefined }),
+      message({ id: "no-galaxy", galaxy: undefined }),
+    ]);
+    signInAs(cast.user);
+    const response = await getMessages();
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body.find((entry: StoredMessage) => entry.id === "linked").stationHref).toBe(
+      `/stations/${cast.moderator.publicId}%3A2123456789AB%3A0?from=messages`,
+    );
+    for (const id of ["missing", "no-address", "no-galaxy"]) {
+      expect(body.find((entry: StoredMessage) => entry.id === id)).not.toHaveProperty("stationHref");
+    }
+  });
+
+  it("does not link another member's station for a viewer restricted to their own archive", async () => {
+    const plain = makeMember({ specialty: "" });
+    seedMembers([...castMembers(cast), plain]);
+    writeDataFile("stations-v2.json", [{ portal, galaxy: 0, ownerId: cast.moderator.publicId }]);
+    writeDataFile("private-messages.json", [message({ recipientMemberId: plain.publicId })]);
+    signInAs(plain);
+    expect((await (await getMessages()).json())[0]).not.toHaveProperty("stationHref");
+    writeDataFile("stations-v2.json", [{ portal, galaxy: 0, ownerId: plain.publicId }]);
+    expect((await (await getMessages()).json())[0].stationHref).toBe(
+      `/stations/${plain.publicId}%3A${portal}%3A0?from=messages`,
+    );
+  });
+
+  it("reports station lookup failures explicitly", async () => {
+    writeDataFile("private-messages.json", [message()]);
+    writeRawDataFile("stations-v2.json", "{");
+    signInAs(cast.user);
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    expect((await getMessages()).status).toBe(503);
+  });
   it("lists the member's own conversations, newest first, without help requests", async () => {
     const emailNamed = makeMember({ name: "mail@example.com", nmsName: "" });
     seedMembers([...castMembers(cast), emailNamed]);

@@ -37,6 +37,20 @@ import {
   type StationMissionSeed,
 } from "@/components/cards/station-card/parts";
 import { StationList } from "@/components/sections/station-list";
+import { useRouter } from "next/navigation";
+import { DetailBackLink, DetailSection, useDetailReturn } from "@/components/shared/detail-page";
+import { MissionDashboard } from "@/components/pages/mission-dashboard";
+import { PlanetsPage } from "@/components/pages/planets-page";
+import { HelpRequestsPage } from "@/components/pages/help-requests-page";
+import type { PlanetDestination } from "@/components/cards/planet-destination-card";
+import {
+  detailOrigins,
+  contextualDetailHref,
+  stationDetailHref,
+  type DetailOrigin,
+  type StationIdentity,
+  type SystemIdentity,
+} from "@/lib/detail-links";
 
 export function StationsPage({
   currentMember,
@@ -48,6 +62,7 @@ export function StationsPage({
   sidebarOfflineCount,
   sidebarStationCount,
   sidebarUserCount,
+  detail,
 }: Readonly<{
   currentMember: AllianceMember;
   alliance: AllianceSettings;
@@ -58,8 +73,21 @@ export function StationsPage({
   sidebarStationCount: number;
   sidebarOfflineCount?: number;
   sidebarUserCount?: number;
+  detail?: Readonly<{
+    station: StationIdentity | null;
+    system?: SystemIdentity;
+    missionId?: string;
+    associatedFirst?: boolean;
+    planets: PlanetDestination[];
+    almanacLookupFailed: boolean;
+    origin?: DetailOrigin;
+  }>;
 }>) {
+  const router = useRouter();
+  const returnDestination = useDetailReturn(detailOrigins[detail?.origin ?? "stations"].href);
   const { t } = useLocale();
+  const [detailRevision, setDetailRevision] = useState(0);
+  const detailSystem = detail?.system ?? detail?.station;
   const [pageMember, setPageMember] = useState(currentMember);
   const [renderedAt] = useState(() => Date.now());
   const [allianceSettings, setAllianceSettings] = useState(alliance);
@@ -329,6 +357,7 @@ export function StationsPage({
         ...current,
         [key]: [...new Set(savedStatuses)],
       }));
+      if (detail) setDetailRevision((current) => current + 1);
     } catch (error_: unknown) {
       setError(error_ instanceof Error ? error_.message : t("errors.request_failed"));
     } finally {
@@ -424,6 +453,21 @@ export function StationsPage({
       setStationNameEdited(false);
       setValidation({ valid: false, lookup: null });
       closeStationDialog();
+      if (detail?.missionId) router.refresh();
+      if (
+        detail?.station &&
+        !detail.missionId &&
+        (canonicalPortal !== detail.station.portal ||
+          galaxy !== detail.station.galaxy ||
+          requestedOwnerId !== detail.station.ownerId)
+      ) {
+        router.replace(
+          contextualDetailHref(
+            stationDetailHref({ portal: canonicalPortal, galaxy, ownerId: requestedOwnerId }, detail.origin),
+            returnDestination,
+          ),
+        );
+      }
       setNotice(
         editingStation
           ? t("stations.station_updated")
@@ -469,6 +513,8 @@ export function StationsPage({
       }
       setStations(parseStations(body.stations));
       setNotice(t("stations.station_removed_from_the_owner_s_archive"));
+      if (detail?.missionId) router.refresh();
+      else if (detail) router.replace(returnDestination);
     } catch (error_: unknown) {
       setError(error_ instanceof Error ? error_.message : t("errors.deletion_failed"));
     }
@@ -503,15 +549,70 @@ export function StationsPage({
     );
     try {
       await refreshStations();
+      if (detail) setDetailRevision((current) => current + 1);
     } catch {
       setError(t("stations.mission_created_but_station_targets_could_not_be_updated"));
     }
   }
 
+  const stationSection = (
+    <DetailSection title={detail ? "details.station" : undefined}>
+      {detail && !detail.station ? (
+        <p className="messages-empty">{t("details.station_unavailable")}</p>
+      ) : (
+        <StationList
+          allianceHub={{ portal: allianceSettings.portalCode, galaxy: allianceSettings.galaxy }}
+          compact={Boolean(detail)}
+          showDetailLink={!detail || Boolean(detail.missionId)}
+          activeStationTab={activeStationTab}
+          canChooseStationView={canChooseStationView}
+          canCreateMissions={canCreateMissions}
+          canSeeAll={canSeeAll}
+          exportingStations={exportingStations}
+          loading={loading}
+          member={pageMember}
+          onCreateMission={(station) =>
+            setMissionStation({
+              portal: station.portal,
+              galaxy: station.galaxy,
+              title: station.name || cachedPlanetTitle(station.planet),
+              ownerMemberId: station.ownerId,
+            })
+          }
+          onEdit={openEditStation}
+          onExport={() => void exportStations()}
+          onFilterChange={setStationFilter}
+          onOpenProfile={setProfileTarget}
+          onOpenStation={(station) => setSelectedStation({ portal: station.portal, galaxy: station.galaxy })}
+          onRemove={(station) =>
+            void removeStation(station.portal, station.galaxy, station.ownerId, stationOwnerName(station))
+          }
+          onSearchChange={setSearch}
+          onTabChange={setActiveStationTab}
+          onToggleStatus={(station, status, checked) =>
+            void toggleStationSystemStatus(station.portal, station.galaxy, status, checked)
+          }
+          onViewNote={(station) => setStationNoteView({ portal: station.portal, note: station.note ?? "" })}
+          ownStationCount={ownDiscoveredStations.length}
+          planetStatuses={planetStatuses}
+          planetStatusesLoaded={planetStatusesLoaded}
+          renderedAt={renderedAt}
+          savingStatusKeys={savingStatusKeys}
+          search={search}
+          stationCounts={stationCounts}
+          stationFilter={stationFilter}
+          stations={stations}
+          visibleStationFilters={visibleStationFilters}
+          visibleStations={visibleStations}
+        />
+      )}
+    </DetailSection>
+  );
+
   return (
     <div className={`app-shell${pageMember.pulseEffectsEnabled === false ? " pulse-effects-disabled" : ""}`}>
       <Sidebar
-        activeSection="stazioni"
+        activeSection={detail?.missionId ? "missioni" : "stazioni"}
         currentMember={pageMember}
         missionCount={missionCount}
         settings={allianceSettings}
@@ -525,25 +626,28 @@ export function StationsPage({
           onAdminOpen={() => setAdminOpen(true)}
           onProfileOpen={() => setProfileOpen(true)}
           onProfileSaved={(profile) => setPageMember((current) => ({ ...current, ...profile }))}
-          sectionTitle={t("stations.stations")}
+          sectionTitle={t(detail?.missionId ? "missions.section_title" : "stations.stations")}
           settings={allianceSettings}
         />
-        <Hero
-          subtitle={t(
-            canSeeAll || canCreateOwnSpecialtyMission
-              ? "admin.browse_alliance_registered_portals_and_their_planets"
-              : "stations.register_portals_for_systems_you_have_discovered",
-          )}
-          settings={allianceSettings}
-          title={t(canSeeAll || canCreateOwnSpecialtyMission ? "stations.space_stations" : "stations.my_stations")}
-        >
-          <HeroAddButton
-            className="station-header-add-pulse"
-            label={t("stations.add_station")}
-            onClick={openAddStation}
-          />
-        </Hero>
+        {!detail && (
+          <Hero
+            subtitle={t(
+              canSeeAll || canCreateOwnSpecialtyMission
+                ? "admin.browse_alliance_registered_portals_and_their_planets"
+                : "stations.register_portals_for_systems_you_have_discovered",
+            )}
+            settings={allianceSettings}
+            title={t(canSeeAll || canCreateOwnSpecialtyMission ? "stations.space_stations" : "stations.my_stations")}
+          >
+            <HeroAddButton
+              className="station-header-add-pulse"
+              label={t("stations.add_station")}
+              onClick={openAddStation}
+            />
+          </Hero>
+        )}
         <main className="content-wrap stations-page">
+          {detail && <DetailBackLink {...detailOrigins[detail.origin ?? "stations"]} />}
           {(error || notice) && (
             <p className={error ? "form-error" : "address-validation address-valid"}>
               {error ? <CircleAlert size={15} /> : null}
@@ -551,48 +655,55 @@ export function StationsPage({
             </p>
           )}
 
-          <StationList
-            activeStationTab={activeStationTab}
-            canChooseStationView={canChooseStationView}
-            canCreateMissions={canCreateMissions}
-            canSeeAll={canSeeAll}
-            exportingStations={exportingStations}
-            loading={loading}
-            member={pageMember}
-            onCreateMission={(station) =>
-              setMissionStation({
-                portal: station.portal,
-                galaxy: station.galaxy,
-                title: station.name || cachedPlanetTitle(station.planet),
-                ownerMemberId: station.ownerId,
-              })
-            }
-            onEdit={openEditStation}
-            onExport={() => void exportStations()}
-            onFilterChange={setStationFilter}
-            onOpenProfile={setProfileTarget}
-            onOpenStation={(station) => setSelectedStation({ portal: station.portal, galaxy: station.galaxy })}
-            onRemove={(station) =>
-              void removeStation(station.portal, station.galaxy, station.ownerId, stationOwnerName(station))
-            }
-            onSearchChange={setSearch}
-            onTabChange={setActiveStationTab}
-            onToggleStatus={(station, status, checked) =>
-              void toggleStationSystemStatus(station.portal, station.galaxy, status, checked)
-            }
-            onViewNote={(station) => setStationNoteView({ portal: station.portal, note: station.note ?? "" })}
-            ownStationCount={ownDiscoveredStations.length}
-            planetStatuses={planetStatuses}
-            planetStatusesLoaded={planetStatusesLoaded}
-            renderedAt={renderedAt}
-            savingStatusKeys={savingStatusKeys}
-            search={search}
-            stationCounts={stationCounts}
-            stationFilter={stationFilter}
-            stations={stations}
-            visibleStationFilters={visibleStationFilters}
-            visibleStations={visibleStations}
-          />
+          {!detail && stationSection}
+          {detail && detailSystem && (
+            <>
+              <MissionDashboard
+                refreshRevision={detailRevision}
+                currentMember={pageMember}
+                alliance={allianceSettings}
+                sidebarStationCount={stations.length}
+                systemScope={detailSystem}
+                featuredMissionId={detail.missionId}
+                associatedFirst={detail.associatedFirst}
+                returnHref={detailOrigins[detail.origin ?? "missions"].href}
+                beforeAssociated={stationSection}
+                onChanged={() => {
+                  void refreshStations().catch((error_: unknown) =>
+                    setError(error_ instanceof Error ? error_.message : t("errors.unable_to_load_space_stations")),
+                  );
+                  void fetch("/api/planet-status", { cache: "no-store" })
+                    .then(async (response) => {
+                      const body = asRecord(await response.json());
+                      if (!response.ok || !body) throw new Error(t("errors.request_failed"));
+                      setPlanetStatuses(parsePlanetSystemStatuses(body.planets));
+                    })
+                    .catch((error_: unknown) =>
+                      setError(error_ instanceof Error ? error_.message : t("errors.request_failed")),
+                    );
+                  router.refresh();
+                }}
+              />
+              <DetailSection title="details.system_and_planets">
+                <PlanetsPage
+                  embedded
+                  alliance={allianceSettings}
+                  currentMember={pageMember}
+                  planets={detail.planets}
+                  almanacLookupFailed={detail.almanacLookupFailed}
+                  missionCount={missionCount}
+                  stationCount={stations.length}
+                />
+              </DetailSection>
+              <HelpRequestsPage
+                alliance={allianceSettings}
+                currentMember={pageMember}
+                missionCount={missionCount}
+                stationCount={stations.length}
+                systemScope={detailSystem}
+              />
+            </>
+          )}
         </main>
       </section>
       {addOpen && (

@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
 import { Check, X } from "lucide-react";
 import { MissionMetrics } from "@/components/sections/mission-metrics";
 import { Sidebar } from "@/components/layout/sidebar";
@@ -33,6 +34,8 @@ import {
 import { useLocale } from "@/components/providers/locale-provider";
 import { useNavigationSearchState } from "@/components/shared/navigation-search-reset";
 import { sortByCreatedAtDescending } from "@/lib/created-at";
+import { isSameSystem, type SystemIdentity } from "@/lib/detail-links";
+import { DetailSection, useDetailReturn } from "@/components/shared/detail-page";
 
 const missionTypeLabels: Record<Mission["targetSpecialty"], string> = {
   all: "Tutti",
@@ -50,6 +53,13 @@ export function MissionDashboard({
   sidebarOfflineCount,
   sidebarStationCount,
   sidebarUserCount,
+  systemScope,
+  onChanged,
+  featuredMissionId,
+  beforeAssociated,
+  associatedFirst = false,
+  returnHref = "/missions",
+  refreshRevision = 0,
 }: Readonly<{
   currentMember: AllianceMember;
   alliance: AllianceSettings;
@@ -57,7 +67,16 @@ export function MissionDashboard({
   sidebarStationCount: number;
   sidebarOfflineCount?: number;
   sidebarUserCount?: number;
+  systemScope?: SystemIdentity;
+  onChanged?: () => void;
+  featuredMissionId?: string;
+  beforeAssociated?: ReactNode;
+  associatedFirst?: boolean;
+  returnHref?: string;
+  refreshRevision?: number;
 }>) {
+  const router = useRouter();
+  const returnDestination = useDetailReturn(returnHref);
   const { t, systemLabel } = useLocale();
   const [member, setMember] = useState(currentMember);
   const [missions, setMissions] = useState<Mission[]>([]);
@@ -92,9 +111,17 @@ export function MissionDashboard({
       .catch(() => undefined);
   }
 
+  const missionsUrl = featuredMissionId
+    ? `/api/missions?${new URLSearchParams({
+        detailMission: featuredMissionId,
+        ...(systemScope ? { stationPortal: systemScope.portal, galaxy: String(systemScope.galaxy) } : {}),
+      })}`
+    : systemScope
+      ? `/api/missions?${new URLSearchParams({ stationPortal: systemScope.portal, galaxy: String(systemScope.galaxy) })}`
+      : "/api/missions";
   useEffect(() => {
     loadCovered();
-    fetch("/api/missions", { cache: "no-store" })
+    fetch(missionsUrl, { cache: "no-store" })
       .then(async (response) => {
         if (!response.ok) throw new Error("Unable to load missions.");
         setMissions((await response.json()) as Mission[]);
@@ -155,13 +182,27 @@ export function MissionDashboard({
           setStationOwners([]);
         });
     }
-  }, [canManage]);
+  }, [canManage, missionsUrl, refreshRevision]);
 
-  const availableMissions = canManage
-    ? showAllMissions
-      ? missions
-      : missions.filter((mission) => [mission.assignedMemberId, mission.stationOwnerMemberId].includes(member.publicId))
-    : missions.filter((mission) => canViewMission(mission, member));
+  const permittedMissions = systemScope
+    ? missions
+    : canManage
+      ? showAllMissions
+        ? missions
+        : missions.filter((mission) =>
+            [mission.assignedMemberId, mission.stationOwnerMemberId].includes(member.publicId),
+          )
+      : missions.filter((mission) => canViewMission(mission, member));
+  const availableMissions = systemScope
+    ? permittedMissions.filter((mission) =>
+        isSameSystem({ portal: mission.systemAddress, galaxy: mission.galaxy }, systemScope),
+      )
+    : permittedMissions;
+
+  function updateMissions(update: (current: Mission[]) => Mission[]) {
+    setMissions(update);
+    onChanged?.();
+  }
 
   const counts = useMemo(() => {
     const waitingMissions = availableMissions.filter((mission) => mission.status === "pending");
@@ -177,6 +218,7 @@ export function MissionDashboard({
   }, [availableMissions]);
 
   const visibleMissions = useMemo(() => {
+    if (systemScope) return sortByCreatedAtDescending(availableMissions);
     const chronological = sortByCreatedAtDescending(
       availableMissions
         .filter((mission) => {
@@ -216,7 +258,7 @@ export function MissionDashboard({
       .map((mission, index) => ({ mission, index }))
       .sort((first, second) => rank(first.mission) - rank(second.mission) || first.index - second.index)
       .map(({ mission }) => mission);
-  }, [availableMissions, canManage, filter, member.simpleView, search]);
+  }, [availableMissions, canManage, filter, member.simpleView, search, systemScope]);
 
   async function saveMission(input: MissionInput, editing: Mission | null = dialogMission) {
     const response = await fetch(editing ? `/api/missions/${editing.id}` : "/api/missions", {
@@ -228,13 +270,13 @@ export function MissionDashboard({
     if (!response.ok) throw new Error(body.error ?? "Unable to save the mission.");
     if (editing) {
       const saved = body as Mission;
-      setMissions((current) => current.map((mission) => (mission.id === saved.id ? saved : mission)));
+      updateMissions((current) => current.map((mission) => (mission.id === saved.id ? saved : mission)));
       setNotice("Mission updated.");
       return;
     }
 
     const created = body as Mission[];
-    setMissions((current) => [...created.filter((item) => canManage || canViewMission(item, member)), ...current]);
+    updateMissions((current) => [...created.filter((item) => canManage || canViewMission(item, member)), ...current]);
     loadCovered();
     setNotice(
       created.length === 3
@@ -247,7 +289,8 @@ export function MissionDashboard({
     const response = await fetch(`/api/missions/${id}`, { method: "DELETE" });
     const body = await response.json();
     if (!response.ok) throw new Error(body.error ?? "Deletion failed.");
-    setMissions((current) => current.filter((mission) => mission.id !== id));
+    updateMissions((current) => current.filter((mission) => mission.id !== id));
+    if (id === featuredMissionId) router.replace(returnDestination);
     setNotice("Mission deleted.");
   }
 
@@ -256,7 +299,7 @@ export function MissionDashboard({
     const body = await response.json();
     if (!response.ok) throw new Error(body.error ?? "Unable to claim the mission.");
     const claimed = body as Mission;
-    setMissions((current) => current.map((item) => (item.id === claimed.id ? claimed : item)));
+    updateMissions((current) => current.map((item) => (item.id === claimed.id ? claimed : item)));
     setNotice("Mission claimed.");
   }
 
@@ -268,7 +311,7 @@ export function MissionDashboard({
     });
     const body = await response.json();
     if (!response.ok) throw new Error(body.error ?? "Unable to complete the mission.");
-    setMissions((current) => current.map((item) => (item.id === mission.id ? (body as Mission) : item)));
+    updateMissions((current) => current.map((item) => (item.id === mission.id ? (body as Mission) : item)));
     setNotice("Mission completed.");
   }
 
@@ -280,7 +323,7 @@ export function MissionDashboard({
     });
     const body = await response.json();
     if (!response.ok) throw new Error(body.error ?? "Unable to start the mission.");
-    setMissions((current) => current.map((item) => (item.id === mission.id ? (body as Mission) : item)));
+    updateMissions((current) => current.map((item) => (item.id === mission.id ? (body as Mission) : item)));
     setNotice("Mission started.");
   }
 
@@ -292,7 +335,7 @@ export function MissionDashboard({
     });
     const body = await response.json();
     if (!response.ok) throw new Error(body.error ?? "Unable to reopen the mission.");
-    setMissions((current) => current.map((item) => (item.id === mission.id ? (body as Mission) : item)));
+    updateMissions((current) => current.map((item) => (item.id === mission.id ? (body as Mission) : item)));
     setNotice("Mission reopened.");
   }
 
@@ -308,7 +351,7 @@ export function MissionDashboard({
       const message = body && typeof body === "object" && "error" in body ? body.error : null;
       throw new Error(typeof message === "string" ? message : t("errors.update_failed"));
     }
-    setMissions((current) => current.map((item) => (item.id === mission.id ? (body as Mission) : item)));
+    updateMissions((current) => current.map((item) => (item.id === mission.id ? (body as Mission) : item)));
   }
 
   async function togglePlanetSystemStatus(mission: Mission, status: MissionSystemStatus, checked: boolean) {
@@ -330,6 +373,7 @@ export function MissionDashboard({
     const savedStatuses = body && typeof body === "object" && "systemStatuses" in body ? body.systemStatuses : null;
     if (!Array.isArray(savedStatuses)) throw new Error("Invalid planet status response.");
     setPlanetStatuses((current) => ({ ...current, [key]: savedStatuses }));
+    onChanged?.();
     if (!canManage && mission.assignedMemberId === member.publicId && mission.status === "in_progress") {
       const floor = systemProgressFloor(savedStatuses, member.specialty ?? "");
       const progress = checked ? Math.max(mission.progress, floor) : floor;
@@ -411,112 +455,148 @@ export function MissionDashboard({
     setDialogOpen(true);
   }
 
-  return (
-    <main className={`app-shell${member.pulseEffectsEnabled === false ? " pulse-effects-disabled" : ""}`}>
-      <Sidebar
-        activeSection="missioni"
+  function renderMissionList(listMissions: Mission[], featured = false) {
+    return (
+      <MissionList
+        compact={Boolean(systemScope)}
+        fullWidth={featured}
+        detailMissionId={featuredMissionId}
+        detailOrigin={systemScope && !featuredMissionId ? "stations" : "missions"}
+        assigneeActionsOnly={Boolean(systemScope)}
+        counts={counts}
+        filter={filter}
+        missions={listMissions}
         currentMember={member}
-        missionCount={missions.length}
-        settings={alliance}
-        stationCount={sidebarStationCount}
-        offlineCount={sidebarOfflineCount}
-        userCount={sidebarUserCount}
+        canManage={canManage}
+        members={members}
+        stationOwners={stationOwners}
+        stationOwnersLoaded={stationOwnersLoaded}
+        planetStatuses={planetStatuses}
+        requestedSpecialty={requestedSpecialty}
+        onCreateRangerMission={createRangerMission}
+        onClaim={(mission) =>
+          void claimMission(mission).catch((error: unknown) =>
+            setNotice(error instanceof Error ? error.message : t("errors.request_failed")),
+          )
+        }
+        onComplete={(mission) =>
+          void completeMission(mission).catch((error: unknown) =>
+            setNotice(error instanceof Error ? error.message : t("errors.request_failed")),
+          )
+        }
+        onStart={(mission) =>
+          void startMission(mission).catch((error: unknown) =>
+            setNotice(error instanceof Error ? error.message : t("errors.request_failed")),
+          )
+        }
+        onReopen={(mission) =>
+          void reopenMission(mission).catch((error: unknown) =>
+            setNotice(error instanceof Error ? error.message : t("errors.request_failed")),
+          )
+        }
+        onUpdateProgress={async (mission, progress) => {
+          try {
+            await updateMissionProgress(mission, progress);
+          } catch (error: unknown) {
+            setNotice(error instanceof Error ? error.message : t("errors.request_failed"));
+            throw error;
+          }
+        }}
+        onToggleSystemStatus={(mission, status, checked) =>
+          void togglePlanetSystemStatus(mission, status, checked).catch((error: unknown) =>
+            setNotice(error instanceof Error ? error.message : t("errors.request_failed")),
+          )
+        }
+        onEdit={(mission) => openMission(mission)}
+        onDeleteMission={(mission) => {
+          if (!window.confirm(t("common.delete_title", { title: mission.title }))) return;
+          void deleteMission(mission.id).catch((error: unknown) =>
+            setNotice(error instanceof Error ? error.message : t("errors.deletion_failed")),
+          );
+        }}
+        onOpenPlanet={setPlanetMission}
+        onFilterChange={setFilter}
+        onSearchChange={setSearch}
+        onScopeChange={canManage ? setShowAllMissions : undefined}
+        showAll={showAllMissions}
+        search={search}
+        searchInput={searchInput}
+        loading={loadingMissions}
       />
-      <section className="main-panel" id="missioni">
-        <Header
+    );
+  }
+
+  const Container = systemScope ? "div" : "main";
+  return (
+    <Container
+      className={
+        systemScope ? undefined : `app-shell${member.pulseEffectsEnabled === false ? " pulse-effects-disabled" : ""}`
+      }
+    >
+      {!systemScope && (
+        <Sidebar
+          activeSection="missioni"
           currentMember={member}
-          onAdminOpen={() => setAdminOpen(true)}
-          onProfileOpen={() => setProfileOpen(true)}
-          onProfileSaved={(profile) => setMember((current) => ({ ...current, ...profile }))}
+          missionCount={missions.length}
           settings={alliance}
+          stationCount={sidebarStationCount}
+          offlineCount={sidebarOfflineCount}
+          userCount={sidebarUserCount}
         />
-        <Hero
-          settings={alliance}
-          subtitle="Coordinate the next frontier, one expedition at a time."
-          title="Mission log"
-        >
-          {canManage && <HeroAddButton label="New mission" onClick={() => openMission(null)} />}
-        </Hero>
-        {!member.simpleView && <MissionMetrics counts={counts} missions={availableMissions} />}
-        <div className="content-wrap">
-          {!profileComplete && (
-            <section className="profile-required-banner">
-              <span>
-                <strong>{t("profile.complete_your_nms_profile")}</strong>
-                <small>
-                  {t(
-                    "profile.enter_your_in_game_name_friend_code_platforms_and_specialty_to_claim_or_be_assigned_missions",
-                  )}
-                </small>
-              </span>
-              <button className="claim-button" onClick={() => setProfileOpen(true)} type="button">
-                {t("profile.complete_profile")}
-              </button>
-            </section>
+      )}
+      {featuredMissionId && !associatedFirst && (
+        <DetailSection title="details.mission">
+          {renderMissionList(
+            visibleMissions.filter((mission) => mission.id === featuredMissionId),
+            true,
           )}
-          <MissionList
-            counts={counts}
-            filter={filter}
-            missions={visibleMissions}
-            currentMember={member}
-            canManage={canManage}
-            members={members}
-            stationOwners={stationOwners}
-            stationOwnersLoaded={stationOwnersLoaded}
-            planetStatuses={planetStatuses}
-            requestedSpecialty={requestedSpecialty}
-            onCreateRangerMission={createRangerMission}
-            onClaim={(mission) =>
-              void claimMission(mission).catch((error: unknown) =>
-                setNotice(error instanceof Error ? error.message : t("errors.request_failed")),
-              )
-            }
-            onComplete={(mission) =>
-              void completeMission(mission).catch((error: unknown) =>
-                setNotice(error instanceof Error ? error.message : t("errors.request_failed")),
-              )
-            }
-            onStart={(mission) =>
-              void startMission(mission).catch((error: unknown) =>
-                setNotice(error instanceof Error ? error.message : t("errors.request_failed")),
-              )
-            }
-            onReopen={(mission) =>
-              void reopenMission(mission).catch((error: unknown) =>
-                setNotice(error instanceof Error ? error.message : t("errors.request_failed")),
-              )
-            }
-            onUpdateProgress={async (mission, progress) => {
-              try {
-                await updateMissionProgress(mission, progress);
-              } catch (error: unknown) {
-                setNotice(error instanceof Error ? error.message : t("errors.request_failed"));
-                throw error;
-              }
-            }}
-            onToggleSystemStatus={(mission, status, checked) =>
-              void togglePlanetSystemStatus(mission, status, checked).catch((error: unknown) =>
-                setNotice(error instanceof Error ? error.message : t("errors.request_failed")),
-              )
-            }
-            onEdit={(mission) => openMission(mission)}
-            onDeleteMission={(mission) => {
-              if (!window.confirm(t("common.delete_title", { title: mission.title }))) return;
-              void deleteMission(mission.id).catch((error: unknown) =>
-                setNotice(error instanceof Error ? error.message : t("errors.deletion_failed")),
-              );
-            }}
-            onOpenPlanet={setPlanetMission}
-            onFilterChange={setFilter}
-            onSearchChange={setSearch}
-            onScopeChange={canManage ? setShowAllMissions : undefined}
-            showAll={showAllMissions}
-            search={search}
-            searchInput={searchInput}
-            loading={loadingMissions}
-          />
-        </div>
-      </section>
+        </DetailSection>
+      )}
+      {!associatedFirst && beforeAssociated}
+      <DetailSection title={systemScope && availableMissions.length > 0 ? "details.associated_missions" : undefined}>
+        {(!systemScope || availableMissions.length > 0) && (
+          <section className={systemScope ? undefined : "main-panel"} id="missioni">
+            {!systemScope && (
+              <>
+                <Header
+                  currentMember={member}
+                  onAdminOpen={() => setAdminOpen(true)}
+                  onProfileOpen={() => setProfileOpen(true)}
+                  onProfileSaved={(profile) => setMember((current) => ({ ...current, ...profile }))}
+                  settings={alliance}
+                />
+                <Hero
+                  settings={alliance}
+                  subtitle="Coordinate the next frontier, one expedition at a time."
+                  title="Mission log"
+                >
+                  {canManage && <HeroAddButton label="New mission" onClick={() => openMission(null)} />}
+                </Hero>
+                {!member.simpleView && <MissionMetrics counts={counts} missions={availableMissions} />}
+              </>
+            )}
+            <div className={systemScope ? undefined : "content-wrap"}>
+              {!profileComplete && (
+                <section className="profile-required-banner">
+                  <span>
+                    <strong>{t("profile.complete_your_nms_profile")}</strong>
+                    <small>
+                      {t(
+                        "profile.enter_your_in_game_name_friend_code_platforms_and_specialty_to_claim_or_be_assigned_missions",
+                      )}
+                    </small>
+                  </span>
+                  <button className="claim-button" onClick={() => setProfileOpen(true)} type="button">
+                    {t("profile.complete_profile")}
+                  </button>
+                </section>
+              )}
+              {renderMissionList(visibleMissions)}
+            </div>
+          </section>
+        )}
+      </DetailSection>
+      {associatedFirst && beforeAssociated}
       {notice && (
         <output className="toast" aria-live="polite">
           <Check size={15} />
@@ -567,6 +647,6 @@ export function MissionDashboard({
           onSaved={(profile) => setMember((current) => ({ ...current, ...profile }))}
         />
       )}
-    </main>
+    </Container>
   );
 }

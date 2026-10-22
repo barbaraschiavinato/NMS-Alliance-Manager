@@ -37,6 +37,31 @@ function renderTaxi(alliance = defaultAlliance, currentMember = member) {
 }
 
 describe("taxi board", () => {
+  it.each([true, false])("uses the portal for an unnamed meeting station, accessible %s", async (accessible) => {
+    const portal = accessible ? station.portal : "0123456789AC";
+    mockFetch({
+      "/api/taxi-requests": [{ ...request, meetingPoint: "station", meetingStation: { portal, galaxy: 0 } }],
+    });
+    renderTaxi();
+    await screen.findByRole("heading", { name: "Taxi to Eissentam" });
+    if (accessible) {
+      expect(screen.getByRole("link", { name: t("taxi.open_meeting_station") })).toHaveTextContent(portal);
+    } else {
+      expect(screen.queryByRole("link", { name: t("taxi.open_meeting_station") })).not.toBeInTheDocument();
+      expect(screen.getByText(new RegExp(portal))).toBeInTheDocument();
+    }
+  });
+  it("keeps a removed meeting station as text rather than linking to an unrelated search", async () => {
+    mockFetch({
+      "/api/taxi-requests": [
+        { ...request, meetingStation: { portal: "0123456789AC", galaxy: 1, name: "Removed station" } },
+      ],
+    });
+    renderTaxi();
+    await screen.findByRole("heading", { name: "Taxi to Eissentam" });
+    expect(screen.getByText(/Removed station/)).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: t("taxi.open_meeting_station") })).not.toBeInTheDocument();
+  });
   it("explains the friend-code requirement and opens the profile instead of the taxi composer", async () => {
     mockFetch({ "/api/taxi-requests": [] });
     const { user } = renderTaxi(defaultAlliance, { ...member, nmsCode: "" });
@@ -109,7 +134,7 @@ describe("taxi board", () => {
       });
       renderTaxi();
       const link = await screen.findByRole("link", { name: t("taxi.open_meeting_station") });
-      expect(link).toHaveAttribute("href", "/stations?search=0123456789AB");
+      expect(link).toHaveAttribute("href", "/stations/other%3A0123456789AB%3A0?from=taxi");
       expect(link).toHaveTextContent(t("taxi.alliance_hub"));
       expect(link).not.toHaveTextContent(portal);
       expect(link).not.toHaveTextContent("0123456789AB");
@@ -345,7 +370,7 @@ describe("taxi board", () => {
     const { user } = renderTaxi();
     expect(await screen.findByRole("heading", { name: "Taxi to Eissentam" })).toBeInTheDocument();
     const link = screen.getByRole("link", { name: t("taxi.open_meeting_station") });
-    expect(link).toHaveAttribute("href", "/stations?search=0123456789AB");
+    expect(link).toHaveAttribute("href", "/stations/other%3A0123456789AB%3A0?from=taxi");
     expect(link).toHaveTextContent("Home");
     expect(link.querySelector("svg")).toHaveClass("lucide-orbit");
     expect(screen.getByRole("heading", { name: "Taxi to Eissentam" }).nextElementSibling).toBe(link);

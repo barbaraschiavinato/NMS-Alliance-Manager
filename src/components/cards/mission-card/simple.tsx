@@ -13,6 +13,7 @@ import {
   targetSpecialtyNames,
   MissionRowAction,
   MissionStationLink,
+  MissionDetailLink,
   AssigneeCell,
   DiscovererCell,
   MissionProgress,
@@ -47,6 +48,9 @@ export function MissionCardSimple({
   onOpenProfile,
   getDiscovererImage,
   planetImageUrl,
+  assigneeActionsOnly,
+  hideDetailLink,
+  detailOrigin,
 }: MissionCardProps) {
   const { t } = useLocale();
   const statuses = systemStatuses[planetSystemStatusKey(mission.systemAddress, mission.galaxy)] ?? [];
@@ -146,7 +150,9 @@ export function MissionCardSimple({
             stationOwners={stationOwners}
             stationOwnersLoaded={stationOwnersLoaded}
           />
+          {!hideDetailLink && <MissionDetailLink mission={mission} origin={detailOrigin} />}
           <MissionRowAction
+            assigneeActionsOnly={assigneeActionsOnly}
             tasksDone={systemProgressFloor(statuses, currentMember.specialty ?? "") >= systemProgressCap}
             requestedSpecialty={requestedSpecialty(mission)}
             canManage={canManage}

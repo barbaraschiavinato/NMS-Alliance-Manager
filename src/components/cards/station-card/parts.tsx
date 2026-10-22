@@ -28,6 +28,7 @@ export type StationEntry = Readonly<{
   planet: CachedPlanet | null;
   hasMissions: boolean;
   canOpenOwnSpecialtyMission: boolean;
+  specialtyMissionId?: string;
   hasAssignedMission: boolean;
   missionStatus: StationMissionStatus;
   availableSpecialties: MissionSpecialty[];
@@ -92,6 +93,9 @@ export function parseStations(value: unknown): StationEntry[] {
         planet,
         hasMissions: station.hasMissions === true,
         canOpenOwnSpecialtyMission: station.canOpenOwnSpecialtyMission === true,
+        ...(typeof station.specialtyMissionId === "string" && station.specialtyMissionId
+          ? { specialtyMissionId: station.specialtyMissionId }
+          : {}),
         hasAssignedMission: station.hasAssignedMission === true,
         missionStatus:
           station.missionStatus === "in_progress" || station.missionStatus === "completed"
@@ -224,10 +228,13 @@ export function CachedPlanetInfo({ planet, onOpen }: Readonly<{ planet: CachedPl
 }
 
 export type StationCardProps = Readonly<{
+  isAllianceHub?: boolean;
   station: StationEntry;
   member: AllianceMember;
   canSeeAll: boolean;
   canCreateMissions: boolean;
+  showDetailLink?: boolean;
+  showAssociatedMissionsLink?: boolean;
   renderedAt: number;
   planetStatuses: PlanetSystemStatuses;
   planetStatusesLoaded: boolean;

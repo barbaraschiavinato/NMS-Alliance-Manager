@@ -341,7 +341,7 @@ describe("PlanetList", () => {
       <PlanetList
         groups={[
           {
-            station: { id: "s1", portal: "0123456789AB", galaxy: 0, name: "Haven" },
+            station: { id: "owner:0123456789AB:0", portal: "0123456789AB", galaxy: 0, name: "Haven" },
             planets: [first, planet({ id: "b", planetNumber: 2 })],
           },
           { station: undefined, planets: [planet({ id: "c", planetNumber: 3 })] },
@@ -356,7 +356,7 @@ describe("PlanetList", () => {
     ]);
     expect(screen.getByRole("link", { name: "Open Haven in Stations" })).toHaveAttribute(
       "href",
-      "/stations?search=0123456789AB",
+      "/stations/owner%3A0123456789AB%3A0?from=planets",
     );
     expect(screen.getByText("Euclide")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /Alpha/ }));

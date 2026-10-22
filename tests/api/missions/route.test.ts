@@ -99,6 +99,147 @@ describe("GET /api/missions", () => {
     const res = await GET();
     expect(res.status).toBe(503);
   });
+
+  describe("station detail scope", () => {
+    const scopedGet = (query: string) => GET(new Request(`http://localhost/api/missions?${query}`));
+
+    beforeEach(() => {
+      seedStations([{ portal: PORTAL, galaxy: 0, ownerId: builder.publicId }]);
+      seedMissions([
+        ...Object.values(missions),
+        storedMission({ title: "Other planet", systemAddress: SAME_SYSTEM_OTHER_PLANET, targetSpecialty: "ranger" }),
+        storedMission({ title: "Other galaxy", galaxy: 1 }),
+      ]);
+    });
+
+    it.each([explorer, builder, moderator, simpleAdmin, makeMember({ specialty: "ranger" })])(
+      "shows all specialties and assignees only in an accessible station's system for $role/$specialty",
+      async (member) => {
+        seedMembers([explorer, builder, moderator, simpleAdmin, member]);
+        signInAs(member);
+        const response = await scopedGet(`stationPortal=${PORTAL.toLowerCase()}&galaxy=0`);
+        expect(response.status).toBe(200);
+        const body = (await response.json()) as Mission[];
+        expect(body.map((mission) => mission.title).sort()).toEqual(["All", "Builder", "Other planet", "Taken"]);
+        expect(body.find((mission) => mission.title === "Taken")?.assignedTo).toBe(builder.nmsName);
+      },
+    );
+
+    it.each([
+      "stationPortal=invalid&galaxy=0",
+      `stationPortal=${PORTAL}`,
+      "galaxy=0",
+      `stationPortal=${PORTAL}&galaxy=-1`,
+      `stationPortal=${PORTAL}&galaxy=256`,
+      `stationPortal=${PORTAL}&galaxy=1.5`,
+    ])("rejects invalid scope: %s", async (query) => {
+      signInAs(explorer);
+      expect((await scopedGet(query)).status).toBe(400);
+    });
+
+    it.each([`stationPortal=${OTHER_PORTAL}&galaxy=0`, `stationPortal=${PORTAL}&galaxy=1`])(
+      "rejects scope without a registered station: %s",
+      async (query) => {
+        signInAs(explorer);
+        expect((await scopedGet(query)).status).toBe(404);
+      },
+    );
+
+    it("requires an approved session even when requesting all associated missions", async () => {
+      expect((await scopedGet(`stationPortal=${PORTAL}&galaxy=0`)).status).toBe(401);
+      const pending = makeMember({ membershipStatus: "pending" });
+      seedMembers([pending]);
+      signInAs(pending);
+      expect((await scopedGet(`stationPortal=${PORTAL}&galaxy=0`)).status).toBe(401);
+    });
+
+    it("restricts members without a specialty to their own stations", async () => {
+      const plain = makeMember({ specialty: "" });
+      seedMembers([plain, builder]);
+      signInAs(plain);
+      expect((await scopedGet(`stationPortal=${PORTAL}&galaxy=0`)).status).toBe(404);
+      seedStations([{ portal: PORTAL, galaxy: 0, ownerId: plain.publicId }]);
+      expect((await scopedGet(`stationPortal=${PORTAL}&galaxy=0`)).status).toBe(200);
+    });
+
+    it("reports station storage failures instead of returning an empty list", async () => {
+      signInAs(explorer);
+      corruptDataFile("stations-v2.json");
+      vi.spyOn(console, "error").mockImplementation(() => {});
+      expect((await scopedGet(`stationPortal=${PORTAL}&galaxy=0`)).status).toBe(503);
+    });
+
+    describe("mission detail scope", () => {
+      beforeEach(() => {
+        seedStations([]);
+        seedMissions(Object.values(missions));
+      });
+      const detailGet = (id: string) =>
+        GET(new Request(`http://localhost/api/missions?detailMission=${encodeURIComponent(id)}`));
+
+      it("requires approval and rejects missing mission IDs", async () => {
+        expect((await detailGet(missions.forAll.id)).status).toBe(401);
+        signInAs(explorer);
+        expect((await detailGet("missing")).status).toBe(404);
+        expect((await detailGet("")).status).toBe(404);
+      });
+
+      it.each([explorer, builder, moderator, simpleAdmin])(
+        "allows the same system visibility as station details for $role/$specialty",
+        async (member) => {
+          seedStations([{ portal: PORTAL, galaxy: 0, ownerId: builder.publicId }]);
+          seedMissions([
+            ...Object.values(missions),
+            storedMission({
+              title: "Other planet",
+              systemAddress: SAME_SYSTEM_OTHER_PLANET,
+              targetSpecialty: "ranger",
+            }),
+            storedMission({ title: "Other galaxy", galaxy: 1 }),
+          ]);
+          signInAs(member);
+          const response = await detailGet(missions.forBuilder.id);
+          expect(response.status).toBe(200);
+          expect(((await response.json()) as Mission[]).map((mission) => mission.title).sort()).toEqual([
+            "All",
+            "Builder",
+            "Other planet",
+            "Taken",
+          ]);
+        },
+      );
+
+      it("falls back to default visibility without a linked station", async () => {
+        signInAs(explorer);
+        const response = await detailGet(missions.forAll.id);
+        expect(response.status).toBe(200);
+        expect(((await response.json()) as Mission[]).map((mission) => mission.title)).toEqual(["All"]);
+        expect((await detailGet(missions.forBuilder.id)).status).toBe(404);
+        expect((await detailGet(missions.assignedToOther.id)).status).toBe(404);
+      });
+
+      it("keeps management access without a linked station", async () => {
+        signInAs(moderator);
+        const response = await detailGet(missions.forBuilder.id);
+        expect(response.status).toBe(200);
+        expect(((await response.json()) as Mission[]).map((mission) => mission.title).sort()).toEqual([
+          "All",
+          "Builder",
+          "Taken",
+        ]);
+      });
+
+      it("restricts members without a specialty to their own stations", async () => {
+        const plain = makeMember({ specialty: "" });
+        seedMembers([plain, builder]);
+        signInAs(plain);
+        seedStations([{ portal: PORTAL, galaxy: 0, ownerId: builder.publicId }]);
+        expect((await detailGet(missions.forBuilder.id)).status).toBe(404);
+        seedStations([{ portal: PORTAL, galaxy: 0, ownerId: plain.publicId }]);
+        expect((await detailGet(missions.forBuilder.id)).status).toBe(200);
+      });
+    });
+  });
 });
 
 describe("POST /api/missions", () => {

@@ -69,6 +69,8 @@ Ogni specializzazione ha le sue voci di avanzamento da spuntare:
 
 Le voci spuntate fanno salire la percentuale fino a un massimo dell'80%. Il 100% si raggiunge con "Completa missione", attivo solo quando le tue voci sono tutte spuntate.
 
+Nelle pagine di dettaglio, il collegamento di ritorno riporta alla pagina da cui hai aperto la scheda, mantenendo l'eventuale ricerca nell'indirizzo. Nei passaggi tra schede trovi «Torna alla scheda missione» o «Torna alla scheda stazione»; per gli elenchi resta «Torna alle missioni» o «Torna alle stazioni». Aprendo un indirizzo direttamente, senza una pagina di provenienza, il ritorno porta alla sezione corrispondente.
+
 ## 3. Ruolo per ruolo
 
 <a id="ranger"></a>
@@ -96,7 +98,7 @@ Hanno lo stesso funzionamento, ciascuno con le proprie voci.
 **Stazioni**
 - Vedono tutte le stazioni ma non possono registrarne né modificarne di altrui.
 - Possono creare una missione **per la propria specializzazione** da una stazione (icona "+"). Viene assegnata automaticamente a loro. Il sistema impedisce di crearla se quella specializzazione è già coperta, o se c'è già un altro pianeta dello stesso sistema.
-- Se una missione esiste già, un'icona apre le missioni collegate. Se è già in carico a un altro membro compare l'etichetta "missione associata".
+- Se una missione esiste già, l'icona con il mirino apre il dettaglio della missione per la tua specializzazione: trovi prima tutte le missioni associate, poi la stazione e i pianeti del sistema, senza duplicare la missione in un blocco separato. Se è già in carico a un altro membro compare l'etichetta "missione associata".
 
 **Missioni**
 - Vedono le missioni per "Tutti", per la propria specializzazione, o "Esploratore + Costruttore" se sono Esploratori o Costruttori. Se una missione ha un assegnatario, la vede solo lui.
@@ -113,6 +115,19 @@ Missioni e Stazioni mostrano fino a 50 elementi per pagina; Pianeti mostra fino 
 
 ### `Orbit` Stazioni
 Descritta sopra per ogni specializzazione. Il nome della pagina è "Le mie stazioni" per i Ranger.
+
+L'azione **Apri dettaglio stazione** sulla scheda apre una pagina dedicata con i blocchi **Stazione**, **Missioni associate**, **Sistema e pianeti**. Il blocco **Missioni associate** appare solo se ci sono missioni e le mostra direttamente, senza tab, ricerca o paginazione. Solo in questo dettaglio sono visibili tutte le missioni dello stesso sistema e della stessa galassia, anche di altre specializzazioni o assegnate ad altri. **Inizia** e **Completa** sono disponibili solo sulle missioni assegnate a te; **Prendi in carico** compare sulle missioni libere per la tua specializzazione o per tutti. Le missioni di altre specializzazioni o assegnate ad altri non mostrano azioni operative. Le azioni di gestione di moderatori e admin restano invariate. Nella pagina **Missioni** restano i consueti filtri di visibilità e la possibilità di prendere in carico le missioni compatibili. **Torna alle stazioni** riapre l'elenco principale.
+
+Il collegamento usa proprietario, portale e galassia: se questi cambiano, cambia anche il link. Dopo una modifica vieni indirizzato al dettaglio aggiornato; dopo l'eliminazione torni all'elenco.
+I collegamenti a una stazione specifica da Pianeti, Missioni, Messaggi e Servizio taxi aprono direttamente questo dettaglio, nella galassia corretta. Se la stazione non è più disponibile, nei messaggi e nelle richieste taxi non viene mostrato un link non valido. I collegamenti alle stazioni di un membro continuano invece ad aprire l'elenco filtrato.
+Il link di ritorno indica la pagina di provenienza: **Torna ai pianeti**, **Torna alle missioni**, **Torna ai messaggi** o **Torna al servizio taxi**. Se apri il dettaglio direttamente o dall'elenco stazioni, trovi **Torna alle stazioni**. La provenienza resta nel collegamento anche dopo una modifica delle coordinate o del proprietario.
+
+Nel blocco **Sistema e pianeti** del dettaglio non viene mostrato il collegamento alla stazione, perché sei già nella sua pagina.
+Se il sistema ha richieste d'aiuto, il dettaglio mostra anche **Richieste d'aiuto** come ultimo blocco, dopo **Sistema e pianeti**. Sono incluse le richieste per qualsiasi pianeta dello stesso sistema e della stessa galassia, con le risposte e le consuete azioni consentite. Il blocco non appare se non ci sono richieste associate.
+La scheda stazione nel dettaglio occupa tutta la larghezza del blocco.
+Il link al dettaglio è blu e segue l'icona delle missioni associate, quando presente. Nella pagina di dettaglio il link non viene mostrato.
+Nel dettaglio è nascosta anche l'azione **Apri missioni associate**, perché le missioni sono già elencate sotto la stazione. Il pulsante **+** per creare una missione resta disponibile quando consentito dal ruolo e dalla specializzazione.
+L'azione di eliminazione, quando consentita, è sempre l'ultima, dopo modifica ed eventuali note.
 
 <a id="missioni"></a>
 
@@ -131,6 +146,17 @@ Le etichette **Paradiso** e **Dissonante** compaiono quando indicate dai dati Al
 
 Nella pagina **Pianeti**, le card mostrano anche le icone di flora, fauna e minerali con i conteggi disponibili in Almanac. Gli stessi contatori compaiono nel dettaglio pianeta, prima del codice portale, e si aggiornano selezionando un altro pianeta. I valori mancanti non vengono mostrati; un conteggio pari a zero resta visibile.
 
+### Dettaglio missione
+
+L'icona **Apri dettaglio missione** nelle card apre una pagina dedicata; il titolo continua ad aprire il dettaglio del pianeta/sistema.
+La pagina mostra prima la missione selezionata a tutta larghezza, poi gli stessi blocchi del dettaglio stazione: **Stazione**, **Missioni associate**, **Sistema e pianeti** ed eventuali **Richieste d'aiuto**.
+La missione selezionata resta anche nell'elenco delle associate: azioni e avanzamento si aggiornano in entrambe le copie.
+Valgono gli stessi permessi del dettaglio stazione: puoi prendere in carico missioni libere compatibili con la tua specializzazione e gestire le tue missioni; le altre restano consultabili.
+Se la stazione collegata non è più disponibile, compare un avviso e la pagina resta accessibile secondo i normali permessi di visibilità delle missioni, senza rendere visibili missioni altrui normalmente nascoste.
+Il link di ritorno indica la sezione di provenienza; eliminando la missione selezionata si torna a **Missioni**.
+
+Le card stazione dello stesso sistema e della stessa galassia dell'hub configurato dall'amministratore mostrano il ribbon rosso **Hub alleanza** in alto a sinistra, al posto di **New**. Il confronto ignora il primo glifo del portale, che identifica il pianeta.
+
 <a id="classifica"></a>
 
 ### `Trophy` Classifica
@@ -139,7 +165,7 @@ Mostra la posizione dei membri per punti: stazioni scoperte, missioni completate
 ### `CarTaxiFront` Servizio taxi
 
 Chiedi un passaggio o aiuta un alleato rispondendo alla sua richiesta.
-Il contatore nel menu mostra il numero di richieste taxi (senza contare le risposte) e si aggiorna automaticamente.
+Il contatore nel menu mostra il numero di richieste taxi in corso (senza contare risposte e richieste archiviate) e si aggiorna automaticamente.
 
 - Premi **Richiedi un taxi**, scegli la **galassia di destinazione**, il **punto d'incontro** e scrivi un messaggio.
 - Per creare una richiesta serve un codice amico NMS valido in **Il mio profilo NMS**. Se manca, il pulsante apre il profilo per completarlo. Puoi comunque leggere e rispondere.
@@ -149,10 +175,12 @@ Il contatore nel menu mostra il numero di richieste taxi (senza contare le rispo
 - Tutti i membri approvati possono vedere le richieste e rispondere.
 - Puoi eliminare le tue richieste e risposte; moderatori/admin possono eliminare anche quelle altrui. Eliminando una richiesta vengono eliminate tutte le sue risposte.
 - Le richieste taxi restano separate dalle Richieste d'aiuto e dai messaggi privati.
+- I tab **In corso** e **Archiviati** separano le richieste aperte da quelle concluse. L'autore della richiesta e i moderatori/admin possono premere **Archivia**, prima di Cancella: l'intera conversazione viene conservata, ma non accetta nuove risposte. Gli archiviati sono inizialmente chiusi: usa la freccia per espandere il messaggio e le risposte. In **Archiviati**, gli stessi utenti possono usare **Ripristina** per riportarla in corso e consentire di nuovo le risposte. In vista semplice valgono i permessi da utente.
 
 <a id="messaggi"></a>
 
 ### `Mail` Messaggi
+- Le pagine di dettaglio conversazione sono disponibili tramite indirizzo diretto (`/messages/ID`, `/help-requests/ID`, `/taxi/ID`), senza nuovi collegamenti negli elenchi per ora. Mostrano soltanto il messaggio iniziale, tutte le risposte aperte e il ritorno alla sezione, mantenendo le azioni consentite. L'indirizzo di una risposta apre la conversazione completa accessibile. Le richieste archiviate restano senza possibilità di rispondere fino al ripristino.
 - I nomi di mittente e destinatario sono cliccabili e aprono la scheda NMS in sola consultazione. I nomi senza un membro associato restano testo normale.
 - Si scrive dal profilo di un membro (cliccando il suo nome). Il messaggio deve riguardare un **pianeta** o una **missione**. Prima dell'invio bisogna confermare che serve solo per quello, perché per il resto si usa Telegram o Discord.
 - Si può scrivere solo a membri approvati e non offline. Max 2000 caratteri.
@@ -164,8 +192,9 @@ Il contatore nel menu mostra il numero di richieste taxi (senza contare le rispo
 - Clicca il nome dell'autore di una richiesta o risposta per consultarne la scheda NMS.
 - Elenco delle richieste di tutti gli alleati, con eventuali risposte.
 - Si invia dalla scheda di un pianeta: scrivi il messaggio (max 2000 caratteri), spunta la conferma e premi "Invia richiesta".
-- Tutti possono rispondere.
+- Tutti possono rispondere alle richieste in corso.
 - Si può eliminare solo la propria richiesta (con le risposte). Chi ha il ruolo moderatore/admin può eliminare quelle altrui.
+- I tab **In corso** e **Archiviati** funzionano come nel Servizio taxi, anche nel dettaglio stazione: **Archivia** conserva richiesta e risposte senza consentirne altre; **Ripristina** riapre la conversazione. Entrambe le azioni sono disponibili all'autore della richiesta e ai moderatori/admin (in vista semplice valgono i permessi da utente). Il contatore nel menu include solo le richieste in corso.
 
 <a id="profilo"></a>
 

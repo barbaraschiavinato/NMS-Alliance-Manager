@@ -4,7 +4,7 @@ import { MessageCard, MessageReplyForm } from "@/components/cards/message-card";
 import { MessageList } from "@/components/sections/message-list";
 import { Tabs } from "@/components/layout/tabs";
 import { useEffect, useState, type ReactNode, type SubmitEvent } from "react";
-import Link from "next/link";
+import { DetailLink as Link, useDetailReturn } from "@/components/shared/detail-page";
 import { Crosshair, MailCheck, Orbit } from "lucide-react";
 
 import { Sidebar } from "@/components/layout/sidebar";
@@ -15,6 +15,9 @@ import { MemberProfilePanel } from "@/components/modals/member-profile-panel";
 import type { AllianceMember, AllianceSettings } from "@/lib/access-store";
 import { useLocale } from "@/components/providers/locale-provider";
 import { MemberProfileLink } from "@/components/shared/member-profile-link";
+import { missionDetailHref } from "@/lib/detail-links";
+import { DetailBackLink } from "@/components/shared/detail-page";
+import { useRouter } from "next/navigation";
 
 type MessageEntry = Readonly<{
   id: string;
@@ -31,6 +34,7 @@ type MessageEntry = Readonly<{
   galaxy?: number;
   planetNumber?: number;
   missionCode?: string;
+  stationHref?: string;
   unread?: boolean;
   createdAt: string;
 }>;
@@ -77,6 +81,7 @@ export function MessagesPage({
   stationCount,
   userCount,
   offlineCount,
+  detailRootId,
 }: Readonly<{
   currentMember: AllianceMember;
   alliance: AllianceSettings;
@@ -84,7 +89,10 @@ export function MessagesPage({
   stationCount: number;
   userCount?: number;
   offlineCount?: number;
+  detailRootId?: string;
 }>) {
+  const router = useRouter();
+  const returnDestination = useDetailReturn("/messages");
   const { t, locale } = useLocale();
 
   const [member, setMember] = useState(currentMember);
@@ -181,6 +189,8 @@ export function MessagesPage({
       }
       const updatedMessages = await fetchMessages(fetchScope);
       setMessages(updatedMessages);
+      if (detailRootId && !updatedMessages.some((entry) => entry.id === detailRootId))
+        router.replace(returnDestination);
       const remainingIds = new Set(updatedMessages.map((entry) => entry.id));
       setExpandedMessageIds((current) => new Set([...current].filter((id) => remainingIds.has(id))));
     } catch (error_: unknown) {
@@ -207,14 +217,16 @@ export function MessagesPage({
   const isAdmin = member.role === "admin";
   const receivedMessages = messages.filter((message) => message.recipientMemberId === member.publicId);
   const sentMessages = messages.filter((message) => message.senderMemberId === member.publicId);
-  const messageTree = buildMessageTree(tab === "all" ? messages : tab === "sent" ? sentMessages : receivedMessages);
+  const messageTree = detailRootId
+    ? buildMessageTree(messages).filter((node) => node.message.id === detailRootId)
+    : buildMessageTree(tab === "all" ? messages : tab === "sent" ? sentMessages : receivedMessages);
 
   function renderMessage(node: MessageNode): ReactNode {
     const { message } = node;
     const sentByCurrentMember = message.senderMemberId === member.publicId;
     const receivedByCurrentMember = message.recipientMemberId === member.publicId;
     const canReply = sentByCurrentMember || receivedByCurrentMember;
-    const isCollapsed = !expandedMessageIds.has(message.id);
+    const isCollapsed = !detailRootId && !expandedMessageIds.has(message.id);
     const isReply = Boolean(message.replyToId);
     const isUnread = Boolean(message.unread) && receivedByCurrentMember;
     return (
@@ -279,18 +291,18 @@ export function MessagesPage({
                 aria-label={t("messages.open_mission")}
                 className="member-icon-action message-subject-link member-link-action"
                 data-tooltip={t("messages.open_mission")}
-                href={`/missions?search=${encodeURIComponent(message.missionCode)}`}
+                href={missionDetailHref(message.missionCode, "messages")}
                 title={t("messages.open_mission")}
               >
                 <Crosshair size={15} />
               </Link>
             )}
-            {!isReply && message.subjectType === "planet" && message.portal && (
+            {!isReply && message.subjectType === "planet" && message.stationHref && (
               <Link
                 aria-label={t("messages.open_planet_station")}
                 className="member-icon-action message-subject-link member-station-filter"
                 data-tooltip={t("messages.open_planet_station")}
-                href={`/stations?search=${encodeURIComponent(message.portal)}`}
+                href={message.stationHref}
                 title={t("messages.open_planet_station")}
               >
                 <Orbit size={15} />
@@ -305,7 +317,7 @@ export function MessagesPage({
         }
         title={isReply ? undefined : message.subject || t("messages.no_subject")}
         toggle={
-          node.children.length > 0
+          !detailRootId && node.children.length > 0
             ? {
                 count: node.children.length,
                 collapsed: isCollapsed,
@@ -321,11 +333,12 @@ export function MessagesPage({
               }
             : undefined
         }
-        toolsBefore={
+        toolsAfterDate={
           isUnread ? (
             <button
               aria-label={t("messages.mark_read")}
               className="member-icon-action"
+              data-tooltip={t("messages.mark_read")}
               onClick={() => void markRead([message.id])}
               title={t("messages.mark_read")}
               type="button"
@@ -359,31 +372,36 @@ export function MessagesPage({
           sectionTitle="messages.messages"
           settings={settings}
         />
-        <Hero settings={settings} subtitle={t("messages.page_description")} title="messages.messages" />
+        {!detailRootId && (
+          <Hero settings={settings} subtitle={t("messages.page_description")} title="messages.messages" />
+        )}
         <main className="content-wrap messages-page">
-          <div className="sticky-list-controls">
-            <Tabs
-              className="member-filter-tabs"
-              items={(["received", "sent", ...(isAdmin ? ["all" as const] : [])] as MessageTab[])
-                .filter(
-                  (key) =>
-                    key === tab || key === "received" || (key === "sent" ? sentMessages.length : messages.length) > 0,
-                )
-                .map((key) => ({
-                  key,
-                  label: t(`messages.tab_${key}`),
-                  count:
-                    key === "all" ? messages.length : key === "sent" ? sentMessages.length : receivedMessages.length,
-                  selected: tab === key,
-                  onSelect: () => {
-                    setTab(key);
-                    void markRead(receivedMessages.map((entry) => entry.id));
-                    setExpandedMessageIds(new Set());
-                  },
-                }))}
-              label={t("messages.messages")}
-            />
-          </div>
+          {detailRootId && <DetailBackLink href="/messages" label="details.back_to_messages" />}
+          {!detailRootId && (
+            <div className="sticky-list-controls">
+              <Tabs
+                className="member-filter-tabs"
+                items={(["received", "sent", ...(isAdmin ? ["all" as const] : [])] as MessageTab[])
+                  .filter(
+                    (key) =>
+                      key === tab || key === "received" || (key === "sent" ? sentMessages.length : messages.length) > 0,
+                  )
+                  .map((key) => ({
+                    key,
+                    label: t(`messages.tab_${key}`),
+                    count:
+                      key === "all" ? messages.length : key === "sent" ? sentMessages.length : receivedMessages.length,
+                    selected: tab === key,
+                    onSelect: () => {
+                      setTab(key);
+                      void markRead(receivedMessages.map((entry) => entry.id));
+                      setExpandedMessageIds(new Set());
+                    },
+                  }))}
+                label={t("messages.messages")}
+              />
+            </div>
+          )}
           <MessageList
             empty={messageTree.length === 0}
             emptyLabel={t("messages.no_messages")}

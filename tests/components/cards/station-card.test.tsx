@@ -111,6 +111,17 @@ describe.each([
     makeMember({ publicId: "viewer", specialty: "explorer", role: "user", simpleView, ...overrides });
   const moderator = () => viewer({ role: "moderator" });
 
+  it.each([false, true])("shows the hub ribbon instead of New, existing missions %s", (hasMissions) => {
+    renderStation({
+      member: viewer(),
+      isAllianceHub: true,
+      station: station({ hasMissions, createdAt: "2026-10-10T00:00:00.000Z" }),
+    });
+    expect(screen.getByText("Alliance hub")).toHaveClass("station-hub-ribbon");
+    expect(screen.queryByText("New")).not.toBeInTheDocument();
+    expect(screen.getByRole("listitem")).toHaveClass("station-is-new");
+  });
+
   it("shows the station name, system info and opens the station", async () => {
     const target = station({ name: "Haven" });
     const { user, props } = renderStation({ member: viewer(), station: target });
@@ -264,18 +275,75 @@ describe.each([
   });
 
   it("links to existing missions for moderators instead of deleting", () => {
-    renderStation({ canSeeAll: true, member: moderator(), station: station({ hasMissions: true }) });
+    renderStation({
+      canSeeAll: true,
+      member: moderator(),
+      station: station({ hasMissions: true, specialtyMissionId: "mission-1" }),
+    });
     expect(screen.getByRole("link", { name: `Open missions for planet ${portal}` })).toHaveAttribute(
       "href",
-      `/missions?search=${portal}`,
+      "/missions/mission-1?from=stations&source=station-card",
     );
     expect(screen.queryByRole("button", { name: /Remove portal/ })).not.toBeInTheDocument();
+    const missionLink = screen.getByRole("link", { name: `Open missions for planet ${portal}` });
+    const detailLink = screen.getByRole("link", { name: "Open station details" });
+    expect(missionLink.nextElementSibling).toBe(detailLink);
+    expect(detailLink).toHaveClass("station-detail-link");
+  });
+
+  it("hides the station detail link when already showing the detail", () => {
+    renderStation({ showDetailLink: false });
+    expect(screen.queryByRole("link", { name: "Open station details" })).not.toBeInTheDocument();
+  });
+
+  it("hides associated mission navigation without hiding permitted mission creation", async () => {
+    const target = station({ hasMissions: true, availableSpecialties: ["builder"] });
+    const { user, props } = renderStation({
+      canSeeAll: true,
+      canCreateMissions: true,
+      member: moderator(),
+      station: target,
+      showAssociatedMissionsLink: false,
+    });
+    expect(screen.queryByRole("link", { name: `Open missions for planet ${portal}` })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Remove portal/ })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: `Create mission from ${portal}` }));
+    expect(props.onCreateMission).toHaveBeenCalledWith(target);
+  });
+
+  it.each([undefined, "Station notes"])("places delete last, after edit and optional notes: %s", (note) => {
+    renderStation({ canSeeAll: true, member: moderator(), station: station({ note }) });
+    const detailLink = screen.getByRole("link", { name: "Open station details" });
+    const editButton = screen.getByRole("button", { name: `Edit station ${portal}` });
+    const deleteButton = screen.getByRole("button", { name: /Remove portal/ });
+    expect(detailLink.nextElementSibling).toBe(editButton);
+    expect(deleteButton.parentElement?.lastElementChild).toBe(deleteButton);
+    if (note) {
+      expect(editButton.nextElementSibling).toBe(screen.getByRole("button", { name: /View notes for/ }));
+    } else {
+      expect(editButton.nextElementSibling).toBe(deleteButton);
+    }
   });
 
   it("links to missions the member can open for their specialty", () => {
-    renderStation({ member: viewer(), station: station({ hasMissions: true, canOpenOwnSpecialtyMission: true }) });
-    expect(screen.getByRole("link", { name: `Open missions for planet ${portal}` })).toBeInTheDocument();
+    renderStation({
+      member: viewer(),
+      station: station({
+        hasMissions: true,
+        canOpenOwnSpecialtyMission: true,
+        specialtyMissionId: "specialty-mission",
+      }),
+    });
+    const link = screen.getByRole("link", { name: `Open missions for planet ${portal}` });
+    expect(link).toHaveAttribute("href", "/missions/specialty-mission?from=stations&source=station-card");
+    expect(link.querySelector(".lucide-crosshair")).toBeInTheDocument();
     expect(screen.queryByRole("img", { name: /mission in progress/ })).not.toBeInTheDocument();
+  });
+
+  it("does not link to a search or an unrelated mission when no specialty mission exists", () => {
+    renderStation({ canSeeAll: true, member: moderator(), station: station({ hasMissions: true }) });
+    expect(screen.queryByRole("link", { name: `Open missions for planet ${portal}` })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Open station details" })).toBeInTheDocument();
   });
 
   it.each([
@@ -285,7 +353,11 @@ describe.each([
   ] as const)("marks a %s mission already in progress", (specialty, label) => {
     renderStation({ member: viewer({ specialty }), station: station({ hasMissions: true }) });
     expect(screen.getByRole("img", { name: label })).toBeInTheDocument();
-    expect(screen.queryByRole("link")).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: `Open missions for planet ${portal}` })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Open station details" })).toHaveAttribute(
+      "href",
+      `/stations/owner%3A${portal}%3A0`,
+    );
   });
 
   it("lets an explorer create a mission when explorers are still needed", () => {
@@ -406,6 +478,7 @@ describe("station card helpers", () => {
         planet: { a: 1 },
         hasMissions: true,
         canOpenOwnSpecialtyMission: true,
+        specialtyMissionId: "parsed-mission",
         hasAssignedMission: true,
         missionStatus: "completed",
         availableSpecialties: ["ranger", "bogus"],
@@ -427,6 +500,7 @@ describe("station card helpers", () => {
       planet: { galaxy: 1, response: { a: 1 } },
       hasMissions: true,
       canOpenOwnSpecialtyMission: true,
+      specialtyMissionId: "parsed-mission",
       hasAssignedMission: true,
       missionStatus: "completed",
       availableSpecialties: ["ranger"],

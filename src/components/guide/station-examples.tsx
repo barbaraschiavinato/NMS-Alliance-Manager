@@ -198,6 +198,7 @@ function StationExamples({
           planet: { galaxy: sample.galaxy, response: sample.response },
           hasMissions: scenario.hasMissions,
           canOpenOwnSpecialtyMission: scenario.canOpen ?? false,
+          ...(scenario.canOpen ? { specialtyMissionId: `guide-${member.specialty}-mission` } : {}),
           hasAssignedMission: false,
           missionStatus: scenario.hasMissions ? "in_progress" : "none",
           availableSpecialties: scenario.available

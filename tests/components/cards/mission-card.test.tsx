@@ -202,7 +202,7 @@ describe("MissionCard row actions", () => {
 
   it("shows no action on missions assigned to someone else", () => {
     renderMissionCard({ mission: mission({ assignedMemberId: "other", assignedTo: "Other", status: "in_progress" }) });
-    expect(screen.getByText("—", { selector: ".no-row-action" })).toBeInTheDocument();
+    expect(screen.queryByText("—", { selector: ".no-row-action" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Claim|Complete|Start/ })).not.toBeInTheDocument();
   });
 
@@ -222,7 +222,7 @@ describe("MissionCard row actions", () => {
 
   it("locks completed missions of other members", () => {
     renderMissionCard({ mission: mission({ status: "completed", assignedMemberId: "other", assignedTo: "Other" }) });
-    expect(screen.getByText("—", { selector: ".no-row-action" })).toBeInTheDocument();
+    expect(screen.queryByText("—", { selector: ".no-row-action" })).not.toBeInTheDocument();
   });
 
   it("gives managers edit and delete actions", async () => {
@@ -275,6 +275,32 @@ describe("MissionCard row actions", () => {
 });
 
 describe("MissionCard station link", () => {
+  it.each([false, true])(
+    "opens mission details without changing the planet title action, simple view %s",
+    async (simpleView) => {
+      const selected = mission();
+      const { user, props, unmount } = renderMissionCard({
+        mission: selected,
+        currentMember: makeMember({ ...me(), simpleView }),
+      });
+      expect(screen.getByRole("link", { name: "Open mission details" })).toHaveAttribute(
+        "href",
+        `/missions/${selected.id}?from=missions`,
+      );
+      expect(screen.getByRole("link", { name: "Open mission details" })).toHaveAttribute(
+        "data-tooltip",
+        "Open mission details",
+      );
+      expect(screen.getByRole("link", { name: "Open mission details" }).nextElementSibling).toBe(
+        screen.getByRole("button", { name: "Claim" }),
+      );
+      await user.click(screen.getByRole("button", { name: `Open system details for ${selected.title}` }));
+      expect(props.onOpenPlanet).toHaveBeenCalledWith(selected);
+      unmount();
+      renderMissionCard({ hideDetailLink: true, currentMember: makeMember({ ...me(), simpleView }) });
+      expect(screen.queryByRole("link", { name: "Open mission details" })).not.toBeInTheDocument();
+    },
+  );
   const manager = () => makeMember({ publicId: "me", role: "moderator", simpleView: false });
 
   it("links to the existing station for managers", () => {
@@ -282,11 +308,11 @@ describe("MissionCard station link", () => {
       canManage: true,
       currentMember: manager(),
       mission: mission({ systemAddress: "0123456789ab", galaxy: 0 }),
-      stationOwners: [{ portal: "0123456789AB", galaxy: 0 } as never],
+      stationOwners: [{ portal: "0123456789AB", galaxy: 0, ownerId: "owner-1", ownerName: "Owner" }],
     });
     expect(screen.getByRole("link", { name: "Open linked station" })).toHaveAttribute(
       "href",
-      "/stations?search=0123456789ab",
+      "/stations/owner-1%3A0123456789AB%3A0?from=missions",
     );
   });
 
@@ -313,10 +339,12 @@ describe("MissionCard station link", () => {
 
   it("hides the link until owners load and for non-managers", () => {
     const { unmount } = renderMissionCard({ canManage: true, currentMember: manager(), stationOwnersLoaded: false });
-    expect(screen.queryByRole("link")).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Open linked station" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Create station from mission" })).not.toBeInTheDocument();
     unmount();
     renderMissionCard();
-    expect(screen.queryByRole("link")).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Open linked station" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Create station from mission" })).not.toBeInTheDocument();
   });
 });
 

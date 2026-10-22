@@ -1,8 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
-import { CirclePlus, Crosshair, FileText, Pencil, Trash2 } from "lucide-react";
+import { DetailLink as Link } from "@/components/shared/detail-page";
+import { CirclePlus, Crosshair, FileText, Pencil, Trash2, ExternalLink } from "lucide-react";
+import { missionDetailHref, stationDetailHref } from "@/lib/detail-links";
 import { GlyphStrip } from "@/components/shared/portal-address-field";
 import { StationSystemCoreInfo } from "@/components/shared/station-system-core-info";
 import { MissionSystemProgress } from "@/components/shared/mission-system-progress";
@@ -37,6 +38,9 @@ export function StationCardSimple({
   onEdit,
   onRemove,
   onViewNote,
+  showDetailLink = true,
+  showAssociatedMissionsLink = true,
+  isAllianceHub = false,
 }: StationCardProps) {
   const { t } = useLocale();
   const planetImageUrl = cachedPlanetImageUrl(station.planet);
@@ -49,9 +53,11 @@ export function StationCardSimple({
   const canEditStation = canSeeAll || station.ownerId === member.publicId;
   const canCreateMission = canCreateMissionFromStation(station, member, canCreateMissions);
   const showCreateMissionPrompt = canCreateMission && member.specialty !== "ranger";
-  const newRibbon = isNewStation && (
+  const newRibbon = (isAllianceHub || isNewStation) && (
     <span className="station-new-ribbon-clip">
-      <span className="station-new-ribbon">{t("stations.new_badge")}</span>
+      <span className={`station-new-ribbon${isAllianceHub ? " station-hub-ribbon" : ""}`}>
+        {t(isAllianceHub ? "stations.alliance_hub_badge" : "stations.new_badge")}
+      </span>
     </span>
   );
   const createMissionRibbon = showCreateMissionPrompt && (
@@ -77,7 +83,9 @@ export function StationCardSimple({
     />
   );
   return (
-    <li className={`${isNewStation ? "station-is-new " : ""}${canCreateMission ? "station-can-create-mission" : ""}`}>
+    <li
+      className={`${isAllianceHub || isNewStation ? "station-is-new " : ""}${canCreateMission ? "station-can-create-mission" : ""}`}
+    >
       {newRibbon}
       {createMissionRibbon}
       {
@@ -176,33 +184,27 @@ export function StationCardSimple({
                 <CirclePlus size={14} />
               </span>
             )}
-          {station.hasMissions ? (
+          {showAssociatedMissionsLink && station.hasMissions && station.specialtyMissionId ? (
             canSeeAll || station.canOpenOwnSpecialtyMission ? (
               <Link
                 aria-label={t("planet.open_missions_for_planet_portal", { portal: station.portal })}
                 className="member-icon-action station-missions-link"
                 data-tooltip={t("missions.open_associated_missions")}
-                href={`/missions?search=${encodeURIComponent(station.portal)}`}
+                href={`${missionDetailHref(station.specialtyMissionId, "stations")}&source=station-card`}
               >
                 <Crosshair size={14} />
               </Link>
             ) : null
-          ) : (
-            (canSeeAll || station.ownerId === member.publicId) && (
-              <button
-                aria-label={t("stations.remove_portal_portal_in_galaxy_from_owner_s_archive", {
-                  portal: station.portal,
-                  galaxy: galaxyLabel(station.galaxy),
-                  owner: stationOwnerName(station),
-                })}
-                className="member-icon-action delete-member"
-                data-tooltip={t("stations.delete_station")}
-                onClick={() => onRemove(station)}
-                type="button"
-              >
-                <Trash2 size={14} />
-              </button>
-            )
+          ) : null}
+          {showDetailLink && (
+            <Link
+              aria-label={t("details.open_station")}
+              className="member-icon-action station-detail-link"
+              data-tooltip={t("details.open_station")}
+              href={stationDetailHref(station)}
+            >
+              <ExternalLink size={14} />
+            </Link>
           )}
           {canEditStation && (
             <button
@@ -224,6 +226,21 @@ export function StationCardSimple({
               type="button"
             >
               <FileText size={14} />
+            </button>
+          )}
+          {!station.hasMissions && (canSeeAll || station.ownerId === member.publicId) && (
+            <button
+              aria-label={t("stations.remove_portal_portal_in_galaxy_from_owner_s_archive", {
+                portal: station.portal,
+                galaxy: galaxyLabel(station.galaxy),
+                owner: stationOwnerName(station),
+              })}
+              className="member-icon-action delete-member"
+              data-tooltip={t("stations.delete_station")}
+              onClick={() => onRemove(station)}
+              type="button"
+            >
+              <Trash2 size={14} />
             </button>
           )}
         </div>

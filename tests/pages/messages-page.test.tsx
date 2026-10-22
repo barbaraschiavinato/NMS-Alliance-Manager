@@ -3,7 +3,7 @@ import { screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { MessagesPage } from "@/components/pages/messages-page";
 import { defaultAlliance, makeMember } from "../helpers/members";
-import { json, mockFetch, renderPage, t } from "./helpers";
+import { json, mockFetch, renderPage, router, t } from "./helpers";
 
 vi.mock("next/navigation", async () => (await import("./helpers")).nextNavigationModule);
 vi.mock("next/image", async () => (await import("./helpers")).nextImageModule);
@@ -24,6 +24,7 @@ function message(overrides: Record<string, unknown> = {}) {
     subject: "Planet Alpha",
     subjectType: "planet",
     portal: "1234567890AB",
+    stationHref: "/stations/owner%3A1234567890AB%3A0?from=messages",
     galaxy: 0,
     unread: true,
     createdAt: "2026-03-01T10:00:00.000Z",
@@ -31,17 +32,65 @@ function message(overrides: Record<string, unknown> = {}) {
   };
 }
 
-function renderMessages(member = me) {
+function renderMessages(member = me, detailRootId?: string) {
   return renderPage(
-    <MessagesPage alliance={defaultAlliance} currentMember={member} missionCount={0} stationCount={0} />,
+    <MessagesPage
+      alliance={defaultAlliance}
+      currentMember={member}
+      missionCount={0}
+      stationCount={0}
+      detailRootId={detailRootId}
+    />,
   );
 }
 
 afterEach(() => {
+  window.history.replaceState(null, "", "/");
   vi.unstubAllGlobals();
 });
 
 describe("MessagesPage", () => {
+  it("returns to the source conversation after deleting its detail root", async () => {
+    window.history.replaceState(null, "", "/messages/msg-1?returnTo=%2Fmessages%2Fprevious");
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    mockFetch({
+      "GET /api/messages": vi.fn().mockReturnValueOnce([message()]).mockReturnValue([]),
+      "DELETE /api/messages": { ok: true },
+    });
+    const { user } = renderMessages(me, "msg-1");
+    await user.click(await screen.findByRole("button", { name: t("messages.delete_message") }));
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith("/messages/previous"));
+  });
+  it("shows only the selected conversation with incoming and outgoing nested replies expanded", async () => {
+    mockFetch({
+      "GET /api/messages": [
+        message(),
+        message({
+          id: "reply",
+          replyToId: "msg-1",
+          senderMemberId: "me",
+          recipientMemberId: "friend",
+          body: "My reply",
+        }),
+        message({ id: "nested", replyToId: "reply", body: "Nested reply" }),
+        message({ id: "unrelated", body: "Unrelated message" }),
+      ],
+    });
+    renderMessages(me, "msg-1");
+    await screen.findByText("Nested reply");
+    expect(screen.getByText("My reply")).toBeInTheDocument();
+    expect(screen.getByText("Meet at the station")).toBeInTheDocument();
+    expect(screen.queryByText("Unrelated message")).not.toBeInTheDocument();
+    expect(screen.queryByRole("tablist")).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: t("details.back_to_messages") })).toHaveAttribute("href", "/messages");
+    expect(screen.getAllByRole("button", { name: t("messages.reply") })).toHaveLength(3);
+  });
+  it("does not show a station link when the associated station is no longer accessible", async () => {
+    mockFetch({ "GET /api/messages": [message({ stationHref: undefined })] });
+    renderMessages();
+    await screen.findByText("Meet at the station");
+    expect(screen.queryByRole("link", { name: t("messages.open_planet_station") })).not.toBeInTheDocument();
+  });
   it("opens sender and recipient profiles from message participants", async () => {
     const { requests } = mockFetch({
       "GET /api/messages": [message()],
@@ -103,11 +152,11 @@ describe("MessagesPage", () => {
     expect(screen.queryByText("Sent by me")).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: t("messages.open_planet_station") })).toHaveAttribute(
       "href",
-      "/stations?search=1234567890AB",
+      "/stations/owner%3A1234567890AB%3A0?from=messages",
     );
     expect(screen.getByRole("link", { name: t("messages.open_mission") })).toHaveAttribute(
       "href",
-      "/missions?search=M-7",
+      "/missions/M-7?from=messages",
     );
 
     await user.click(screen.getByRole("button", { name: t("messages.mark_read") }));

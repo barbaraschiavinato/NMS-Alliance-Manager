@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { MissionDashboard } from "@/components/pages/mission-dashboard";
 import type { Mission } from "@/lib/missions";
 import { defaultAlliance, makeMember } from "../helpers/members";
-import { json, makeMission, mockFetch, renderPage, t } from "./helpers";
+import { json, makeMission, mockFetch, renderPage, router, t } from "./helpers";
 
 vi.mock("next/navigation", async () => (await import("./helpers")).nextNavigationModule);
 vi.mock("next/image", async () => (await import("./helpers")).nextImageModule);
@@ -45,10 +45,236 @@ function renderDashboard(member = explorer, props: Partial<Parameters<typeof Mis
 }
 
 afterEach(() => {
+  window.history.replaceState(null, "", "/");
   vi.unstubAllGlobals();
 });
 
 describe("MissionDashboard as a normal user", () => {
+  it("loads a featured mission by ID even without a supplied system scope", async () => {
+    const selected = makeMission();
+    const { requests } = mockFetch(dashboardRoutes([selected]));
+    renderDashboard(explorer, { featuredMissionId: selected.id });
+    await screen.findAllByText(selected.title);
+    expect(requests("GET", "/api/missions")[0].url.search).toBe(`?detailMission=${selected.id}`);
+  });
+  it.each([false, true])(
+    "features the selected mission and keeps both copies synchronized, simple view %s",
+    async (simpleView) => {
+      const selected = makeMission({ title: "Selected builder", targetSpecialty: "builder" });
+      const builder = makeMember({ ...explorer, specialty: "builder", simpleView });
+      const other = makeMission({ id: "other", title: "Other associated", targetSpecialty: "ranger" });
+      const { requests } = mockFetch(
+        dashboardRoutes([selected, other], {
+          [`POST /api/missions/${selected.id}/claim`]: {
+            ...selected,
+            assignedMemberId: builder.publicId,
+            assignedTo: builder.nmsName,
+            status: "in_progress",
+          },
+        }),
+      );
+      const { user, container } = renderDashboard(builder, {
+        systemScope: { portal: selected.systemAddress, galaxy: selected.galaxy },
+        featuredMissionId: selected.id,
+        beforeAssociated: (
+          <section>
+            <h2>Linked station slot</h2>
+          </section>
+        ),
+      });
+      await screen.findAllByText(selected.title);
+      const featured = screen.getByRole("heading", { name: t("details.mission") }).closest("section")!;
+      const associated = screen.getByRole("heading", { name: t("details.associated_missions") }).closest("section")!;
+      expect(within(featured).getAllByText(selected.title)).toHaveLength(1);
+      expect(within(associated).getByText(selected.title)).toBeInTheDocument();
+      expect(within(associated).getByText(other.title)).toBeInTheDocument();
+      expect(within(featured).queryByText(other.title)).not.toBeInTheDocument();
+      expect(featured.querySelector(".mission-card-grid-full-width")).not.toBeNull();
+      expect(featured.nextElementSibling).toBe(
+        screen.getByRole("heading", { name: "Linked station slot" }).parentElement,
+      );
+      expect(container.querySelectorAll(".app-shell")).toHaveLength(0);
+      expect(container.querySelector(".toolbar")).toBeNull();
+      expect(within(featured).queryByRole("link", { name: t("details.open_mission") })).not.toBeInTheDocument();
+      expect(within(associated).getAllByRole("link", { name: t("details.open_mission") })).toHaveLength(1);
+      expect(requests("GET", "/api/missions")[0].url.searchParams.get("detailMission")).toBe(selected.id);
+      await user.click(within(featured).getByRole("button", { name: t("missions.claim") }));
+      await waitFor(() => expect(screen.queryAllByRole("button", { name: t("missions.claim") })).toHaveLength(0));
+      expect(within(featured).getByRole("button", { name: t("missions.complete_mission") })).toBeInTheDocument();
+      expect(within(associated).getByRole("button", { name: t("missions.complete_mission") })).toBeInTheDocument();
+    },
+  );
+
+  it("returns to missions after deleting the featured mission", async () => {
+    const selected = makeMission();
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    mockFetch(dashboardRoutes([selected], { [`DELETE /api/missions/${selected.id}`]: {} }));
+    const { user } = renderDashboard(moderator, {
+      systemScope: { portal: selected.systemAddress, galaxy: selected.galaxy },
+      featuredMissionId: selected.id,
+    });
+
+    await screen.findAllByText(selected.title);
+    await user.click(screen.getAllByRole("button", { name: `${t("common.delete")} ${selected.title}` })[0]);
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith("/missions"));
+  });
+
+  it.each(["/stations?search=Pilot", "/missions/previous?from=stations"])(
+    "returns to the exact source %s after deleting the current mission",
+    async (destination) => {
+      const selected = makeMission();
+      window.history.replaceState(null, "", `/missions/${selected.id}?returnTo=${encodeURIComponent(destination)}`);
+      vi.spyOn(window, "confirm").mockReturnValue(true);
+      mockFetch(dashboardRoutes([selected], { [`DELETE /api/missions/${selected.id}`]: {} }));
+      const { user } = renderDashboard(moderator, {
+        systemScope: { portal: selected.systemAddress, galaxy: selected.galaxy },
+        featuredMissionId: selected.id,
+        associatedFirst: true,
+      });
+      await screen.findByText(selected.title);
+      await user.click(screen.getByRole("button", { name: `${t("common.delete")} ${selected.title}` }));
+      await waitFor(() => expect(router.replace).toHaveBeenCalledWith(destination));
+    },
+  );
+  it.each([false, true])(
+    "lets a builder claim a compatible free mission in station details, simple view %s",
+    async (simpleView) => {
+      const builder = makeMember({ ...explorer, specialty: "builder", simpleView });
+      const free = makeMission({ id: "builder-free", title: "Free builder mission", targetSpecialty: "builder" });
+      const { requests } = mockFetch(
+        dashboardRoutes(
+          [
+            free,
+            makeMission({ id: "all-free", title: "Free for all", targetSpecialty: "all" }),
+            makeMission({ id: "explorer-free", title: "Free explorer", targetSpecialty: "explorer" }),
+            makeMission({ id: "combined-free", title: "Combined mission", targetSpecialty: "explorer_builder" }),
+            makeMission({
+              id: "taken",
+              title: "Taken builder",
+              targetSpecialty: "builder",
+              assignedMemberId: "another",
+              assignedTo: "Other builder",
+            }),
+          ],
+          {
+            "POST /api/missions/builder-free/claim": {
+              ...free,
+              assignedMemberId: builder.publicId,
+              assignedTo: builder.nmsName,
+              status: "in_progress",
+            },
+          },
+        ),
+      );
+      const { user } = renderDashboard(builder, { systemScope: { portal: free.systemAddress, galaxy: free.galaxy } });
+      const title = await screen.findByText(free.title);
+      const card = title.closest("article")!;
+      expect(screen.getAllByRole("button", { name: t("missions.claim") })).toHaveLength(2);
+      for (const name of ["Free explorer", "Combined mission", "Taken builder"]) {
+        const otherCard = screen.getByText(name).closest("article")!;
+        expect(within(otherCard).queryByRole("button", { name: t("missions.claim") })).not.toBeInTheDocument();
+        expect(within(otherCard).queryByRole("button", { name: t("missions.start_mission") })).not.toBeInTheDocument();
+        expect(
+          within(otherCard).queryByRole("button", { name: t("missions.complete_mission") }),
+        ).not.toBeInTheDocument();
+      }
+      await user.click(within(card).getByRole("button", { name: t("missions.claim") }));
+      expect(await screen.findByText(t("Mission claimed."))).toBeInTheDocument();
+      expect(requests("POST", "/api/missions/builder-free/claim")).toHaveLength(1);
+      expect(within(card).getByRole("button", { name: t("missions.complete_mission") })).toBeInTheDocument();
+      expect(within(card).queryByRole("button", { name: t("missions.claim") })).not.toBeInTheDocument();
+    },
+  );
+
+  it("shows every associated mission regardless of status or initial search and hides the block after the last deletion", async () => {
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    const missions = (["pending", "in_progress", "completed"] as const).map((status) =>
+      makeMission({ id: status, title: `Associated ${status}`, status, systemAddress: "1234567890AB", galaxy: 0 }),
+    );
+    mockFetch(
+      dashboardRoutes(missions, {
+        "DELETE /api/missions/pending": {},
+        "DELETE /api/missions/in_progress": {},
+        "DELETE /api/missions/completed": {},
+      }),
+    );
+    const { user, container } = renderDashboard(moderator, {
+      systemScope: { portal: "1234567890AB", galaxy: 0 },
+      initialSearch: "not a mission",
+    });
+    for (const mission of missions) {
+      await screen.findByText(mission.title);
+    }
+    expect(container.querySelector(".toolbar")).toBeNull();
+    for (const mission of missions) {
+      await user.click(screen.getByRole("button", { name: `${t("common.delete")} ${mission.title}` }));
+    }
+    await waitFor(() =>
+      expect(screen.queryByRole("heading", { name: t("details.associated_missions") })).not.toBeInTheDocument(),
+    );
+  });
+
+  it.each([false, true])(
+    "shows all associated specialties with compatible claims and assignee actions in detail mode %s",
+    async (simpleView) => {
+      const own = makeMission({
+        id: "scoped",
+        title: "Local mission",
+        systemAddress: "1234567890AB",
+        galaxy: 0,
+        assignedMemberId: explorer.publicId,
+        assignedTo: "Scout",
+      });
+      const onChanged = vi.fn();
+      const { requests } = mockFetch(
+        dashboardRoutes(
+          [
+            own,
+            makeMission({ id: "foreign", title: "Foreign galaxy", systemAddress: own.systemAddress, galaxy: 2 }),
+            makeMission({ id: "other", title: "Other system", systemAddress: "1234567890AC", galaxy: 0 }),
+            makeMission({
+              id: "hidden",
+              title: "Builder only",
+              systemAddress: own.systemAddress,
+              targetSpecialty: "builder",
+              assignedMemberId: "someone-else",
+              assignedTo: "Builder",
+              status: "in_progress",
+            }),
+            makeMission({ id: "free", title: "Free explorer" }),
+          ],
+          {
+            "PATCH /api/missions/scoped": { ...own, status: "in_progress" },
+          },
+        ),
+      );
+      const { user, container } = renderDashboard(
+        { ...explorer, simpleView },
+        {
+          systemScope: { portal: "2234567890AB", galaxy: 0 },
+          onChanged,
+        },
+      );
+      await user.click(await screen.findByRole("button", { name: t("missions.start_mission") }));
+      expect(await screen.findByRole("button", { name: t("missions.complete_mission") })).toBeInTheDocument();
+      expect(onChanged).toHaveBeenCalledOnce();
+      expect(screen.queryByText("Foreign galaxy")).not.toBeInTheDocument();
+      expect(screen.queryByText("Other system")).not.toBeInTheDocument();
+      expect(screen.getByText("Builder only")).toBeInTheDocument();
+      expect(screen.getByText("Free explorer")).toBeInTheDocument();
+      expect(screen.getAllByRole("button", { name: t("missions.claim") })).toHaveLength(1);
+      expect(screen.getAllByRole("button", { name: t("missions.complete_mission") })).toHaveLength(1);
+      expect(requests("GET", "/api/missions")[0].url.searchParams.get("stationPortal")).toBe("2234567890AB");
+      expect(requests("GET", "/api/missions")[0].url.searchParams.get("galaxy")).toBe("0");
+      expect(container.querySelector(".app-shell")).toBeNull();
+      expect(container.querySelector("main")).toBeNull();
+      expect(screen.getByRole("heading", { name: t("details.associated_missions") })).toBeInTheDocument();
+      expect(container.querySelector(".toolbar")).toBeNull();
+      expect(container.querySelector(".table-footer")).toBeNull();
+      expect(screen.queryByRole("navigation", { name: t("common.pagination") })).not.toBeInTheDocument();
+    },
+  );
+
   it("shows only the missions the member can see and claims a free one", async () => {
     const free = makeMission({ id: "m-free", title: "Free survey" });
     const builderOnly = makeMission({ id: "m-builder", title: "Builder job", targetSpecialty: "builder" });
@@ -309,7 +535,7 @@ describe("MissionDashboard as a moderator", () => {
     await waitFor(() => expect(requests("GET", "/api/members")).toHaveLength(1));
     expect(await screen.findByRole("link", { name: t("missions.open_linked_station") })).toHaveAttribute(
       "href",
-      "/stations?search=1234567890AB",
+      "/stations/owner-1%3A1234567890AB%3A0?from=missions",
     );
     expect(screen.getByRole("link", { name: t("stations.create_station_from_mission") })).toHaveAttribute(
       "href",

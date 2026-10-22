@@ -42,6 +42,9 @@
 .mission-card-progress .progress-cell { min-width: 100px; flex: 1; justify-content: flex-end; }
 .mission-card-actions { display: flex; align-items: center; justify-content: space-between; padding-top: 10px; border-top: 1px solid #354044; }
 .mission-card-action-buttons { display: flex; align-items: center; gap: 5px; margin-left: auto; }
+.mission-card-actions:has(.mission-action-button) { flex-wrap: wrap; gap: 10px; }
+.mission-card-actions:has(.mission-action-button) > .mission-card-action-buttons { flex-basis: 100%; flex-wrap: wrap; justify-content: flex-end; }
+.mission-card-action-buttons > .mission-action-button { flex: 1 1 100%; width: 100%; }
 .mission-system-progress { display: inline-flex; align-items: center; gap: 10px; }
 .mission-system-progress-group { display: inline-flex; align-items: center; gap: 2px; }
 .mission-system-progress-item { width: 20px; height: 24px; position: relative; z-index: 0; display: grid; flex: 0 0 20px; place-items: center; cursor: default; outline: none; }
@@ -131,11 +134,13 @@
 .mission-row-actions [data-tooltip]:hover::after,
 .mission-row-actions [data-tooltip]:focus-visible::after { opacity: 1; transform: translateY(0); }
 .mission-create-station { position: relative; }
-.mission-station-link, .mission-station-link[data-tooltip], .mission-create-station[data-tooltip] { position: relative; }
-.mission-station-link[data-tooltip]::after, .mission-create-station[data-tooltip]::after { position: absolute; z-index: 30; right: 0; bottom: calc(100% + 7px); padding: 6px 8px; color: #f1eee7; border: 1px solid #394548; border-radius: 3px; background: #111719; box-shadow: 0 4px 14px #0008; content: attr(data-tooltip); font-size: 9px; font-weight: 500; line-height: 1.2; opacity: 0; pointer-events: none; text-transform: none; transform: translateY(3px); transition: opacity .12s, transform .12s; white-space: nowrap; }
+.mission-station-link, .mission-station-link[data-tooltip], .mission-create-station[data-tooltip], .mission-detail-link[data-tooltip] { position: relative; }
+.mission-station-link[data-tooltip]::after, .mission-create-station[data-tooltip]::after, .mission-detail-link[data-tooltip]::after { position: absolute; z-index: 30; right: 0; bottom: calc(100% + 7px); padding: 6px 8px; color: #f1eee7; border: 1px solid #394548; border-radius: 3px; background: #111719; box-shadow: 0 4px 14px #0008; content: attr(data-tooltip); font-size: 9px; font-weight: 500; line-height: 1.2; opacity: 0; pointer-events: none; text-transform: none; transform: translateY(3px); transition: opacity .12s, transform .12s; white-space: nowrap; }
 .mission-station-link[data-tooltip]:hover::after,
 .mission-station-link[data-tooltip]:focus-visible::after,
 .mission-create-station[data-tooltip]:hover::after,
+.mission-detail-link[data-tooltip]:hover::after,
+.mission-detail-link[data-tooltip]:focus-visible::after,
 .mission-create-station[data-tooltip]:focus-visible::after { opacity: 1; transform: translateY(0); }
 .claim-button { min-height: 27px; padding: 0 9px; color: #355b43; border: 1px solid #cbd9c6; background: #eef4e9; cursor: pointer; font-size: 9px; font-weight: 700; }
 .claim-button:hover { background: #e2edd9; }
@@ -457,4 +462,12 @@ body:has(.sidebar-compact) .mission-notes-content { font-size: 17px; }
 
 @media (max-width: 950px) {
   .main-panel.main-panel .station-card-extended .mission-system-progress-square { width: 14px; height: 14px; }
+}
+.mission-card-grid.mission-card-grid-full-width { grid-template-columns: minmax(0, 1fr); }
+.mission-card-action-buttons .mission-detail-link { color: #72d1c4; }
+@media (min-width: 951px) {
+  .mission-card-actions { flex-wrap: wrap; gap: 5px; }
+  .mission-card-actions > .mission-system-progress { margin-right: auto; }
+  .mission-card-actions > .mission-card-action-buttons { display: contents; }
+  .mission-card-action-buttons > .mission-action-button { order: 1; margin-top: 5px; }
 }

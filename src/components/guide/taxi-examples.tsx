@@ -1,9 +1,11 @@
 "use client";
 
 import { ChevronDown, Orbit, Send } from "lucide-react";
+import Link from "next/link";
 import { HeroAddButton } from "@/components/layout/hero";
 import { MessageCard } from "@/components/cards/message-card";
 import { MemberProfileExample } from "@/components/guide/message-composer-examples";
+import { stationDetailHref } from "@/lib/detail-links";
 
 const noop = () => undefined;
 
@@ -65,10 +67,13 @@ export function TaxiExamples() {
           <MessageCard
             title="Taxi verso Eissentam"
             titleDetails={
-              <a className="message-meeting-station" href="/stations?search=0123456789AB">
+              <Link
+                className="message-meeting-station"
+                href={stationDetailHref({ ownerId: "example", portal: "0123456789AB", galaxy: 0 })}
+              >
                 <Orbit size={15} aria-hidden="true" />
                 Incontro: Hub dell&apos;alleanza · Euclide
-              </a>
+              </Link>
             }
             participants={
               <>
