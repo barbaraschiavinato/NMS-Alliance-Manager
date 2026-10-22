@@ -275,7 +275,7 @@ export async function saveHelpRequest(
         meetingPoint?: TaxiMeetingPoint;
         subjectType: "taxi";
       }>,
-): Promise<void> {
+): Promise<string> {
   const messages = await readMessages();
   const id = randomUUID();
   messages.push({
@@ -288,6 +288,7 @@ export async function saveHelpRequest(
     createdAt: new Date().toISOString(),
   });
   await writeMessages(messages);
+  return id;
 }
 
 export async function reassignPrivateMessageMember(fromMemberId: string, toMemberId: string): Promise<void> {

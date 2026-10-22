@@ -6,6 +6,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "NMS Alliance Manager",
   description: "Mission management for your alliance.",
+  icons: { apple: "/glyphs/glyph-mask-0.png" },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

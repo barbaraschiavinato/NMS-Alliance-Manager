@@ -57,6 +57,10 @@ export function missionDetailHref(id: string, origin: DetailOrigin = "missions")
   return `/missions/${encodeURIComponent(id)}?from=${origin}`;
 }
 
+export function taxiDetailHref(id: string) {
+  return `/taxi/${encodeURIComponent(id)}`;
+}
+
 export function findMissionStation<T extends SystemIdentity>(
   mission: Readonly<{ systemAddress: string; galaxy: number }>,
   stations: readonly T[],

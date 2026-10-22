@@ -2,6 +2,44 @@ import type { TranslationCatalog } from "../translations";
 
 export const translations: TranslationCatalog = {
   common: {
+    "taxi_notifications.title": "Notifiche Taxi",
+    "taxi_notifications.browser_title": "Notifiche Taxi nel browser",
+    "taxi_notifications.loading": "Caricamento impostazioni notifiche…",
+    "taxi_notifications.save_before_test":
+      "Salva le impostazioni prima di inviare una prova. Le modifiche non richiedono un riavvio.",
+    "taxi_notifications.configure_links": "Configura AUTH_URL per i link ai dettagli nelle notifiche.",
+    "taxi_notifications.enabled": "Abilitato",
+    "taxi_notifications.credentials_ready": "Credenziali configurate",
+    "taxi_notifications.credentials_missing": "Credenziali mancanti o non valide",
+    "taxi_notifications.send_test": "Invia prova",
+    "taxi_notifications.telegram_chat_id": "Chat ID del gruppo Telegram Taxi",
+    "taxi_notifications.include_replies": "Notifica anche le risposte Taxi (tutti i canali)",
+    "taxi_notifications.save": "Salva notifiche Taxi",
+    "taxi_notifications.saved": "Impostazioni notifiche Taxi salvate.",
+    "taxi_notifications.test_sent":
+      "Notifica di prova inviata. Le prove Push arrivano solo ai tuoi dispositivi abilitati.",
+    "taxi_notifications.receive": "Ricevi notifiche Taxi sui miei dispositivi collegati",
+    "taxi_notifications.admin_disabled": "Le notifiche Push Taxi sono disabilitate dall'amministratore.",
+    "taxi_notifications.unsupported":
+      "Web Push non disponibile in questo browser. Su iPhone/iPad, aggiungi prima l'app alla schermata Home (iOS 16.4+).",
+    "taxi_notifications.connect": "Collega questo browser",
+    "taxi_notifications.refresh": "Collega o aggiorna questo browser",
+    "taxi_notifications.disconnect": "Scollega questo browser",
+    "taxi_notifications.connected": "Questo browser è collegato per le notifiche Taxi.",
+    "taxi_notifications.disconnected": "Questo browser è scollegato.",
+    "taxi_notifications.delivery_hint":
+      "Non riceverai avvisi per le tue azioni. La consegna dipende dal supporto del browser e del sistema operativo.",
+    "taxi_notifications.permission_denied":
+      "Permesso per le notifiche non concesso. Controlla le impostazioni del browser.",
+    "taxi_notifications.push_error": "Impossibile configurare le notifiche Push Taxi.",
+    "taxi_notifications.error": "Impossibile configurare le notifiche Taxi.",
+    "taxi_notifications.admin_error":
+      "Impossibile configurare o inviare le notifiche Taxi. Controlla la configurazione del canale e i log del server.",
+    "taxi_notifications.invalid_settings": "Impostazioni notifiche Taxi non valide.",
+    "taxi_notifications.configure_credentials":
+      "Configura le credenziali nelle variabili d'ambiente prima di abilitare questo canale.",
+    "taxi_notifications.invalid_channel": "Canale di notifica non valido.",
+    "taxi_notifications.invalid_subscription": "Iscrizione Push del browser non valida.",
     "details.back_to_stations": "Torna alle stazioni",
     "details.back_to_station_detail": "Torna alla scheda stazione",
     "details.back_to_mission_detail": "Torna alla scheda missione",
@@ -546,7 +584,7 @@ export const translations: TranslationCatalog = {
     "profile.no_specialty_specified": "Specializzazione non indicata",
     "profile.no_platforms_specified": "Nessuna piattaforma indicata",
     "profile.simple_view": "Vista semplice",
-    "profile.enable_pulse_effects": "Mostra le pulsazioni",
+    "profile.enable_pulse_effects": "Mostra le animazioni",
     "navigation.switch_to_simple_view": "Passa alla vista semplice",
     "navigation.switch_to_extended_view": "Passa alla vista admin",
     "profile.message_mission_only_notice":

@@ -52,7 +52,7 @@ Colori delle specializzazioni:
 - una o più piattaforme: PC, SteamOS, PlayStation, Xbox, Nintendo Switch, Mac;
 - specializzazione: Costruttore, Ranger o Esploratore;
 - contatti Telegram e Discord, opzionali;
-- l'opzione **Mostra le pulsazioni**, che puoi deselezionare per disattivare le animazioni di pulsazione nell'app.
+- l'opzione **Mostra le animazioni**, che puoi deselezionare per disattivare le animazioni di pulsazione nell'app.
 
 Senza profilo completo non puoi prendere missioni né ricevere assegnazioni. Un banner ti avvisa.
 
@@ -176,6 +176,28 @@ Il contatore nel menu mostra il numero di richieste taxi in corso (senza contare
 - Puoi eliminare le tue richieste e risposte; moderatori/admin possono eliminare anche quelle altrui. Eliminando una richiesta vengono eliminate tutte le sue risposte.
 - Le richieste taxi restano separate dalle Richieste d'aiuto e dai messaggi privati.
 - I tab **In corso** e **Archiviati** separano le richieste aperte da quelle concluse. L'autore della richiesta e i moderatori/admin possono premere **Archivia**, prima di Cancella: l'intera conversazione viene conservata, ma non accetta nuove risposte. Gli archiviati sono inizialmente chiusi: usa la freccia per espandere il messaggio e le risposte. In **Archiviati**, gli stessi utenti possono usare **Ripristina** per riportarla in corso e consentire di nuovo le risposte. In vista semplice valgono i permessi da utente.
+
+#### Notifiche Taxi
+
+Su Discord, dopo il codice amico compare il contatto Discord del profilo, se presente: **Discord del richiedente** e, nelle risposte, **Discord di chi risponde**. È testo di contatto, non una menzione con notifica. Non viene inviato a Telegram o Web Push.
+
+I dati di contatto sono ordinati come **nome NMS**, **codice amico**, **Telegram** (solo su Telegram). Nelle risposte compare prima il blocco di chi risponde, poi quello del richiedente originale; seguono destinazione, ritrovo e link.
+
+Se nel profilo del richiedente è presente uno username Telegram valido, con o senza `@` iniziale, il bot lo menziona nel gruppo come **Richiedente: @username**. Negli avvisi delle risposte, in cima compaiono nome NMS e codice amico valido di chi risponde, anche su Discord; su Telegram compare anche il suo tag, se valido. Sotto restano i dati e il tag del richiedente originale. Inserisci lo username, non un nome visualizzato o un link. Il campo è autodichiarato e non verifica la proprietà dell'account; l'effettiva notifica dipende dalle impostazioni Telegram. Il tag non viene incluso su Discord o Web Push.
+
+Se il ritrovo è una stazione o l'hub e nello stesso sistema e nella stessa galassia esiste una scheda stazione, gli alert Discord e Telegram includono **Scheda stazione del ritrovo**. Il collegamento apre quella scheda e permette di tornare al Taxi. Se la stazione non è presente o è stata eliminata, il ritrovo resta indicato senza link.
+
+Negli avvisi condivisi, «Apri la richiesta per i dettagli e rispondere.» precede il link finale. Su Telegram il collegamento appare come **Vai al dettaglio Taxi**, con titolo in grassetto; su Discord è visibile l'URL. I link a localhost usati nelle prove locali richiedono il computer di sviluppo.
+
+Negli avvisi Discord e Telegram è indicato anche il **ritrovo** della richiesta originale: Offline, Da concordare nelle risposte, Hub dell'alleanza o stazione. Per hub e stazioni compaiono indirizzo portale e galassia del ritrovo, che può essere diversa dalla destinazione; per le stazioni compare anche il nome, se disponibile. Questo vale anche per gli avvisi delle risposte. Web Push rimane sintetico e non include il ritrovo.
+
+Se l'amministratore abilita i canali, le nuove richieste Taxi e, se previsto, le risposte generano avvisi nel canale Discord, nel gruppo Telegram e tramite Web Push. Gli avvisi contengono la galassia di destinazione e un link al dettaglio, non il testo completo. Discord e Telegram includono anche il codice amico attuale del richiedente originale, se disponibile e valido, nel formato `XXXX-XXXX-XXXXX`, anche negli avvisi delle risposte: è visibile a chiunque abbia accesso al canale o gruppo. Web Push non contiene codici amico. Il link richiede comunque l'accesso come membro approvato.
+
+In **Il mio profilo NMS → Notifiche Taxi nel browser** puoi attivare o disattivare la ricezione personale su tutti i tuoi dispositivi. Premi **Collega questo browser** e concedi il permesso alle notifiche per ogni dispositivo; **Scollega questo browser** rimuove solo quello corrente. Il salvataggio di queste preferenze è separato dal pulsante di salvataggio del profilo. Non ricevi notifiche Push per le tue azioni.
+
+Le notifiche possono arrivare anche con la pagina chiusa, nei browser e sistemi compatibili; non sono garantite se il browser è stato terminato completamente. Servono HTTPS (oppure localhost per le prove) e il consenso del browser. Su iPhone/iPad occorre prima aggiungere l'app alla schermata Home (iOS 16.4 o successivo). La consegna è senza garanzia né ritentativi automatici. Aiuto e messaggi privati non generano ancora alert.
+
+Gli admin, fuori dalla vista semplice, gestiscono i canali e il chat ID del gruppo in **Amministrazione → Notifiche Taxi**. I canali partono disabilitati. Dopo aver salvato, **Invia prova** verifica il canale scelto; la prova Push arriva solo ai dispositivi abilitati dell'admin.
 
 <a id="messaggi"></a>
 

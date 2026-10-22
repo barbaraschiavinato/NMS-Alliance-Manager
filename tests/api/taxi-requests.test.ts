@@ -4,8 +4,15 @@ import { jsonRequest } from "../helpers/http";
 import { defaultAlliance, seedMembers, writeDataFile } from "../helpers/members";
 import { castMembers, makeCast, readDataFile, resetData, type Cast } from "./helpers/fixtures";
 import { DELETE, GET, POST } from "@/app/api/taxi-requests/route";
+import { after } from "next/server";
+import { notifyTaxi } from "@/lib/taxi-notification-delivery";
 
 vi.mock("@/auth", async () => (await import("../helpers/auth")).authMock);
+vi.mock("next/server", async (original) => ({
+  ...(await original<typeof import("next/server")>()),
+  after: vi.fn(),
+}));
+vi.mock("@/lib/taxi-notification-delivery", () => ({ notifyTaxi: vi.fn() }));
 
 const url = "/api/taxi-requests";
 let cast: Cast;
@@ -26,6 +33,8 @@ const taxi = (overrides: Record<string, unknown> = {}) => ({
 });
 
 beforeEach(() => {
+  vi.mocked(after).mockClear();
+  vi.mocked(notifyTaxi).mockClear();
   resetData();
   cast = makeCast();
   seedMembers(castMembers(cast));
@@ -33,6 +42,31 @@ beforeEach(() => {
 });
 
 describe("taxi requests", () => {
+  it("preserves a successful save when notification scheduling fails", async () => {
+    signInAs(cast.user);
+    vi.mocked(after).mockImplementationOnce(() => {
+      throw new Error("No request context");
+    });
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    expect((await post({ message: "Ride", galaxy: 0 })).status).toBe(201);
+    expect(stored()).toHaveLength(1);
+  });
+  it("schedules alerts only after saving valid requests and replies", async () => {
+    signInAs(cast.user);
+    expect((await post({ message: "", galaxy: 0 })).status).toBe(400);
+    expect(after).not.toHaveBeenCalled();
+    expect((await post({ message: "Ride", galaxy: 0 })).status).toBe(201);
+    const id = stored()[0].id;
+    expect(after).toHaveBeenCalledOnce();
+    expect(notifyTaxi).not.toHaveBeenCalled();
+    const callback = vi.mocked(after).mock.calls[0][0];
+    if (typeof callback === "function") await callback();
+    expect(notifyTaxi).toHaveBeenCalledWith(id, cast.user.publicId, false);
+    expect((await post({ message: "On my way", replyToId: id })).status).toBe(201);
+    const replyCallback = vi.mocked(after).mock.calls[1][0];
+    if (typeof replyCallback === "function") await replyCallback();
+    expect(notifyTaxi).toHaveBeenCalledWith(id, cast.user.publicId, true);
+  });
   it.each(["user", "moderator", "admin"] as const)(
     "requires a friend code to create taxi requests even for %s",
     async (role) => {
