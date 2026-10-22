@@ -7,6 +7,12 @@ description: Things noticed during code changes that look wrong or risky and nee
 
 Things noticed during code changes that look wrong or risky and need a closer look. Remove an entry once it has been resolved or ruled out.
 
+## C-wjaol9: Dynamic data paths make Turbopack trace the whole project (2026-10-22)
+
+`src/lib/local-data-path.ts:5`
+
+The production build succeeds but warns that resolving `NMS_DATA_DIR` relative to `process.cwd()` causes the whole project to be traced into server output. This may enlarge Vercel deployments or exceed deployment size limits. Investigate statically scoped production paths or an appropriate tracing configuration without breaking isolated local/test storage.
+
 ## C-uu5uon: Blob writes overwrite the whole document with no concurrency check (2026-10-11)
 
 `src/lib/store.ts:153`, `src/lib/access-store.ts:116`, `src/lib/stations-store.ts:152`, `src/lib/private-messages-store.ts:165`, `src/lib/planet-system-status-store.ts:75`, `src/lib/almanac-store.ts:53`

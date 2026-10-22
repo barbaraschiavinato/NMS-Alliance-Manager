@@ -1214,6 +1214,18 @@ export async function GuideContent({
               </li>
             </ul>
             <TaxiExamples />
+            <p>
+              Se abilitati dall&apos;admin, gli alert Taxi arrivano su Discord, nel gruppo Telegram e tramite Web Push,
+              con galassia e link al dettaglio, senza il testo completo. Discord e Telegram mostrano anche il codice
+              amico del richiedente originale, se valido, anche negli avvisi delle risposte: è visibile ai partecipanti
+              del canale o gruppo. Includono anche il ritrovo originale: Offline, da concordare, hub o stazione, con
+              indirizzo portale e galassia per hub e stazioni. Se esiste una stazione nello stesso sistema e nella
+              stessa galassia del ritrovo, trovi anche il link alla sua scheda, incluso per l&apos;hub. Web Push non
+              include il codice amico o il ritrovo. In «Il mio profilo NMS» puoi abilitare le notifiche Taxi e collegare
+              ogni browser concedendo il permesso. Non ricevi Push per le tue azioni. Servono HTTPS o localhost; su
+              iPhone/iPad aggiungi prima l&apos;app alla schermata Home (iOS 16.4+). La consegna dipende dal browser e
+              dal sistema operativo e non è garantita. Aiuto e messaggi privati non generano ancora alert.
+            </p>
           </section>
           <section id="richieste-aiuto">
             <h2 style={{ color: "#ff4d4f" }}>

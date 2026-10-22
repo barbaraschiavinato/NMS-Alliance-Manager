@@ -2,6 +2,41 @@ import type { TranslationCatalog } from "../translations";
 
 export const translations: TranslationCatalog = {
   common: {
+    "taxi_notifications.title": "Taxi notifications",
+    "taxi_notifications.browser_title": "Taxi browser notifications",
+    "taxi_notifications.loading": "Loading notification settings…",
+    "taxi_notifications.save_before_test": "Save settings before sending a test. Changes apply without a restart.",
+    "taxi_notifications.configure_links": "Configure AUTH_URL for notification detail links.",
+    "taxi_notifications.enabled": "Enabled",
+    "taxi_notifications.credentials_ready": "Credentials configured",
+    "taxi_notifications.credentials_missing": "Credentials missing or invalid",
+    "taxi_notifications.send_test": "Send test",
+    "taxi_notifications.telegram_chat_id": "Taxi Telegram group chat ID",
+    "taxi_notifications.include_replies": "Also notify taxi replies (all channels)",
+    "taxi_notifications.save": "Save taxi notifications",
+    "taxi_notifications.saved": "Taxi notification settings saved.",
+    "taxi_notifications.test_sent": "Test notification sent. Push tests reach only your enabled devices.",
+    "taxi_notifications.receive": "Receive taxi notifications on my connected devices",
+    "taxi_notifications.admin_disabled": "Taxi push notifications are disabled by the administrator.",
+    "taxi_notifications.unsupported":
+      "Web Push is unavailable in this browser. On iPhone/iPad, install the app on the Home Screen first (iOS 16.4+).",
+    "taxi_notifications.connect": "Connect this browser",
+    "taxi_notifications.refresh": "Connect or refresh this browser",
+    "taxi_notifications.disconnect": "Disconnect this browser",
+    "taxi_notifications.connected": "This browser is connected for taxi notifications.",
+    "taxi_notifications.disconnected": "This browser is disconnected.",
+    "taxi_notifications.delivery_hint":
+      "You will not receive alerts for your own actions. Delivery depends on browser and operating-system support.",
+    "taxi_notifications.permission_denied":
+      "Browser notification permission was not granted. Check your browser settings.",
+    "taxi_notifications.push_error": "Unable to configure taxi push notifications.",
+    "taxi_notifications.error": "Unable to configure taxi notifications.",
+    "taxi_notifications.admin_error":
+      "Unable to configure or send taxi notifications. Check the channel configuration and server logs.",
+    "taxi_notifications.invalid_settings": "Invalid taxi notification settings.",
+    "taxi_notifications.configure_credentials": "Configure the environment credentials before enabling this channel.",
+    "taxi_notifications.invalid_channel": "Invalid notification channel.",
+    "taxi_notifications.invalid_subscription": "Invalid browser push subscription.",
     "details.back_to_stations": "Back to stations",
     "details.back_to_station_detail": "Back to station details",
     "details.back_to_mission_detail": "Back to mission details",

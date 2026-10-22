@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 import { getCurrentMember, hasRole } from "@/lib/authorization";
 import { readAccessData } from "@/lib/access-store";
 import { decodePortalAddress } from "@/lib/missions";
@@ -13,6 +13,16 @@ import type { BroadcastKind } from "@/lib/private-messages-store";
 import { readAllStationPortals } from "@/lib/stations-store";
 import { galaxyLabel } from "@/lib/galaxies";
 import { isValidNmsFriendCode } from "@/lib/member-types";
+import { notifyTaxi } from "@/lib/taxi-notification-delivery";
+
+function scheduleTaxiNotification(requestId: string, authorId: string, reply: boolean) {
+  try {
+    after(() => notifyTaxi(requestId, authorId, reply));
+  } catch (error) {
+    // The request is already saved; scheduling must not turn it into an apparent failed save.
+    console.error("Unable to schedule taxi notification", error);
+  }
+}
 
 export function createBroadcastRequestHandlers(kind: BroadcastKind) {
   const errorKey = (key: string) => `${kind}.${key}`;
@@ -82,6 +92,7 @@ export function createBroadcastRequestHandlers(kind: BroadcastKind) {
           return NextResponse.json({ error: "broadcast.archived_read_only" }, { status: 409 });
         }
         if (!saved) return NextResponse.json({ error: errorKey("request_not_found") }, { status: 404 });
+        if (kind === "taxi") scheduleTaxiNotification(replyToId, member.publicId, true);
         return NextResponse.json({ ok: true }, { status: 201 });
       } catch (error) {
         console.error(`Unable to save ${kind} reply`, error);
@@ -132,7 +143,7 @@ export function createBroadcastRequestHandlers(kind: BroadcastKind) {
         if (hub && !hub.portalCode) {
           return NextResponse.json({ error: errorKey("hub_unavailable") }, { status: 400 });
         }
-        await saveHelpRequest(member.publicId, message, {
+        const requestId = await saveHelpRequest(member.publicId, message, {
           subjectType: "taxi",
           subject: galaxyLabel(galaxy),
           galaxy,
@@ -148,6 +159,7 @@ export function createBroadcastRequestHandlers(kind: BroadcastKind) {
               }
             : {}),
         });
+        scheduleTaxiNotification(requestId, member.publicId, false);
         return NextResponse.json({ ok: true }, { status: 201 });
       } catch (error) {
         console.error("Unable to save taxi request", error);

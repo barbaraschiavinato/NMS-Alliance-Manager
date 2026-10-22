@@ -14,6 +14,7 @@ import {
   type NmsPlatform,
 } from "@/lib/member-types";
 import { useLocale } from "@/components/providers/locale-provider";
+import { TaxiPushPreferences } from "@/components/shared/taxi-notification-controls";
 
 const roleLabels: Record<MemberRole, string> = {
   user: "members.member_role_label",
@@ -278,6 +279,7 @@ export function MemberProfilePanel({
             </button>
           </div>
         </form>
+        {!offlineMode && !editMember && member.membershipStatus === "approved" && <TaxiPushPreferences />}
       </dialog>
     </div>
   );

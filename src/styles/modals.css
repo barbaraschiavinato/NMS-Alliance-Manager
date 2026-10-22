@@ -36,6 +36,24 @@
 .upload-field { display: grid; align-content: start; gap: 7px; color: #647268; font-size: 10px; }
 .upload-field input { width: 100%; color: #758176; font-size: 9px; }
 .admin-save-row { display: flex; margin: 3px 0 13px; }
+.taxi-notification-admin h3 { font-size: 12px; }
+.taxi-notification-form { display: grid; gap: 12px; }
+.taxi-notification-form > .field-hint { margin: 0 0 4px; line-height: 1.6; }
+.taxi-notification-channel { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px 16px; padding: 16px; border: 1px solid #354044; border-radius: 6px; background: #1a2124; }
+.taxi-notification-channel .message-acknowledgement { margin: 0; font-size: 13px; }
+.taxi-notification-channel .quiet-button { grid-column: 2; grid-row: 1 / 3; display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 36px; }
+.taxi-notification-status { display: flex; align-items: center; gap: 6px; margin: 0; font-size: 11px; line-height: 1.5; }
+.taxi-notification-status.is-ready { color: #72d1c4; }
+.taxi-notification-status.is-missing { color: #e6b67a; }
+.taxi-notification-chat { grid-column: 1 / -1; margin: 4px 0 0; padding-top: 12px; border-top: 1px solid #354044; }
+.taxi-notification-chat input { width: 100%; font-family: "SFMono-Regular", Consolas, monospace; }
+.taxi-notification-options { margin: 4px 0 0; padding: 10px 0; line-height: 1.5; }
+.taxi-notification-actions { justify-content: flex-end; margin-top: 0; }
+@media (max-width: 520px) {
+  .taxi-notification-channel { grid-template-columns: minmax(0, 1fr); padding: 13px; }
+  .taxi-notification-channel .quiet-button { grid-column: 1; grid-row: auto; justify-self: start; }
+  .taxi-notification-actions .primary-button { width: 100%; }
+}
 .revoke-approval { color: #ef8067; border-color: #70413b; background: #2b1e1d; }
 .revoke-approval:hover { border-color: #ef8067; background: #3a2522; }
 .admin-feedback { display: flex; align-items: flex-start; gap: 6px; margin: 12px 0 0; font-size: 10px; line-height: 1.4; }
