@@ -55,6 +55,32 @@ beforeEach(() => {
 });
 
 describe("taxi alert delivery", () => {
+  it.each(["", "123"])(
+    "routes Telegram tests, requests and replies using optional topic %j",
+    async (telegramThreadId) => {
+      await saveTaxiNotificationSettings({
+        ...defaultTaxiNotificationSettings,
+        telegramEnabled: true,
+        telegramChatId: "-123",
+        telegramThreadId,
+      });
+      const fetch = vi
+        .fn<typeof globalThis.fetch>()
+        .mockImplementation(async () => new Response(JSON.stringify({ ok: true })));
+      vi.stubGlobal("fetch", fetch);
+      await sendTaxiTest("telegram", author.publicId);
+      await notifyTaxi("ride", author.publicId, false);
+      await notifyTaxi("ride", recipient.publicId, true);
+      expect(fetch).toHaveBeenCalledTimes(3);
+      for (const [url, options] of fetch.mock.calls) {
+        expect(url).toBe("https://api.telegram.org/bot123:secret/sendMessage");
+        const body = JSON.parse(String(options?.body));
+        expect(body.chat_id).toBe("-123");
+        if (telegramThreadId) expect(body.message_thread_id).toBe(123);
+        else expect(body).not.toHaveProperty("message_thread_id");
+      }
+    },
+  );
   it.each(["missing", "incomplete"] as const)(
     "keeps reply alerts deliverable with %s responder details",
     async (kind) => {

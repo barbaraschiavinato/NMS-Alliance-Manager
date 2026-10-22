@@ -1,4 +1,4 @@
-import { mkdirSync } from "node:fs";
+import { mkdirSync, readFileSync } from "node:fs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import webpush from "web-push";
 import { writeDataFile } from "../helpers/members";
@@ -20,6 +20,31 @@ beforeEach(() => {
 });
 
 describe("Taxi notification persistence", () => {
+  it.each([false, true])(
+    "migrates legacy settings without changing delivery or devices (Blob=%s)",
+    async (blobBackend) => {
+      const legacy = {
+        settings: { ...defaultTaxiNotificationSettings, telegramEnabled: true, telegramChatId: "-123" },
+        disabledMembers: ["one"],
+        devices: [{ memberId: "two", subscription: sub }],
+      };
+      Reflect.deleteProperty(legacy.settings, "telegramThreadId");
+      if (blobBackend) {
+        useBlobBackend();
+        setBlobJson(blob, legacy);
+      } else {
+        writeDataFile(file, legacy);
+      }
+      const expected = { ...legacy, settings: { ...legacy.settings, telegramThreadId: "" } };
+      expect(await (await load()).readTaxiNotifications()).toEqual(expected);
+      expect(blobBackend ? readBlobJson(blob) : JSON.parse(readFileSync("data/" + file, "utf8"))).toEqual(expected);
+      if (blobBackend) {
+        blobMock.put.mockClear();
+        await (await load()).readTaxiNotifications();
+        expect(blobMock.put).not.toHaveBeenCalled();
+      }
+    },
+  );
   it("defaults missing documents to disabled channels and enabled personal preferences", async () => {
     const { readTaxiNotifications } = await load();
     expect(await readTaxiNotifications()).toEqual(data());
@@ -30,13 +55,17 @@ describe("Taxi notification persistence", () => {
   it("atomically persists settings, devices and preferences, serializing concurrent mutations", async () => {
     const store = await load();
     await Promise.all([
-      store.saveTaxiNotificationSettings({ ...defaultTaxiNotificationSettings, pushEnabled: true }),
+      store.saveTaxiNotificationSettings({
+        ...defaultTaxiNotificationSettings,
+        pushEnabled: true,
+        telegramThreadId: "123",
+      }),
       store.setTaxiPushPreference("one", false),
       store.saveTaxiPushDevice("one", sub),
       store.setTaxiPushPreference("two", false),
     ]);
     expect(await store.readTaxiNotifications()).toMatchObject({
-      settings: { pushEnabled: true },
+      settings: { pushEnabled: true, telegramThreadId: "123" },
       disabledMembers: ["one", "two"],
       devices: [{ memberId: "one", subscription: sub }],
     });

@@ -117,18 +117,40 @@ export function TaxiNotificationAdmin() {
                 {t("Send test")} — {channel === "push" ? "Web Push" : channel === "discord" ? "Discord" : "Telegram"}
               </button>
               {channel === "telegram" && (
-                <label className="field taxi-notification-chat">
-                  <span>{t("Taxi Telegram group chat ID")}</span>
-                  <input
-                    value={data.settings.telegramChatId}
-                    maxLength={21}
-                    placeholder="-123456789"
-                    disabled={busy}
-                    onChange={(event) =>
-                      setData({ ...data, settings: { ...data.settings, telegramChatId: event.target.value.trim() } })
-                    }
-                  />
-                </label>
+                <>
+                  <label className="field taxi-notification-chat">
+                    <span>{t("Taxi Telegram group chat ID")}</span>
+                    <input
+                      value={data.settings.telegramChatId}
+                      maxLength={21}
+                      placeholder="-123456789"
+                      disabled={busy}
+                      onChange={(event) =>
+                        setData({ ...data, settings: { ...data.settings, telegramChatId: event.target.value.trim() } })
+                      }
+                    />
+                  </label>
+                  <label className="field taxi-notification-chat">
+                    <span>{t("Taxi Telegram topic ID (optional)")}</span>
+                    <input
+                      value={data.settings.telegramThreadId}
+                      aria-describedby="taxi-telegram-topic-hint"
+                      inputMode="numeric"
+                      maxLength={10}
+                      placeholder="123"
+                      disabled={busy}
+                      onChange={(event) =>
+                        setData({
+                          ...data,
+                          settings: { ...data.settings, telegramThreadId: event.target.value.trim() },
+                        })
+                      }
+                    />
+                  </label>
+                  <p className="field-hint" id="taxi-telegram-topic-hint">
+                    {t("Leave empty to send without selecting a Telegram topic.")}
+                  </p>
+                </>
               )}
             </div>
           ))}

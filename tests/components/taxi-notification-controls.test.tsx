@@ -90,6 +90,7 @@ describe("Taxi notification administration", () => {
     await user.click(screen.getByRole("checkbox", { name: "Web Push — Enabled" }));
     await user.click(screen.getByRole("checkbox", { name: "Also notify taxi replies (all channels)" }));
     await user.type(screen.getByRole("textbox", { name: "Taxi Telegram group chat ID" }), "-123");
+    await user.type(screen.getByRole("textbox", { name: "Taxi Telegram topic ID (optional)" }), "123");
     for (const channel of ["Discord", "Telegram", "Web Push"]) {
       await user.click(screen.getByRole("button", { name: `Send test — ${channel}` }));
       expect(await screen.findByRole("status")).toHaveTextContent("Test notification sent.");
@@ -107,7 +108,19 @@ describe("Taxi notification administration", () => {
       pushEnabled: true,
       repliesEnabled: false,
       telegramChatId: "-123",
+      telegramThreadId: "123",
     });
+  });
+  it("allows clearing an existing Telegram topic", async () => {
+    const { requests } = mockFetch({
+      [`GET ${adminUrl}`]: { ...state, settings: { ...state.settings, telegramThreadId: "123" } },
+      [`PATCH ${adminUrl}`]: state,
+    });
+    const { user } = renderWithLocale(<TaxiNotificationAdmin />);
+    await user.clear(await screen.findByRole("textbox", { name: "Taxi Telegram topic ID (optional)" }));
+    await user.click(screen.getByRole("button", { name: "Save taxi notifications" }));
+    expect(await screen.findByRole("status")).toHaveTextContent("settings saved");
+    expect(requests("PATCH", adminUrl)[0].body).toMatchObject({ telegramThreadId: "" });
   });
   it("shows missing configuration and disables tests", async () => {
     mockFetch({
