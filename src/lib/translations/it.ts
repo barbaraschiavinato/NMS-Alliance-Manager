@@ -584,7 +584,7 @@ export const translations: TranslationCatalog = {
     "profile.no_specialty_specified": "Specializzazione non indicata",
     "profile.no_platforms_specified": "Nessuna piattaforma indicata",
     "profile.simple_view": "Vista semplice",
-    "profile.enable_pulse_effects": "Mostra le pulsazioni",
+    "profile.enable_pulse_effects": "Mostra le animazioni",
     "navigation.switch_to_simple_view": "Passa alla vista semplice",
     "navigation.switch_to_extended_view": "Passa alla vista admin",
     "profile.message_mission_only_notice":

@@ -239,7 +239,7 @@ export function MemberProfilePanel({
             </label>
           )}
           {!offlineMode && !editMember && (
-            <label className="message-acknowledgement">
+            <label className="message-acknowledgement profile-animation-preference">
               <input
                 checked={pulseEffectsEnabled}
                 onChange={(event) => setPulseEffectsEnabled(event.target.checked)}
