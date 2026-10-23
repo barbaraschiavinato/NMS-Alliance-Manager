@@ -9,7 +9,7 @@ import { portalSearchMatches } from "@/lib/missions/missions";
 import { formatNmsFriendCode, isValidNmsFriendCode } from "@/lib/members/member-types";
 import { galaxyLabel } from "@/lib/planets/galaxies";
 import { translate } from "@/lib/translations";
-import { appOrigin, escapeTelegramHtml, postJson } from "@/lib/notifications/notification-transport";
+import { appOrigin, escapeTelegramHtml, postJson, telegramUsername } from "@/lib/notifications/notification-transport";
 
 function vapidDetails() {
   const publicKey = process.env.VAPID_PUBLIC_KEY?.trim();
@@ -84,11 +84,6 @@ type ContactDetails = { body: string; telegram?: string; discord?: string };
 
 function discordContact(value?: string) {
   return value?.replace(/\s+/g, " ").trim().slice(0, 40);
-}
-
-function telegramUsername(value?: string) {
-  const username = value?.trim().replace(/^@/, "");
-  return username && /^[A-Za-z][A-Za-z0-9_]{4,31}$/.test(username) ? username : undefined;
 }
 
 async function sendChannel(

@@ -2,7 +2,7 @@
 
 import { Tabs } from "@/components/layout/tabs";
 import { useMemo } from "react";
-import { Check, CircleAlert, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import type { AllianceMember, MemberRole, MembershipStatus } from "@/lib/members/member-types";
 import { LoadingSpinner } from "@/components/shared/loading-spinner";
 import { useLocale } from "@/components/providers/locale-provider";
@@ -20,8 +20,6 @@ export function MemberList({
   search,
   onSearchChange,
   loading,
-  error,
-  notice,
   memberActivity,
   canChangeRole,
   currentMemberEmail,
@@ -38,8 +36,6 @@ export function MemberList({
   search: string;
   onSearchChange: (search: string) => void;
   loading: boolean;
-  error: string;
-  notice: string;
   memberActivity: { missionOwnerIds: string[]; stationOwnerIds: string[] };
   canChangeRole: boolean;
   currentMemberEmail: string;
@@ -103,19 +99,6 @@ export function MemberList({
           </label>
         </div>
       </div>
-
-      {error && (
-        <p className="form-error">
-          <CircleAlert size={15} />
-          {t(error)}
-        </p>
-      )}
-      {notice && (
-        <p className="address-validation address-valid">
-          <Check size={14} />
-          {t(notice)}
-        </p>
-      )}
 
       {loading ? (
         <LoadingSpinner />

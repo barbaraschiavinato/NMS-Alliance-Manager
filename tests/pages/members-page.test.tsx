@@ -239,6 +239,31 @@ describe("MembersPage", () => {
     expect(screen.getByRole("dialog", { name: t("profile.my_nms_profile") })).toBeInTheDocument();
   });
 
+  it("shows feedback as a closable toast", async () => {
+    mockFetch({
+      "GET /api/admin/members": [pending, approved],
+      "PATCH /api/admin/members": { ok: true },
+    });
+    const { user } = renderMembers();
+    await user.click(
+      await screen.findByRole("button", { name: t("common.approve_email", { email: "pending@example.com" }) }),
+    );
+    const toast = await screen.findByRole("status", { name: "" });
+    expect(toast).toHaveClass("toast");
+    expect(toast).toHaveTextContent(t("User approved."));
+    await user.click(within(toast).getByRole("button", { name: t("common.close_notification") }));
+    expect(screen.queryByText(t("User approved."))).not.toBeInTheDocument();
+  });
+
+  it("shows load failures as an error toast that can be dismissed", async () => {
+    mockFetch({ "GET /api/admin/members": json({}, 500) });
+    const { user } = renderMembers();
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveClass("toast-error");
+    await user.click(within(alert).getByRole("button", { name: t("common.close_notification") }));
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
   it("falls back to generic messages when the requests fail without details", async () => {
     mockFetch({ "GET /api/admin/members": json({}, 500) });
     renderMembers();

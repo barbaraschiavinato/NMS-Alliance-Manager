@@ -90,7 +90,12 @@ export async function PATCH(request: Request) {
     );
     if (!updated) return NextResponse.json({ error: "Utente non trovato o non modificabile." }, { status: 404 });
     if (previousStatus === "pending" && updated.membershipStatus === "approved")
-      await scheduleMemberNotification(() => notifyMemberApproved(updated.publicId, member.nmsName || member.name));
+      await scheduleMemberNotification(() =>
+        notifyMemberApproved(updated.publicId, {
+          name: member.nmsName || member.name,
+          telegramName: member.telegramName,
+        }),
+      );
     return NextResponse.json({ ok: true, membershipStatus: updated.membershipStatus });
   }
 

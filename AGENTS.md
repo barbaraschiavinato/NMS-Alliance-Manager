@@ -137,6 +137,17 @@ Each `src/app/<section>/page.tsx` is a thin server component. It loads access da
 - Private conversation details build their tree from all accessible messages, not the Received/Sent tab subsets, so incoming and outgoing replies remain together. Broadcast details select the root independently of the Active/Archived tabs. Keep the normal application header/sidebar and existing permitted actions; do not add list controls or a separate detail-card implementation.
 - When a newly added detail route returns 404 in local development but its data exists and route tests pass, check whether Next.js has discovered the route before changing access or lookup logic. If the development route map is stale, ask before restarting the active server and verify the real authenticated URL afterward.
 
+### Shared UI components
+
+- Reuse the single shared component instead of writing a copy: `Tabs` (`components/layout/tabs.tsx`, the only tab bar; it scrolls horizontally only, so keep the tab row free of vertical overflow on touch screens), `Pagination` (`components/shared/pagination.tsx`, icon-only buttons on mobile, text kept as `aria-label`), `Toast` (`components/shared/toast.tsx`, closable success/error feedback with optional auto-close) and `DetailSection` (borderless on mobile). New pages should report action feedback with `Toast`, not inline text.
+- The Users page filters members by status and by a **Moderators** tab that includes admins (`role` is `moderator` or `admin`).
+
+### Notifications
+
+- **Taxi** (`notifications/taxi-*`): Discord, Telegram and Web Push, configured in Administration. The personal Web Push section in My NMS Profile is rendered only while the administrator has enabled Web Push and it is configured; otherwise nothing is shown.
+- **User notifications** (`notifications/member-*`): Telegram only, configured in Administration (group chat ID, optional topic, `TELEGRAM_MEMBERS_BOT_TOKEN`). It announces a new account awaiting approval (scheduled from `getCurrentMember` when `registerMember` reports `awaitingApproval`) and a pending account that was approved (`PATCH /api/admin/members`, with the approver's name and valid Telegram tag). Alerts never contain email addresses and are scheduled with `after()` only when enabled, so a failed alert can never break the registration or approval.
+- Shared HTTP/Telegram helpers (`postJson`, `appOrigin`, `escapeTelegramHtml`, `telegramUsername`) live in `notifications/notification-transport.ts`; reuse them for any new channel.
+
 ### Guide layout
 
 - The portal-address validation examples (`AddressValidationExample`, `.guide-validation-examples`) use the full available width and inherit the shared responsive `.guide-examples` grid. Do not reintroduce a 560px maximum width or a validation-specific single-column override; retain the shared mobile breakpoint.

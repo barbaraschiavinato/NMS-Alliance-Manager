@@ -39,3 +39,8 @@ export async function postJson(url: URL | string, body: unknown, provider: strin
 export function escapeTelegramHtml(value: string) {
   return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
+
+export function telegramUsername(value?: string) {
+  const username = value?.trim().replace(/^@/, "");
+  return username && /^[A-Za-z][A-Za-z0-9_]{4,31}$/.test(username) ? username : undefined;
+}

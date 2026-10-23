@@ -1,7 +1,7 @@
 import { after } from "next/server";
 import { readAccessData } from "@/lib/members/access-store";
 import { readMemberNotificationSettings } from "@/lib/notifications/member-notifications-store";
-import { appOrigin, escapeTelegramHtml, postJson } from "@/lib/notifications/notification-transport";
+import { appOrigin, escapeTelegramHtml, postJson, telegramUsername } from "@/lib/notifications/notification-transport";
 
 function telegramToken() {
   const token = process.env.TELEGRAM_MEMBERS_BOT_TOKEN?.trim();
@@ -67,10 +67,14 @@ export function notifyMemberRegistered(memberId: string) {
   }));
 }
 
-export function notifyMemberApproved(memberId: string, approverName: string) {
+export function notifyMemberApproved(memberId: string, approver: Readonly<{ name: string; telegramName?: string }>) {
+  const username = telegramUsername(approver.telegramName);
   return dispatch(memberId, (name) => ({
     title: "Utente approvato",
-    lines: [`Utente: ${name}`, `Approvato da: ${singleLine(approverName, "un moderatore")}`],
+    lines: [
+      `Utente: ${name}`,
+      `Approvato da: ${singleLine(approver.name, "un moderatore")}${username ? ` (@${username})` : ""}`,
+    ],
   }));
 }
 

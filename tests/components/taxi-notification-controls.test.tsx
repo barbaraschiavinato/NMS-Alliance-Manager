@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { act, screen } from "@testing-library/react";
+import { act, screen, waitFor } from "@testing-library/react";
 import { TaxiNotificationAdmin, TaxiPushPreferences } from "@/components/shared/taxi-notification-controls";
 import { renderWithLocale } from "./helpers";
 import { json, mockFetch } from "../pages/helpers";
@@ -245,13 +245,21 @@ describe("Taxi push preferences", () => {
     await user.click(await screen.findByRole("button", { name: "Connect or refresh this browser" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("permission was not granted");
   });
-  it("reports unsupported browsers and admin-disabled notifications", async () => {
+  it("reports unsupported browsers", async () => {
     vi.stubGlobal("isSecureContext", false);
-    mockFetch({ [`GET ${pushUrl}`]: { ...pushState, available: false } });
+    mockFetch({ [`GET ${pushUrl}`]: pushState });
     renderWithLocale(<TaxiPushPreferences />);
     expect(await screen.findByText(/Web Push is unavailable/)).toBeInTheDocument();
-    expect(screen.getByText("Taxi push notifications are disabled by the administrator.")).toBeInTheDocument();
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
+  });
+  it("renders nothing while loading or when the administrator has not enabled Web Push", async () => {
+    const { fetchMock } = mockFetch({ [`GET ${pushUrl}`]: { ...pushState, available: false } });
+    const { container } = renderWithLocale(<TaxiPushPreferences />);
+    expect(container).toBeEmptyDOMElement();
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledOnce());
+    await act(async () => {});
+    expect(container).toBeEmptyDOMElement();
+    expect(screen.queryByText("Taxi browser notifications")).not.toBeInTheDocument();
   });
   it("shows loading and action errors without success feedback", async () => {
     registration.pushManager.getSubscription.mockResolvedValue(sub);

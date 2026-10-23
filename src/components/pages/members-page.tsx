@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { AllianceMember, AllianceSettings, MemberRole, MembershipStatus } from "@/lib/members/member-types";
 
 import { Sidebar } from "@/components/layout/sidebar";
@@ -11,6 +11,7 @@ import { MemberProfilePanel } from "@/components/modals/member-profile-panel";
 import { MemberList, type ManagedMember, type MemberFilter } from "@/components/sections/member-list";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useNavigationSearchState } from "@/components/shared/navigation-search-reset";
+import { Toast } from "@/components/shared/toast";
 
 function updateNotice(update: { membershipStatus: MembershipStatus } | { role: MemberRole }) {
   if ("role" in update) {
@@ -52,6 +53,8 @@ export function MembersPage({
   const [profileOpen, setProfileOpen] = useState(false);
   const [editingMember, setEditingMember] = useState<ManagedMember | null>(null);
   const canChangeRole = pageMember.role === "admin";
+  const dismissError = useCallback(() => setError(""), []);
+  const dismissNotice = useCallback(() => setNotice(""), []);
 
   useEffect(() => {
     fetch("/api/admin/members", { cache: "no-store" })
@@ -173,12 +176,10 @@ export function MembersPage({
             canChangeRole={canChangeRole}
             counts={counts}
             currentMemberEmail={pageMember.email}
-            error={error}
             filter={filter}
             loading={loadingMembers}
             memberActivity={memberActivity}
             members={members}
-            notice={notice}
             onDelete={(target) => void deleteMember(target)}
             onEdit={setEditingMember}
             onFilterChange={setFilter}
@@ -190,6 +191,8 @@ export function MembersPage({
           />
         </main>
       </section>
+      {error && <Toast message={error} onClose={dismissError} tone="error" />}
+      {!error && notice && <Toast autoCloseMs={6000} message={notice} onClose={dismissNotice} />}
       {adminOpen && pageMember.role === "admin" && (
         <AdminPanel onClose={() => setAdminOpen(false)} onSaved={setAllianceSettings} />
       )}

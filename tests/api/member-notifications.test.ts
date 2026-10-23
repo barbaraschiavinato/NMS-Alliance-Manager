@@ -27,7 +27,7 @@ vi.mock("next/server", async (original) => ({
 }));
 
 const adminUrl = "/api/admin/member-notifications";
-const administrator = makeMember({ role: "admin", simpleView: false, nmsName: "Chief" });
+const administrator = makeMember({ role: "admin", simpleView: false, nmsName: "Chief", telegramName: "@chief_nms" });
 const pending = makeMember({
   membershipStatus: "pending",
   nmsName: "",
@@ -162,7 +162,7 @@ describe("member notification alerts", () => {
     const { text } = JSON.parse(fetch.mock.calls[0][1].body);
     expect(text).toContain("Utente approvato");
     expect(text).toContain("Newbie");
-    expect(text).toContain("Approvato da: Chief");
+    expect(text).toContain("Approvato da: Chief (@chief_nms)");
   });
 
   it("stays silent for other status changes and when alerts are disabled", async () => {
@@ -218,10 +218,17 @@ describe("member notification edge cases", () => {
     expect(JSON.parse(fetch.mock.calls[0][1].body).text).toContain("Approvato da: Boss");
   });
 
+  it.each(["bad name", "abc", ""])("omits an invalid approver Telegram tag %j", async (telegramName) => {
+    const fetch = stubTelegram();
+    await saveMemberNotificationSettings(settings);
+    await notifyMemberApproved(pending.publicId, { name: "Chief", telegramName });
+    expect(JSON.parse(fetch.mock.calls[0][1].body).text).toContain("Approvato da: Chief\n");
+  });
+
   it("omits the topic when none is set and uses neutral wording for a blank approver", async () => {
     const fetch = stubTelegram();
     await saveMemberNotificationSettings({ ...settings, telegramThreadId: "" });
-    await notifyMemberApproved(pending.publicId, "   ");
+    await notifyMemberApproved(pending.publicId, { name: "   " });
     const body = JSON.parse(fetch.mock.calls[0][1].body);
     expect(body).not.toHaveProperty("message_thread_id");
     expect(body.text).toContain("Approvato da: un moderatore");

@@ -45,8 +45,6 @@ function renderMembers(overrides: Partial<Parameters<typeof MemberList>[0]> = {}
     search: "",
     onSearchChange: vi.fn(),
     loading: false,
-    error: "",
-    notice: "",
     memberActivity: { missionOwnerIds: [], stationOwnerIds: [] },
     canChangeRole: false,
     currentMemberEmail: "me@example.com",
@@ -139,12 +137,10 @@ describe("MemberList", () => {
     expect(screen.getByText("Visualizzati 0 di 0 utenti")).toBeInTheDocument();
   });
 
-  it("shows loading, error and notice states", () => {
-    renderMembers({ loading: true, error: "members.search_users", notice: "auth.approved_status_label" });
+  it("shows the loading state", () => {
+    renderMembers({ loading: true });
     expect(screen.getByRole("status", { name: "Loading" })).toBeInTheDocument();
     expect(screen.queryByRole("article")).not.toBeInTheDocument();
-    expect(screen.getByText("Search users", { selector: ".form-error" })).toBeInTheDocument();
-    expect(screen.getByText("Approved", { selector: ".address-valid" })).toBeInTheDocument();
     expect(screen.getByText("Loading users")).toBeInTheDocument();
   });
 

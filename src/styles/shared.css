@@ -122,6 +122,13 @@
 .planet-card-address .glyph-strip-large { max-width: 420px; }
 .toast { position: fixed; z-index: 30; right: 22px; bottom: 20px; display: flex; align-items: center; gap: 9px; padding: 12px 13px; color: var(--ink); border: 1px solid #394548; border-left: 3px solid var(--green); border-radius: 3px; background: #1a2124; box-shadow: 0 6px 24px #00000066; font-size: 11px; animation: dialog-in .18s ease-out both; }
 .toast > svg { color: var(--green); }
+.toast > span { min-width: 0; line-height: 1.4; }
+.toast-error { border-left-color: #ef8067; }
+.toast-error > svg { color: #ef8067; }
+@media (max-width: 720px) {
+  .toast { right: 12px; bottom: 12px; left: 12px; font-size: 12px; }
+  .toast > span { flex: 1; }
+}
 .toast button { display: grid; place-items: center; margin-left: 8px; padding: 2px; color: #a4adae; border: 0; background: transparent; cursor: pointer; }
 .toast button:hover { color: var(--ink); }
 .loading-indicator { min-height: 88px; display: flex; align-items: center; justify-content: center; color: var(--lime); }
