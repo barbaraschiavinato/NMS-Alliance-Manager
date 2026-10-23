@@ -3,12 +3,12 @@
 import Image from "next/image";
 import { DetailLink as Link } from "@/components/shared/detail-page";
 import { CirclePlus, Crosshair, FileText, Pencil, Trash2, ExternalLink } from "lucide-react";
-import { missionDetailHref, stationDetailHref } from "@/lib/detail-links";
+import { missionDetailHref, stationDetailHref } from "@/lib/navigation/detail-links";
 import { GlyphStrip } from "@/components/shared/portal-address-field";
 import { StationSystemCoreInfo } from "@/components/shared/station-system-core-info";
 import { MissionSystemProgress } from "@/components/shared/mission-system-progress";
-import { galaxyLabel } from "@/lib/galaxies";
-import { editableSystemStatusRoles, planetSystemStatusKey } from "@/lib/planet-system-status";
+import { galaxyLabel } from "@/lib/planets/galaxies";
+import { editableSystemStatusRoles, planetSystemStatusKey } from "@/lib/planets/planet-system-status";
 import { useLocale } from "@/components/providers/locale-provider";
 import {
   GalaxyLabel,

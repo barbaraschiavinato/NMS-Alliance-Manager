@@ -1,11 +1,11 @@
 import { MissionDashboard } from "@/components/pages/mission-dashboard";
 import { LoginScreen } from "@/components/pages/login-screen";
-import { getMissingAuthConfiguration } from "@/lib/local-auth";
+import { getMissingAuthConfiguration } from "@/lib/auth/local-auth";
 import { auth } from "@/auth";
-import { getCurrentMember } from "@/lib/authorization";
+import { getCurrentMember } from "@/lib/auth/authorization";
 import { PendingApproval } from "@/components/pages/pending-approval";
-import { readAccessData } from "@/lib/access-store";
-import { readAllStationPortals, readStationPortals } from "@/lib/stations-store";
+import { readAccessData } from "@/lib/members/access-store";
+import { readAllStationPortals, readStationPortals } from "@/lib/stations/stations-store";
 
 export const dynamic = "force-dynamic";
 

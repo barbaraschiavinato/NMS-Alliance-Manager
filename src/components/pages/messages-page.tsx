@@ -12,10 +12,10 @@ import { Header } from "@/components/layout/header";
 import { Hero } from "@/components/layout/hero";
 import { AdminPanel } from "@/components/modals/admin-panel";
 import { MemberProfilePanel } from "@/components/modals/member-profile-panel";
-import type { AllianceMember, AllianceSettings } from "@/lib/access-store";
+import type { AllianceMember, AllianceSettings } from "@/lib/members/access-store";
 import { useLocale } from "@/components/providers/locale-provider";
 import { MemberProfileLink } from "@/components/shared/member-profile-link";
-import { missionDetailHref } from "@/lib/detail-links";
+import { missionDetailHref } from "@/lib/navigation/detail-links";
 import { DetailBackLink } from "@/components/shared/detail-page";
 import { useRouter } from "next/navigation";
 

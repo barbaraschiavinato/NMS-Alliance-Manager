@@ -1,4 +1,4 @@
-import { isLocalAuthEnabled } from "@/lib/local-auth";
+import { isLocalAuthEnabled } from "@/lib/auth/local-auth";
 
 export function getBlobAuthOptions() {
   // LOCAL_AUTH usa sempre i file in data/, per non scrivere mai su uno store Blob reale.

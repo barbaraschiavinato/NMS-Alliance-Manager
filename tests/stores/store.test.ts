@@ -1,6 +1,6 @@
 import { writeFileSync } from "node:fs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { Mission } from "@/lib/missions";
+import type { Mission } from "@/lib/missions/missions";
 import { makeMember, seedMembers, writeDataFile } from "../helpers/members";
 import {
   blobMock,
@@ -18,7 +18,7 @@ import {
 
 vi.mock("@vercel/blob", async () => (await import("./helpers")).blobModule);
 // Una missione demo, per coprire il recupero di indirizzo e galassia dal seed.
-vi.mock("@/lib/seed", () => ({
+vi.mock("@/lib/missions/seed", () => ({
   initialMissions: [
     {
       id: "seed-1",
@@ -37,7 +37,7 @@ vi.mock("@/lib/seed", () => ({
   ],
 }));
 
-const load = () => import("@/lib/store");
+const load = () => import("@/lib/missions/store");
 
 function storedMission(overrides: Record<string, unknown> = {}): Record<string, unknown> {
   return {
@@ -65,7 +65,7 @@ beforeEach(() => {
 describe("readMissions (local filesystem)", () => {
   it("returns the seed when the file does not exist, without writing", async () => {
     const { readMissions } = await load();
-    const { initialMissions } = await import("@/lib/seed");
+    const { initialMissions } = await import("@/lib/missions/seed");
     expect(await readMissions()).toBe(initialMissions);
     expect(dataFileExists("missions.json")).toBe(false);
   });
@@ -73,7 +73,7 @@ describe("readMissions (local filesystem)", () => {
   it("returns the seed when the document is not an array", async () => {
     writeDataFile("missions.json", { missions: [] });
     const { readMissions } = await load();
-    const { initialMissions } = await import("@/lib/seed");
+    const { initialMissions } = await import("@/lib/missions/seed");
     expect(await readMissions()).toBe(initialMissions);
     expect(readDataFile("missions.json")).toEqual({ missions: [] });
   });
@@ -363,7 +363,7 @@ describe("Blob backend", () => {
 
   it("returns the seed when the blob is missing or unchanged", async () => {
     const { readMissions } = await load();
-    const { initialMissions } = await import("@/lib/seed");
+    const { initialMissions } = await import("@/lib/missions/seed");
     expect(await readMissions()).toBe(initialMissions);
     expect(blobMock.get).toHaveBeenCalledWith("alliance-manager/missions.json", blobReadOptions());
     setBlobJson("alliance-manager/missions.json", [storedMission()]);

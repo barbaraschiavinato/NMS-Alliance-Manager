@@ -1,7 +1,7 @@
 "use client";
 
 import { GlyphStrip, PortalValidation, type SystemAddressLookup } from "@/components/shared/portal-address-field";
-import { decodePortalAddress } from "@/lib/missions";
+import { decodePortalAddress } from "@/lib/missions/missions";
 
 type Sample = Readonly<{ portal: string; galaxy: number }>;
 

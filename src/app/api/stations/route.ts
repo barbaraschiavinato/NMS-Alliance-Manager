@@ -1,18 +1,18 @@
 import { NextResponse } from "next/server";
-import { getCurrentMember, hasRole } from "@/lib/authorization";
-import { readAccessData, type AllianceMember } from "@/lib/access-store";
-import { readAlmanacResponse, readAlmanacResponses, writeAlmanacResponse } from "@/lib/almanac-store";
-import { coveredSpecialties, decodePortalAddress, isDifferentPlanetInSameSystem } from "@/lib/missions";
-import { availableMissionSpecialties } from "@/lib/station-mission-availability";
-import { isEmailAddress } from "@/lib/member-types";
+import { getCurrentMember, hasRole } from "@/lib/auth/authorization";
+import { readAccessData, type AllianceMember } from "@/lib/members/access-store";
+import { readAlmanacResponse, readAlmanacResponses, writeAlmanacResponse } from "@/lib/almanac/almanac-store";
+import { coveredSpecialties, decodePortalAddress, isDifferentPlanetInSameSystem } from "@/lib/missions/missions";
+import { availableMissionSpecialties } from "@/lib/missions/station-mission-availability";
+import { isEmailAddress } from "@/lib/members/member-types";
 import {
   addStationPortal,
   readAllStationPortals,
   readStationPortals,
   removeStationPortal,
   updateStationPortal,
-} from "@/lib/stations-store";
-import { readMissions, writeMissions } from "@/lib/store";
+} from "@/lib/stations/stations-store";
+import { readMissions, writeMissions } from "@/lib/missions/store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

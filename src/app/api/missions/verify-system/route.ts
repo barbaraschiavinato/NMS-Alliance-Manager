@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { getCurrentMember } from "@/lib/authorization";
-import { readAlmanacResponse, writeAlmanacResponse } from "@/lib/almanac-store";
-import { decodePortalAddress } from "@/lib/missions";
-import { normalizeAlmanacPlanet } from "@/lib/almanac-normalize";
+import { getCurrentMember } from "@/lib/auth/authorization";
+import { readAlmanacResponse, writeAlmanacResponse } from "@/lib/almanac/almanac-store";
+import { decodePortalAddress } from "@/lib/missions/missions";
+import { normalizeAlmanacPlanet } from "@/lib/almanac/almanac-normalize";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

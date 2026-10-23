@@ -1,7 +1,7 @@
 import { readdirSync } from "node:fs";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { AccessData, MemberProfileInput } from "@/lib/access-store";
-import { devLocalAccounts, testLocalAccounts } from "@/lib/local-auth";
+import type { AccessData, MemberProfileInput } from "@/lib/members/access-store";
+import { devLocalAccounts, testLocalAccounts } from "@/lib/auth/local-auth";
 import { defaultAlliance, makeMember, seedMembers, writeDataFile } from "../helpers/members";
 import {
   blobMock,
@@ -18,7 +18,7 @@ import {
 
 vi.mock("@vercel/blob", async () => (await import("./helpers")).blobModule);
 
-const load = () => import("@/lib/access-store");
+const load = () => import("@/lib/members/access-store");
 const readAccessFile = () => readDataFile("access.json") as AccessData;
 const validUuid = "11111111-2222-4333-8444-555555555555";
 const adminEmail = "root-admin@example.com";

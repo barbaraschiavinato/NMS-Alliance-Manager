@@ -17,7 +17,7 @@ import {
 
 vi.mock("@vercel/blob", async () => (await import("./helpers")).blobModule);
 
-const load = () => import("@/lib/almanac-store");
+const load = () => import("@/lib/almanac/almanac-store");
 const fileName = "almanac.json";
 const blobPath = "alliance-manager/almanac.json";
 const portalFor = (index: number) => index.toString(16).toUpperCase().padStart(12, "0");

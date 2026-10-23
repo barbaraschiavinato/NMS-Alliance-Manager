@@ -7,7 +7,7 @@ import {
   memberSpecialties,
   membershipStatuses,
   normalizeNmsFriendCode,
-} from "@/lib/member-types";
+} from "@/lib/members/member-types";
 
 describe("member constants", () => {
   it("lists roles from lowest to highest", () => {

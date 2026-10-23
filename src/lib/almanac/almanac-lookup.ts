@@ -3,8 +3,8 @@ import {
   readAlmanacResponse,
   writeAlmanacResponse,
   writeAlmanacResponses,
-} from "@/lib/almanac-store";
-import { normalizeAlmanacPlanet } from "@/lib/almanac-normalize";
+} from "@/lib/almanac/almanac-store";
+import { normalizeAlmanacPlanet } from "@/lib/almanac/almanac-normalize";
 
 async function fetchAlmanacPlanet(address: string, galaxy: number): Promise<Record<string, unknown> | null> {
   const response = await fetch(`https://nmsalmanac.com/api/planets/${address}?galaxy=${galaxy + 1}`, {

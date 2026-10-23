@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { getCurrentMember } from "@/lib/authorization";
-import { coveredSpecialties } from "@/lib/missions";
-import { readMissions } from "@/lib/store";
+import { getCurrentMember } from "@/lib/auth/authorization";
+import { coveredSpecialties } from "@/lib/missions/missions";
+import { readMissions } from "@/lib/missions/store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

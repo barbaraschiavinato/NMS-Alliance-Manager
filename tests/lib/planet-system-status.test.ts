@@ -8,7 +8,7 @@ import {
   planetSystemStatusKey,
   systemProgressCap,
   systemProgressFloor,
-} from "@/lib/planet-system-status";
+} from "@/lib/planets/planet-system-status";
 
 describe("planetSystemStatusKey", () => {
   it("combines galaxy and upper-cased portal", () => {

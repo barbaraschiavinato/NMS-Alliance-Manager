@@ -584,7 +584,7 @@ describe("DELETE /api/messages", () => {
   });
 
   it("returns 404 if the message disappears before deletion", async () => {
-    const store = await import("@/lib/private-messages-store");
+    const store = await import("@/lib/messages/private-messages-store");
     vi.spyOn(store, "deletePrivateMessageBranch").mockResolvedValue(0);
     signInAs(cast.user);
     expect((await remove({ messageId: "root" })).status).toBe(404);

@@ -1,14 +1,14 @@
 import { auth } from "@/auth";
 import { LoginScreen } from "@/components/pages/login-screen";
-import { getMissingAuthConfiguration } from "@/lib/local-auth";
+import { getMissingAuthConfiguration } from "@/lib/auth/local-auth";
 import { HelpRequestsPage } from "@/components/pages/help-requests-page";
 import { PendingApproval } from "@/components/pages/pending-approval";
-import { getCurrentMember } from "@/lib/authorization";
-import { readAccessData } from "@/lib/access-store";
-import { readMissions } from "@/lib/store";
-import { readAllStationPortals, readStationPortals } from "@/lib/stations-store";
-import { readHelpRequests } from "@/lib/private-messages-store";
-import { findMessageRoot } from "@/lib/message-thread";
+import { getCurrentMember } from "@/lib/auth/authorization";
+import { readAccessData } from "@/lib/members/access-store";
+import { readMissions } from "@/lib/missions/store";
+import { readAllStationPortals, readStationPortals } from "@/lib/stations/stations-store";
+import { readHelpRequests } from "@/lib/messages/private-messages-store";
+import { findMessageRoot } from "@/lib/messages/message-thread";
 import { notFound } from "next/navigation";
 
 export async function renderRequestBoard(kind: "help" | "taxi" = "help", detailId?: string) {

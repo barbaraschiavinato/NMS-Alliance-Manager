@@ -1,13 +1,13 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { LoginScreen } from "@/components/pages/login-screen";
-import { getMissingAuthConfiguration } from "@/lib/local-auth";
+import { getMissingAuthConfiguration } from "@/lib/auth/local-auth";
 import { MembersPage } from "@/components/pages/members-page";
 import { PendingApproval } from "@/components/pages/pending-approval";
-import { getCurrentMember } from "@/lib/authorization";
-import { readAccessData } from "@/lib/access-store";
-import { readMissions } from "@/lib/store";
-import { readAllStationPortals } from "@/lib/stations-store";
+import { getCurrentMember } from "@/lib/auth/authorization";
+import { readAccessData } from "@/lib/members/access-store";
+import { readMissions } from "@/lib/missions/store";
+import { readAllStationPortals } from "@/lib/stations/stations-store";
 
 export const dynamic = "force-dynamic";
 

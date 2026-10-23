@@ -1,5 +1,5 @@
-import { isEmailAddress, type AllianceMember } from "@/lib/member-types";
-import type { Mission } from "@/lib/missions";
+import { isEmailAddress, type AllianceMember } from "@/lib/members/member-types";
+import type { Mission } from "@/lib/missions/missions";
 
 export function serializeMission(mission: Mission, members: readonly AllianceMember[]): Mission {
   const assignedMember = members.find((candidate) => candidate.publicId === mission.assignedMemberId);

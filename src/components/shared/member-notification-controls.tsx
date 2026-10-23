@@ -3,7 +3,7 @@
 import { useEffect, useState, type SubmitEvent } from "react";
 import { CheckCircle2, CircleAlert, Send, UserCheck } from "lucide-react";
 import { useLocale } from "@/components/providers/locale-provider";
-import type { MemberNotificationSettings } from "@/lib/member-notifications";
+import type { MemberNotificationSettings } from "@/lib/notifications/member-notifications";
 
 type AdminState = {
   settings: MemberNotificationSettings;

@@ -1,16 +1,16 @@
 import { auth } from "@/auth";
 import { LoginScreen } from "@/components/pages/login-screen";
-import { getMissingAuthConfiguration } from "@/lib/local-auth";
+import { getMissingAuthConfiguration } from "@/lib/auth/local-auth";
 import { PendingApproval } from "@/components/pages/pending-approval";
 import { StationsPage } from "@/components/pages/stations-page";
-import { getCurrentMember, hasRole } from "@/lib/authorization";
-import { readAccessData } from "@/lib/access-store";
-import { readMissions } from "@/lib/store";
-import { readAllStationPortals, readStationPortals } from "@/lib/stations-store";
+import { getCurrentMember, hasRole } from "@/lib/auth/authorization";
+import { readAccessData } from "@/lib/members/access-store";
+import { readMissions } from "@/lib/missions/store";
+import { readAllStationPortals, readStationPortals } from "@/lib/stations/stations-store";
 import { notFound } from "next/navigation";
-import { findMissionStation, isSameSystem, parseStationId, parseDetailOrigin } from "@/lib/detail-links";
-import { loadPlanetDestinations } from "@/lib/planet-destinations";
-import { canViewMission } from "@/lib/missions";
+import { findMissionStation, isSameSystem, parseStationId, parseDetailOrigin } from "@/lib/navigation/detail-links";
+import { loadPlanetDestinations } from "@/lib/planets/planet-destinations";
+import { canViewMission } from "@/lib/missions/missions";
 
 export async function renderStationsRoute({
   searchParams,

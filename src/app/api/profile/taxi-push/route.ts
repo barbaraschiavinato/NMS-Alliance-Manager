@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
-import { getCurrentMember } from "@/lib/authorization";
+import { getCurrentMember } from "@/lib/auth/authorization";
 import {
   isPushSubscription,
   readTaxiNotifications,
   removeTaxiPushDevice,
   saveTaxiPushDevice,
   setTaxiPushPreference,
-} from "@/lib/taxi-notifications-store";
-import { taxiNotificationReadiness, taxiPushPublicKey } from "@/lib/taxi-notification-delivery";
+} from "@/lib/notifications/taxi-notifications-store";
+import { taxiNotificationReadiness, taxiPushPublicKey } from "@/lib/notifications/taxi-notification-delivery";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

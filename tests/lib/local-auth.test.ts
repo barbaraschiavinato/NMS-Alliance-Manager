@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { isValidNmsFriendCode, memberRoles, memberSpecialties } from "@/lib/member-types";
+import { isValidNmsFriendCode, memberRoles, memberSpecialties } from "@/lib/members/member-types";
 import {
   adminEmail,
   devLocalAccounts,
@@ -8,7 +8,7 @@ import {
   getLocalAccounts,
   isFixedLocalAccount,
   testLocalAccounts,
-} from "@/lib/local-auth";
+} from "@/lib/auth/local-auth";
 
 describe.each([
   ["development", devLocalAccounts],

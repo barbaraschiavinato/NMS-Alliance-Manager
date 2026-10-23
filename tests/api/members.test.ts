@@ -31,7 +31,7 @@ describe("GET /api/members", () => {
   it("registers an unknown Google account as pending and rejects it", async () => {
     signInAs({ email: "Newcomer@Example.com", name: "Newcomer", image: "" });
     expect((await getMembers()).status).toBe(401);
-    const { readAccessData } = await import("@/lib/access-store");
+    const { readAccessData } = await import("@/lib/members/access-store");
     expect(
       (await readAccessData()).members.find((member) => member.email === "newcomer@example.com")?.membershipStatus,
     ).toBe("pending");

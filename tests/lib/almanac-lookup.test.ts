@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, rmSync } from "node:fs";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { almanacSystemLabel, lookupAlmanacPlanet, lookupAlmanacPlanets } from "@/lib/almanac-lookup";
+import { almanacSystemLabel, lookupAlmanacPlanet, lookupAlmanacPlanets } from "@/lib/almanac/almanac-lookup";
 import { writeDataFile } from "../helpers/members";
 import { almanacWords, structuredPlanet, structuredSystem } from "../helpers/almanac";
 
@@ -121,7 +121,7 @@ describe("lookupAlmanacPlanet", () => {
 describe("lookupAlmanacPlanets", () => {
   it("isolates cached planet errors, ignores unrelated raw records and persists successful migrations", async () => {
     vi.resetModules();
-    const { lookupAlmanacPlanets: lookup } = await import("@/lib/almanac-lookup");
+    const { lookupAlmanacPlanets: lookup } = await import("@/lib/almanac/almanac-lookup");
     const invalid = { ...structuredPlanet, words: "invalid" };
     writeDataFile("almanac.json", {
       [structuredPlanet.portal]: { 0: structuredPlanet },

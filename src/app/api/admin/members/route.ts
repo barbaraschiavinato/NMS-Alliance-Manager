@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { getCurrentMember, hasRole } from "@/lib/authorization";
-import { linkOfflineMember } from "@/lib/offline-members";
+import { getCurrentMember, hasRole } from "@/lib/auth/authorization";
+import { linkOfflineMember } from "@/lib/members/offline-members";
 import {
   updateMemberProfile,
   createOfflineMember,
@@ -11,11 +11,11 @@ import {
   memberRoles,
   updateMemberApproval,
   updateMemberRole,
-} from "@/lib/access-store";
-import { readMissions, writeMissions } from "@/lib/store";
-import { membershipStatuses } from "@/lib/member-types";
-import { isFixedLocalAccount } from "@/lib/local-auth";
-import { notifyMemberApproved, scheduleMemberNotification } from "@/lib/member-notification-delivery";
+} from "@/lib/members/access-store";
+import { readMissions, writeMissions } from "@/lib/missions/store";
+import { membershipStatuses } from "@/lib/members/member-types";
+import { isFixedLocalAccount } from "@/lib/auth/local-auth";
+import { notifyMemberApproved, scheduleMemberNotification } from "@/lib/notifications/member-notification-delivery";
 
 const profileConflictMessages = {
   name: "members.duplicate_in_game_name",

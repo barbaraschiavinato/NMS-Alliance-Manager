@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { Ban, Check, CircleX, Crosshair, Orbit, Pencil, Trash2, UserRoundCheck } from "lucide-react";
-import { formatNmsFriendCode } from "@/lib/member-types";
-import type { AllianceMember, MemberRole, MemberSpecialty, MembershipStatus } from "@/lib/member-types";
+import { formatNmsFriendCode } from "@/lib/members/member-types";
+import type { AllianceMember, MemberRole, MemberSpecialty, MembershipStatus } from "@/lib/members/member-types";
 import { useLocale } from "@/components/providers/locale-provider";
 
 export type ManagedMember = AllianceMember & { protectedAdmin: boolean };

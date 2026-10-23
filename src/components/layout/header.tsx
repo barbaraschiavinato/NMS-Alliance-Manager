@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import { signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Settings2, LayoutList, LogOut, UserRound } from "lucide-react";
-import type { AllianceMember, AllianceSettings } from "@/lib/access-store";
-import { getViewSwitchDestination } from "@/lib/view-navigation";
+import type { AllianceMember, AllianceSettings } from "@/lib/members/access-store";
+import { getViewSwitchDestination } from "@/lib/navigation/view-navigation";
 import { useLocale } from "@/components/providers/locale-provider";
 import { LanguageSelector } from "@/components/shared/language-selector";
 

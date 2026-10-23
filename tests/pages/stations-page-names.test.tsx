@@ -2,7 +2,7 @@
 import { act, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { StationsPage } from "@/components/pages/stations-page";
-import { generateSystemName } from "@/lib/system-name";
+import { generateSystemName } from "@/lib/planets/system-name";
 import { defaultAlliance, makeMember } from "../helpers/members";
 import { mockFetch, renderPage, t } from "./helpers";
 
@@ -11,7 +11,7 @@ vi.mock("next/image", async () => (await import("./helpers")).nextImageModule);
 vi.mock("next/link", async () => (await import("./helpers")).nextLinkModule);
 vi.mock("next-auth/react", async () => (await import("./helpers")).nextAuthReactModule);
 vi.mock("@/lib/nms-core/system.js", async () => (await import("./helpers")).nmsCoreModule);
-vi.mock("@/lib/system-name", () => ({ generateSystemName: vi.fn() }));
+vi.mock("@/lib/planets/system-name", () => ({ generateSystemName: vi.fn() }));
 
 // Station name generation with a controllable generateSystemName: names typed while it runs win.
 

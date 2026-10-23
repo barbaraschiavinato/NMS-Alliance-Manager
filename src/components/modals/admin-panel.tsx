@@ -2,9 +2,9 @@
 
 import { useEffect, useState, type SubmitEvent } from "react";
 import { Check, CircleAlert, ImagePlus, ShieldCheck, X } from "lucide-react";
-import type { AllianceSettings } from "@/lib/access-store";
+import type { AllianceSettings } from "@/lib/members/access-store";
 import { useLocale } from "@/components/providers/locale-provider";
-import { galaxyNames } from "@/lib/galaxies";
+import { galaxyNames } from "@/lib/planets/galaxies";
 import { TaxiNotificationAdmin } from "@/components/shared/taxi-notification-controls";
 import { MemberNotificationAdmin } from "@/components/shared/member-notification-controls";
 

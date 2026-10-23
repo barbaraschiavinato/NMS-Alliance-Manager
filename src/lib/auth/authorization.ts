@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
-import { getMissingAuthConfiguration } from "@/lib/local-auth";
-import { registerMember, type AllianceMember, type MemberRole } from "@/lib/access-store";
-import { notifyMemberRegistered, scheduleMemberNotification } from "@/lib/member-notification-delivery";
+import { getMissingAuthConfiguration } from "@/lib/auth/local-auth";
+import { registerMember, type AllianceMember, type MemberRole } from "@/lib/members/access-store";
+import { notifyMemberRegistered, scheduleMemberNotification } from "@/lib/notifications/member-notification-delivery";
 
 export async function getCurrentMember(
   options: Readonly<{ allowPending?: boolean; allowBlocked?: boolean }> = {},

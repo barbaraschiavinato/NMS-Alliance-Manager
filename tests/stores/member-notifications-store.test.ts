@@ -2,10 +2,13 @@ import { mkdirSync, readFileSync } from "node:fs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { writeDataFile } from "../helpers/members";
 import { blobMock, readBlobJson, resetStores, setBlobJson, useBlobBackend } from "./helpers";
-import { defaultMemberNotificationSettings, isMemberNotificationSettings } from "@/lib/member-notifications";
+import {
+  defaultMemberNotificationSettings,
+  isMemberNotificationSettings,
+} from "@/lib/notifications/member-notifications";
 
 vi.mock("@vercel/blob", async () => (await import("./helpers")).blobModule);
-const load = () => import("@/lib/member-notifications-store");
+const load = () => import("@/lib/notifications/member-notifications-store");
 const file = "member-notifications.json";
 const blob = `alliance-manager/${file}`;
 const settings = { telegramEnabled: true, telegramChatId: "-123", telegramThreadId: "5" };

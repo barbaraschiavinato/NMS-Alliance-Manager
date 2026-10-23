@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { almanacWords, structuredPlanet, structuredSystem } from "../helpers/almanac";
-import { almanacDiscoveryCounts } from "@/lib/almanac-discovery-counts";
+import { almanacDiscoveryCounts } from "@/lib/almanac/almanac-discovery-counts";
 
 beforeEach(() => {
   vi.resetModules();
@@ -17,7 +17,7 @@ function stubDocuments(words: unknown = almanacWords, system: unknown = structur
 describe("normalizeAlmanacPlanet", () => {
   it.each([undefined, {}])("normalizes galaxy image queries in raw and already adapted planets: %j", async (lines) => {
     const fetchMock = stubDocuments();
-    const { normalizeAlmanacPlanet } = await import("@/lib/almanac-normalize");
+    const { normalizeAlmanacPlanet } = await import("@/lib/almanac/almanac-normalize");
     const disc = "planets/20B705693DD3/disc.8d7140a1.webp?galaxy=10";
     const result = await normalizeAlmanacPlanet({ ...structuredPlanet, lines, pictures: { disc } });
     expect(result.pictures).toEqual({ disc: `/${disc}` });
@@ -32,14 +32,14 @@ describe("normalizeAlmanacPlanet", () => {
     "https://other.example/disc.webp?galaxy=10",
     "/planets/x.webp?galaxy=10",
   ])("preserves unsupported or already absolute image paths: %s", async (disc) => {
-    const { normalizeAlmanacPictures } = await import("@/lib/almanac-normalize");
+    const { normalizeAlmanacPictures } = await import("@/lib/almanac/almanac-normalize");
     const planet = { pictures: { disc } };
     expect(normalizeAlmanacPictures(planet)).toBe(planet);
   });
 
   it("preserves legacy responses without network requests", async () => {
     const fetchMock = stubDocuments();
-    const { normalizeAlmanacPlanet } = await import("@/lib/almanac-normalize");
+    const { normalizeAlmanacPlanet } = await import("@/lib/almanac/almanac-normalize");
     const legacy = { portal: "1234567890AB", lines: { band: { type: { word: "Lush" } } } };
     expect(await normalizeAlmanacPlanet(legacy)).toBe(legacy);
     expect(await normalizeAlmanacPlanet({ ...legacy, kind: "planet" })).toEqual({ ...legacy, kind: "planet" });
@@ -48,7 +48,7 @@ describe("normalizeAlmanacPlanet", () => {
 
   it("adapts names, descriptions, system facts, counts, resources, colours and image paths", async () => {
     const fetchMock = stubDocuments();
-    const { normalizeAlmanacPlanet } = await import("@/lib/almanac-normalize");
+    const { normalizeAlmanacPlanet } = await import("@/lib/almanac/almanac-normalize");
     const planet = await normalizeAlmanacPlanet(structuredPlanet);
     expect(planet).toMatchObject({
       name: "Test World",
@@ -93,7 +93,7 @@ describe("normalizeAlmanacPlanet", () => {
 
   it("shares dictionary and system requests between planets in the same system", async () => {
     const fetchMock = stubDocuments();
-    const { normalizeAlmanacPlanet } = await import("@/lib/almanac-normalize");
+    const { normalizeAlmanacPlanet } = await import("@/lib/almanac/almanac-normalize");
     await Promise.all([
       normalizeAlmanacPlanet(structuredPlanet),
       normalizeAlmanacPlanet({
@@ -106,7 +106,7 @@ describe("normalizeAlmanacPlanet", () => {
 
   it("marks outlaw systems without inventing an economy star rating", async () => {
     stubDocuments(almanacWords, { ...structuredSystem, wealth: { level: "outlaw" } });
-    const { normalizeAlmanacPlanet } = await import("@/lib/almanac-normalize");
+    const { normalizeAlmanacPlanet } = await import("@/lib/almanac/almanac-normalize");
     const planet = await normalizeAlmanacPlanet(structuredPlanet);
     expect(planet).toMatchObject({ lines: { band: { economy: { black_market: true } } } });
     expect((planet.lines as { band: { economy: unknown } }).band.economy).not.toHaveProperty("stars");
@@ -123,7 +123,7 @@ describe("normalizeAlmanacPlanet", () => {
     { galaxy: 257 },
   ])("rejects invalid metadata before making requests: %j", async (overrides) => {
     const fetchMock = stubDocuments();
-    const { normalizeAlmanacPlanet } = await import("@/lib/almanac-normalize");
+    const { normalizeAlmanacPlanet } = await import("@/lib/almanac/almanac-normalize");
     await expect(normalizeAlmanacPlanet({ ...structuredPlanet, ...overrides })).rejects.toThrow("metadata");
     expect(fetchMock).not.toHaveBeenCalled();
   });
@@ -132,7 +132,7 @@ describe("normalizeAlmanacPlanet", () => {
     "rejects a mismatched system: %j",
     async (overrides) => {
       stubDocuments(almanacWords, { ...structuredSystem, ...overrides });
-      const { normalizeAlmanacPlanet } = await import("@/lib/almanac-normalize");
+      const { normalizeAlmanacPlanet } = await import("@/lib/almanac/almanac-normalize");
       await expect(normalizeAlmanacPlanet(structuredPlanet)).rejects.toThrow("mismatched system");
     },
   );
@@ -142,7 +142,7 @@ describe("normalizeAlmanacPlanet", () => {
       String(input).includes("/systems/") ? Response.json(structuredSystem) : new Response("", { status: 429 }),
     );
     vi.stubGlobal("fetch", fetchMock);
-    const { normalizeAlmanacPlanet } = await import("@/lib/almanac-normalize");
+    const { normalizeAlmanacPlanet } = await import("@/lib/almanac/almanac-normalize");
     await expect(normalizeAlmanacPlanet(structuredPlanet)).rejects.toThrow("429");
     fetchMock.mockImplementation(async (input) =>
       Response.json(String(input).includes("/systems/") ? structuredSystem : almanacWords),
@@ -153,13 +153,13 @@ describe("normalizeAlmanacPlanet", () => {
 
   it.each([null, [], "invalid"])("rejects an invalid dictionary document: %j", async (words) => {
     stubDocuments(words);
-    const { normalizeAlmanacPlanet } = await import("@/lib/almanac-normalize");
+    const { normalizeAlmanacPlanet } = await import("@/lib/almanac/almanac-normalize");
     await expect(normalizeAlmanacPlanet(structuredPlanet)).rejects.toThrow("invalid document");
   });
 
   it("rejects and retries dictionaries without the required sections", async () => {
     const fetchMock = stubDocuments({});
-    const { normalizeAlmanacPlanet } = await import("@/lib/almanac-normalize");
+    const { normalizeAlmanacPlanet } = await import("@/lib/almanac/almanac-normalize");
     await expect(normalizeAlmanacPlanet(structuredPlanet)).rejects.toThrow("invalid dictionary");
     fetchMock.mockImplementation(async (input) =>
       Response.json(String(input).includes("/systems/") ? structuredSystem : almanacWords),
@@ -178,7 +178,7 @@ describe("normalizeAlmanacPlanet", () => {
     });
     vi.stubGlobal("fetch", fetchMock);
     const info = vi.spyOn(console, "info").mockImplementation(() => undefined);
-    const { normalizeAlmanacPlanet } = await import("@/lib/almanac-normalize");
+    const { normalizeAlmanacPlanet } = await import("@/lib/almanac/almanac-normalize");
     const result = await normalizeAlmanacPlanet({
       ...structuredPlanet,
       words: "words.en.expired.json",
@@ -207,7 +207,7 @@ describe("normalizeAlmanacPlanet", () => {
         }),
       );
       vi.spyOn(console, "info").mockImplementation(() => undefined);
-      const { normalizeAlmanacPlanet } = await import("@/lib/almanac-normalize");
+      const { normalizeAlmanacPlanet } = await import("@/lib/almanac/almanac-normalize");
       await expect(normalizeAlmanacPlanet({ ...structuredPlanet, words: "words.en.expired.json" })).rejects.toThrow();
     },
   );
@@ -221,7 +221,7 @@ describe("normalizeAlmanacPlanet", () => {
       star: 2,
       race: null,
     });
-    const { normalizeAlmanacPlanet } = await import("@/lib/almanac-normalize");
+    const { normalizeAlmanacPlanet } = await import("@/lib/almanac/almanac-normalize");
     const result = await normalizeAlmanacPlanet({
       ...structuredPlanet,
       names: null,
@@ -252,7 +252,7 @@ describe("normalizeAlmanacPlanet", () => {
   it("handles absent image records, unknown features, moon descriptions and unclassified resources", async () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
     stubDocuments({ ...almanacWords, items: { odd: { name: "Odd find" } } });
-    const { normalizeAlmanacPlanet } = await import("@/lib/almanac-normalize");
+    const { normalizeAlmanacPlanet } = await import("@/lib/almanac/almanac-normalize");
     const planet = await normalizeAlmanacPlanet({
       ...structuredPlanet,
       size: "moon",
@@ -278,7 +278,7 @@ describe("normalizeAlmanacPlanet", () => {
       wealth: { level },
       conflict: {},
     });
-    const { normalizeAlmanacPlanet } = await import("@/lib/almanac-normalize");
+    const { normalizeAlmanacPlanet } = await import("@/lib/almanac/almanac-normalize");
     expect(
       await normalizeAlmanacPlanet({
         ...structuredPlanet,

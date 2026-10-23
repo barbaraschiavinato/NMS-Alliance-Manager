@@ -1,5 +1,5 @@
 import { vi } from "vitest";
-import type { AllianceMember } from "@/lib/member-types";
+import type { AllianceMember } from "@/lib/members/member-types";
 
 // Da usare con: vi.mock("@/auth", async () => (await import("../helpers/auth")).authMock);
 export const authMock = {

@@ -5,8 +5,8 @@ import { vi } from "vitest";
 import { LocaleProvider } from "@/components/providers/locale-provider";
 import { NavigationSearchResetProvider } from "@/components/shared/navigation-search-reset";
 import { translate, type Locale } from "@/lib/translations";
-import type { Mission } from "@/lib/missions";
-import { defaultTaxiNotificationSettings } from "@/lib/taxi-notifications";
+import type { Mission } from "@/lib/missions/missions";
+import { defaultTaxiNotificationSettings } from "@/lib/notifications/taxi-notifications";
 
 // Renderizza dentro LocaleProvider (lingua fissa, "en" di default) e NavigationSearchResetProvider, come fa il layout.
 export function renderPage(

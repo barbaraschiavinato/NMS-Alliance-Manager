@@ -1,15 +1,15 @@
 import webpush from "web-push";
-import { readAccessData } from "@/lib/access-store";
-import { readHelpRequests } from "@/lib/private-messages-store";
-import { readTaxiNotifications, removeTaxiPushDevice } from "@/lib/taxi-notifications-store";
-import type { TaxiNotificationChannel } from "@/lib/taxi-notifications";
-import { stationDetailHref, taxiDetailHref } from "@/lib/detail-links";
-import { readAllStationPortals } from "@/lib/stations-store";
-import { portalSearchMatches } from "@/lib/missions";
-import { formatNmsFriendCode, isValidNmsFriendCode } from "@/lib/member-types";
-import { galaxyLabel } from "@/lib/galaxies";
+import { readAccessData } from "@/lib/members/access-store";
+import { readHelpRequests } from "@/lib/messages/private-messages-store";
+import { readTaxiNotifications, removeTaxiPushDevice } from "@/lib/notifications/taxi-notifications-store";
+import type { TaxiNotificationChannel } from "@/lib/notifications/taxi-notifications";
+import { stationDetailHref, taxiDetailHref } from "@/lib/navigation/detail-links";
+import { readAllStationPortals } from "@/lib/stations/stations-store";
+import { portalSearchMatches } from "@/lib/missions/missions";
+import { formatNmsFriendCode, isValidNmsFriendCode } from "@/lib/members/member-types";
+import { galaxyLabel } from "@/lib/planets/galaxies";
 import { translate } from "@/lib/translations";
-import { appOrigin, escapeTelegramHtml, postJson } from "@/lib/notification-transport";
+import { appOrigin, escapeTelegramHtml, postJson } from "@/lib/notifications/notification-transport";
 
 function vapidDetails() {
   const publicKey = process.env.VAPID_PUBLIC_KEY?.trim();

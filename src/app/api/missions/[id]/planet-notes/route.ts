@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { getCurrentMember, hasRole } from "@/lib/authorization";
-import { canViewMission } from "@/lib/missions";
-import { readMissions } from "@/lib/store";
-import { readAllStationPortals } from "@/lib/stations-store";
+import { getCurrentMember, hasRole } from "@/lib/auth/authorization";
+import { canViewMission } from "@/lib/missions/missions";
+import { readMissions } from "@/lib/missions/store";
+import { readAllStationPortals } from "@/lib/stations/stations-store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

@@ -3,8 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Check, CircleAlert, Crosshair, Orbit, Pencil, Search, Trash2 } from "lucide-react";
-import { formatNmsFriendCode } from "@/lib/member-types";
-import type { AllianceMember, AllianceSettings, MemberSpecialty } from "@/lib/member-types";
+import { formatNmsFriendCode } from "@/lib/members/member-types";
+import type { AllianceMember, AllianceSettings, MemberSpecialty } from "@/lib/members/member-types";
 
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";

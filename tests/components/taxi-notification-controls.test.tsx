@@ -4,7 +4,7 @@ import { act, screen } from "@testing-library/react";
 import { TaxiNotificationAdmin, TaxiPushPreferences } from "@/components/shared/taxi-notification-controls";
 import { renderWithLocale } from "./helpers";
 import { json, mockFetch } from "../pages/helpers";
-import { defaultTaxiNotificationSettings } from "@/lib/taxi-notifications";
+import { defaultTaxiNotificationSettings } from "@/lib/notifications/taxi-notifications";
 
 const adminUrl = "/api/admin/taxi-notifications";
 const pushUrl = "/api/profile/taxi-push";

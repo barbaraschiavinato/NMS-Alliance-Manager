@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
-import type { AllianceMember, AllianceSettings } from "@/lib/member-types";
+import type { AllianceMember, AllianceSettings } from "@/lib/members/member-types";
 
 const friendCodes = new Set<string>();
 

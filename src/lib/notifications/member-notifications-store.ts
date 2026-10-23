@@ -2,13 +2,13 @@ import { get, put } from "@vercel/blob";
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 import path from "node:path";
-import { getBlobAuthOptions } from "@/lib/blob-config";
-import { localDataPath } from "@/lib/local-data-path";
+import { getBlobAuthOptions } from "@/lib/storage/blob-config";
+import { localDataPath } from "@/lib/storage/local-data-path";
 import {
   defaultMemberNotificationSettings,
   isMemberNotificationSettings,
   type MemberNotificationSettings,
-} from "@/lib/member-notifications";
+} from "@/lib/notifications/member-notifications";
 
 const blobPath = "alliance-manager/member-notifications.json";
 

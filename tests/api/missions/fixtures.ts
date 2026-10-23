@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
-import type { Mission, MissionInput } from "@/lib/missions";
+import type { Mission, MissionInput } from "@/lib/missions/missions";
 import { writeDataFile } from "../../helpers/members";
 
 // Indirizzi portale validi: SAME_SYSTEM_OTHER_PLANET differisce da PORTAL solo per il glifo del pianeta.

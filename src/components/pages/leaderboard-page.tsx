@@ -10,7 +10,7 @@ import { Hero } from "@/components/layout/hero";
 import { AdminPanel } from "@/components/modals/admin-panel";
 import { MemberProfilePanel } from "@/components/modals/member-profile-panel";
 import { useLocale } from "@/components/providers/locale-provider";
-import type { AllianceMember, AllianceSettings } from "@/lib/access-store";
+import type { AllianceMember, AllianceSettings } from "@/lib/members/access-store";
 
 export type LeaderboardEntry = Readonly<{
   publicId: string;

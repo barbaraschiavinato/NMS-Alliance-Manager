@@ -2,7 +2,7 @@
 import { screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Header } from "@/components/layout/header";
-import type { AllianceSettings } from "@/lib/member-types";
+import type { AllianceSettings } from "@/lib/members/member-types";
 import { defaultAlliance, makeMember } from "../../helpers/members";
 import { renderWithLocale } from "../helpers";
 

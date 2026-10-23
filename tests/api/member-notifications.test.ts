@@ -5,17 +5,20 @@ import { makeMember, seedMembers } from "../helpers/members";
 import { jsonRequest } from "../helpers/http";
 import * as admin from "@/app/api/admin/member-notifications/route";
 import { PATCH as patchMembers } from "@/app/api/admin/members/route";
-import { getCurrentMember } from "@/lib/authorization";
-import { defaultMemberNotificationSettings } from "@/lib/member-notifications";
-import { readMemberNotificationSettings, saveMemberNotificationSettings } from "@/lib/member-notifications-store";
-import * as notificationStore from "@/lib/member-notifications-store";
+import { getCurrentMember } from "@/lib/auth/authorization";
+import { defaultMemberNotificationSettings } from "@/lib/notifications/member-notifications";
+import {
+  readMemberNotificationSettings,
+  saveMemberNotificationSettings,
+} from "@/lib/notifications/member-notifications-store";
+import * as notificationStore from "@/lib/notifications/member-notifications-store";
 import {
   memberNotificationReadiness,
   notifyMemberApproved,
   notifyMemberRegistered,
   scheduleMemberNotification,
   sendMemberNotificationTest,
-} from "@/lib/member-notification-delivery";
+} from "@/lib/notifications/member-notification-delivery";
 
 vi.mock("@/auth", async () => (await import("../helpers/auth")).authMock);
 vi.mock("next/server", async (original) => ({

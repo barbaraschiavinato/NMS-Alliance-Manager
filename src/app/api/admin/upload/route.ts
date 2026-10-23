@@ -1,7 +1,7 @@
 import { put } from "@vercel/blob";
 import { NextResponse } from "next/server";
-import { getCurrentMember, hasRole } from "@/lib/authorization";
-import { getBlobAuthOptions } from "@/lib/blob-config";
+import { getCurrentMember, hasRole } from "@/lib/auth/authorization";
+import { getBlobAuthOptions } from "@/lib/storage/blob-config";
 
 const allowedTypes = new Set(["image/jpeg", "image/png", "image/webp", "image/avif"]);
 const maxUploadBytes = 5 * 1024 * 1024;

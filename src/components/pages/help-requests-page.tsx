@@ -11,19 +11,24 @@ import { Header } from "@/components/layout/header";
 import { Hero, HeroAddButton } from "@/components/layout/hero";
 import { Tabs } from "@/components/layout/tabs";
 import { TaxiRequestDialog } from "@/components/modals/taxi-request-dialog";
-import type { MeetingStation, TaxiStationOption, BroadcastKind, TaxiMeetingPoint } from "@/lib/private-messages-store";
+import type {
+  MeetingStation,
+  TaxiStationOption,
+  BroadcastKind,
+  TaxiMeetingPoint,
+} from "@/lib/messages/private-messages-store";
 import { AdminPanel } from "@/components/modals/admin-panel";
 import { PlanetCard } from "@/components/modals/planet-card";
 import { MemberProfilePanel } from "@/components/modals/member-profile-panel";
 import { MemberProfileLink } from "@/components/shared/member-profile-link";
-import { galaxyLabel } from "@/lib/galaxies";
-import { portalSearchMatches } from "@/lib/missions";
-import { isSameSystem, missionDetailHref, stationDetailHref, type SystemIdentity } from "@/lib/detail-links";
+import { galaxyLabel } from "@/lib/planets/galaxies";
+import { portalSearchMatches } from "@/lib/missions/missions";
+import { isSameSystem, missionDetailHref, stationDetailHref, type SystemIdentity } from "@/lib/navigation/detail-links";
 import { DetailBackLink, DetailSection } from "@/components/shared/detail-page";
 import { useRouter } from "next/navigation";
-import { isValidNmsFriendCode } from "@/lib/member-types";
+import { isValidNmsFriendCode } from "@/lib/members/member-types";
 import { useLocale } from "@/components/providers/locale-provider";
-import type { AllianceMember, AllianceSettings } from "@/lib/access-store";
+import type { AllianceMember, AllianceSettings } from "@/lib/members/access-store";
 
 type HelpReply = Readonly<{
   id: string;

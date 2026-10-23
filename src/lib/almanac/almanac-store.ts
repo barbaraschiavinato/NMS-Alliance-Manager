@@ -2,9 +2,9 @@ import { get, put } from "@vercel/blob";
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 import path from "node:path";
-import { localDataPath } from "@/lib/local-data-path";
-import { getBlobAuthOptions } from "@/lib/blob-config";
-import { normalizeAlmanacPictures, normalizeAlmanacPlanet } from "@/lib/almanac-normalize";
+import { localDataPath } from "@/lib/storage/local-data-path";
+import { getBlobAuthOptions } from "@/lib/storage/blob-config";
+import { normalizeAlmanacPictures, normalizeAlmanacPlanet } from "@/lib/almanac/almanac-normalize";
 
 type AlmanacResponse = Record<string, unknown>;
 type AlmanacResponseIndex = Record<string, Record<string, AlmanacResponse>>;

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { type ComponentProps, type ReactNode, useSyncExternalStore } from "react";
 import { usePathname } from "next/navigation";
-import { contextualDetailHref, detailReturnDestination, detailOrigins } from "@/lib/detail-links";
+import { contextualDetailHref, detailReturnDestination, detailOrigins } from "@/lib/navigation/detail-links";
 import { useLocale } from "@/components/providers/locale-provider";
 
 function subscribeLocation(callback: () => void) {

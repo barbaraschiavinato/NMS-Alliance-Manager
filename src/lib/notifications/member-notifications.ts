@@ -1,4 +1,4 @@
-import { isTelegramChatId, isTelegramThreadId } from "@/lib/taxi-notifications";
+import { isTelegramChatId, isTelegramThreadId } from "@/lib/notifications/taxi-notifications";
 
 export type MemberNotificationSettings = {
   telegramEnabled: boolean;

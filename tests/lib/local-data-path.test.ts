@@ -1,6 +1,6 @@
 import path from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { localDataPath } from "@/lib/local-data-path";
+import { localDataPath } from "@/lib/storage/local-data-path";
 
 describe("localDataPath", () => {
   afterEach(() => vi.unstubAllEnvs());

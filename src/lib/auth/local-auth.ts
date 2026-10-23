@@ -1,4 +1,4 @@
-import type { MemberRole, MemberSpecialty, NmsPlatform } from "@/lib/member-types";
+import type { MemberRole, MemberSpecialty, NmsPlatform } from "@/lib/members/member-types";
 
 export type LocalAccount = Readonly<{
   email: string;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import type { AllianceMember, AllianceSettings, MemberRole, MembershipStatus } from "@/lib/member-types";
+import type { AllianceMember, AllianceSettings, MemberRole, MembershipStatus } from "@/lib/members/member-types";
 
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";

@@ -4,7 +4,7 @@ import { screen } from "@testing-library/react";
 import { MemberNotificationAdmin } from "@/components/shared/member-notification-controls";
 import { renderWithLocale } from "./helpers";
 import { json, mockFetch } from "../pages/helpers";
-import { defaultMemberNotificationSettings } from "@/lib/member-notifications";
+import { defaultMemberNotificationSettings } from "@/lib/notifications/member-notifications";
 
 const url = "/api/admin/member-notifications";
 const state = {

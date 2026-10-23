@@ -3,7 +3,7 @@
 import { Tabs } from "@/components/layout/tabs";
 import { useMemo } from "react";
 import { Check, CircleAlert, Search } from "lucide-react";
-import type { AllianceMember, MemberRole, MembershipStatus } from "@/lib/member-types";
+import type { AllianceMember, MemberRole, MembershipStatus } from "@/lib/members/member-types";
 import { LoadingSpinner } from "@/components/shared/loading-spinner";
 import { useLocale } from "@/components/providers/locale-provider";
 

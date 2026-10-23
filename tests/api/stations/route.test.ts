@@ -537,7 +537,7 @@ describe("PATCH /api/stations", () => {
   });
 
   it("returns 409 if the station changes before the update", async () => {
-    const store = await import("@/lib/stations-store");
+    const store = await import("@/lib/stations/stations-store");
     vi.spyOn(store, "updateStationPortal").mockResolvedValue(false);
     signInAs(cast.user);
     expect((await patch(patchBody())).status).toBe(409);

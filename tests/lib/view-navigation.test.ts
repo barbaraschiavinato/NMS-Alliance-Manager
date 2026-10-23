@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getViewSwitchDestination } from "@/lib/view-navigation";
+import { getViewSwitchDestination } from "@/lib/navigation/view-navigation";
 
 describe("getViewSwitchDestination", () => {
   it.each(["/users", "/users/member-id", "/offline-players", "/offline-players/member-id"])(

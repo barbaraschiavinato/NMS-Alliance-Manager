@@ -1,8 +1,14 @@
 import { NextResponse } from "next/server";
-import { getCurrentMember, hasRole } from "@/lib/authorization";
-import { readMemberNotificationSettings, saveMemberNotificationSettings } from "@/lib/member-notifications-store";
-import { isMemberNotificationSettings } from "@/lib/member-notifications";
-import { memberNotificationReadiness, sendMemberNotificationTest } from "@/lib/member-notification-delivery";
+import { getCurrentMember, hasRole } from "@/lib/auth/authorization";
+import {
+  readMemberNotificationSettings,
+  saveMemberNotificationSettings,
+} from "@/lib/notifications/member-notifications-store";
+import { isMemberNotificationSettings } from "@/lib/notifications/member-notifications";
+import {
+  memberNotificationReadiness,
+  sendMemberNotificationTest,
+} from "@/lib/notifications/member-notification-delivery";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

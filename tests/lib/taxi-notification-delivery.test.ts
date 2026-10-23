@@ -6,18 +6,18 @@ import {
   sendTaxiTest,
   taxiNotificationReadiness,
   taxiPushPublicKey,
-} from "@/lib/taxi-notification-delivery";
+} from "@/lib/notifications/taxi-notification-delivery";
 import {
   readTaxiNotifications,
   saveTaxiNotificationSettings,
   saveTaxiPushDevice,
   setTaxiPushPreference,
-} from "@/lib/taxi-notifications-store";
-import { defaultTaxiNotificationSettings } from "@/lib/taxi-notifications";
-import * as notificationStore from "@/lib/taxi-notifications-store";
-import { formatNmsFriendCode } from "@/lib/member-types";
-import { galaxyLabel } from "@/lib/galaxies";
-import { stationDetailHref } from "@/lib/detail-links";
+} from "@/lib/notifications/taxi-notifications-store";
+import { defaultTaxiNotificationSettings } from "@/lib/notifications/taxi-notifications";
+import * as notificationStore from "@/lib/notifications/taxi-notifications-store";
+import { formatNmsFriendCode } from "@/lib/members/member-types";
+import { galaxyLabel } from "@/lib/planets/galaxies";
+import { stationDetailHref } from "@/lib/navigation/detail-links";
 
 const author = makeMember();
 const recipient = makeMember();

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type SubmitEvent } from "react";
-import { generateSystemName } from "@/lib/system-name";
+import { generateSystemName } from "@/lib/planets/system-name";
 import { ArrowUpRight, CircleAlert, Orbit, Trash2, X } from "lucide-react";
 import {
   decodePortalAddress,
@@ -9,16 +9,16 @@ import {
   type MissionInput,
   type MissionPriority,
   type MissionStatus,
-} from "@/lib/missions";
+} from "@/lib/missions/missions";
 import {
   SystemAddressField,
   type SystemAddressLookup,
   type SystemAddressValidation,
 } from "@/components/shared/portal-address-field";
-import type { AllianceMember } from "@/lib/access-store";
-import type { MemberSpecialty } from "@/lib/member-types";
-import { missionSpecialties, specialtyAlreadyCovered, type MissionSpecialty } from "@/lib/missions";
-import { galaxyNames, galaxyLabel } from "@/lib/galaxies";
+import type { AllianceMember } from "@/lib/members/access-store";
+import type { MemberSpecialty } from "@/lib/members/member-types";
+import { missionSpecialties, specialtyAlreadyCovered, type MissionSpecialty } from "@/lib/missions/missions";
+import { galaxyNames, galaxyLabel } from "@/lib/planets/galaxies";
 import {
   isMissionSystemStatus,
   missionSystemStatuses,
@@ -26,7 +26,7 @@ import {
   planetSystemStatusKey,
   systemProgressFloor,
   type MissionSystemStatus,
-} from "@/lib/planet-system-status";
+} from "@/lib/planets/planet-system-status";
 import { useLocale } from "@/components/providers/locale-provider";
 
 const specialtyNames: Record<MemberSpecialty, string> = {

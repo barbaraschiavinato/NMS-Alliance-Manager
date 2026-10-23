@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { getCurrentMember } from "@/lib/authorization";
-import { readMissions, writeMissions } from "@/lib/store";
-import { isValidNmsFriendCode } from "@/lib/member-types";
-import type { Mission } from "@/lib/missions";
-import { readAccessData } from "@/lib/access-store";
-import { serializeMission } from "@/lib/mission-view";
+import { getCurrentMember } from "@/lib/auth/authorization";
+import { readMissions, writeMissions } from "@/lib/missions/store";
+import { isValidNmsFriendCode } from "@/lib/members/member-types";
+import type { Mission } from "@/lib/missions/missions";
+import { readAccessData } from "@/lib/members/access-store";
+import { serializeMission } from "@/lib/missions/mission-view";
 
 type RouteContext = { params: Promise<{ id: string }> };
 

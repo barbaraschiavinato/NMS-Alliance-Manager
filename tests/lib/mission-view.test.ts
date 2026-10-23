@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { serializeMission } from "@/lib/mission-view";
-import type { Mission } from "@/lib/missions";
+import { serializeMission } from "@/lib/missions/mission-view";
+import type { Mission } from "@/lib/missions/missions";
 import { makeMember } from "../helpers/members";
 
 function makeMission(overrides: Partial<Mission> = {}): Mission {

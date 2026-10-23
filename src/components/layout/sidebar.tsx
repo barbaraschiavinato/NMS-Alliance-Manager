@@ -16,7 +16,7 @@ import {
   UserRoundX,
   CarTaxiFront,
 } from "lucide-react";
-import type { AllianceMember, AllianceSettings } from "@/lib/access-store";
+import type { AllianceMember, AllianceSettings } from "@/lib/members/access-store";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useRequestSearchReset } from "@/components/shared/navigation-search-reset";
 

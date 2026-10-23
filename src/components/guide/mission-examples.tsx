@@ -1,9 +1,9 @@
 "use client";
 
 import { MissionCardSimple } from "@/components/cards/mission-card/simple";
-import type { AllianceMember } from "@/lib/member-types";
-import type { Mission } from "@/lib/missions";
-import { planetSystemStatusKey, type MissionSystemStatus } from "@/lib/planet-system-status";
+import type { AllianceMember } from "@/lib/members/member-types";
+import type { Mission } from "@/lib/missions/missions";
+import { planetSystemStatusKey, type MissionSystemStatus } from "@/lib/planets/planet-system-status";
 
 type Sample = Readonly<{
   portal: string;

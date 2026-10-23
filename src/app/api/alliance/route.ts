@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { getCurrentMember, hasRole } from "@/lib/authorization";
-import { readAccessData, updateAllianceSettings } from "@/lib/access-store";
+import { getCurrentMember, hasRole } from "@/lib/auth/authorization";
+import { readAccessData, updateAllianceSettings } from "@/lib/members/access-store";
 
 export async function GET() {
   const member = await getCurrentMember();

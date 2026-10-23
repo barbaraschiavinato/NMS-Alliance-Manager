@@ -11,7 +11,7 @@ import {
   contextualDetailHref,
   detailReturnDestination,
   internalDetailDestination,
-} from "@/lib/detail-links";
+} from "@/lib/navigation/detail-links";
 
 describe("contextual detail navigation", () => {
   it.each(["stations", "missions", "planets", "messages", "help-requests", "taxi"])(

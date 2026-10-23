@@ -2,7 +2,7 @@
 
 import { Gem, Leaf, PawPrint } from "lucide-react";
 import { useLocale } from "@/components/providers/locale-provider";
-import type { AlmanacDiscoveryCounts } from "@/lib/almanac-discovery-counts";
+import type { AlmanacDiscoveryCounts } from "@/lib/almanac/almanac-discovery-counts";
 
 export function PlanetDiscoveryCounts({ counts = {} }: Readonly<{ counts?: AlmanacDiscoveryCounts }>) {
   const { t } = useLocale();

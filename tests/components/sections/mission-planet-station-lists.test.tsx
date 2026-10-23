@@ -7,7 +7,7 @@ import type { StationEntry, StationFilter } from "@/components/cards/station-car
 import { MissionList, type MissionFilter } from "@/components/sections/mission-list";
 import { PlanetList, PlanetStationHeading } from "@/components/sections/planet-list";
 import { StationList } from "@/components/sections/station-list";
-import type { AllianceMember } from "@/lib/member-types";
+import type { AllianceMember } from "@/lib/members/member-types";
 import type { Locale } from "@/lib/translations";
 import { makeMember } from "../../helpers/members";
 import { makeMission, renderWithLocale } from "../helpers";

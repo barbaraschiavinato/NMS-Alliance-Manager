@@ -13,7 +13,7 @@ import {
   specialtyAlreadyCovered,
   type Mission,
   type MissionViewer,
-} from "@/lib/missions";
+} from "@/lib/missions/missions";
 
 function makeMission(overrides: Partial<Mission> = {}): Mission {
   return {

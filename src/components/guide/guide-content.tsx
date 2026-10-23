@@ -5,7 +5,7 @@ import { MessageComposerExamples } from "@/components/guide/message-composer-exa
 import { TaxiExamples } from "@/components/guide/taxi-examples";
 import { MessageTabsExample } from "@/components/guide/message-tabs-example";
 import { translate } from "@/lib/translations";
-import { readAccessData } from "@/lib/access-store";
+import { readAccessData } from "@/lib/members/access-store";
 import {
   Archive,
   ArchiveRestore,
@@ -62,7 +62,7 @@ import { createPlanetListExamplePlanet, PlanetListExample } from "@/components/g
 import { PlanetStationHeadingExample } from "@/components/guide/planet-station-heading-example";
 import { emptyPlanetFilterValues } from "@/components/forms/planet-filters";
 import { LocaleProvider } from "@/components/providers/locale-provider";
-import type { AllianceSettings } from "@/lib/access-store";
+import type { AllianceSettings } from "@/lib/members/access-store";
 
 const specialtyIcons = {
   ranger: { icon: Compass, color: "#5fd68a", name: "Ranger" },

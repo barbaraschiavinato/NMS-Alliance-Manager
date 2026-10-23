@@ -3,7 +3,7 @@ import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { MissionForm } from "@/components/modals/mission-form";
 import { makeMember } from "../helpers/members";
-import type { Mission } from "@/lib/missions";
+import type { Mission } from "@/lib/missions/missions";
 import { json, makeMission, mockFetch, renderPage, t } from "./helpers";
 
 vi.mock("next/image", async () => (await import("./helpers")).nextImageModule);

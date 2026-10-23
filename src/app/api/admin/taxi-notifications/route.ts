@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { getCurrentMember, hasRole } from "@/lib/authorization";
-import { readTaxiNotifications, saveTaxiNotificationSettings } from "@/lib/taxi-notifications-store";
-import { isTaxiNotificationSettings } from "@/lib/taxi-notifications";
-import { sendTaxiTest, taxiNotificationReadiness } from "@/lib/taxi-notification-delivery";
+import { getCurrentMember, hasRole } from "@/lib/auth/authorization";
+import { readTaxiNotifications, saveTaxiNotificationSettings } from "@/lib/notifications/taxi-notifications-store";
+import { isTaxiNotificationSettings } from "@/lib/notifications/taxi-notifications";
+import { sendTaxiTest, taxiNotificationReadiness } from "@/lib/notifications/taxi-notification-delivery";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

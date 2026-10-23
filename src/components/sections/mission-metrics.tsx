@@ -1,6 +1,6 @@
 "use client";
 
-import type { Mission } from "@/lib/missions";
+import type { Mission } from "@/lib/missions/missions";
 import type { MissionFilter } from "@/components/sections/mission-list";
 import { useLocale } from "@/components/providers/locale-provider";
 

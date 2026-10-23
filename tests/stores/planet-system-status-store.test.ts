@@ -17,7 +17,7 @@ import {
 
 vi.mock("@vercel/blob", async () => (await import("./helpers")).blobModule);
 
-const load = () => import("@/lib/planet-system-status-store");
+const load = () => import("@/lib/planets/planet-system-status-store");
 const fileName = "planet-system-status.json";
 const blobPath = "alliance-manager/planet-system-status.json";
 

@@ -3,14 +3,14 @@
 import { type CSSProperties } from "react";
 import { DetailLink as Link } from "@/components/shared/detail-page";
 import { AlertTriangle, Orbit, Skull } from "lucide-react";
-import { galaxyLabel } from "@/lib/galaxies";
+import { galaxyLabel } from "@/lib/planets/galaxies";
 import {
   PlanetDestinationCard,
   conflictLevels,
   type PlanetDestination,
 } from "@/components/cards/planet-destination-card";
 import { useLocale } from "@/components/providers/locale-provider";
-import { stationDetailHref } from "@/lib/detail-links";
+import { stationDetailHref } from "@/lib/navigation/detail-links";
 
 const raceIcons: Record<string, string> = {
   Gek: "/icons/nms-gek.svg",

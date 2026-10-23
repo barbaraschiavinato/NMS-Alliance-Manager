@@ -3,7 +3,7 @@
 import { useEffect, useState, type SubmitEvent } from "react";
 import { Bell, CheckCircle2, CircleAlert, Send } from "lucide-react";
 import { useLocale } from "@/components/providers/locale-provider";
-import type { TaxiNotificationChannel, TaxiNotificationSettings } from "@/lib/taxi-notifications";
+import type { TaxiNotificationChannel, TaxiNotificationSettings } from "@/lib/notifications/taxi-notifications";
 
 type AdminState = {
   settings: TaxiNotificationSettings;

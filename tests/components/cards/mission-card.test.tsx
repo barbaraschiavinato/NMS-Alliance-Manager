@@ -8,8 +8,8 @@ import {
   readPlanetNotes,
   type MissionCardProps,
 } from "@/components/cards/mission-card/parts";
-import type { AllianceMember } from "@/lib/member-types";
-import type { Mission } from "@/lib/missions";
+import type { AllianceMember } from "@/lib/members/member-types";
+import type { Mission } from "@/lib/missions/missions";
 import type { Locale } from "@/lib/translations";
 import { makeMember } from "../../helpers/members";
 import { makeMission, renderWithLocale } from "../helpers";

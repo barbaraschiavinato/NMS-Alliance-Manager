@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { sortByCreatedAtDescending } from "@/lib/created-at";
+import { sortByCreatedAtDescending } from "@/lib/utils/created-at";
 
 describe("sortByCreatedAtDescending", () => {
   it("puts newest first and undated items last in original order", () => {

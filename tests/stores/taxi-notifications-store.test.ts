@@ -3,10 +3,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import webpush from "web-push";
 import { writeDataFile } from "../helpers/members";
 import { blobMock, readBlobJson, resetStores, setBlobJson, useBlobBackend } from "./helpers";
-import { defaultTaxiNotificationSettings, isTaxiNotificationSettings } from "@/lib/taxi-notifications";
+import { defaultTaxiNotificationSettings, isTaxiNotificationSettings } from "@/lib/notifications/taxi-notifications";
 
 vi.mock("@vercel/blob", async () => (await import("./helpers")).blobModule);
-const load = () => import("@/lib/taxi-notifications-store");
+const load = () => import("@/lib/notifications/taxi-notifications-store");
 const file = "taxi-notifications.json";
 const blob = "alliance-manager/" + file;
 const keys = webpush.generateVAPIDKeys();

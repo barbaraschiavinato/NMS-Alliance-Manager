@@ -17,12 +17,12 @@ import {
   type Mission,
   type MissionInput,
   type MissionSpecialty,
-} from "@/lib/missions";
-import type { AllianceMember, AllianceSettings } from "@/lib/access-store";
+} from "@/lib/missions/missions";
+import type { AllianceMember, AllianceSettings } from "@/lib/members/access-store";
 import { AdminPanel } from "@/components/modals/admin-panel";
 import { MemberProfilePanel } from "@/components/modals/member-profile-panel";
 import { PlanetCard } from "@/components/modals/planet-card";
-import { isValidNmsFriendCode } from "@/lib/member-types";
+import { isValidNmsFriendCode } from "@/lib/members/member-types";
 import {
   missionSystemStatuses,
   missionSystemStatusRoles,
@@ -30,11 +30,11 @@ import {
   systemProgressFloor,
   type MissionSystemStatus,
   type PlanetSystemStatuses,
-} from "@/lib/planet-system-status";
+} from "@/lib/planets/planet-system-status";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useNavigationSearchState } from "@/components/shared/navigation-search-reset";
-import { sortByCreatedAtDescending } from "@/lib/created-at";
-import { isSameSystem, type SystemIdentity } from "@/lib/detail-links";
+import { sortByCreatedAtDescending } from "@/lib/utils/created-at";
+import { isSameSystem, type SystemIdentity } from "@/lib/navigation/detail-links";
 import { DetailSection, useDetailReturn } from "@/components/shared/detail-page";
 
 const missionTypeLabels: Record<Mission["targetSpecialty"], string> = {

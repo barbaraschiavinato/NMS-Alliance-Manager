@@ -2,9 +2,9 @@ import { get, put } from "@vercel/blob";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 import path from "node:path";
-import { localDataPath } from "@/lib/local-data-path";
-import { getBlobAuthOptions } from "@/lib/blob-config";
-import { readAccessData } from "@/lib/access-store";
+import { localDataPath } from "@/lib/storage/local-data-path";
+import { getBlobAuthOptions } from "@/lib/storage/blob-config";
+import { readAccessData } from "@/lib/members/access-store";
 
 export type MeetingStation = Readonly<{ portal: string; galaxy: number; name?: string }>;
 export type TaxiStationOption = MeetingStation & Readonly<{ id: string }>;

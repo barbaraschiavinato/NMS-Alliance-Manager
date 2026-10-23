@@ -3,13 +3,13 @@ import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 import path from "node:path";
 import type { PushSubscription } from "web-push";
-import { getBlobAuthOptions } from "@/lib/blob-config";
-import { localDataPath } from "@/lib/local-data-path";
+import { getBlobAuthOptions } from "@/lib/storage/blob-config";
+import { localDataPath } from "@/lib/storage/local-data-path";
 import {
   defaultTaxiNotificationSettings,
   isTaxiNotificationSettings,
   type TaxiNotificationSettings,
-} from "@/lib/taxi-notifications";
+} from "@/lib/notifications/taxi-notifications";
 
 type Device = { memberId: string; subscription: PushSubscription };
 type NotificationData = {
