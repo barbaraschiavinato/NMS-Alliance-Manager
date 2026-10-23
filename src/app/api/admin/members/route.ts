@@ -15,6 +15,7 @@ import {
 import { readMissions, writeMissions } from "@/lib/store";
 import { membershipStatuses } from "@/lib/member-types";
 import { isFixedLocalAccount } from "@/lib/local-auth";
+import { notifyMemberApproved, scheduleMemberNotification } from "@/lib/member-notification-delivery";
 
 const profileConflictMessages = {
   name: "members.duplicate_in_game_name",
@@ -78,6 +79,9 @@ export async function PATCH(request: Request) {
     ) {
       return NextResponse.json({ error: "Stato approvazione non valido." }, { status: 400 });
     }
+    const previousStatus = (await readAccessData()).members.find(
+      (item) => item.email === email.trim().toLowerCase(),
+    )?.membershipStatus;
     const updated = await updateMemberApproval(
       email,
       member.email,
@@ -85,6 +89,8 @@ export async function PATCH(request: Request) {
       member.role,
     );
     if (!updated) return NextResponse.json({ error: "Utente non trovato o non modificabile." }, { status: 404 });
+    if (previousStatus === "pending" && updated.membershipStatus === "approved")
+      await scheduleMemberNotification(() => notifyMemberApproved(updated.publicId, member.nmsName || member.name));
     return NextResponse.json({ ok: true, membershipStatus: updated.membershipStatus });
   }
 

@@ -58,6 +58,10 @@ export function mockFetch(pageRoutes: Routes = {}) {
       readiness: { discord: false, telegram: false, push: false, links: false },
     },
     "GET /api/profile/taxi-push": { enabled: true, available: false, publicKey: null },
+    "GET /api/admin/member-notifications": {
+      settings: { telegramEnabled: false, telegramChatId: "", telegramThreadId: "" },
+      readiness: { telegram: false, links: false },
+    },
     ...pageRoutes,
   };
   const calls: FetchCall[] = [];

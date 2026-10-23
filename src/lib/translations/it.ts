@@ -42,6 +42,18 @@ export const translations: TranslationCatalog = {
       "Configura le credenziali nelle variabili d'ambiente prima di abilitare questo canale.",
     "taxi_notifications.invalid_channel": "Canale di notifica non valido.",
     "taxi_notifications.invalid_subscription": "Iscrizione Push del browser non valida.",
+    "member_notifications.title": "Notifiche utenti",
+    "member_notifications.description":
+      "Avvisi Telegram per le nuove registrazioni in attesa di approvazione e per gli utenti approvati.",
+    "member_notifications.telegram_chat_id": "Chat ID del gruppo Telegram Utenti",
+    "member_notifications.telegram_topic_id": "ID topic Telegram Utenti (opzionale)",
+    "member_notifications.save": "Salva notifiche utenti",
+    "member_notifications.saved": "Impostazioni notifiche utenti salvate.",
+    "member_notifications.test_sent": "Notifica di prova utenti inviata.",
+    "member_notifications.error": "Impossibile configurare le notifiche utenti.",
+    "member_notifications.admin_error":
+      "Impossibile configurare o inviare le notifiche utenti. Controlla la configurazione del canale e i log del server.",
+    "member_notifications.invalid_settings": "Impostazioni notifiche utenti non valide.",
     "details.back_to_stations": "Torna alle stazioni",
     "details.back_to_station_detail": "Torna alla scheda stazione",
     "details.back_to_mission_detail": "Torna alla scheda missione",

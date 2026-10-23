@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { getMissingAuthConfiguration } from "@/lib/local-auth";
 import { registerMember, type AllianceMember, type MemberRole } from "@/lib/access-store";
+import { notifyMemberRegistered, scheduleMemberNotification } from "@/lib/member-notification-delivery";
 
 export async function getCurrentMember(
   options: Readonly<{ allowPending?: boolean; allowBlocked?: boolean }> = {},
@@ -9,11 +10,12 @@ export async function getCurrentMember(
   const session = await auth();
   const email = session?.user?.email;
   if (!email) return null;
-  const { member } = await registerMember({
+  const { member, awaitingApproval } = await registerMember({
     email,
     name: session.user?.name ?? email,
     image: session.user?.image ?? "",
   });
+  if (awaitingApproval) await scheduleMemberNotification(() => notifyMemberRegistered(member.publicId));
   if (member.offline) return null;
   if (member.membershipStatus === "blocked" && !options.allowBlocked) return null;
   if (member.membershipStatus === "pending" && !options.allowPending) return null;

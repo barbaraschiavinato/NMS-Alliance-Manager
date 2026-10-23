@@ -199,7 +199,7 @@ export async function registerMember(identity: Pick<AllianceMember, "email" | "n
     existingMember.role === role &&
     existingMember.membershipStatus === membershipStatus
   ) {
-    return { member: existingMember, alliance: data.alliance };
+    return { member: existingMember, alliance: data.alliance, awaitingApproval: false };
   }
   const member: AllianceMember = {
     publicId: existingMember?.publicId ?? randomUUID(),
@@ -222,7 +222,7 @@ export async function registerMember(identity: Pick<AllianceMember, "email" | "n
   if (index === -1) data.members.push(member);
   else data.members[index] = member;
   await writeAccessData(data);
-  return { member, alliance: data.alliance };
+  return { member, alliance: data.alliance, awaitingApproval: index === -1 && membershipStatus === "pending" };
 }
 
 // LOCAL_AUTH: on every login restores role and approval of the development account. In the development set the profile

@@ -142,6 +142,14 @@ Shared alerts place the detail invitation immediately before the final link. Tel
 
 Discord and Telegram Taxi alerts also include the original request's saved meeting point, on both new requests and replies: Offline, arrange in replies, alliance hub, or station. Hub/station summaries include the saved portal address and meeting galaxy (which may differ from the destination); a station name is included when available. Legacy requests use their saved station or default to arrange in replies. Web Push remains a short summary without meeting details.
 
+## User notifications
+
+In **Administration → User notifications**, admins can enable a Telegram alert, with its own group chat ID and optional topic ID, for two events: a new account that registered and is waiting for approval, and a pending account that was just approved. Alerts are disabled by default, show only the NMS name (or the Google name before the profile is filled in) and, for approvals, the approver's name, never email addresses, and link to `/users`. Re-approving a blocked account and the auto-approved `ALLIANCE_ADMIN_EMAIL` account send nothing.
+
+- Set `TELEGRAM_MEMBERS_BOT_TOKEN` to a Telegram bot token (it may be the same bot as Taxi) and add the bot to the target group with permission to send messages. `AUTH_URL` is required for the link, as for Taxi.
+- Settings live in `data/member-notifications.json` locally or `alliance-manager/member-notifications.json` in private Blob storage; the token is never stored there.
+- Delivery is best-effort through Next `after()`, scheduled only when alerts are enabled, and a failed alert never affects the registration or approval. Registration alerts are sent when the account is first created, so two simultaneous first requests (the store has no locking) could rarely produce a duplicate alert.
+
 ## System addresses
 
 Every mission requires a full portal address of 12 hexadecimal glyphs (`0`-`F`) and a galaxy index (`0`-`255`). The interface shows the decoded `Planet / System / Y / Z / X` parameters and flags reserved or invalid values. The glyph PNGs are in `public/glyphs/` and come from [NMS Galactic Map](https://github.com/elegra1965-source/nms-galactic-map/tree/main/glyphs). They are No Man's Sky images, owned by their respective holders and not covered by the source repository's software license; this fan-made project is not affiliated with or endorsed by Hello Games.
