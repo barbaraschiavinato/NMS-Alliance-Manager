@@ -4,7 +4,7 @@ import { signInAs } from "../helpers/auth";
 import { makeMember, seedMembers } from "../helpers/members";
 import { jsonRequest } from "../helpers/http";
 import * as admin from "@/app/api/admin/member-notifications/route";
-import { PATCH as patchMembers } from "@/app/api/admin/members/route";
+import { DELETE as deleteMembers, PATCH as patchMembers } from "@/app/api/admin/members/route";
 import { getCurrentMember } from "@/lib/auth/authorization";
 import { defaultMemberNotificationSettings } from "@/lib/notifications/member-notifications";
 import {
@@ -14,8 +14,8 @@ import {
 import * as notificationStore from "@/lib/notifications/member-notifications-store";
 import {
   memberNotificationReadiness,
-  notifyMemberApproved,
   notifyMemberRegistered,
+  notifyMemberStatusChanged,
   scheduleMemberNotification,
   sendMemberNotificationTest,
 } from "@/lib/notifications/member-notification-delivery";
@@ -165,14 +165,90 @@ describe("member notification alerts", () => {
     expect(text).toContain("Approvato da: Chief (@chief_nms)");
   });
 
-  it("stays silent for other status changes and when alerts are disabled", async () => {
-    stubTelegram();
+  it.each([
+    ["approved", "blocked", "Utente bloccato", "Bloccato da: Chief (@chief_nms)"],
+    ["blocked", "approved", "Utente sbloccato", "Sbloccato da: Chief (@chief_nms)"],
+    ["pending", "blocked", "Utente bloccato", "Bloccato da: Chief"],
+    ["approved", "pending", "Utente rimesso in attesa", "Modificato da: Chief"],
+    ["blocked", "pending", "Utente rimesso in attesa", "Modificato da: Chief"],
+  ] as const)("announces a status change from %s to %s", async (from, to, title, actorLine) => {
+    const fetch = stubTelegram();
+    const target = makeMember({ membershipStatus: from, nmsName: "Target" });
+    seedMembers([administrator, target]);
+    await saveMemberNotificationSettings(settings);
+    expect(
+      (await patchMembers(jsonRequest("/api/admin/members", "PATCH", { email: target.email, membershipStatus: to })))
+        .status,
+    ).toBe(200);
+    await runScheduled(0);
+    const { text } = JSON.parse(fetch.mock.calls[0][1].body);
+    expect(text).toContain(title);
+    expect(text).toContain("Utente: Target");
+    expect(text).toContain(actorLine);
+  });
+
+  it("stays silent when the status does not change or alerts are disabled", async () => {
+    const fetch = stubTelegram();
     const request = (membershipStatus: string) =>
       patchMembers(jsonRequest("/api/admin/members", "PATCH", { email: pending.email, membershipStatus }));
     await request("approved");
     await saveMemberNotificationSettings(settings);
-    await request("blocked");
     await request("approved");
+    await runScheduled(0);
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it("announces role changes with the previous and new role, and ignores unchanged roles", async () => {
+    const fetch = stubTelegram();
+    const target = makeMember({ nmsName: "Target", role: "user" });
+    seedMembers([administrator, target]);
+    await saveMemberNotificationSettings(settings);
+    const change = (role: string) =>
+      patchMembers(jsonRequest("/api/admin/members", "PATCH", { email: target.email, role }));
+    expect((await change("moderator")).status).toBe(200);
+    await runScheduled(0);
+    const { text } = JSON.parse(fetch.mock.calls[0][1].body);
+    expect(text).toContain("Ruolo modificato");
+    expect(text).toContain("Ruolo: Utente → Moderatore");
+    expect(text).toContain("Modificato da: Chief (@chief_nms)");
+    fetch.mockClear();
+    await change("moderator");
+    await runScheduled(1);
+    expect(fetch).not.toHaveBeenCalled();
+    expect((await change("admin")).status).toBe(200);
+    await runScheduled(2);
+    expect(JSON.parse(fetch.mock.calls[0][1].body).text).toContain("Ruolo: Moderatore → Amministratore");
+  });
+
+  it("does not announce failed role changes", async () => {
+    stubTelegram();
+    await saveMemberNotificationSettings(settings);
+    const response = await patchMembers(
+      jsonRequest("/api/admin/members", "PATCH", { email: "nobody@example.com", role: "moderator" }),
+    );
+    expect(response.status).toBe(404);
+    expect(after).not.toHaveBeenCalled();
+  });
+
+  it("announces a removed member by the name they had before deletion", async () => {
+    const fetch = stubTelegram();
+    const target = makeMember({ nmsName: "Target" });
+    seedMembers([administrator, target]);
+    await saveMemberNotificationSettings(settings);
+    const response = await deleteMembers(jsonRequest("/api/admin/members", "DELETE", { email: target.email }));
+    expect(response.status).toBe(200);
+    await runScheduled(0);
+    const { text } = JSON.parse(fetch.mock.calls[0][1].body);
+    expect(text).toContain("Utente rimosso");
+    expect(text).toContain("Utente: Target");
+    expect(text).toContain("Rimosso da: Chief (@chief_nms)");
+  });
+
+  it("does not announce a removal that was refused", async () => {
+    stubTelegram();
+    await saveMemberNotificationSettings(settings);
+    const response = await deleteMembers(jsonRequest("/api/admin/members", "DELETE", { email: "nobody@example.com" }));
+    expect(response.status).toBe(404);
     expect(after).not.toHaveBeenCalled();
   });
 
@@ -221,14 +297,14 @@ describe("member notification edge cases", () => {
   it.each(["bad name", "abc", ""])("omits an invalid approver Telegram tag %j", async (telegramName) => {
     const fetch = stubTelegram();
     await saveMemberNotificationSettings(settings);
-    await notifyMemberApproved(pending.publicId, { name: "Chief", telegramName });
+    await notifyMemberStatusChanged(pending.publicId, "pending", "approved", { name: "Chief", telegramName });
     expect(JSON.parse(fetch.mock.calls[0][1].body).text).toContain("Approvato da: Chief\n");
   });
 
   it("omits the topic when none is set and uses neutral wording for a blank approver", async () => {
     const fetch = stubTelegram();
     await saveMemberNotificationSettings({ ...settings, telegramThreadId: "" });
-    await notifyMemberApproved(pending.publicId, { name: "   " });
+    await notifyMemberStatusChanged(pending.publicId, "pending", "approved", { name: "   " });
     const body = JSON.parse(fetch.mock.calls[0][1].body);
     expect(body).not.toHaveProperty("message_thread_id");
     expect(body.text).toContain("Approvato da: un moderatore");

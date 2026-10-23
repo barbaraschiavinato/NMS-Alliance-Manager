@@ -84,7 +84,7 @@ export function MemberNotificationAdmin() {
       {data && (
         <form className="taxi-notification-form" onSubmit={(event) => save(event, data.settings)}>
           <p className="field-hint">
-            {t("Telegram alerts for new registrations awaiting approval and for approved users.")}
+            {t("Telegram alerts for new registrations and for approvals, blocks, role changes and removals of users.")}
           </p>
           {!data.readiness.links && (
             <p className="form-error">{t("Configure AUTH_URL for notification detail links.")}</p>

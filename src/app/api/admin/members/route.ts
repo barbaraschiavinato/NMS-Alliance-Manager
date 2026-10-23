@@ -13,9 +13,18 @@ import {
   updateMemberRole,
 } from "@/lib/members/access-store";
 import { readMissions, writeMissions } from "@/lib/missions/store";
-import { membershipStatuses } from "@/lib/members/member-types";
+import { membershipStatuses, type AllianceMember, type MemberRole } from "@/lib/members/member-types";
 import { isFixedLocalAccount } from "@/lib/auth/local-auth";
-import { notifyMemberApproved, scheduleMemberNotification } from "@/lib/notifications/member-notification-delivery";
+import {
+  notifyMemberRemoved,
+  notifyMemberRoleChanged,
+  notifyMemberStatusChanged,
+  scheduleMemberNotification,
+} from "@/lib/notifications/member-notification-delivery";
+
+function actorOf(member: AllianceMember) {
+  return { name: member.nmsName || member.name, telegramName: member.telegramName };
+}
 
 const profileConflictMessages = {
   name: "members.duplicate_in_game_name",
@@ -88,14 +97,11 @@ export async function PATCH(request: Request) {
       membershipStatus as (typeof membershipStatuses)[number],
       member.role,
     );
-    if (!updated) return NextResponse.json({ error: "Utente non trovato o non modificabile." }, { status: 404 });
-    if (previousStatus === "pending" && updated.membershipStatus === "approved")
-      await scheduleMemberNotification(() =>
-        notifyMemberApproved(updated.publicId, {
-          name: member.nmsName || member.name,
-          telegramName: member.telegramName,
-        }),
-      );
+    if (!updated || !previousStatus)
+      return NextResponse.json({ error: "Utente non trovato o non modificabile." }, { status: 404 });
+    await scheduleMemberNotification(() =>
+      notifyMemberStatusChanged(updated.publicId, previousStatus, updated.membershipStatus, actorOf(member)),
+    );
     return NextResponse.json({ ok: true, membershipStatus: updated.membershipStatus });
   }
 
@@ -104,8 +110,13 @@ export async function PATCH(request: Request) {
   if (typeof role !== "string" || !memberRoles.includes(role as (typeof memberRoles)[number])) {
     return NextResponse.json({ error: "Ruolo non valido." }, { status: 400 });
   }
+  const target = (await readAccessData()).members.find((item) => item.email === email.trim().toLowerCase());
   const updated = await updateMemberRole(email, role as (typeof memberRoles)[number]);
-  if (!updated) return NextResponse.json({ error: "Utente non trovato o ruolo non modificabile." }, { status: 404 });
+  if (!updated || !target)
+    return NextResponse.json({ error: "Utente non trovato o ruolo non modificabile." }, { status: 404 });
+  await scheduleMemberNotification(() =>
+    notifyMemberRoleChanged(target.publicId, target.role, role as MemberRole, actorOf(member)),
+  );
   return NextResponse.json({ ok: true });
 }
 
@@ -125,9 +136,12 @@ export async function DELETE(request: Request) {
     (candidate) => candidate.email === process.env.ALLIANCE_ADMIN_EMAIL?.trim().toLowerCase(),
   );
   const removed = await deleteMember((input as { email: string }).email, member.role, member.email);
-  if (!removed)
+  if (!removed || !removedMember)
     return NextResponse.json({ error: "Membro non trovato o non eliminabile con il tuo ruolo." }, { status: 404 });
-  if (removedMember && adminMember) {
+  await scheduleMemberNotification(() =>
+    notifyMemberRemoved(removedMember.nmsName || removedMember.name, actorOf(member)),
+  );
+  if (adminMember) {
     const missions = await readMissions();
     if (missions.some((mission) => mission.stationOwnerMemberId === removedMember.publicId)) {
       await writeMissions(

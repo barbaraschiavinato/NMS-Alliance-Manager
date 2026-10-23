@@ -40,7 +40,7 @@ export const translations: TranslationCatalog = {
     "taxi_notifications.invalid_channel": "Invalid notification channel.",
     "taxi_notifications.invalid_subscription": "Invalid browser push subscription.",
     "member_notifications.title": "User notifications",
-    "member_notifications.description": "Telegram alerts for new registrations awaiting approval and for approved users.",
+    "member_notifications.description": "Telegram alerts for new registrations and for approvals, blocks, role changes and removals of users.",
     "member_notifications.telegram_chat_id": "Users Telegram group chat ID",
     "member_notifications.telegram_topic_id": "Users Telegram topic ID (optional)",
     "member_notifications.save": "Save user notifications",

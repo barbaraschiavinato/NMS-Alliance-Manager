@@ -44,7 +44,7 @@ export const translations: TranslationCatalog = {
     "taxi_notifications.invalid_subscription": "Iscrizione Push del browser non valida.",
     "member_notifications.title": "Notifiche utenti",
     "member_notifications.description":
-      "Avvisi Telegram per le nuove registrazioni in attesa di approvazione e per gli utenti approvati.",
+      "Avvisi Telegram per le nuove registrazioni e per approvazioni, blocchi, cambi di ruolo e rimozioni degli utenti.",
     "member_notifications.telegram_chat_id": "Chat ID del gruppo Telegram Utenti",
     "member_notifications.telegram_topic_id": "ID topic Telegram Utenti (opzionale)",
     "member_notifications.save": "Salva notifiche utenti",

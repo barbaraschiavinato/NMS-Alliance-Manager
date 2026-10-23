@@ -12,4 +12,7 @@ description: Project instructions for Copilot
 - I nuovi account sono `pending` per default; solo moderatori/admin li possono approvare. Tutti gli endpoint operativi richiedono `membershipStatus: approved`.
 - Le Route Handlers API leggono e scrivono JSON tramite `src/lib/missions/store.ts`: locale in `data/missions.json`, produzione su Vercel Blob privato.
 - Non usare il filesystem locale per la persistenza in produzione e non esporre né committare token o dati runtime.
+- `src/lib/` è raggruppata per dominio (`almanac/`, `auth/`, `members/`, `messages/`, `missions/`, `navigation/`, `notifications/`, `planets/`, `stations/`, `storage/`, `utils/`): metti i nuovi moduli nella cartella giusta, non nella radice.
+- Riusa i componenti condivisi (`Tabs`, `Pagination`, `Toast`, `DetailSection`) invece di crearne copie; il feedback delle azioni usa `Toast`.
+- Le notifiche Telegram degli utenti (registrazione, approvazione, blocco, cambio ruolo, rimozione) sono in `src/lib/notifications/member-*` e non devono mai contenere email.
 - Verifica le modifiche con `npm run lint` e `npm run build`.
