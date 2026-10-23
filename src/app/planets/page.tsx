@@ -1,13 +1,13 @@
 import { auth } from "@/auth";
 import { LoginScreen } from "@/components/pages/login-screen";
-import { getMissingAuthConfiguration } from "@/lib/local-auth";
+import { getMissingAuthConfiguration } from "@/lib/auth/local-auth";
 import { PlanetsPage } from "@/components/pages/planets-page";
 import { PendingApproval } from "@/components/pages/pending-approval";
-import { getCurrentMember, hasRole } from "@/lib/authorization";
-import { readAccessData } from "@/lib/access-store";
-import { readAllStationPortals, readStationPortals } from "@/lib/stations-store";
-import { readMissions } from "@/lib/store";
-import { loadPlanetDestinations } from "@/lib/planet-destinations";
+import { getCurrentMember, hasRole } from "@/lib/auth/authorization";
+import { readAccessData } from "@/lib/members/access-store";
+import { readAllStationPortals, readStationPortals } from "@/lib/stations/stations-store";
+import { readMissions } from "@/lib/missions/store";
+import { loadPlanetDestinations } from "@/lib/planets/planet-destinations";
 
 export const dynamic = "force-dynamic";
 

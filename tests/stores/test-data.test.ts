@@ -3,17 +3,17 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
-import { decodePortalAddress, isMissionInput, missionStatuses } from "@/lib/missions";
-import { testLocalAccounts } from "@/lib/local-auth";
+import { decodePortalAddress, isMissionInput, missionStatuses } from "@/lib/missions/missions";
+import { testLocalAccounts } from "@/lib/auth/local-auth";
 
 // The fixtures in fixtures/test-data/ are the starting data of `npm run dev:test`. They are read here with the real
 // store readers, from a temporary copy, so a fixture the app cannot load fails the tests.
 let dataDir = "";
-let access: Awaited<ReturnType<typeof import("@/lib/access-store").readAccessData>>;
-let missions: Awaited<ReturnType<typeof import("@/lib/store").readMissions>>;
-let stations: Awaited<ReturnType<typeof import("@/lib/stations-store").readAllStationPortals>>;
-let statuses: Awaited<ReturnType<typeof import("@/lib/planet-system-status-store").readPlanetSystemStatuses>>;
-let messages: Awaited<ReturnType<typeof import("@/lib/private-messages-store").readPrivateMessages>>;
+let access: Awaited<ReturnType<typeof import("@/lib/members/access-store").readAccessData>>;
+let missions: Awaited<ReturnType<typeof import("@/lib/missions/store").readMissions>>;
+let stations: Awaited<ReturnType<typeof import("@/lib/stations/stations-store").readAllStationPortals>>;
+let statuses: Awaited<ReturnType<typeof import("@/lib/planets/planet-system-status-store").readPlanetSystemStatuses>>;
+let messages: Awaited<ReturnType<typeof import("@/lib/messages/private-messages-store").readPrivateMessages>>;
 let missionsBefore: unknown;
 let missionsAfter: unknown;
 
@@ -26,11 +26,11 @@ beforeAll(async () => {
   vi.resetModules();
 
   const [accessStore, missionsStore, stationsStore, statusStore, messagesStore] = await Promise.all([
-    import("@/lib/access-store"),
-    import("@/lib/store"),
-    import("@/lib/stations-store"),
-    import("@/lib/planet-system-status-store"),
-    import("@/lib/private-messages-store"),
+    import("@/lib/members/access-store"),
+    import("@/lib/missions/store"),
+    import("@/lib/stations/stations-store"),
+    import("@/lib/planets/planet-system-status-store"),
+    import("@/lib/messages/private-messages-store"),
   ]);
   missionsBefore = JSON.parse(await readFile(path.join(dataDir, "missions.json"), "utf8"));
   access = await accessStore.readAccessData();

@@ -1,7 +1,7 @@
 import { get } from "@vercel/blob";
 import { NextResponse } from "next/server";
-import { getCurrentMember } from "@/lib/authorization";
-import { getBlobAuthOptions } from "@/lib/blob-config";
+import { getCurrentMember } from "@/lib/auth/authorization";
+import { getBlobAuthOptions } from "@/lib/storage/blob-config";
 
 export async function GET(request: Request) {
   const member = await getCurrentMember();

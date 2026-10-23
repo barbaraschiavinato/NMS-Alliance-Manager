@@ -217,7 +217,7 @@ describe("PATCH /api/admin/members", () => {
     });
 
     it("returns 404 if the member disappears before the update", async () => {
-      const store = await import("@/lib/access-store");
+      const store = await import("@/lib/members/access-store");
       vi.spyOn(store, "updateMemberProfile").mockResolvedValue(null);
       signInAs(cast.admin);
       expect((await patch({ action: "profile", email: cast.user.email, ...validProfile() })).status).toBe(404);

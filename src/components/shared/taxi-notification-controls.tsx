@@ -3,7 +3,7 @@
 import { useEffect, useState, type SubmitEvent } from "react";
 import { Bell, CheckCircle2, CircleAlert, Send } from "lucide-react";
 import { useLocale } from "@/components/providers/locale-provider";
-import type { TaxiNotificationChannel, TaxiNotificationSettings } from "@/lib/taxi-notifications";
+import type { TaxiNotificationChannel, TaxiNotificationSettings } from "@/lib/notifications/taxi-notifications";
 
 type AdminState = {
   settings: TaxiNotificationSettings;
@@ -279,6 +279,8 @@ export function TaxiPushPreferences() {
     }
   }
 
+  // Hide the whole section while loading and when the administrator has not enabled Web Push.
+  if (!error && !data?.available) return null;
   return (
     <section className="admin-section">
       <h3>{t("Taxi browser notifications")}</h3>
@@ -293,9 +295,6 @@ export function TaxiPushPreferences() {
             />
             <span>{t("Receive taxi notifications on my connected devices")}</span>
           </label>
-          {!data.available && (
-            <p className="field-hint">{t("Taxi push notifications are disabled by the administrator.")}</p>
-          )}
           {supported === false && (
             <p className="field-hint">
               {t(
@@ -308,7 +307,7 @@ export function TaxiPushPreferences() {
               <button
                 type="button"
                 className="quiet-button"
-                disabled={busy || !data.available || !data.enabled}
+                disabled={busy || !data.enabled}
                 onClick={() => void connect()}
               >
                 {t(subscription ? "Connect or refresh this browser" : "Connect this browser")}

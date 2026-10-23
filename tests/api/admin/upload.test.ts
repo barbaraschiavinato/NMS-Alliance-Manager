@@ -55,7 +55,7 @@ describe("POST /api/admin/upload", () => {
   });
 
   it("returns 503 when the Blob configuration is invalid", async () => {
-    const authorization = await import("@/lib/authorization");
+    const authorization = await import("@/lib/auth/authorization");
     vi.spyOn(authorization, "getCurrentMember").mockResolvedValue(cast.admin);
     vi.stubEnv("VERCEL", "1");
     expect((await upload(imageForm())).status).toBe(503);

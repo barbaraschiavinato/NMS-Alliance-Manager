@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { getCurrentMember } from "@/lib/authorization";
-import { lookupAlmanacPlanet } from "@/lib/almanac-lookup";
-import { decodePortalAddress } from "@/lib/missions";
+import { getCurrentMember } from "@/lib/auth/authorization";
+import { lookupAlmanacPlanet } from "@/lib/almanac/almanac-lookup";
+import { decodePortalAddress } from "@/lib/missions/missions";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

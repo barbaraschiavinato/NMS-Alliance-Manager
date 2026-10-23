@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { Hero, HeroAddButton } from "@/components/layout/hero";
 import { Tabs } from "@/components/layout/tabs";
-import { galaxyLabel } from "@/lib/galaxies";
+import { galaxyLabel } from "@/lib/planets/galaxies";
 import { defaultAlliance } from "../../helpers/members";
 import { renderWithLocale, tr } from "../helpers";
 

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { getBlobAuthOptions } from "@/lib/blob-config";
+import { getBlobAuthOptions } from "@/lib/storage/blob-config";
 
 describe("getBlobAuthOptions", () => {
   it("uses the local filesystem when nothing is configured", () => {

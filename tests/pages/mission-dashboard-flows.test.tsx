@@ -2,8 +2,8 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { MissionDashboard } from "@/components/pages/mission-dashboard";
-import type { AllianceMember } from "@/lib/access-store";
-import type { Mission } from "@/lib/missions";
+import type { AllianceMember } from "@/lib/members/access-store";
+import type { Mission } from "@/lib/missions/missions";
 import { defaultAlliance, makeMember } from "../helpers/members";
 import { type FetchCall, json, makeMission, mockFetch, renderPage, t } from "./helpers";
 

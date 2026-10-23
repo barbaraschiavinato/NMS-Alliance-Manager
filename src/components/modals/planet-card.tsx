@@ -3,8 +3,8 @@ import { useEffect, useState, type SubmitEvent } from "react";
 import { Siren, X } from "lucide-react";
 import { GlyphStrip } from "@/components/shared/portal-address-field";
 import { PlanetDiscoveryCounts } from "@/components/shared/planet-discovery-counts";
-import { almanacDiscoveryCounts } from "@/lib/almanac-discovery-counts";
-import { galaxyLabel } from "@/lib/galaxies";
+import { almanacDiscoveryCounts } from "@/lib/almanac/almanac-discovery-counts";
+import { galaxyLabel } from "@/lib/planets/galaxies";
 import { useLocale } from "@/components/providers/locale-provider";
 
 type PlanetRecord = Readonly<Record<string, unknown>>;

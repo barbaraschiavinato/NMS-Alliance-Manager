@@ -1,17 +1,17 @@
 import { auth } from "@/auth";
 import { LoginScreen } from "@/components/pages/login-screen";
-import { getMissingAuthConfiguration } from "@/lib/local-auth";
+import { getMissingAuthConfiguration } from "@/lib/auth/local-auth";
 import { LeaderboardPage, type LeaderboardBoard } from "@/components/pages/leaderboard-page";
 import { PendingApproval } from "@/components/pages/pending-approval";
-import { getCurrentMember } from "@/lib/authorization";
-import { readAccessData } from "@/lib/access-store";
-import { readMissions } from "@/lib/store";
-import { coveredSpecialties } from "@/lib/missions";
-import { missionSystemStatuses, missionSystemStatusRoles } from "@/lib/planet-system-status";
-import { readPlanetSystemStatuses } from "@/lib/planet-system-status-store";
-import { readAlmanacCache } from "@/lib/almanac-store";
-import { getSystemPlanetAddresses } from "@/lib/planet-addresses";
-import { readAllStationPortals, readStationPortals } from "@/lib/stations-store";
+import { getCurrentMember } from "@/lib/auth/authorization";
+import { readAccessData } from "@/lib/members/access-store";
+import { readMissions } from "@/lib/missions/store";
+import { coveredSpecialties } from "@/lib/missions/missions";
+import { missionSystemStatuses, missionSystemStatusRoles } from "@/lib/planets/planet-system-status";
+import { readPlanetSystemStatuses } from "@/lib/planets/planet-system-status-store";
+import { readAlmanacCache } from "@/lib/almanac/almanac-store";
+import { getSystemPlanetAddresses } from "@/lib/planets/planet-addresses";
+import { readAllStationPortals, readStationPortals } from "@/lib/stations/stations-store";
 
 export const dynamic = "force-dynamic";
 

@@ -1,8 +1,8 @@
-import { getSystemPlanetAddresses } from "@/lib/planet-addresses";
+import { getSystemPlanetAddresses } from "@/lib/planets/planet-addresses";
 import { PlanetListExampleView } from "./planet-list-example-view";
 import { guideStationInit } from "./station-init";
 import type { PlanetDestination } from "@/components/cards/planet-destination-card";
-import { almanacDiscoveryCounts } from "@/lib/almanac-discovery-counts";
+import { almanacDiscoveryCounts } from "@/lib/almanac/almanac-discovery-counts";
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   return value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : null;

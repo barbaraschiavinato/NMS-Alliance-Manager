@@ -9,7 +9,7 @@ describe("test harness", () => {
     const member = makeMember({ role: "moderator", simpleView: true });
     seedMembers([member]);
     signInAs(member);
-    const { getCurrentMember } = await import("@/lib/authorization");
+    const { getCurrentMember } = await import("@/lib/auth/authorization");
     const current = await getCurrentMember();
     expect(current?.publicId).toBe(member.publicId);
     expect(current?.role).toBe("user");

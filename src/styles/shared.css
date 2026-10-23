@@ -8,6 +8,14 @@
 .detail-section > h2 { margin: 0 0 20px; font-size: 20px; color: #e0e5e0; }
 .detail-section .sticky-list-controls { position: static; }
 .detail-section .station-list-cards { grid-template-columns: minmax(0, 1fr); }
+@media (max-width: 720px) {
+  .detail-section { margin-bottom: 20px; padding: 0; border: 0; border-radius: 0; background: transparent; }
+  .detail-section > h2 { margin-bottom: 12px; font-size: 17px; }
+}
+@media (max-width: 950px) {
+  .sidebar-compact ~ .main-panel .detail-section { margin-bottom: 20px; padding: 0; border: 0; border-radius: 0; background: transparent; }
+  .sidebar-compact ~ .main-panel .detail-section > h2 { margin-bottom: 12px; font-size: 17px; }
+}
 .content-wrap { width: min(1240px, 100%); margin: 0 auto; padding: 27px 40px 20px; }
 .eyebrow { display: flex; align-items: center; gap: 9px; color: #cad8ca; font-size: 8px; letter-spacing: 1px; }
 .primary-button { height: 37px; position: relative; z-index: 2; display: inline-flex; align-items: center; justify-content: center; gap: 9px; padding: 0 13px; color: #213329; border: 0; background: var(--lime); cursor: pointer; font-size: 10px; font-weight: 700; }
@@ -114,6 +122,13 @@
 .planet-card-address .glyph-strip-large { max-width: 420px; }
 .toast { position: fixed; z-index: 30; right: 22px; bottom: 20px; display: flex; align-items: center; gap: 9px; padding: 12px 13px; color: var(--ink); border: 1px solid #394548; border-left: 3px solid var(--green); border-radius: 3px; background: #1a2124; box-shadow: 0 6px 24px #00000066; font-size: 11px; animation: dialog-in .18s ease-out both; }
 .toast > svg { color: var(--green); }
+.toast > span { min-width: 0; line-height: 1.4; }
+.toast-error { border-left-color: #ef8067; }
+.toast-error > svg { color: #ef8067; }
+@media (max-width: 720px) {
+  .toast { right: 12px; bottom: 12px; left: 12px; font-size: 12px; }
+  .toast > span { flex: 1; }
+}
 .toast button { display: grid; place-items: center; margin-left: 8px; padding: 2px; color: #a4adae; border: 0; background: transparent; cursor: pointer; }
 .toast button:hover { color: var(--ink); }
 .loading-indicator { min-height: 88px; display: flex; align-items: center; justify-content: center; color: var(--lime); }
@@ -414,6 +429,13 @@ body:has(.sidebar-compact) .dialog-heading .icon-button svg { width: 26px; heigh
   font: inherit;
   font-weight: 600;
   cursor: pointer;
+}
+
+@media (max-width: 720px) {
+  .list-pagination { flex-wrap: nowrap; gap: 8px; margin-block: 12px; }
+  .pagination-button { min-width: 44px; min-height: 40px; padding: 8px 12px; }
+  .pagination-label { display: none; }
+  .pagination-status { min-width: 0; font-size: 12px; white-space: nowrap; }
 }
 
 .pagination-button:not(:disabled):hover {

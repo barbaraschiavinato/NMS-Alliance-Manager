@@ -28,18 +28,31 @@ export function Pagination({
   if (pageCount <= 1) return null;
   return (
     <nav aria-label={t("common.pagination")} className="list-pagination">
-      <button className="pagination-button" disabled={page === 1} onClick={() => onPageChange(page - 1)} type="button">
-        <ChevronLeft aria-hidden="true" size={16} />
-        {t("common.previous_page")}
-      </button>
-      <span aria-live="polite">{t("common.page_of_total", { page, total: pageCount })}</span>
       <button
+        aria-label={t("common.previous_page")}
+        className="pagination-button"
+        disabled={page === 1}
+        onClick={() => onPageChange(page - 1)}
+        type="button"
+      >
+        <ChevronLeft aria-hidden="true" size={16} />
+        <span aria-hidden="true" className="pagination-label">
+          {t("common.previous_page")}
+        </span>
+      </button>
+      <span aria-live="polite" className="pagination-status">
+        {t("common.page_of_total", { page, total: pageCount })}
+      </span>
+      <button
+        aria-label={t("common.next_page")}
         className="pagination-button"
         disabled={page === pageCount}
         onClick={() => onPageChange(page + 1)}
         type="button"
       >
-        {t("common.next_page")}
+        <span aria-hidden="true" className="pagination-label">
+          {t("common.next_page")}
+        </span>
         <ChevronRight aria-hidden="true" size={16} />
       </button>
     </nav>

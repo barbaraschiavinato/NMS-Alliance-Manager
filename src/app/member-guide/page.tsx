@@ -4,11 +4,11 @@ import { LoginScreen } from "@/components/pages/login-screen";
 import { PendingApproval } from "@/components/pages/pending-approval";
 import { GuideContent } from "@/components/guide/guide-content";
 import { Hero } from "@/components/layout/hero";
-import { getCurrentMember } from "@/lib/authorization";
-import { readAccessData } from "@/lib/access-store";
-import { getMissingAuthConfiguration } from "@/lib/local-auth";
-import { readMissions } from "@/lib/store";
-import { readAllStationPortals } from "@/lib/stations-store";
+import { getCurrentMember } from "@/lib/auth/authorization";
+import { readAccessData } from "@/lib/members/access-store";
+import { getMissingAuthConfiguration } from "@/lib/auth/local-auth";
+import { readMissions } from "@/lib/missions/store";
+import { readAllStationPortals } from "@/lib/stations/stations-store";
 
 export const dynamic = "force-dynamic";
 

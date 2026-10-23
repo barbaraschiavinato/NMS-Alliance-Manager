@@ -5,8 +5,8 @@ import { vi } from "vitest";
 import { LocaleProvider } from "@/components/providers/locale-provider";
 import { NavigationSearchResetProvider } from "@/components/shared/navigation-search-reset";
 import { translate, type Locale } from "@/lib/translations";
-import type { Mission } from "@/lib/missions";
-import { defaultTaxiNotificationSettings } from "@/lib/taxi-notifications";
+import type { Mission } from "@/lib/missions/missions";
+import { defaultTaxiNotificationSettings } from "@/lib/notifications/taxi-notifications";
 
 // Renderizza dentro LocaleProvider (lingua fissa, "en" di default) e NavigationSearchResetProvider, come fa il layout.
 export function renderPage(
@@ -58,6 +58,10 @@ export function mockFetch(pageRoutes: Routes = {}) {
       readiness: { discord: false, telegram: false, push: false, links: false },
     },
     "GET /api/profile/taxi-push": { enabled: true, available: false, publicKey: null },
+    "GET /api/admin/member-notifications": {
+      settings: { telegramEnabled: false, telegramChatId: "", telegramThreadId: "" },
+      readiness: { telegram: false, links: false },
+    },
     ...pageRoutes,
   };
   const calls: FetchCall[] = [];

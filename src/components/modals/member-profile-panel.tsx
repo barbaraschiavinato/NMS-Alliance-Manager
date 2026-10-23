@@ -12,7 +12,7 @@ import {
   type MemberRole,
   type MemberSpecialty,
   type NmsPlatform,
-} from "@/lib/member-types";
+} from "@/lib/members/member-types";
 import { useLocale } from "@/components/providers/locale-provider";
 import { TaxiPushPreferences } from "@/components/shared/taxi-notification-controls";
 

@@ -5,14 +5,14 @@ import { defaultAlliance, seedMembers, writeDataFile } from "../helpers/members"
 import { castMembers, makeCast, readDataFile, resetData, type Cast } from "./helpers/fixtures";
 import { DELETE, GET, POST } from "@/app/api/taxi-requests/route";
 import { after } from "next/server";
-import { notifyTaxi } from "@/lib/taxi-notification-delivery";
+import { notifyTaxi } from "@/lib/notifications/taxi-notification-delivery";
 
 vi.mock("@/auth", async () => (await import("../helpers/auth")).authMock);
 vi.mock("next/server", async (original) => ({
   ...(await original<typeof import("next/server")>()),
   after: vi.fn(),
 }));
-vi.mock("@/lib/taxi-notification-delivery", () => ({ notifyTaxi: vi.fn() }));
+vi.mock("@/lib/notifications/taxi-notification-delivery", () => ({ notifyTaxi: vi.fn() }));
 
 const url = "/api/taxi-requests";
 let cast: Cast;

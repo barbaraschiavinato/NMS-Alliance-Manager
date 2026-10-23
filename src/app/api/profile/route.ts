@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { getCurrentMember } from "@/lib/authorization";
-import { isMemberProfileInput, updateMemberProfile } from "@/lib/access-store";
-import { isFixedLocalAccount } from "@/lib/local-auth";
-import { normalizeNmsFriendCode, type AllianceMember } from "@/lib/member-types";
+import { getCurrentMember } from "@/lib/auth/authorization";
+import { isMemberProfileInput, updateMemberProfile } from "@/lib/members/access-store";
+import { isFixedLocalAccount } from "@/lib/auth/local-auth";
+import { normalizeNmsFriendCode, type AllianceMember } from "@/lib/members/member-types";
 
 const profileConflictMessages = {
   name: "members.duplicate_in_game_name",

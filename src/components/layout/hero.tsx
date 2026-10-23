@@ -4,8 +4,8 @@ import { useState, type ReactNode } from "react";
 import { CirclePlus, Orbit, X } from "lucide-react";
 import { useLocale } from "@/components/providers/locale-provider";
 import { GlyphStrip } from "@/components/shared/portal-address-field";
-import type { AllianceSettings } from "@/lib/access-store";
-import { galaxyLabel } from "@/lib/galaxies";
+import type { AllianceSettings } from "@/lib/members/access-store";
+import { galaxyLabel } from "@/lib/planets/galaxies";
 
 export function Hero({
   settings,

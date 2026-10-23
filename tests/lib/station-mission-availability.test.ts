@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { availableMissionSpecialties } from "@/lib/station-mission-availability";
-import type { Mission } from "@/lib/missions";
+import { availableMissionSpecialties } from "@/lib/missions/station-mission-availability";
+import type { Mission } from "@/lib/missions/missions";
 
 function mission(overrides: Partial<Mission> = {}): Mission {
   return {

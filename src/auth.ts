@@ -1,7 +1,7 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import { ensureLocalMember } from "@/lib/access-store";
-import { findLocalAccount, isLocalAuthEnabled } from "@/lib/local-auth";
+import { ensureLocalMember } from "@/lib/members/access-store";
+import { findLocalAccount, isLocalAuthEnabled } from "@/lib/auth/local-auth";
 
 const localAuth = isLocalAuthEnabled();
 

@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { zipSync } from "fflate";
-import { getCurrentMember, hasRole } from "@/lib/authorization";
-import { readAccessData } from "@/lib/access-store";
-import { readAlmanacResponses } from "@/lib/almanac-store";
-import { galaxyLabel } from "@/lib/galaxies";
-import type { Mission, MissionSpecialty } from "@/lib/missions";
-import { isEmailAddress } from "@/lib/member-types";
-import { readMissions } from "@/lib/store";
-import { readAllStationPortals } from "@/lib/stations-store";
+import { getCurrentMember, hasRole } from "@/lib/auth/authorization";
+import { readAccessData } from "@/lib/members/access-store";
+import { readAlmanacResponses } from "@/lib/almanac/almanac-store";
+import { galaxyLabel } from "@/lib/planets/galaxies";
+import type { Mission, MissionSpecialty } from "@/lib/missions/missions";
+import { isEmailAddress } from "@/lib/members/member-types";
+import { readMissions } from "@/lib/missions/store";
+import { readAllStationPortals } from "@/lib/stations/stations-store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

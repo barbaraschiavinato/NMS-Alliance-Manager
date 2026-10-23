@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 async function loadModule() {
-  return import("@/lib/planet-addresses");
+  return import("@/lib/planets/planet-addresses");
 }
 
 afterEach(() => {

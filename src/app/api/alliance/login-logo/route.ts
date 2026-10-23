@@ -1,7 +1,7 @@
 import { get } from "@vercel/blob";
 import { NextResponse } from "next/server";
-import { readAccessData } from "@/lib/access-store";
-import { getBlobAuthOptions } from "@/lib/blob-config";
+import { readAccessData } from "@/lib/members/access-store";
+import { getBlobAuthOptions } from "@/lib/storage/blob-config";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

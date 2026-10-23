@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { findMessageRoot } from "@/lib/message-thread";
+import { findMessageRoot } from "@/lib/messages/message-thread";
 
 describe("findMessageRoot", () => {
   it("resolves nested replies to the root and rejects missing IDs", () => {

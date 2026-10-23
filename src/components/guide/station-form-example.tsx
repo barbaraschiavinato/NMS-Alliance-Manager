@@ -2,7 +2,7 @@
 
 import { GlyphStrip } from "@/components/shared/portal-address-field";
 import { useLocale } from "@/components/providers/locale-provider";
-import { galaxyLabel } from "@/lib/galaxies";
+import { galaxyLabel } from "@/lib/planets/galaxies";
 
 type Sample = Readonly<{ portal: string; galaxy: number; response: Record<string, unknown> }>;
 

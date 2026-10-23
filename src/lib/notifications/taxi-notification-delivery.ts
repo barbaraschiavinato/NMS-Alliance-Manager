@@ -1,14 +1,15 @@
 import webpush from "web-push";
-import { readAccessData } from "@/lib/access-store";
-import { readHelpRequests } from "@/lib/private-messages-store";
-import { readTaxiNotifications, removeTaxiPushDevice } from "@/lib/taxi-notifications-store";
-import type { TaxiNotificationChannel } from "@/lib/taxi-notifications";
-import { stationDetailHref, taxiDetailHref } from "@/lib/detail-links";
-import { readAllStationPortals } from "@/lib/stations-store";
-import { portalSearchMatches } from "@/lib/missions";
-import { formatNmsFriendCode, isValidNmsFriendCode } from "@/lib/member-types";
-import { galaxyLabel } from "@/lib/galaxies";
+import { readAccessData } from "@/lib/members/access-store";
+import { readHelpRequests } from "@/lib/messages/private-messages-store";
+import { readTaxiNotifications, removeTaxiPushDevice } from "@/lib/notifications/taxi-notifications-store";
+import type { TaxiNotificationChannel } from "@/lib/notifications/taxi-notifications";
+import { stationDetailHref, taxiDetailHref } from "@/lib/navigation/detail-links";
+import { readAllStationPortals } from "@/lib/stations/stations-store";
+import { portalSearchMatches } from "@/lib/missions/missions";
+import { formatNmsFriendCode, isValidNmsFriendCode } from "@/lib/members/member-types";
+import { galaxyLabel } from "@/lib/planets/galaxies";
 import { translate } from "@/lib/translations";
+import { appOrigin, escapeTelegramHtml, postJson, telegramUsername } from "@/lib/notifications/notification-transport";
 
 function vapidDetails() {
   const publicKey = process.env.VAPID_PUBLIC_KEY?.trim();
@@ -57,22 +58,6 @@ function telegramToken() {
   return token;
 }
 
-function appOrigin() {
-  let url: URL;
-  try {
-    url = new URL(process.env.AUTH_URL ?? "");
-  } catch {
-    throw new Error("Configure AUTH_URL for notification detail links.");
-  }
-  if (
-    url.username ||
-    url.password ||
-    (url.protocol !== "https:" && !(url.protocol === "http:" && ["localhost", "127.0.0.1"].includes(url.hostname)))
-  )
-    throw new Error("AUTH_URL must use HTTPS (HTTP localhost is allowed for development).");
-  return url.origin;
-}
-
 export function taxiNotificationReadiness() {
   function ready(validate: () => unknown) {
     try {
@@ -94,42 +79,11 @@ export function taxiPushPublicKey() {
   return vapidDetails().publicKey;
 }
 
-async function postJson(url: URL | string, body: unknown, provider: string) {
-  let response: Response;
-  try {
-    response = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-      signal: AbortSignal.timeout(10000),
-      redirect: "error",
-    });
-  } catch {
-    // Do not include fetch errors: their URLs may contain provider credentials.
-    throw new Error(`${provider}: network error or timeout.`);
-  }
-  if (!response.ok) throw new Error(`${provider}: HTTP ${response.status}; delivery was not retried.`);
-  if (provider === "Telegram") {
-    const result: unknown = await response.json();
-    if (!result || typeof result !== "object" || !("ok" in result) || result.ok !== true)
-      throw new Error("Telegram: delivery was not confirmed.");
-  }
-}
-
 type Alert = { title: string; body: string; path: string; tag: string };
 type ContactDetails = { body: string; telegram?: string; discord?: string };
 
 function discordContact(value?: string) {
   return value?.replace(/\s+/g, " ").trim().slice(0, 40);
-}
-
-function escapeTelegramHtml(value: string) {
-  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-}
-
-function telegramUsername(value?: string) {
-  const username = value?.trim().replace(/^@/, "");
-  return username && /^[A-Za-z][A-Za-z0-9_]{4,31}$/.test(username) ? username : undefined;
 }
 
 async function sendChannel(

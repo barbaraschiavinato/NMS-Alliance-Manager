@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { Droplet, Globe2, Moon } from "lucide-react";
-import type { AlmanacDiscoveryCounts } from "@/lib/almanac-discovery-counts";
+import type { AlmanacDiscoveryCounts } from "@/lib/almanac/almanac-discovery-counts";
 import { PlanetDiscoveryCounts } from "@/components/shared/planet-discovery-counts";
 import { GlyphStrip } from "@/components/shared/portal-address-field";
 import { useLocale } from "@/components/providers/locale-provider";

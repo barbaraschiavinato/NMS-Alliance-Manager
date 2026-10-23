@@ -1,19 +1,19 @@
 import { after, NextResponse } from "next/server";
-import { getCurrentMember, hasRole } from "@/lib/authorization";
-import { readAccessData } from "@/lib/access-store";
-import { decodePortalAddress } from "@/lib/missions";
+import { getCurrentMember, hasRole } from "@/lib/auth/authorization";
+import { readAccessData } from "@/lib/members/access-store";
+import { decodePortalAddress } from "@/lib/missions/missions";
 import {
   deleteHelpRequest,
   readHelpRequests,
   saveHelpReply,
   saveHelpRequest,
   setHelpRequestArchived,
-} from "@/lib/private-messages-store";
-import type { BroadcastKind } from "@/lib/private-messages-store";
-import { readAllStationPortals } from "@/lib/stations-store";
-import { galaxyLabel } from "@/lib/galaxies";
-import { isValidNmsFriendCode } from "@/lib/member-types";
-import { notifyTaxi } from "@/lib/taxi-notification-delivery";
+} from "@/lib/messages/private-messages-store";
+import type { BroadcastKind } from "@/lib/messages/private-messages-store";
+import { readAllStationPortals } from "@/lib/stations/stations-store";
+import { galaxyLabel } from "@/lib/planets/galaxies";
+import { isValidNmsFriendCode } from "@/lib/members/member-types";
+import { notifyTaxi } from "@/lib/notifications/taxi-notification-delivery";
 
 function scheduleTaxiNotification(requestId: string, authorId: string, reply: boolean) {
   try {

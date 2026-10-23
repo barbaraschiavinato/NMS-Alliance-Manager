@@ -1,18 +1,18 @@
 import { get, put } from "@vercel/blob";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { localDataPath } from "@/lib/local-data-path";
-import { getBlobAuthOptions } from "@/lib/blob-config";
+import { localDataPath } from "@/lib/storage/local-data-path";
+import { getBlobAuthOptions } from "@/lib/storage/blob-config";
 import {
   isMissionPriority,
   isMissionStatus,
   normalizeMissionPriority,
   normalizeMissionStatus,
   type Mission,
-} from "@/lib/missions";
-import { migrateLegacyPlanetSystemStatuses } from "@/lib/planet-system-status-store";
-import { readAccessData } from "@/lib/access-store";
-import { initialMissions } from "@/lib/seed";
+} from "@/lib/missions/missions";
+import { migrateLegacyPlanetSystemStatuses } from "@/lib/planets/planet-system-status-store";
+import { readAccessData } from "@/lib/members/access-store";
+import { initialMissions } from "@/lib/missions/seed";
 
 const blobPath = "alliance-manager/missions.json";
 const localPath = localDataPath("missions.json");

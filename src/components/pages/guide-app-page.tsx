@@ -5,7 +5,7 @@ import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
 import { AdminPanel } from "@/components/modals/admin-panel";
 import { MemberProfilePanel } from "@/components/modals/member-profile-panel";
-import type { AllianceMember, AllianceSettings } from "@/lib/access-store";
+import type { AllianceMember, AllianceSettings } from "@/lib/members/access-store";
 
 export function GuideAppPage({
   children,

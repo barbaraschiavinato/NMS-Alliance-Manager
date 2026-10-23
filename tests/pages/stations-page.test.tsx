@@ -2,7 +2,7 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { StationsPage } from "@/components/pages/stations-page";
-import { galaxyLabel } from "@/lib/galaxies";
+import { galaxyLabel } from "@/lib/planets/galaxies";
 import { defaultAlliance, makeMember } from "../helpers/members";
 import { json, makeMission, mockFetch, renderPage, router, t } from "./helpers";
 

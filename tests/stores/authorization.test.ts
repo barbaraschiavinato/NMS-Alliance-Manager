@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { AllianceMember, MemberRole } from "@/lib/member-types";
+import type { AllianceMember, MemberRole } from "@/lib/members/member-types";
 import { signInAs as helperSignInAs } from "../helpers/auth";
 import { makeMember, seedMembers } from "../helpers/members";
 import { readDataFile, resetStores } from "./helpers";
 
 vi.mock("@/auth", async () => (await import("../helpers/auth")).authMock);
 
-const load = () => import("@/lib/authorization");
+const load = () => import("@/lib/auth/authorization");
 
 // resetStores azzera il registro dei moduli, ma la factory di vi.mock resta in cache:
 // il mock va preso da @/auth stesso, non dall'helper importato staticamente.

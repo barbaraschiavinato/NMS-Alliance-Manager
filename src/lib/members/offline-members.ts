@@ -1,8 +1,8 @@
-import { isValidNmsFriendCode } from "@/lib/member-types";
-import { readAccessData, writeAccessData } from "@/lib/access-store";
-import { reassignPrivateMessageMember } from "@/lib/private-messages-store";
-import { reassignStationOwner } from "@/lib/stations-store";
-import { readMissions, writeMissions } from "@/lib/store";
+import { isValidNmsFriendCode } from "@/lib/members/member-types";
+import { readAccessData, writeAccessData } from "@/lib/members/access-store";
+import { reassignPrivateMessageMember } from "@/lib/messages/private-messages-store";
+import { reassignStationOwner } from "@/lib/stations/stations-store";
+import { readMissions, writeMissions } from "@/lib/missions/store";
 
 export async function linkOfflineMember(offlineId: string, targetId: string): Promise<boolean> {
   if (offlineId === targetId) return false;

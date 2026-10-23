@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { galaxyLabel, galaxyNames } from "@/lib/galaxies";
+import { galaxyLabel, galaxyNames } from "@/lib/planets/galaxies";
 
 describe("galaxies", () => {
   it("has 256 unique names", () => {

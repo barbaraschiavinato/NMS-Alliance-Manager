@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { LocaleProvider } from "@/components/providers/locale-provider";
 import { NavigationSearchResetProvider } from "@/components/shared/navigation-search-reset";
 import { translate, type Locale } from "@/lib/translations";
-import type { Mission } from "@/lib/missions";
+import type { Mission } from "@/lib/missions/missions";
 
 // Renders `ui` inside LocaleProvider (fixed locale, default "en") and NavigationSearchResetProvider; returns RTL's result plus a user-event `user`.
 export function renderWithLocale(

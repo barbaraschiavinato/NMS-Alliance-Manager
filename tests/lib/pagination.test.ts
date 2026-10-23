@@ -4,7 +4,7 @@ beforeEach(() => vi.resetModules());
 
 describe("pagination configuration", () => {
   it("defaults to 50 list items and 20 systems", async () => {
-    const sizes = await import("@/lib/pagination");
+    const sizes = await import("@/lib/navigation/pagination");
     expect(sizes.listPageSize).toBe(50);
     expect(sizes.planetSystemsPageSize).toBe(20);
   });
@@ -12,7 +12,7 @@ describe("pagination configuration", () => {
   it("allows local-sized overrides of 10 items and 5 systems", async () => {
     vi.stubEnv("NEXT_PUBLIC_LIST_PAGE_SIZE", "10");
     vi.stubEnv("NEXT_PUBLIC_PLANET_SYSTEMS_PAGE_SIZE", "5");
-    const sizes = await import("@/lib/pagination");
+    const sizes = await import("@/lib/navigation/pagination");
     expect(sizes.listPageSize).toBe(10);
     expect(sizes.planetSystemsPageSize).toBe(5);
   });
@@ -20,7 +20,7 @@ describe("pagination configuration", () => {
   it("uses defaults for empty values", async () => {
     vi.stubEnv("NEXT_PUBLIC_LIST_PAGE_SIZE", "");
     vi.stubEnv("NEXT_PUBLIC_PLANET_SYSTEMS_PAGE_SIZE", "");
-    const sizes = await import("@/lib/pagination");
+    const sizes = await import("@/lib/navigation/pagination");
     expect(sizes.listPageSize).toBe(50);
     expect(sizes.planetSystemsPageSize).toBe(20);
   });
@@ -29,13 +29,15 @@ describe("pagination configuration", () => {
     "rejects invalid page size %s",
     async (value) => {
       vi.stubEnv("NEXT_PUBLIC_LIST_PAGE_SIZE", value);
-      await expect(import("@/lib/pagination")).rejects.toThrow("NEXT_PUBLIC_LIST_PAGE_SIZE must be a positive integer");
+      await expect(import("@/lib/navigation/pagination")).rejects.toThrow(
+        "NEXT_PUBLIC_LIST_PAGE_SIZE must be a positive integer",
+      );
     },
   );
 
   it("validates the system page size independently", async () => {
     vi.stubEnv("NEXT_PUBLIC_PLANET_SYSTEMS_PAGE_SIZE", "0");
-    await expect(import("@/lib/pagination")).rejects.toThrow(
+    await expect(import("@/lib/navigation/pagination")).rejects.toThrow(
       "NEXT_PUBLIC_PLANET_SYSTEMS_PAGE_SIZE must be a positive integer",
     );
   });

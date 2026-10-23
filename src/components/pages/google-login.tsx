@@ -6,7 +6,7 @@ import { signIn } from "next-auth/react";
 import { Orbit } from "lucide-react";
 import { useLocale } from "@/components/providers/locale-provider";
 import { LanguageSelector } from "@/components/shared/language-selector";
-import type { LocalAccountOption } from "@/lib/local-auth";
+import type { LocalAccountOption } from "@/lib/auth/local-auth";
 
 export function GoogleLogin({
   allianceName,

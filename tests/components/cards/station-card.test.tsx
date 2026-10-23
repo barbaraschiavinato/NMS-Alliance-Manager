@@ -13,8 +13,8 @@ import {
   type StationCardProps,
   type StationEntry,
 } from "@/components/cards/station-card/parts";
-import { canCreateMissionFromStation } from "@/lib/station-mission-availability";
-import type { AllianceMember } from "@/lib/member-types";
+import { canCreateMissionFromStation } from "@/lib/missions/station-mission-availability";
+import type { AllianceMember } from "@/lib/members/member-types";
 import type { Locale } from "@/lib/translations";
 import { makeMember } from "../../helpers/members";
 import { renderWithLocale } from "../helpers";

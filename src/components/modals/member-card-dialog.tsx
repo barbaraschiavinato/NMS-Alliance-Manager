@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { CircleAlert, MessageSquareText, Send, X } from "lucide-react";
-import type { MemberRole, MemberSpecialty, NmsPlatform } from "@/lib/member-types";
-import { formatNmsFriendCode } from "@/lib/member-types";
+import type { MemberRole, MemberSpecialty, NmsPlatform } from "@/lib/members/member-types";
+import { formatNmsFriendCode } from "@/lib/members/member-types";
 import { useLocale } from "@/components/providers/locale-provider";
 import type { SubmitEvent } from "react";
 

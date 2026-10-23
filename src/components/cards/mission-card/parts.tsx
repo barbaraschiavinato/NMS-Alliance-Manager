@@ -16,14 +16,19 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { DetailLink } from "@/components/shared/detail-page";
-import type { Mission, MissionSpecialty } from "@/lib/missions";
-import type { AllianceMember } from "@/lib/access-store";
-import { type MissionSystemStatus, type PlanetSystemStatuses } from "@/lib/planet-system-status";
+import type { Mission, MissionSpecialty } from "@/lib/missions/missions";
+import type { AllianceMember } from "@/lib/members/access-store";
+import { type MissionSystemStatus, type PlanetSystemStatuses } from "@/lib/planets/planet-system-status";
 import { useEffect, useRef, useState } from "react";
 import { type MemberMessageContext } from "@/components/modals/member-card-dialog";
 import { useLocale } from "@/components/providers/locale-provider";
 import type { StationOwnerOption } from "@/components/modals/mission-form";
-import { findMissionStation, missionDetailHref, stationDetailHref, type DetailOrigin } from "@/lib/detail-links";
+import {
+  findMissionStation,
+  missionDetailHref,
+  stationDetailHref,
+  type DetailOrigin,
+} from "@/lib/navigation/detail-links";
 
 export function asRecord(value: unknown): Record<string, unknown> | null {
   return value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : null;

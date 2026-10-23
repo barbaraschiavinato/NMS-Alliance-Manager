@@ -1,18 +1,18 @@
 import { NextResponse } from "next/server";
-import { getCurrentMember, hasRole } from "@/lib/authorization";
-import { readAccessData } from "@/lib/access-store";
-import { readAlmanacResponse } from "@/lib/almanac-store";
-import { decodePortalAddress } from "@/lib/missions";
+import { getCurrentMember, hasRole } from "@/lib/auth/authorization";
+import { readAccessData } from "@/lib/members/access-store";
+import { readAlmanacResponse } from "@/lib/almanac/almanac-store";
+import { decodePortalAddress } from "@/lib/missions/missions";
 import {
   deletePrivateMessageBranch,
   markPrivateMessagesRead,
   readPrivateMessages,
   savePrivateMessage,
-} from "@/lib/private-messages-store";
-import { readAllStationPortals, readStationPortals } from "@/lib/stations-store";
-import { isSameSystem, stationDetailHref } from "@/lib/detail-links";
-import { readMissions } from "@/lib/store";
-import { isEmailAddress } from "@/lib/member-types";
+} from "@/lib/messages/private-messages-store";
+import { readAllStationPortals, readStationPortals } from "@/lib/stations/stations-store";
+import { isSameSystem, stationDetailHref } from "@/lib/navigation/detail-links";
+import { readMissions } from "@/lib/missions/store";
+import { isEmailAddress } from "@/lib/members/member-types";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

@@ -1,11 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { AccessData } from "@/lib/access-store";
+import type { AccessData } from "@/lib/members/access-store";
 import { makeMember, seedMembers, writeDataFile } from "../helpers/members";
 import { dataFileExists, portalA, portalB, readDataFile, resetStores } from "./helpers";
 
 vi.mock("@vercel/blob", async () => (await import("./helpers")).blobModule);
 
-const load = () => import("@/lib/offline-members");
+const load = () => import("@/lib/members/offline-members");
 const now = "2026-05-01T12:00:00.000Z";
 
 function mission(id: string, overrides: Record<string, unknown> = {}) {

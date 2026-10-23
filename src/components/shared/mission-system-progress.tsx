@@ -1,7 +1,11 @@
 "use client";
 
 import { useLocale } from "@/components/providers/locale-provider";
-import { missionSystemStatuses, missionSystemStatusRoles, type MissionSystemStatus } from "@/lib/planet-system-status";
+import {
+  missionSystemStatuses,
+  missionSystemStatusRoles,
+  type MissionSystemStatus,
+} from "@/lib/planets/planet-system-status";
 
 const progressStatuses = missionSystemStatuses.filter((status) => status !== "data_error");
 

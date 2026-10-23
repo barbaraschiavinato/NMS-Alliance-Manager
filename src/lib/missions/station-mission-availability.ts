@@ -1,5 +1,5 @@
-import type { AllianceMember } from "@/lib/member-types";
-import { coveredSpecialties, missionSpecialties, type Mission, type MissionSpecialty } from "@/lib/missions";
+import type { AllianceMember } from "@/lib/members/member-types";
+import { coveredSpecialties, missionSpecialties, type Mission, type MissionSpecialty } from "@/lib/missions/missions";
 
 export function availableMissionSpecialties(
   missions: readonly Mission[],

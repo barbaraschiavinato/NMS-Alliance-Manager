@@ -15,7 +15,7 @@ function stubLetterMaps() {
 }
 
 async function loadModule() {
-  return import("@/lib/system-name");
+  return import("@/lib/planets/system-name");
 }
 
 function mockSystemName(

@@ -2,7 +2,7 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { MissionDashboard } from "@/components/pages/mission-dashboard";
-import type { Mission } from "@/lib/missions";
+import type { Mission } from "@/lib/missions/missions";
 import { defaultAlliance, makeMember } from "../helpers/members";
 import { json, makeMission, mockFetch, renderPage, router, t } from "./helpers";
 

@@ -2,11 +2,11 @@
 
 import { AlertTriangle } from "lucide-react";
 import { GlyphStrip } from "@/components/shared/portal-address-field";
-import { galaxyLabel } from "@/lib/galaxies";
-import { planetSystemStatusKey } from "@/lib/planet-system-status";
+import { galaxyLabel } from "@/lib/planets/galaxies";
+import { planetSystemStatusKey } from "@/lib/planets/planet-system-status";
 import { useLocale } from "@/components/providers/locale-provider";
 import { StationSystemCoreInfo } from "@/components/shared/station-system-core-info";
-import { editableSystemStatusRoles, systemProgressCap, systemProgressFloor } from "@/lib/planet-system-status";
+import { editableSystemStatusRoles, systemProgressCap, systemProgressFloor } from "@/lib/planets/planet-system-status";
 import { MissionSystemProgress } from "@/components/shared/mission-system-progress";
 import {
   isMissionAssignee,

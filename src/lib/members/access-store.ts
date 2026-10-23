@@ -1,9 +1,9 @@
 import { get, put } from "@vercel/blob";
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { localDataPath } from "@/lib/local-data-path";
+import { localDataPath } from "@/lib/storage/local-data-path";
 import { randomUUID } from "node:crypto";
-import { getBlobAuthOptions } from "@/lib/blob-config";
+import { getBlobAuthOptions } from "@/lib/storage/blob-config";
 import {
   isValidNmsFriendCode,
   memberRoles,
@@ -11,7 +11,7 @@ import {
   membershipStatuses,
   normalizeNmsFriendCode,
   nmsPlatforms,
-} from "@/lib/member-types";
+} from "@/lib/members/member-types";
 import type {
   AllianceMember,
   AllianceSettings,
@@ -19,10 +19,10 @@ import type {
   MemberSpecialty,
   MembershipStatus,
   NmsPlatform,
-} from "@/lib/member-types";
-import { isFixedLocalAccount, type LocalAccount } from "@/lib/local-auth";
+} from "@/lib/members/member-types";
+import { isFixedLocalAccount, type LocalAccount } from "@/lib/auth/local-auth";
 
-export { memberRoles, memberSpecialties, membershipStatuses, nmsPlatforms } from "@/lib/member-types";
+export { memberRoles, memberSpecialties, membershipStatuses, nmsPlatforms } from "@/lib/members/member-types";
 export type {
   AllianceMember,
   AllianceSettings,
@@ -30,7 +30,7 @@ export type {
   MemberSpecialty,
   MembershipStatus,
   NmsPlatform,
-} from "@/lib/member-types";
+} from "@/lib/members/member-types";
 
 export type AccessData = {
   members: AllianceMember[];
@@ -199,7 +199,7 @@ export async function registerMember(identity: Pick<AllianceMember, "email" | "n
     existingMember.role === role &&
     existingMember.membershipStatus === membershipStatus
   ) {
-    return { member: existingMember, alliance: data.alliance };
+    return { member: existingMember, alliance: data.alliance, awaitingApproval: false };
   }
   const member: AllianceMember = {
     publicId: existingMember?.publicId ?? randomUUID(),
@@ -222,7 +222,7 @@ export async function registerMember(identity: Pick<AllianceMember, "email" | "n
   if (index === -1) data.members.push(member);
   else data.members[index] = member;
   await writeAccessData(data);
-  return { member, alliance: data.alliance };
+  return { member, alliance: data.alliance, awaitingApproval: index === -1 && membershipStatus === "pending" };
 }
 
 // LOCAL_AUTH: on every login restores role and approval of the development account. In the development set the profile

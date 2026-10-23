@@ -1,6 +1,6 @@
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
-import type { AllianceMember } from "@/lib/member-types";
+import type { AllianceMember } from "@/lib/members/member-types";
 import { defaultAlliance, makeMember } from "../../helpers/members";
 
 // Svuota data/ della directory temporanea del file di test.

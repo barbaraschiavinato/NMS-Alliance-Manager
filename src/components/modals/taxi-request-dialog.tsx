@@ -2,9 +2,9 @@
 
 import { useEffect, useId, useRef, useState, type SubmitEvent } from "react";
 import { ChevronDown, CircleAlert, Send, X } from "lucide-react";
-import { galaxyLabel, galaxyNames } from "@/lib/galaxies";
-import type { TaxiStationOption } from "@/lib/private-messages-store";
-import type { AllianceSettings } from "@/lib/member-types";
+import { galaxyLabel, galaxyNames } from "@/lib/planets/galaxies";
+import type { TaxiStationOption } from "@/lib/messages/private-messages-store";
+import type { AllianceSettings } from "@/lib/members/member-types";
 import { useLocale } from "@/components/providers/locale-provider";
 
 function TaxiCombobox({

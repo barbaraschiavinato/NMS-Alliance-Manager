@@ -20,7 +20,7 @@ import {
 
 vi.mock("@vercel/blob", async () => (await import("./helpers")).blobModule);
 
-const load = () => import("@/lib/stations-store");
+const load = () => import("@/lib/stations/stations-store");
 const listFile = "stations-v2.json";
 const legacyFile = "stations.json";
 const adminEmail = "root-admin@example.com";

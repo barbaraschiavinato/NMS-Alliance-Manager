@@ -18,7 +18,7 @@ import PlanetsRoute from "@/app/planets/page";
 import StationsRoute from "@/app/stations/page";
 import StationDetailRoute from "@/app/stations/[id]/page";
 import MissionDetailRoute from "@/app/missions/[id]/page";
-import { stationId } from "@/lib/detail-links";
+import { stationId } from "@/lib/navigation/detail-links";
 import UsersPage from "@/app/users/page";
 import { GuideAppPage } from "@/components/pages/guide-app-page";
 import { HelpRequestsPage } from "@/components/pages/help-requests-page";
@@ -32,12 +32,12 @@ import { PendingApproval } from "@/components/pages/pending-approval";
 import { PlanetsPage } from "@/components/pages/planets-page";
 import { LocaleProvider } from "@/components/providers/locale-provider";
 import { StationsPage } from "@/components/pages/stations-page";
-import type { AllianceMember } from "@/lib/member-types";
-import { readMissions, writeMissions } from "@/lib/store";
-import { readAllStationPortals, readStationPortals, type OwnedStationPortal } from "@/lib/stations-store";
-import { lookupAlmanacPlanets } from "@/lib/almanac-lookup";
-import { readPlanetSystemStatuses } from "@/lib/planet-system-status-store";
-import { readAlmanacCache } from "@/lib/almanac-store";
+import type { AllianceMember } from "@/lib/members/member-types";
+import { readMissions, writeMissions } from "@/lib/missions/store";
+import { readAllStationPortals, readStationPortals, type OwnedStationPortal } from "@/lib/stations/stations-store";
+import { lookupAlmanacPlanets } from "@/lib/almanac/almanac-lookup";
+import { readPlanetSystemStatuses } from "@/lib/planets/planet-system-status-store";
+import { readAlmanacCache } from "@/lib/almanac/almanac-store";
 import { signInAs } from "../helpers/auth";
 import { makeMember, seedMembers, writeDataFile } from "../helpers/members";
 import { makeMission } from "./helpers";
@@ -45,15 +45,18 @@ import { makeMission } from "./helpers";
 vi.mock("@/auth", async () => (await import("../helpers/auth")).authMock);
 vi.mock("next/navigation", async () => (await import("./helpers")).nextNavigationModule);
 vi.mock("@/lib/nms-core/system.js", async () => (await import("./helpers")).nmsCoreModule);
-vi.mock("@/lib/store", () => ({ readMissions: vi.fn(async () => []), writeMissions: vi.fn(async () => undefined) }));
-vi.mock("@/lib/stations-store", () => ({
+vi.mock("@/lib/missions/store", () => ({
+  readMissions: vi.fn(async () => []),
+  writeMissions: vi.fn(async () => undefined),
+}));
+vi.mock("@/lib/stations/stations-store", () => ({
   readAllStationPortals: vi.fn(async () => []),
   readStationPortals: vi.fn(async () => []),
 }));
-vi.mock("@/lib/planet-system-status-store", () => ({ readPlanetSystemStatuses: vi.fn(async () => ({})) }));
-vi.mock("@/lib/almanac-store", () => ({ readAlmanacCache: vi.fn(async () => () => null) }));
-vi.mock("@/lib/almanac-lookup", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@/lib/almanac-lookup")>()),
+vi.mock("@/lib/planets/planet-system-status-store", () => ({ readPlanetSystemStatuses: vi.fn(async () => ({})) }));
+vi.mock("@/lib/almanac/almanac-store", () => ({ readAlmanacCache: vi.fn(async () => () => null) }));
+vi.mock("@/lib/almanac/almanac-lookup", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/almanac/almanac-lookup")>()),
   lookupAlmanacPlanets: vi.fn(async () => new Map()),
 }));
 

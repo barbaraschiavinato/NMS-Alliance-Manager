@@ -2,7 +2,7 @@
 
 import { StationCardSimple } from "@/components/cards/station-card/simple";
 import type { StationEntry } from "@/components/cards/station-card/parts";
-import type { AllianceMember } from "@/lib/member-types";
+import type { AllianceMember } from "@/lib/members/member-types";
 
 type Sample = Readonly<{
   portal: string;

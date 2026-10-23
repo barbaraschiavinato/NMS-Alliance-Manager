@@ -4,14 +4,18 @@ import { makeMember, seedMembers, writeDataFile } from "../helpers/members";
 import { jsonRequest } from "../helpers/http";
 import * as admin from "@/app/api/admin/taxi-notifications/route";
 import * as push from "@/app/api/profile/taxi-push/route";
-import { defaultTaxiNotificationSettings } from "@/lib/taxi-notifications";
-import { readTaxiNotifications, saveTaxiPushDevice } from "@/lib/taxi-notifications-store";
-import * as notificationStore from "@/lib/taxi-notifications-store";
-import { sendTaxiTest, taxiNotificationReadiness, taxiPushPublicKey } from "@/lib/taxi-notification-delivery";
+import { defaultTaxiNotificationSettings } from "@/lib/notifications/taxi-notifications";
+import { readTaxiNotifications, saveTaxiPushDevice } from "@/lib/notifications/taxi-notifications-store";
+import * as notificationStore from "@/lib/notifications/taxi-notifications-store";
+import {
+  sendTaxiTest,
+  taxiNotificationReadiness,
+  taxiPushPublicKey,
+} from "@/lib/notifications/taxi-notification-delivery";
 import webpush from "web-push";
 
 vi.mock("@/auth", async () => (await import("../helpers/auth")).authMock);
-vi.mock("@/lib/taxi-notification-delivery", () => ({
+vi.mock("@/lib/notifications/taxi-notification-delivery", () => ({
   taxiNotificationReadiness: vi.fn(),
   taxiPushPublicKey: vi.fn(),
   sendTaxiTest: vi.fn(),

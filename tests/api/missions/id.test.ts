@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { Mission } from "@/lib/missions";
+import type { Mission } from "@/lib/missions/missions";
 import { signInAs } from "../../helpers/auth";
 import { jsonRequest, routeParams } from "../../helpers/http";
 import { makeMember, seedMembers } from "../../helpers/members";

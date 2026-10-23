@@ -12,19 +12,19 @@ import { SystemAddressField, type SystemAddressValidation } from "@/components/s
 import { MissionForm } from "@/components/modals/mission-form";
 import { PlanetCard } from "@/components/modals/planet-card";
 import { MemberCardDialog, type MemberMessageContext } from "@/components/modals/member-card-dialog";
-import type { AllianceMember, AllianceSettings } from "@/lib/access-store";
-import { galaxyNames, galaxyLabel } from "@/lib/galaxies";
-import { decodePortalAddress, portalSearchMatches, type Mission, type MissionInput } from "@/lib/missions";
+import type { AllianceMember, AllianceSettings } from "@/lib/members/access-store";
+import { galaxyNames, galaxyLabel } from "@/lib/planets/galaxies";
+import { decodePortalAddress, portalSearchMatches, type Mission, type MissionInput } from "@/lib/missions/missions";
 import {
   isMissionSystemStatus,
   planetSystemStatusKey,
   type MissionSystemStatus,
   type PlanetSystemStatuses,
-} from "@/lib/planet-system-status";
+} from "@/lib/planets/planet-system-status";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useNavigationSearchState } from "@/components/shared/navigation-search-reset";
-import { sortByCreatedAtDescending } from "@/lib/created-at";
-import { generateSystemName } from "@/lib/system-name";
+import { sortByCreatedAtDescending } from "@/lib/utils/created-at";
+import { generateSystemName } from "@/lib/planets/system-name";
 import {
   asRecord,
   cachedPlanetTitle,
@@ -50,7 +50,7 @@ import {
   type DetailOrigin,
   type StationIdentity,
   type SystemIdentity,
-} from "@/lib/detail-links";
+} from "@/lib/navigation/detail-links";
 
 export function StationsPage({
   currentMember,

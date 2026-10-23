@@ -1,8 +1,8 @@
 import { rmSync } from "node:fs";
 import path from "node:path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { readAccessData } from "@/lib/access-store";
-import { adminEmail } from "@/lib/local-auth";
+import { readAccessData } from "@/lib/members/access-store";
+import { adminEmail } from "@/lib/auth/local-auth";
 
 type Provider = Record<string, unknown> & {
   id: string;

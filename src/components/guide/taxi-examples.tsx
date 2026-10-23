@@ -5,7 +5,7 @@ import Link from "next/link";
 import { HeroAddButton } from "@/components/layout/hero";
 import { MessageCard } from "@/components/cards/message-card";
 import { MemberProfileExample } from "@/components/guide/message-composer-examples";
-import { stationDetailHref } from "@/lib/detail-links";
+import { stationDetailHref } from "@/lib/navigation/detail-links";
 
 const noop = () => undefined;
 

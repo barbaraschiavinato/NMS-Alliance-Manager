@@ -17,7 +17,7 @@ import {
 
 vi.mock("@vercel/blob", async () => (await import("./helpers")).blobModule);
 
-const load = () => import("@/lib/private-messages-store");
+const load = () => import("@/lib/messages/private-messages-store");
 const fileName = "private-messages.json";
 const blobPath = "alliance-manager/private-messages.json";
 const now = "2026-05-01T12:00:00.000Z";

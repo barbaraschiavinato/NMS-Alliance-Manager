@@ -8,7 +8,7 @@ import {
   SystemAddressField,
   type SystemAddressLookup,
 } from "@/components/shared/portal-address-field";
-import { decodePortalAddress } from "@/lib/missions";
+import { decodePortalAddress } from "@/lib/missions/missions";
 import { renderWithLocale } from "../helpers";
 
 vi.mock("next/image", async () => (await import("../helpers")).nextImageModule);

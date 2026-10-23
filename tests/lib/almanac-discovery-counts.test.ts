@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { almanacDiscoveryCounts } from "@/lib/almanac-discovery-counts";
+import { almanacDiscoveryCounts } from "@/lib/almanac/almanac-discovery-counts";
 
 describe("almanacDiscoveryCounts", () => {
   it("reads the Almanac discovery totals, not resource list lengths", () => {
