@@ -34,7 +34,7 @@ const members = [
   managed({ name: "Bob", nmsName: "Blaze", email: "b@example.com", membershipStatus: "blocked", specialty: "ranger" }),
 ];
 
-const counts: Record<MemberFilter, number> = { all: 3, pending: 1, approved: 1, blocked: 1 };
+const counts: Record<MemberFilter, number> = { all: 3, pending: 1, approved: 1, blocked: 1, moderators: 0 };
 
 function renderMembers(overrides: Partial<Parameters<typeof MemberList>[0]> = {}, locale: Locale = "en") {
   const props: Parameters<typeof MemberList>[0] = {
@@ -84,9 +84,24 @@ describe("MemberList", () => {
   });
 
   it("filters by status and hides empty status tabs", () => {
-    renderMembers({ filter: "blocked", counts: { all: 3, pending: 0, approved: 3, blocked: 0 } });
+    renderMembers({ filter: "blocked", counts: { all: 3, pending: 0, approved: 3, blocked: 0, moderators: 0 } });
     expect(cardNames()).toEqual(["b@example.com"]);
     expect(screen.getAllByRole("tab").map((tab) => tab.textContent)).toEqual(["Approved3", "Blocked0", "All3"]);
+  });
+
+  it("shows a moderators tab that includes admins", () => {
+    const staff = [
+      managed({ name: "Ada", email: "ada@example.com", role: "admin" }),
+      managed({ name: "Mo", email: "mo@example.com", role: "moderator" }),
+      managed({ name: "Uma", email: "uma@example.com", role: "user" }),
+    ];
+    renderMembers({
+      members: staff,
+      filter: "moderators",
+      counts: { all: 3, pending: 0, approved: 3, blocked: 0, moderators: 2 },
+    });
+    expect(cardNames()).toEqual(["ada@example.com", "mo@example.com"]);
+    expect(screen.getByRole("tab", { name: "Moderators2" })).toHaveAttribute("aria-selected", "true");
   });
 
   it("searches name, email, friend code and translated specialty", () => {
@@ -117,7 +132,7 @@ describe("MemberList", () => {
   });
 
   it("explains when nobody has registered yet, in Italian", () => {
-    renderMembers({ members: [], counts: { all: 0, pending: 0, approved: 0, blocked: 0 } }, "it");
+    renderMembers({ members: [], counts: { all: 0, pending: 0, approved: 0, blocked: 0, moderators: 0 } }, "it");
     expect(
       screen.getByText("Nessun utente registrato: i membri compariranno dopo il primo accesso con Google."),
     ).toBeInTheDocument();

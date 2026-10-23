@@ -72,6 +72,7 @@ export function MembersPage({
       pending: members.filter((member) => member.membershipStatus === "pending").length,
       approved: members.filter((member) => member.membershipStatus === "approved").length,
       blocked: members.filter((member) => member.membershipStatus === "blocked").length,
+      moderators: members.filter((member) => member.role === "moderator" || member.role === "admin").length,
     }),
     [members],
   );

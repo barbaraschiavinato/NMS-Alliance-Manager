@@ -516,6 +516,7 @@ export const translations: TranslationCatalog = {
     "members.search_missions_users_or_type": "Search missions, users, or type",
     "members.search_users": "Search users",
     "members.filter_users_by_status": "Filter users by status",
+    "members.moderators": "Moderators",
     "members.no_users_match_this_filter": "No users match this filter.",
     "members.role_label": "Role",
     "members.delete_user": "Delete user",

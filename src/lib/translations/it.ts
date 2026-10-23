@@ -528,6 +528,7 @@ export const translations: TranslationCatalog = {
     "members.search_missions_users_or_type": "Cerca missione, utente o tipo",
     "members.search_users": "Cerca utenti",
     "members.filter_users_by_status": "Filtra utenti per stato",
+    "members.moderators": "Moderatori",
     "members.no_users_match_this_filter": "Nessun utente in questo filtro.",
     "members.role_label": "Ruolo",
     "members.delete_user": "Elimina utente",

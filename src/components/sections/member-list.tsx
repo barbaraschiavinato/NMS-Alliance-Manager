@@ -7,7 +7,7 @@ import type { AllianceMember, MemberRole, MembershipStatus } from "@/lib/member-
 import { LoadingSpinner } from "@/components/shared/loading-spinner";
 import { useLocale } from "@/components/providers/locale-provider";
 
-export type MemberFilter = "all" | MembershipStatus;
+export type MemberFilter = "all" | "moderators" | MembershipStatus;
 import { MemberCard, specialtyLabels, statusLabels, type ManagedMember } from "@/components/cards/member-card";
 
 export type { ManagedMember };
@@ -53,7 +53,11 @@ export function MemberList({
   const visibleMembers = useMemo(
     () =>
       members
-        .filter((member) => filter === "all" || member.membershipStatus === filter)
+        .filter((member) => {
+          if (filter === "all") return true;
+          if (filter === "moderators") return member.role === "moderator" || member.role === "admin";
+          return member.membershipStatus === filter;
+        })
         .filter((member) =>
           `${member.name} ${member.nmsName} ${member.email} ${member.nmsCode} ${member.specialty ? t(specialtyLabels[member.specialty]) : ""}`
             .toLowerCase()
@@ -63,6 +67,11 @@ export function MemberList({
     [filter, members, search, t],
   );
   let emptyMessage = t("members.no_users_match_this_filter");
+  const tabLabel = (status: MemberFilter) => {
+    if (status === "all") return t("common.all");
+    if (status === "moderators") return t("members.moderators");
+    return t(statusLabels[status]);
+  };
   if (counts.all === 0)
     emptyMessage = t("auth.no_registered_users_members_will_appear_after_their_first_google_sign_in");
   else if (filter === "pending") emptyMessage = t("auth.there_are_no_requests_awaiting_approval");
@@ -71,11 +80,11 @@ export function MemberList({
       <div className="toolbar members-toolbar sticky-list-controls">
         <Tabs
           className="member-filter-tabs"
-          items={(["pending", "approved", "blocked", "all"] as MemberFilter[])
+          items={(["pending", "approved", "blocked", "moderators", "all"] as MemberFilter[])
             .filter((status) => status === "all" || status === filter || counts[status] > 0)
             .map((status) => ({
               key: status,
-              label: t(status === "all" ? "common.all" : statusLabels[status]),
+              label: tabLabel(status),
               count: counts[status],
               selected: filter === status,
               onSelect: () => onFilterChange(status),

@@ -45,7 +45,7 @@
 .filter-tab { height: 47px; position: relative; display: flex; align-items: center; gap: 7px; padding: 0; color: #858e87; border: 0; background: transparent; cursor: pointer; font-size: 10px; white-space: nowrap; }
 .filter-tab > span { min-width: 17px; padding: 2px 4px; color: #849088; border: 1px solid #354044; background: #111719; font-family: "SFMono-Regular", Consolas, monospace; font-size: 8px; text-align: center; }
 .filter-tab.selected { color: var(--lime); font-weight: 700; }
-.filter-tab.selected::after { height: 2px; position: absolute; right: 0; bottom: -1px; left: 0; background: var(--lime); content: ""; }
+.filter-tab.selected::after { height: 2px; position: absolute; right: 0; bottom: 0; left: 0; background: var(--lime); content: ""; }
 .filter-tab.selected > span { color: var(--lime); border-color: var(--lime); background: #352719; }
 .toolbar-actions { gap: 7px; }
 .search-field { width: 194px; height: 29px; display: flex; align-items: center; gap: 7px; padding: 0 7px; color: #849088; border: 1px solid #354044; background: #111719; transition: border-color .15s, box-shadow .15s; }
@@ -70,7 +70,9 @@
 }
 
 @media (max-width: 1200px) {
-  .filter-tabs { width: 100%; justify-content: space-between; gap: 8px; }
+  .filter-tabs { width: 100%; justify-content: space-between; gap: 8px; overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .filter-tabs::-webkit-scrollbar { display: none; }
+  .filter-tab { flex: 0 0 auto; }
 }
 
 @media (max-width: 1200px) {
@@ -205,7 +207,7 @@
 }
 
 @media (max-width: 950px) {
-  .sidebar-compact ~ .main-panel .filter-tabs { width: 100%; justify-content: space-between; gap: 8px; overflow-x: auto; }
+  .sidebar-compact ~ .main-panel .filter-tabs { width: 100%; justify-content: space-between; gap: 8px; }
 }
 
 .nav-item { position: relative; }
