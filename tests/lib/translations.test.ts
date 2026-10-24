@@ -167,13 +167,37 @@ describe("translateAlmanacValue", () => {
     expect(translateAlmanacValue("en", economy)).toBe(economy);
   });
 
-  it.each(["Destitute", "Medium Supply", "Promising", "Satisfactory", "Affluent"])(
-    "translates the Almanac wealth description %s into Italian",
-    (wealth) => {
-      expect(translateAlmanacValue("it", wealth)).not.toBe(wealth);
-      expect(translateAlmanacValue("en", wealth)).toBe(wealth);
-    },
-  );
+  it.each([
+    "Adequate",
+    "Advanced",
+    "Affluent",
+    "Balanced",
+    "Booming",
+    "Comfortable",
+    "Declining",
+    "Destitute",
+    "Developing",
+    "Flourishing",
+    "High Supply",
+    "Low Supply",
+    "Medium Supply",
+    "Opulent",
+    "Promising",
+    "Prosperous",
+    "Satisfactory",
+    "Sustainable",
+    "Unpromising",
+    "Unsuccessful",
+    "Wealthy",
+  ])("translates the Almanac wealth description %s into Italian", (wealth) => {
+    expect(translateAlmanacValue("it", wealth)).not.toBe(wealth);
+    expect(translateAlmanacValue("en", wealth)).toBe(wealth);
+  });
+
+  it.each(["Deep", "Shallow", "Ocean", "None"])("translates the water depth %s into Italian", (water) => {
+    expect(translateAlmanacValue("it", water)).not.toBe(water);
+    expect(translateAlmanacValue("en", water)).toBe(water);
+  });
 
   it("ignores the capitalisation of Almanac values when there is no exact translation", () => {
     expect(translateAlmanacValue("it", "power Generation")).toBe("Generazione d'energia");
