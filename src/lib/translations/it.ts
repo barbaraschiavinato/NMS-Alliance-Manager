@@ -50,6 +50,9 @@ export const translations: TranslationCatalog = {
     "member_notifications.email_hint": "Invia all'utente un'email quando il suo account viene approvato.",
     "member_notifications.send_email_test": "Invia email di prova al mio indirizzo",
     "member_notifications.email_test_sent": "Email di prova inviata al tuo indirizzo.",
+    "member_notifications.email_key_rejected": "Resend ha rifiutato la chiave API. Controlla RESEND_API_KEY.",
+    "member_notifications.email_sender_rejected":
+      "Resend ha rifiutato il mittente. Usa un indirizzo su un dominio verificato in Resend (onboarding@resend.dev invia prove solo all'indirizzo del tuo account Resend).",
     "member_notifications.save": "Salva notifiche utenti",
     "member_notifications.saved": "Impostazioni notifiche utenti salvate.",
     "member_notifications.test_sent": "Notifica di prova utenti inviata.",

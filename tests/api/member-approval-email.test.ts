@@ -238,14 +238,37 @@ describe("approval email administration", () => {
     expect(JSON.parse(fetch.mock.calls[0][1].body)).toMatchObject({ to: [administrator.email] });
   });
 
-  it("refuses the test email while the option is off, and reports delivery failures generically", async () => {
+  it("refuses the test email while the option is off", async () => {
     const fetch = stubResend();
     vi.spyOn(console, "error").mockImplementation(() => {});
     expect((await admin.POST(jsonRequest(adminUrl, "POST", { channel: "email" }))).status).toBe(503);
     expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    [401, "Resend rejected the API key. Check RESEND_API_KEY."],
+    [403, "Resend rejected the sender."],
+    [422, "Resend rejected the sender."],
+  ])("explains a Resend %i refusal without forwarding its message", async (status, expected) => {
+    const fetch = stubResend();
+    vi.spyOn(console, "error").mockImplementation(() => {});
     await saveMemberNotificationSettings(emailOnly);
-    fetch.mockResolvedValue(new Response("{}", { status: 422 }));
-    expect((await admin.POST(jsonRequest(adminUrl, "POST", { channel: "email" }))).status).toBe(503);
+    fetch.mockResolvedValue(new Response(JSON.stringify({ message: "secret provider detail" }), { status }));
+    const response = await admin.POST(jsonRequest(adminUrl, "POST", { channel: "email" }));
+    expect(response.status).toBe(502);
+    const { error } = await response.json();
+    expect(error).toContain(expected);
+    expect(error).not.toContain("secret provider detail");
+  });
+
+  it("reports other delivery failures generically", async () => {
+    const fetch = stubResend();
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    await saveMemberNotificationSettings(emailOnly);
+    fetch.mockResolvedValue(new Response("{}", { status: 500 }));
+    const response = await admin.POST(jsonRequest(adminUrl, "POST", { channel: "email" }));
+    expect(response.status).toBe(503);
+    expect((await response.json()).error).toContain("Unable to configure or send member notifications");
   });
 
   it.each([{ channel: "sms" }, { channel: 1 }])("rejects the unknown test channel %j", async (value) => {

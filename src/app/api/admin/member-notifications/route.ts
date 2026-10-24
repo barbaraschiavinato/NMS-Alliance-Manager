@@ -22,8 +22,21 @@ async function authorize() {
   return { member };
 }
 
+// Resend answers with a status the administrator can act on; its message is never forwarded.
+const resendErrors: Record<string, string> = {
+  "401": "Resend rejected the API key. Check RESEND_API_KEY.",
+  "403":
+    "Resend rejected the sender. Use an address on a domain verified in Resend (onboarding@resend.dev only sends tests to your own Resend account address).",
+  "422":
+    "Resend rejected the sender. Use an address on a domain verified in Resend (onboarding@resend.dev only sends tests to your own Resend account address).",
+};
+
 function failure(error: unknown) {
-  console.error("Member notification administration failed", error instanceof Error ? error.message : "Unknown error");
+  const message = error instanceof Error ? error.message : "Unknown error";
+  console.error("Member notification administration failed", message);
+  const resendStatus = /^Resend: HTTP (\d+)/.exec(message)?.[1];
+  if (resendStatus && resendErrors[resendStatus])
+    return NextResponse.json({ error: resendErrors[resendStatus] }, { status: 502 });
   return NextResponse.json(
     { error: "Unable to configure or send member notifications. Check the channel configuration and server logs." },
     { status: 503 },

@@ -47,6 +47,9 @@ export const translations: TranslationCatalog = {
     "member_notifications.email_hint": "Sends the user one email when their account is approved.",
     "member_notifications.send_email_test": "Send test email to my address",
     "member_notifications.email_test_sent": "Test email sent to your address.",
+    "member_notifications.email_key_rejected": "Resend rejected the API key. Check RESEND_API_KEY.",
+    "member_notifications.email_sender_rejected":
+      "Resend rejected the sender. Use an address on a domain verified in Resend (onboarding@resend.dev only sends tests to your own Resend account address).",
     "member_notifications.save": "Save user notifications",
     "member_notifications.saved": "User notification settings saved.",
     "member_notifications.test_sent": "User test notification sent.",
