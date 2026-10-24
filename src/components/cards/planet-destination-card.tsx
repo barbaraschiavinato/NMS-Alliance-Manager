@@ -26,6 +26,7 @@ export type PlanetDestination = Readonly<{
   systemFacts: { label: string; value: string }[];
   planetType?: string;
   economyStars?: number;
+  wealth?: string;
   discoveryCounts?: AlmanacDiscoveryCounts;
   plants: string[];
   minerals: string[];

@@ -18,7 +18,7 @@ vi.mock("next/image", async () => (await import("../helpers")).nextImageModule);
 vi.mock("next/link", async () => (await import("../helpers")).nextLinkModule);
 vi.mock("@/lib/nms-core/system.js", () => ({
   systemAttributes: () => ({ star_type: 2 }),
-  planetSeeds: () => ({ planet_seeds: [1, 2] }),
+  planetSeeds: () => ({ planet_seeds: [1, 2], planet_count: 2, moon_count: 0 }),
 }));
 
 type FetchRoutes = { notes?: () => Response; planet?: () => Response };

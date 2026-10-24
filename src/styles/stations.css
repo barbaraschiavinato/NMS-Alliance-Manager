@@ -59,10 +59,7 @@
 .station-planet-open > span { color: #a4adae; font-size: 8px; }
 .station-planet-open > strong { overflow: hidden; color: var(--lime); font-size: 9px; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
 .station-planet-open:hover > strong { color: #ff8400; text-decoration: underline; text-underline-offset: 2px; }
-.station-planet-info dl { min-width: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px 8px; margin: 0; }
-.station-planet-info dl > div { min-width: 0; display: flex; flex-wrap: wrap; gap: 3px; }
-.station-planet-info dt { color: #a4adae; font-size: 7px; }
-.station-planet-info dd { min-width: 0; margin: 0; color: #d4dad6; font-size: 8px; overflow-wrap: anywhere; }
+.station-planet-info .planet-station-facts { min-width: 0; }
 .station-planet-unknown { color: #879188; font-size: 9px; }
 .station-actions { display: flex; align-items: center; justify-content: flex-end; gap: 5px; }
 .station-header-add-pulse { animation: station-header-add-pulse 1.8s ease-in-out infinite; }
@@ -146,7 +143,7 @@
 }
 
 @media (max-width: 720px) {
-  .station-planet-info dl { grid-column: 1 / span 2; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .station-planet-info .planet-station-facts { grid-column: 1 / span 2; }
 }
 
 .sidebar-compact ~ .main-panel .station-card-title-copy > span { font-size: 11px; }
@@ -154,8 +151,6 @@
 .sidebar-compact ~ .main-panel .station-card-no-planet { font-size: 12px; }
 .sidebar-compact ~ .main-panel .station-card-planet-image { width: 84px; height: 84px; flex-basis: 84px; }
 .sidebar-compact ~ .main-panel .station-portal-code > code { display: none; }
-.sidebar-compact ~ .main-panel .station-planet-info dt { font-size: 11px; }
-.sidebar-compact ~ .main-panel .station-planet-info dd { font-size: 14px; }
 .sidebar-compact ~ .main-panel .station-planet-info { grid-template-columns: minmax(0, 1fr); padding: 8px 0; }
 .sidebar-compact ~ .main-panel .station-system-status > strong { font-size: 11px; }
 .sidebar-compact ~ .main-panel .station-owner-link { font-size: 14px; }

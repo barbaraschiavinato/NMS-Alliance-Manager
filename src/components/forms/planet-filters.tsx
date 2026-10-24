@@ -13,6 +13,7 @@ const featureLabels: Record<SystemFeature, string> = {
 export type PlanetFilterValues = Readonly<{
   economy: string;
   economyStars: number | null;
+  wealth: string;
   star: string;
   race: string;
   planetType: string;
@@ -33,6 +34,7 @@ export type PlanetFilterValues = Readonly<{
 export type PlanetFilterOptions = Readonly<{
   economy: string[];
   economyStars: number[];
+  wealth: string[];
   star: string[];
   race: string[];
   planetType: string[];
@@ -50,6 +52,7 @@ export type PlanetFilterOptions = Readonly<{
 export const emptyPlanetFilterValues: PlanetFilterValues = {
   economy: "",
   economyStars: null,
+  wealth: "",
   star: "",
   race: "",
   planetType: "",
@@ -70,6 +73,7 @@ export const emptyPlanetFilterValues: PlanetFilterValues = {
 export const emptyPlanetFilterOptions: PlanetFilterOptions = {
   economy: [],
   economyStars: [],
+  wealth: [],
   star: [],
   race: [],
   planetType: [],
@@ -196,6 +200,21 @@ export function PlanetFilters({
                 <option key={count} value={count}>
                   {"★".repeat(count)}
                   {"☆".repeat(3 - count)}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="planet-filter">
+            <span>{t("planet.wealth")}</span>
+            <select
+              aria-label={t("planet.filter_wealth")}
+              onChange={(event) => onChange("wealth", event.target.value)}
+              value={values.wealth}
+            >
+              <option value="">{t("planet.all_wealth")}</option>
+              {options.wealth.map((value) => (
+                <option key={value} value={value}>
+                  {tv(value)}
                 </option>
               ))}
             </select>
@@ -412,6 +431,11 @@ export function PlanetActiveFilters({
       key: "economyStars",
       label: `${t("planet.economy_stars")}: ${"★".repeat(values.economyStars)}${"☆".repeat(3 - values.economyStars)}`,
       clear: () => onChange("economyStars", null),
+    },
+    values.wealth && {
+      key: "wealth",
+      label: `${t("planet.wealth")}: ${tv(values.wealth)}`,
+      clear: () => onChange("wealth", ""),
     },
     values.star && {
       key: "star",

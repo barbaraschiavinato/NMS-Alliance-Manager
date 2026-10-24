@@ -39,6 +39,7 @@ function planet(overrides: Partial<PlanetDestination> = {}): PlanetDestination {
     ],
     planetType: "Lush",
     economyStars: 2,
+    wealth: "Affluent",
     plants: ["Star Bulb"],
     minerals: ["Copper"],
     valuables: ["Gold"],
@@ -74,6 +75,7 @@ const frozen = planet({
   ],
   planetType: "Frozen",
   economyStars: undefined,
+  wealth: "Destitute",
   plants: [],
   minerals: ["Dioxite"],
   valuables: [],
@@ -276,6 +278,8 @@ describe("PlanetsPage", () => {
     ["planet.filter_minerals", "Dioxite", "Glacia"],
     ["planet.filter_valuables", "Gold", "Verdant"],
     ["planet.filter_economy_stars", "2", "Verdant"],
+    ["planet.filter_wealth", "Affluent", "Verdant"],
+    ["planet.filter_wealth", "Destitute", "Glacia"],
     ["planet.filter_paradise", "yes", "Verdant"],
     ["planet.filter_pirate_system", "yes", "Glacia"],
     ["planet.filter_special_system", "gas-giant", "Verdant"],
@@ -301,6 +305,7 @@ describe("PlanetsPage", () => {
       ["planet.filter_star", "Yellow"],
       ["planet.filter_economy", "Trading"],
       ["planet.filter_economy_stars", "2"],
+      ["planet.filter_wealth", "Affluent"],
       ["planet.filter_race", "Gek"],
       ["planet.filter_size", "Large"],
       ["planet.filter_paradise", "yes"],
@@ -320,7 +325,7 @@ describe("PlanetsPage", () => {
     expect(screen.getByText("Verdant")).toBeInTheDocument();
 
     const removeButtons = screen.getAllByRole("button", { name: new RegExp(`^${t("planet.remove_filter")}:`) });
-    expect(removeButtons).toHaveLength(16);
+    expect(removeButtons).toHaveLength(17);
     for (const button of removeButtons) await user.click(button);
     expect(screen.queryByRole("button", { name: t("planet.reset_filters") })).not.toBeInTheDocument();
     expect(screen.getByText("Glacia")).toBeInTheDocument();
@@ -388,6 +393,7 @@ describe("PlanetsPage", () => {
         .map((option) => option.getAttribute("value"));
     expect(values("planet.filter_economy")).toEqual(["Mining", "Trading"]);
     expect(values("planet.filter_economy_stars")).toEqual(["1", "2"]);
+    expect(values("planet.filter_wealth")).toEqual(["Affluent", "Destitute"]);
     expect(values("planet.filter_star")).toEqual(["Blue", "Red", "Yellow"]);
     expect(values("planet.filter_race")).toEqual(["Gek", "Korvax", "Unknown"]);
     expect(values("planet.filter_water")).toEqual(["Dry", "Ocean"]);

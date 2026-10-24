@@ -132,6 +132,20 @@ export const almanacValueTranslations: Readonly<Record<Locale, Readonly<Record<s
     Manufacturing: "Manifattura",
     Technology: "Tecnologia",
     "Power generation": "Generazione d'energia",
+    // Altri tipi di economia restituiti da Almanac (traduzioni non ufficiali)
+    "Fuel Generation": "Generazione di carburante",
+    Alchemical: "Alchimia",
+    Industrial: "Industria",
+    "Metal Processing": "Lavorazione dei metalli",
+    "Nano-construction": "Nanocostruzione",
+    "Ore Extraction": "Estrazione di minerali",
+    Shipping: "Spedizioni",
+    // Livello di ricchezza del sistema (traduzioni non ufficiali)
+    Destitute: "Indigente",
+    "Medium Supply": "Offerta media",
+    Promising: "Promettente",
+    Satisfactory: "Soddisfacente",
+    Affluent: "Benestante",
     // Colore della stella
     Yellow: "Gialla",
     Green: "Verde",

@@ -14,6 +14,8 @@ import {
 } from "@/lib/planets/planet-system-status";
 export { canCreateMissionFromStation } from "@/lib/missions/station-mission-availability";
 import { useLocale } from "@/components/providers/locale-provider";
+import { SystemFacts } from "@/components/shared/system-facts";
+import { almanacStarCount, almanacSystemFacts } from "@/lib/almanac/almanac-facts";
 
 export type CachedPlanet = Readonly<{ galaxy: number; response: Record<string, unknown> }>;
 export type StationMissionStatus = "none" | "in_progress" | "completed";
@@ -194,19 +196,13 @@ export function cachedPlanetImageUrl(planet: CachedPlanet | null) {
 }
 
 export function CachedPlanetInfo({ planet, onOpen }: Readonly<{ planet: CachedPlanet; onOpen: () => void }>) {
-  const { t, tv } = useLocale();
+  const { t } = useLocale();
   const lines = asRecord(planet.response.lines);
   const band = lines ? asRecord(lines.band) : null;
   const headline = lines ? asRecord(lines.headline) : null;
   const title = typeof headline?.word === "string" ? headline.word : planetWord(band, "type");
-  const facts = [
-    [t("common.planet_type_label"), planetWord(band, "type")],
-    [t("planet.weather"), planetWord(band, "weather")],
-    [t("planet.water"), planetWord(band, "water")],
-    [t("planet.star"), planetWord(band, "star")],
-    [t("common.economy"), planetWord(band, "economy")],
-    [t("common.race"), planetWord(band, "race")],
-  ].filter((fact): fact is [string, string] => Boolean(fact[1]));
+  const facts = almanacSystemFacts(band);
+  const economyStars = almanacStarCount(band?.economy);
 
   return (
     <div className="station-planet-info">
@@ -219,14 +215,7 @@ export function CachedPlanetInfo({ planet, onOpen }: Readonly<{ planet: CachedPl
         <GalaxyLabel galaxy={planet.galaxy} />
         <strong>{title || t("planet.planet_data")}</strong>
       </button>
-      <dl>
-        {facts.map(([label, value]) => (
-          <div key={label}>
-            <dt>{label}</dt>
-            <dd>{tv(value)}</dd>
-          </div>
-        ))}
-      </dl>
+      <SystemFacts economyStars={economyStars} facts={facts} />
     </div>
   );
 }

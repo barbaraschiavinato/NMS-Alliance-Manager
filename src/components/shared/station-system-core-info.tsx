@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useLocale } from "@/components/providers/locale-provider";
 
-type SystemSummary = Readonly<{ planetCount: number; starType: number }>;
+type SystemSummary = Readonly<{ planetCount: number; moonCount: number; starType: number }>;
 
 const starTypeLabels = [
   "system.star_yellow_white",
@@ -27,11 +27,14 @@ export function StationSystemCoreInfo({ portal, galaxy }: Readonly<{ portal: str
         const { systemAttributes, planetSeeds } = await import("@/lib/nms-core/system.js");
         const address = BigInt(`0x${portal}`);
         const attributes = systemAttributes(address, galaxy);
-        const planetCount = planetSeeds(address, galaxy).planet_seeds.length;
+        const { planet_count: planetCount, moon_count: moonCount } = planetSeeds(address, galaxy);
         if (
           !Number.isInteger(planetCount) ||
           planetCount < 1 ||
           planetCount > 6 ||
+          !Number.isInteger(moonCount) ||
+          moonCount < 0 ||
+          moonCount > 12 ||
           typeof attributes.star_type !== "number" ||
           !Number.isInteger(attributes.star_type) ||
           attributes.star_type < 0 ||
@@ -39,7 +42,7 @@ export function StationSystemCoreInfo({ portal, galaxy }: Readonly<{ portal: str
         ) {
           throw new Error("Invalid nms-core system attributes.");
         }
-        if (active) setSummary({ planetCount, starType: attributes.star_type });
+        if (active) setSummary({ planetCount, moonCount, starType: attributes.star_type });
       } catch (error_: unknown) {
         console.error("Unable to calculate station system details with nms-core", error_);
         if (active) setError(true);
@@ -57,7 +60,16 @@ export function StationSystemCoreInfo({ portal, galaxy }: Readonly<{ portal: str
 
   return (
     <span className="station-card-system-core">
-      {t("system.planets_count", { count: summary.planetCount })} ·{" "}
+      {t(summary.planetCount === 1 ? "system.planet_count_one" : "system.planets_count", {
+        count: summary.planetCount,
+      })}{" "}
+      ·{" "}
+      {summary.moonCount > 0 && (
+        <>
+          {t(summary.moonCount === 1 ? "system.moon_count_one" : "system.moons_count", { count: summary.moonCount })}{" "}
+          ·{" "}
+        </>
+      )}
       {t("system.star_type_label", {
         type: t(starTypeLabels[summary.starType]),
       })}

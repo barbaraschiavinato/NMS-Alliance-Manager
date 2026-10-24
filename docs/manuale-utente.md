@@ -116,6 +116,10 @@ Missioni e Stazioni mostrano fino a 50 elementi per pagina; Pianeti mostra fino 
 ### `Orbit` Stazioni
 Descritta sopra per ogni specializzazione. Il nome della pagina è "Le mie stazioni" per i Ranger.
 
+Nell'intestazione del sistema (Pianeti) e sulla scheda stazione, passando il mouse (o selezionando con la tastiera) l'icona della **razza**, le stelle dell'**economia** e i pallini del **conflitto** compare un suggerimento con il valore esatto (per esempio «Livello economia: 2/3»).
+
+Sotto il nome della stazione, la scheda indica quanti **pianeti** e quante **lune** ha il sistema (le lune compaiono solo se ce ne sono) e il colore della stella; il conteggio è calcolato dall'indirizzo portale.
+
 Se il sistema della stazione ospita un **buco nero**, un'**Interfaccia Atlas** o è un sistema viola ridotto a un **gigante gassoso** (un solo pianeta con cinque lune), sulla scheda compare un'etichetta apposita (viola per il buco nero, rossa con il logo di No Man's Sky per l'Atlas, ambra con un pianeta ad anello per il gigante gassoso). La stessa etichetta appare accanto al nome nell'intestazione del sistema nella pagina Pianeti. Il dato è calcolato dall'indirizzo portale, quindi è sempre disponibile e non dipende da Almanac.
 
 L'azione **Apri dettaglio stazione** sulla scheda apre una pagina dedicata con i blocchi **Stazione**, **Missioni associate**, **Sistema e pianeti**. Il blocco **Missioni associate** appare solo se ci sono missioni e le mostra direttamente, senza tab, ricerca o paginazione. Solo in questo dettaglio sono visibili tutte le missioni dello stesso sistema e della stessa galassia, anche di altre specializzazioni o assegnate ad altri. **Inizia** e **Completa** sono disponibili solo sulle missioni assegnate a te; **Prendi in carico** compare sulle missioni libere per la tua specializzazione o per tutti. Le missioni di altre specializzazioni o assegnate ad altri non mostrano azioni operative. Le azioni di gestione di moderatori e admin restano invariate. Nella pagina **Missioni** restano i consueti filtri di visibilità e la possibilità di prendere in carico le missioni compatibili. **Torna alle stazioni** riapre l'elenco principale.
@@ -144,6 +148,8 @@ L'azione di eliminazione, quando consentita, è sempre l'ultima, dopo modifica e
 
 ### `Eclipse` Dettaglio pianeta
 Mostra i dati del pianeta e, tramite l'icona sirena, permette di inviare una **richiesta d'aiuto** (vedi [Richieste d'aiuto](#richieste-daiuto)).
+Il filtro **Ricchezza** della pagina **Pianeti** raggruppa i sistemi per la descrizione economica fornita da Almanac (per esempio Indigente, Promettente, Benestante), che affina le stelle dell'economia. I valori Almanac dell'economia e della ricchezza sono tradotti in italiano.
+
 Il filtro **Sistema speciale** della pagina **Pianeti** mostra solo i sistemi con un buco nero, un'Interfaccia Atlas o un gigante gassoso (le voci disponibili dipendono dai sistemi presenti).
 
 Le etichette **Paradiso** e **Dissonante** compaiono quando indicate dai dati Almanac, senza sostituire le descrizioni delle condizioni del pianeta.
