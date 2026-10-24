@@ -1,3 +1,5 @@
+import { almanacRetryAfterSeconds, noteAlmanacRateLimit } from "@/lib/almanac/almanac-rate-limit";
+
 type AlmanacRecord = Record<string, unknown>;
 
 function record(value: unknown): AlmanacRecord {
@@ -19,11 +21,13 @@ async function readDocument(url: string, refresh = false): Promise<AlmanacRecord
   const existing = documents.get(url);
   if (existing) return existing;
   const request = (async () => {
+    if (almanacRetryAfterSeconds() > 0) throw new AlmanacDocumentError(429, url);
     const response = await fetch(url, {
       headers: { Accept: "application/json" },
       signal: AbortSignal.timeout(6000),
       cache: refresh ? "no-store" : "force-cache",
     });
+    if (response.status === 429) noteAlmanacRateLimit(response);
     if (!response.ok) throw new AlmanacDocumentError(response.status, url);
     const value: unknown = await response.json();
     if (value === null || typeof value !== "object" || Array.isArray(value)) {

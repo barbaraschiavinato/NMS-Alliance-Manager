@@ -1,6 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, rmSync } from "node:fs";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { resetAlmanacRateLimit } from "@/lib/almanac/almanac-rate-limit";
 import { almanacSystemLabel, lookupAlmanacPlanet, lookupAlmanacPlanets } from "@/lib/almanac/almanac-lookup";
 import { writeDataFile } from "../helpers/members";
 import { almanacWords, structuredPlanet, structuredSystem } from "../helpers/almanac";
@@ -26,7 +27,9 @@ function stubAlmanac(overrides: Record<string, () => Response | Promise<Response
 }
 
 beforeEach(() => {
+  resetAlmanacRateLimit();
   vi.spyOn(console, "error").mockImplementation(() => {});
+  vi.spyOn(console, "warn").mockImplementation(() => {});
 });
 
 afterEach(() => {
@@ -87,7 +90,47 @@ describe("lookupAlmanacPlanet", () => {
     expect(existsSync(cachePath())).toBe(false);
   });
 
-  it.each([429, 500, 503])("fails on HTTP %i", async (status) => {
+  it("pauses all requests after a 429 until Retry-After has passed", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    try {
+      const fetchMock = stubAlmanac({
+        "0123456789AB": () => new Response("slow down", { status: 429, headers: { "Retry-After": "120" } }),
+      });
+      await expect(lookupAlmanacPlanet("0123456789AB", 0)).rejects.toThrow("planet.almanac_lookup_failed");
+      expect(console.warn).toHaveBeenCalledWith(expect.stringContaining("pausing requests for 120 seconds"));
+      expect(console.error).not.toHaveBeenCalled();
+      fetchMock.mockClear();
+
+      await expect(lookupAlmanacPlanet("1123456789AB", 0)).rejects.toThrow("planet.almanac_lookup_failed");
+      expect(fetchMock).not.toHaveBeenCalled();
+      const results = await lookupAlmanacPlanets([{ portal: "2123456789AB", galaxy: 0 }]);
+      expect(results.get("2123456789AB:0")).toEqual({ planet: null, failed: true });
+      expect(fetchMock).not.toHaveBeenCalled();
+      expect(console.error).not.toHaveBeenCalled();
+      expect(console.warn).toHaveBeenCalledOnce();
+
+      vi.setSystemTime(Date.now() + 121_000);
+      await expect(lookupAlmanacPlanet("1123456789AB", 0)).resolves.toMatchObject({ portal: "1123456789AB" });
+      expect(fetchMock).toHaveBeenCalledOnce();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it.each([
+    ["without Retry-After", undefined, "pausing requests for 60 seconds"],
+    ["with an unusable Retry-After", "soon", "pausing requests for 60 seconds"],
+    ["with an excessive Retry-After", "99999999", `pausing requests for ${7 * 24 * 60 * 60} seconds`],
+  ])("falls back to a safe pause on a 429 %s", async (_label, retryAfter, message) => {
+    stubAlmanac({
+      "0123456789AB": () =>
+        new Response("", { status: 429, headers: retryAfter ? { "Retry-After": retryAfter } : undefined }),
+    });
+    await expect(lookupAlmanacPlanet("0123456789AB", 0)).rejects.toThrow("planet.almanac_lookup_failed");
+    expect(console.warn).toHaveBeenCalledWith(expect.stringContaining(message));
+  });
+
+  it.each([500, 503])("fails on HTTP %i", async (status) => {
     stubAlmanac({ "0123456789AB": () => new Response("error", { status }) });
     await expect(lookupAlmanacPlanet("0123456789AB", 0)).rejects.toThrow("planet.almanac_lookup_failed");
     expect(console.error).toHaveBeenCalledWith(expect.stringContaining("error"), expect.objectContaining({ status }));
