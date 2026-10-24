@@ -405,6 +405,27 @@ describe("PlanetsPage", () => {
     expect(values("planet.filter_valuables")).toEqual(["Ancient Bones", "Gold"]);
   });
 
+  it("merges economy types that differ only by capitalisation in the filter", async () => {
+    const withEconomy = (id: string, value: string) =>
+      planet({
+        id,
+        planetPortal: `${id}234567890AB`,
+        systemFacts: [{ label: "common.economy", value }],
+        almanacName: id,
+        station: undefined,
+      });
+    mockFetch({});
+    const { user } = renderPlanets({
+      planets: [withEconomy("A", "Advanced Materials"), withEconomy("B", "Advanced materials")],
+    });
+    await user.click(screen.getByRole("button", { name: t("planet.filters") }));
+    const select = screen.getByRole("combobox", { name: t("planet.filter_economy") });
+    expect(within(select).getAllByRole("option")).toHaveLength(2);
+    await user.selectOptions(select, within(select).getAllByRole("option")[1]);
+    expect(screen.getByText("A")).toBeInTheDocument();
+    expect(screen.getByText("B")).toBeInTheDocument();
+  });
+
   it("orders untitled planets by portal and searches planets without an almanac name", async () => {
     const untitled = (portal: string, planetNumber: number) =>
       planet({

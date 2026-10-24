@@ -106,11 +106,12 @@ export function PlanetsPage({
   const filterOptions = useMemo(
     () => ({
       economy: [
-        ...new Set(
+        ...new Map(
           planets
             .map((planet) => systemFactValue(planet, "common.economy"))
-            .filter((value): value is string => Boolean(value)),
-        ),
+            .filter((value): value is string => Boolean(value))
+            .map((value) => [value.toLowerCase(), value] as const),
+        ).values(),
       ].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" })),
       economyStars: [
         ...new Set(
@@ -185,7 +186,8 @@ export function PlanetsPage({
       planetGroups.flatMap((group) => {
         const matchingPlanets = group.planets.filter(
           (planet) =>
-            (!filters.economy || systemFactValue(planet, "common.economy") === filters.economy) &&
+            (!filters.economy ||
+              systemFactValue(planet, "common.economy")?.toLowerCase() === filters.economy.toLowerCase()) &&
             (filters.economyStars === null || planet.economyStars === filters.economyStars) &&
             (!filters.wealth || planet.wealth === filters.wealth) &&
             (!filters.star || systemFactValue(planet, "planet.star") === filters.star) &&
