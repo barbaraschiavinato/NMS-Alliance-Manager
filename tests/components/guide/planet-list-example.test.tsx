@@ -13,7 +13,7 @@ vi.mock("@/components/guide/station-init", () => sample);
 vi.mock("next/image", async () => (await import("../helpers")).nextImageModule);
 vi.mock("@/lib/nms-core/system.js", () => ({
   systemAttributes: () => ({ star_type: 0 }),
-  planetSeeds: () => ({ planet_seeds: [1, 2] }),
+  planetSeeds: () => ({ planet_seeds: [1, 2], planet_count: 2, moon_count: 0 }),
 }));
 
 beforeEach(() => {

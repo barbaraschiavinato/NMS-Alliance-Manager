@@ -23,7 +23,7 @@ vi.mock("next/image", async () => (await import("../helpers")).nextImageModule);
 vi.mock("next/link", async () => (await import("../helpers")).nextLinkModule);
 vi.mock("@/lib/nms-core/system.js", () => ({
   systemAttributes: (address: bigint) => ({ star_type: 1, gas_giant: address === BigInt("0x03EA02304626") }),
-  planetSeeds: () => ({ planet_seeds: [1, 2, 3] }),
+  planetSeeds: () => ({ planet_seeds: [1, 2, 3], planet_count: 3, moon_count: 0 }),
 }));
 
 const portal = "0123456789AB";

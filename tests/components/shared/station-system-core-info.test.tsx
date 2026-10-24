@@ -13,7 +13,7 @@ vi.mock("@/lib/nms-core/system.js", () => nmsCore);
 
 beforeEach(() => {
   nmsCore.systemAttributes.mockReturnValue({ star_type: 3 });
-  nmsCore.planetSeeds.mockReturnValue({ planet_seeds: [1, 2, 3, 4] });
+  nmsCore.planetSeeds.mockReturnValue({ planet_seeds: [1, 2, 3, 4], planet_count: 4, moon_count: 0 });
 });
 
 describe("StationSystemCoreInfo", () => {
@@ -30,7 +30,38 @@ describe("StationSystemCoreInfo", () => {
   });
 
   it.each([
-    ["an out-of-range planet count", () => nmsCore.planetSeeds.mockReturnValue({ planet_seeds: [] })],
+    [{ planet_count: 3, moon_count: 2 }, "en", "3 planets · 2 moons · red star"],
+    [{ planet_count: 1, moon_count: 1 }, "en", "1 planet · 1 moon · red star"],
+    [{ planet_count: 1, moon_count: 5 }, "it", "1 pianeta · 5 lune · Stella rossa"],
+    [{ planet_count: 1, moon_count: 1 }, "it", "1 pianeta · 1 luna · Stella rossa"],
+    [{ planet_count: 5, moon_count: 0 }, "en", "5 planets · red star"],
+  ] as const)("splits planets and moons: %j in %s", async (counts, locale, text) => {
+    nmsCore.planetSeeds.mockReturnValue({ planet_seeds: [], ...counts });
+    renderWithLocale(<StationSystemCoreInfo galaxy={0} portal="0123456789AB" />, { locale });
+    expect(await screen.findByText(text)).toBeInTheDocument();
+  });
+
+  it.each([
+    [
+      "a missing planet count",
+      () => nmsCore.planetSeeds.mockReturnValue({ planet_seeds: [], planet_count: 0, moon_count: 0 }),
+    ],
+    [
+      "too many planets",
+      () => nmsCore.planetSeeds.mockReturnValue({ planet_seeds: [], planet_count: 7, moon_count: 0 }),
+    ],
+    [
+      "a negative moon count",
+      () => nmsCore.planetSeeds.mockReturnValue({ planet_seeds: [1], planet_count: 1, moon_count: -1 }),
+    ],
+    [
+      "too many moons",
+      () => nmsCore.planetSeeds.mockReturnValue({ planet_seeds: [1], planet_count: 1, moon_count: 13 }),
+    ],
+    [
+      "a non-numeric moon count",
+      () => nmsCore.planetSeeds.mockReturnValue({ planet_seeds: [1], planet_count: 1, moon_count: undefined }),
+    ],
     ["an unknown star type", () => nmsCore.systemAttributes.mockReturnValue({ star_type: 9 })],
     [
       "a calculation error",

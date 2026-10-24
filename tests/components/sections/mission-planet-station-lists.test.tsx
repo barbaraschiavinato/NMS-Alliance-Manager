@@ -16,7 +16,7 @@ vi.mock("next/image", async () => (await import("../helpers")).nextImageModule);
 vi.mock("next/link", async () => (await import("../helpers")).nextLinkModule);
 vi.mock("@/lib/nms-core/system.js", () => ({
   systemAttributes: (address: bigint) => ({ star_type: 0, gas_giant: address === BigInt("0x03EA02304626") }),
-  planetSeeds: () => ({ planet_seeds: [BigInt(1)] }),
+  planetSeeds: () => ({ planet_seeds: [BigInt(1)], planet_count: 1, moon_count: 0 }),
 }));
 // Il dialog profilo è coperto dai test dei modali: qui basta sapere quando viene aperto.
 vi.mock("@/components/modals/member-card-dialog", () => ({
