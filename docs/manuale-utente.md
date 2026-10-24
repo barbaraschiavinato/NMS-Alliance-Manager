@@ -43,7 +43,8 @@ Colori delle specializzazioni:
 **Primo accesso.**
 1. Accedi con Google.
 2. L'account parte come **in attesa di approvazione**. Finché un moderatore o un admin non lo approva puoi solo completare il profilo ed uscire.
-3. Se l'accesso viene bloccato, compare un messaggio con l'invito a contattare i moderatori.
+3. Quando l'account viene approvato, se l'alleanza ha attivato l'avviso ricevi un'**email** all'indirizzo Google con cui hai fatto l'accesso (solo per l'approvazione, non per altri cambi di stato). Puoi anche semplicemente riaccedere.
+4. Se l'accesso viene bloccato, compare un messaggio con l'invito a contattare i moderatori.
 
 **Profilo.** Si apre dall'header ed è modificabile solo dal proprietario. Contiene:
 - nome in gioco;

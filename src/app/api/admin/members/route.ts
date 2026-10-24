@@ -16,6 +16,7 @@ import { readMissions, writeMissions } from "@/lib/missions/store";
 import { membershipStatuses, type AllianceMember, type MemberRole } from "@/lib/members/member-types";
 import { isFixedLocalAccount } from "@/lib/auth/local-auth";
 import {
+  notifyMemberApprovedByEmail,
   notifyMemberRemoved,
   notifyMemberRoleChanged,
   notifyMemberStatusChanged,
@@ -102,6 +103,8 @@ export async function PATCH(request: Request) {
     await scheduleMemberNotification(() =>
       notifyMemberStatusChanged(updated.publicId, previousStatus, updated.membershipStatus, actorOf(member)),
     );
+    if (previousStatus === "pending" && updated.membershipStatus === "approved")
+      await scheduleMemberNotification(() => notifyMemberApprovedByEmail(updated.publicId), "email");
     return NextResponse.json({ ok: true, membershipStatus: updated.membershipStatus });
   }
 

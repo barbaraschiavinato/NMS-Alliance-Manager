@@ -7,6 +7,7 @@ import {
 import { isMemberNotificationSettings } from "@/lib/notifications/member-notifications";
 import {
   memberNotificationReadiness,
+  sendMemberEmailTest,
   sendMemberNotificationTest,
 } from "@/lib/notifications/member-notification-delivery";
 
@@ -49,7 +50,11 @@ export async function PATCH(request: Request) {
   if (!isMemberNotificationSettings(value))
     return NextResponse.json({ error: "Invalid member notification settings." }, { status: 400 });
   const readiness = memberNotificationReadiness();
-  if (value.telegramEnabled && (!readiness.telegram || !readiness.links))
+  if (
+    (value.telegramEnabled && !readiness.telegram) ||
+    (value.approvalEmailEnabled && !readiness.email) ||
+    ((value.telegramEnabled || value.approvalEmailEnabled) && !readiness.links)
+  )
     return NextResponse.json(
       { error: "Configure the environment credentials before enabling this channel." },
       { status: 400 },
@@ -62,11 +67,17 @@ export async function PATCH(request: Request) {
   }
 }
 
-export async function POST() {
+export async function POST(request?: Request) {
   const auth = await authorize();
   if (auth.error) return auth.error;
+  const value: unknown = await request?.json().catch(() => null);
+  const channel = value && typeof value === "object" && "channel" in value ? value.channel : "telegram";
+  if (channel !== "telegram" && channel !== "email")
+    return NextResponse.json({ error: "Invalid notification channel." }, { status: 400 });
   try {
-    await sendMemberNotificationTest();
+    // The email test goes only to the administrator who asked for it.
+    if (channel === "email") await sendMemberEmailTest(auth.member.email);
+    else await sendMemberNotificationTest();
     return NextResponse.json({ ok: true });
   } catch (error) {
     return failure(error);

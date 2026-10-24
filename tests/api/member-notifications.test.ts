@@ -35,7 +35,7 @@ const pending = makeMember({
   approvedBy: "",
   approvedAt: "",
 });
-const settings = { telegramEnabled: true, telegramChatId: "-123", telegramThreadId: "7" };
+const settings = { telegramEnabled: true, telegramChatId: "-123", telegramThreadId: "7", approvalEmailEnabled: false };
 
 function stubTelegram() {
   vi.stubEnv("AUTH_URL", "http://localhost:3000/api/auth");
@@ -75,7 +75,7 @@ describe("member notification administration", () => {
     expect((await admin.PATCH(jsonRequest(adminUrl, "PATCH", settings))).status).toBe(200);
     const response = await admin.GET();
     expect(response.headers.get("cache-control")).toBe("no-store");
-    expect(await response.json()).toEqual({ settings, readiness: { telegram: true, links: true } });
+    expect(await response.json()).toEqual({ settings, readiness: { telegram: true, email: false, links: true } });
   });
 
   it("logs storage failures without exposing them to clients", async () => {
@@ -266,12 +266,12 @@ describe("member notification alerts", () => {
 
 describe("member notification delivery", () => {
   it("validates the bot token and the application URL for readiness", () => {
-    expect(memberNotificationReadiness()).toEqual({ telegram: false, links: false });
+    expect(memberNotificationReadiness()).toEqual({ telegram: false, email: false, links: false });
     vi.stubEnv("TELEGRAM_MEMBERS_BOT_TOKEN", "not-a-token");
     vi.stubEnv("AUTH_URL", "https://alliance.example.com/api/auth");
-    expect(memberNotificationReadiness()).toEqual({ telegram: false, links: true });
+    expect(memberNotificationReadiness()).toEqual({ telegram: false, email: false, links: true });
     vi.stubEnv("TELEGRAM_MEMBERS_BOT_TOKEN", "123:test");
-    expect(memberNotificationReadiness()).toEqual({ telegram: true, links: true });
+    expect(memberNotificationReadiness()).toEqual({ telegram: true, email: false, links: true });
   });
 
   it("refuses to send a test while the channel is disabled", async () => {

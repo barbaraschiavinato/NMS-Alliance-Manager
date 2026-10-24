@@ -11,7 +11,12 @@ vi.mock("@vercel/blob", async () => (await import("./helpers")).blobModule);
 const load = () => import("@/lib/notifications/member-notifications-store");
 const file = "member-notifications.json";
 const blob = `alliance-manager/${file}`;
-const settings = { telegramEnabled: true, telegramChatId: "-123", telegramThreadId: "5" };
+const settings = {
+  telegramEnabled: true,
+  telegramChatId: "-123",
+  telegramThreadId: "5",
+  approvalEmailEnabled: true,
+};
 const invalid = { settings: { ...settings, telegramChatId: "" } };
 
 beforeEach(() => {
@@ -28,6 +33,23 @@ describe("Member notification persistence", () => {
     expect(stored).toEqual({ settings });
     expect(await readMemberNotificationSettings()).toEqual(settings);
   });
+
+  it.each([false, true])(
+    "reads documents written before the approval email existed as disabled (Blob=%s)",
+    async (blobBackend) => {
+      const legacy = { settings: { telegramEnabled: true, telegramChatId: "-123", telegramThreadId: "5" } };
+      if (blobBackend) {
+        useBlobBackend();
+        setBlobJson(blob, legacy);
+      } else {
+        writeDataFile(file, legacy);
+      }
+      expect(await (await load()).readMemberNotificationSettings()).toEqual({
+        ...legacy.settings,
+        approvalEmailEnabled: false,
+      });
+    },
+  );
 
   it("treats a 304 Blob response as a new installation", async () => {
     useBlobBackend();
@@ -59,10 +81,13 @@ describe("Member notification persistence", () => {
     await expect((await load()).readMemberNotificationSettings()).rejects.toThrow();
   });
 
-  it.each([null, [], { ...settings, telegramThreadId: "0" }, { ...settings, telegramEnabled: "true" }])(
-    "validates settings %j",
-    (value) => {
-      expect(isMemberNotificationSettings(value)).toBe(false);
-    },
-  );
+  it.each([
+    null,
+    [],
+    { ...settings, telegramThreadId: "0" },
+    { ...settings, telegramEnabled: "true" },
+    { ...settings, approvalEmailEnabled: 1 },
+  ])("validates settings %j", (value) => {
+    expect(isMemberNotificationSettings(value)).toBe(false);
+  });
 });
