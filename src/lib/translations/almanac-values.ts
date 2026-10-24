@@ -132,7 +132,7 @@ export const almanacValueTranslations: Readonly<Record<Locale, Readonly<Record<s
     Manufacturing: "Manifattura",
     Technology: "Tecnologia",
     "Power generation": "Generazione d'energia",
-    // Altri tipi di economia restituiti da Almanac (traduzioni non ufficiali)
+    // Altri tipi di economia restituiti da Almanac (traduzioni non ufficiali; "Mercantile" resta uguale in italiano)
     "Fuel Generation": "Generazione di carburante",
     Alchemical: "Alchimia",
     Industrial: "Industria",
@@ -140,6 +140,19 @@ export const almanacValueTranslations: Readonly<Record<Locale, Readonly<Record<s
     "Nano-construction": "Nanocostruzione",
     "Ore Extraction": "Estrazione di minerali",
     Shipping: "Spedizioni",
+    Commercial: "Commercio",
+    Construction: "Costruzioni",
+    "Energy Supply": "Fornitura energetica",
+    Engineering: "Ingegneria",
+    Experimental: "Sperimentale",
+    "High Tech": "Alta tecnologia",
+    "High Voltage": "Alta tensione",
+    "Mass Production": "Produzione di massa",
+    "Material Fusion": "Fusione dei materiali",
+    Mathematical: "Matematica",
+    Minerals: "Minerali",
+    Prospecting: "Prospezione",
+    Research: "Ricerca",
     // Livello di ricchezza del sistema (traduzioni non ufficiali)
     Destitute: "Indigente",
     "Medium Supply": "Offerta media",

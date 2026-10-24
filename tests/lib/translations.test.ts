@@ -135,7 +135,21 @@ describe("translateAlmanacValue", () => {
 
   it.each([
     "Advanced materials",
+    "Advanced Materials",
     "Alchemical",
+    "Commercial",
+    "Construction",
+    "Energy Supply",
+    "Engineering",
+    "Experimental",
+    "High Tech",
+    "High Voltage",
+    "Mass Production",
+    "Material Fusion",
+    "Mathematical",
+    "Minerals",
+    "Prospecting",
+    "Research",
     "Fuel Generation",
     "Industrial",
     "Manufacturing",
@@ -160,6 +174,22 @@ describe("translateAlmanacValue", () => {
       expect(translateAlmanacValue("en", wealth)).toBe(wealth);
     },
   );
+
+  it("ignores the capitalisation of Almanac values when there is no exact translation", () => {
+    expect(translateAlmanacValue("it", "power Generation")).toBe("Generazione d'energia");
+    expect(translateAlmanacValue("it", "FUEL GENERATION")).toBe("Generazione di carburante");
+    expect(translateAlmanacValue("it", "Unknown Economy")).toBe("Unknown Economy");
+    expect(translateAlmanacValue("en", "FUEL GENERATION")).toBe("FUEL GENERATION");
+  });
+
+  it("never maps values that differ only by case to different translations", () => {
+    const seen = new Map<string, string>();
+    for (const [key, value] of Object.entries(almanacValueTranslations.it)) {
+      const lower = key.toLowerCase();
+      expect(seen.get(lower) ?? value, key).toBe(value);
+      seen.set(lower, value);
+    }
+  });
 
   it("has only non-empty Italian translations", () => {
     for (const [key, value] of Object.entries(almanacValueTranslations.it)) expect(value.trim(), key).not.toBe("");

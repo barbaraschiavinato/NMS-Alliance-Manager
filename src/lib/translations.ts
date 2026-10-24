@@ -50,10 +50,21 @@ const legacyAliases = new Map<string, string>([
   ["data_error", "system.data_error"],
 ]);
 
+// Almanac sometimes varies the capitalisation of the same word ("Advanced Materials" / "Advanced materials").
+function lowercaseValues(values: Readonly<Record<string, string>>): ReadonlyMap<string, string> {
+  return new Map(Object.entries(values).map(([key, translated]) => [key.toLowerCase(), translated]));
+}
+
+const almanacValuesByLowercase: Record<Locale, ReadonlyMap<string, string>> = {
+  en: lowercaseValues(almanacValueTranslations.en),
+  it: lowercaseValues(almanacValueTranslations.it),
+};
+
 export function translateAlmanacValue(locale: Locale, value: string) {
   const count = locale === "it" ? value.match(/^(\d+) (species|plants?)$/) : null;
   if (count) return `${count[1]} ${count[2] === "plant" ? "pianta" : count[2] === "plants" ? "piante" : "specie"}`;
-  return Object.hasOwn(almanacValueTranslations[locale], value) ? almanacValueTranslations[locale][value] : value;
+  if (Object.hasOwn(almanacValueTranslations[locale], value)) return almanacValueTranslations[locale][value];
+  return almanacValuesByLowercase[locale].get(value.toLowerCase()) ?? value;
 }
 
 export function translate(locale: Locale, message: string, values?: Readonly<Record<string, string | number>>) {
