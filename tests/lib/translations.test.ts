@@ -133,6 +133,34 @@ describe("translateAlmanacValue", () => {
     expect(translateAlmanacValue("it", "3 trees")).toBe("3 trees");
   });
 
+  it.each([
+    "Advanced materials",
+    "Alchemical",
+    "Fuel Generation",
+    "Industrial",
+    "Manufacturing",
+    "Metal Processing",
+    "Nano-construction",
+    "None",
+    "Ore Extraction",
+    "Power generation",
+    "Scientific",
+    "Shipping",
+    "Technology",
+    "Trading",
+  ])("translates the Almanac economy type %s into Italian", (economy) => {
+    expect(translateAlmanacValue("it", economy)).not.toBe(economy);
+    expect(translateAlmanacValue("en", economy)).toBe(economy);
+  });
+
+  it.each(["Destitute", "Medium Supply", "Promising", "Satisfactory", "Affluent"])(
+    "translates the Almanac wealth description %s into Italian",
+    (wealth) => {
+      expect(translateAlmanacValue("it", wealth)).not.toBe(wealth);
+      expect(translateAlmanacValue("en", wealth)).toBe(wealth);
+    },
+  );
+
   it("has only non-empty Italian translations", () => {
     for (const [key, value] of Object.entries(almanacValueTranslations.it)) expect(value.trim(), key).not.toBe("");
     expect(almanacValueTranslations.en).toEqual({});

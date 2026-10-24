@@ -117,6 +117,9 @@ export function PlanetsPage({
           planets.map((planet) => planet.economyStars).filter((value): value is number => value !== undefined),
         ),
       ].sort((a, b) => a - b),
+      wealth: [
+        ...new Set(planets.map((planet) => planet.wealth).filter((value): value is string => Boolean(value))),
+      ].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" })),
       star: [
         ...new Set(
           planets
@@ -184,6 +187,7 @@ export function PlanetsPage({
           (planet) =>
             (!filters.economy || systemFactValue(planet, "common.economy") === filters.economy) &&
             (filters.economyStars === null || planet.economyStars === filters.economyStars) &&
+            (!filters.wealth || planet.wealth === filters.wealth) &&
             (!filters.star || systemFactValue(planet, "planet.star") === filters.star) &&
             (!filters.race || systemFactValue(planet, "common.race") === filters.race) &&
             (!filters.planetType || planet.planetType === filters.planetType) &&

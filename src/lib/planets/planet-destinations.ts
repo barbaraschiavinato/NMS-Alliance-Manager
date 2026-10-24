@@ -10,7 +10,7 @@ import { almanacSystemLabel, lookupAlmanacPlanets } from "@/lib/almanac/almanac-
 import type { OwnedStationPortal } from "@/lib/stations/stations-store";
 import { readMissions, writeMissions } from "@/lib/missions/store";
 import { almanacDiscoveryCounts, type AlmanacDiscoveryCounts } from "@/lib/almanac/almanac-discovery-counts";
-import { almanacStarCount, almanacSystemFacts, almanacWord } from "@/lib/almanac/almanac-facts";
+import { almanacStarCount, almanacSystemFacts, almanacWealth, almanacWord } from "@/lib/almanac/almanac-facts";
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   return value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : null;
@@ -177,6 +177,7 @@ export async function loadPlanetDestinations(
           systemFacts: { label: string; value: string }[];
           planetType?: string;
           economyStars?: number;
+          wealth?: string;
           discoveryCounts: AlmanacDiscoveryCounts;
           plants: string[];
           minerals: string[];
@@ -207,6 +208,7 @@ export async function loadPlanetDestinations(
         const almanacName = typeof headline?.word === "string" ? headline.word : undefined;
         const planetType = almanacWord(band?.type);
         const economyStars = almanacStarCount(band?.economy);
+        const wealth = almanacWealth(band?.economy);
         const economy = asRecord(band?.economy);
         const almanacFacts = (
           [
@@ -232,6 +234,7 @@ export async function loadPlanetDestinations(
                 discoveryCounts: almanacDiscoveryCounts(band),
                 ...(planetType ? { planetType } : {}),
                 ...(economyStars !== undefined ? { economyStars } : {}),
+                ...(wealth ? { wealth } : {}),
                 plants: almanacResourceNames(carries, ["plant", "consumable"]),
                 minerals: almanacResourceNames(carries, ["mineral"]),
                 valuables: almanacResourceNames(carries, ["tradeable"]),

@@ -16,6 +16,7 @@ import { renderWithLocale, tr } from "../helpers";
 const options: PlanetFilterOptions = {
   economy: ["Trading"],
   economyStars: [1, 3],
+  wealth: ["Affluent", "Destitute"],
   star: ["Yellow"],
   race: ["Gek"],
   planetType: ["Lush"],
@@ -85,6 +86,7 @@ describe("PlanetFilters", () => {
     ["planet.filter_planet_type", "planetType", "Lush"],
     ["planet.filter_star", "star", "Yellow"],
     ["planet.filter_economy", "economy", "Trading"],
+    ["planet.filter_wealth", "wealth", "Affluent"],
     ["planet.filter_race", "race", "Gek"],
     ["planet.filter_size", "size", "Large"],
     ["planet.filter_dissonant", "dissonant", "yes"],
@@ -145,6 +147,7 @@ describe("PlanetActiveFilters", () => {
   const allValues: PlanetFilterValues = {
     economy: "Trading",
     economyStars: 2,
+    wealth: "Destitute",
     star: "Yellow",
     race: "Gek",
     planetType: "Lush",
@@ -177,6 +180,7 @@ describe("PlanetActiveFilters", () => {
     const expected: Array<[string, keyof PlanetFilterValues, string | null]> = [
       [`${tr("common.economy")}: ${tv("Trading")}`, "economy", ""],
       [`${tr("planet.economy_stars")}: ★★☆`, "economyStars", null],
+      [`${tr("planet.wealth")}: ${tv("Destitute")}`, "wealth", ""],
       [`${tr("planet.star_type")}: ${tv("Yellow")}`, "star", ""],
       [`${tr("common.race")}: ${tv("Gek")}`, "race", ""],
       [`${tr("planet.planet_type")}: ${tv("Lush")}`, "planetType", ""],

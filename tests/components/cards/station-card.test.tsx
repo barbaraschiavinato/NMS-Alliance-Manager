@@ -178,6 +178,9 @@ describe.each([
 
   it("translates planet facts into Italian", () => {
     renderStation({ member: viewer(), station: station({ planet: lushPlanet }) }, "it");
+    expect(screen.getByText("Stella").parentElement).toHaveTextContent("Stella Gialla");
+    expect(screen.getByText("Economia").parentElement).toHaveTextContent("Economia Generazione di carburante ★★☆");
+    expect(screen.getByText("Conflitto")).toBeInTheDocument();
     expect(screen.getByText("Razza")).toBeInTheDocument();
     for (const text of ["Meteo", "Acqua", "Tipo", "Lussureggiante"])
       expect(screen.queryByText(text)).not.toBeInTheDocument();
