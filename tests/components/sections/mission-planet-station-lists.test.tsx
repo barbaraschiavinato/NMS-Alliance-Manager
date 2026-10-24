@@ -472,8 +472,15 @@ describe("PlanetList", () => {
         station={undefined}
       />,
     );
-    expect(screen.getByRole("img", { name: "Gek" })).toHaveClass("planet-race-icon");
-    expect(screen.getByLabelText("2/3")).toHaveTextContent("★★☆");
+    const race = screen.getByRole("img", { name: "Gek" });
+    expect(race).toHaveClass("planet-race");
+    expect(race).toHaveAttribute("data-tooltip", "Gek");
+    expect(race).toHaveAttribute("tabindex", "0");
+    expect(race.querySelector(".planet-race-icon")).not.toBeNull();
+    const stars = screen.getByRole("img", { name: "Economy level: 2/3" });
+    expect(stars).toHaveTextContent("★★☆");
+    expect(stars).toHaveAttribute("data-tooltip", "Economy level: 2/3");
+    expect(stars).toHaveAttribute("tabindex", "0");
     const conflict = screen.getByRole("img", { name: "High" });
     expect(conflict.querySelectorAll("i.filled")).toHaveLength(3);
     expect(screen.getByText("Weather").parentElement).toHaveTextContent("Weather Humid");

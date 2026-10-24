@@ -260,12 +260,13 @@ body:has(.sidebar-compact) .planet-notes-list li { font-size: 17px; }
 .planet-conflict-dots { display: inline-flex; align-items: center; gap: 3px; margin-left: 5px; vertical-align: middle; }
 .planet-conflict-dots > i { width: 7px; height: 7px; box-sizing: border-box; border: 1px solid var(--lime); border-radius: 50%; }
 .sidebar-compact ~ .main-panel .planet-conflict-dots > i { width: 9px; height: 9px; }
-.planet-conflict-dots { position: relative; }
-.planet-conflict-dots[data-tooltip]::after { position: absolute; z-index: 30; left: 0; bottom: calc(100% + 7px); padding: 6px 8px; color: #f1eee7; border: 1px solid #394548; border-radius: 3px; background: #111719; box-shadow: 0 4px 14px #0008; content: attr(data-tooltip); font-size: 9px; font-weight: 500; line-height: 1.2; opacity: 0; pointer-events: none; transform: translateY(3px); transition: opacity .12s, transform .12s; white-space: nowrap; }
-.planet-conflict-dots[data-tooltip]:hover::after { opacity: 1; transform: translateY(0); }
-.planet-race-icon { display: inline-block; width: 12px; height: 11px; margin: 0 4px 0 2px; vertical-align: -2px; background: var(--lime); -webkit-mask: var(--race-icon) center / contain no-repeat; mask: var(--race-icon) center / contain no-repeat; }
+.planet-conflict-dots, .planet-race, .planet-economy-stars { position: relative; }
+:is(.planet-conflict-dots, .planet-race, .planet-economy-stars)[data-tooltip]::after { position: absolute; z-index: 30; left: 0; bottom: calc(100% + 7px); padding: 6px 8px; color: #f1eee7; border: 1px solid #394548; border-radius: 3px; background: #111719; box-shadow: 0 4px 14px #0008; content: attr(data-tooltip); font-size: 9px; font-weight: 500; line-height: 1.2; opacity: 0; pointer-events: none; transform: translateY(3px); transition: opacity .12s, transform .12s; white-space: nowrap; }
+:is(.planet-conflict-dots, .planet-race, .planet-economy-stars)[data-tooltip]:is(:hover, :focus-visible)::after { opacity: 1; transform: translateY(0); }
+.planet-race { display: inline-block; margin: 0 4px 0 2px; cursor: default; }
+.planet-race-icon { display: inline-block; width: 12px; height: 11px; vertical-align: -2px; background: var(--lime); -webkit-mask: var(--race-icon) center / contain no-repeat; mask: var(--race-icon) center / contain no-repeat; }
 .sidebar-compact ~ .main-panel .planet-race-icon { width: 15px; height: 14px; }
-.planet-race-unknown { margin: 0 4px 0 2px; color: var(--lime); font-weight: 700; }
+.planet-race-unknown { color: var(--lime); font-weight: 700; }
 @media (max-width: 720px) {
   .main-panel .planet-mission-card-copy { flex: 1 1 0; }
 }

@@ -116,6 +116,8 @@ Missioni e Stazioni mostrano fino a 50 elementi per pagina; Pianeti mostra fino 
 ### `Orbit` Stazioni
 Descritta sopra per ogni specializzazione. Il nome della pagina è "Le mie stazioni" per i Ranger.
 
+Nell'intestazione del sistema (Pianeti) e sulla scheda stazione, passando il mouse (o selezionando con la tastiera) l'icona della **razza**, le stelle dell'**economia** e i pallini del **conflitto** compare un suggerimento con il valore esatto (per esempio «Livello economia: 2/3»).
+
 Sotto il nome della stazione, la scheda indica quanti **pianeti** e quante **lune** ha il sistema (le lune compaiono solo se ce ne sono) e il colore della stella; il conteggio è calcolato dall'indirizzo portale.
 
 Se il sistema della stazione ospita un **buco nero**, un'**Interfaccia Atlas** o è un sistema viola ridotto a un **gigante gassoso** (un solo pianeta con cinque lune), sulla scheda compare un'etichetta apposita (viola per il buco nero, rossa con il logo di No Man's Sky per l'Atlas, ambra con un pianeta ad anello per il gigante gassoso). La stessa etichetta appare accanto al nome nell'intestazione del sistema nella pagina Pianeti. Il dato è calcolato dall'indirizzo portale, quindi è sempre disponibile e non dipende da Almanac.

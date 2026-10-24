@@ -23,23 +23,36 @@ export function SystemFacts({
       {facts.map((fact) => (
         <span key={fact.label}>
           <b>{t(fact.label)}</b>
-          {fact.label === "common.race" && raceIcons[fact.value] && (
+          {fact.label === "common.race" && (
             <span
               aria-label={tv(fact.value)}
-              className="planet-race-icon"
+              className="planet-race"
               data-tooltip={tv(fact.value)}
               role="img"
-              style={{ "--race-icon": `url(${raceIcons[fact.value]})` } as CSSProperties}
-            />
-          )}
-          {fact.label === "common.race" && !raceIcons[fact.value] && (
-            <span aria-label={tv(fact.value)} className="planet-race-unknown" data-tooltip={tv(fact.value)} role="img">
-              -
+              tabIndex={0}
+            >
+              {raceIcons[fact.value] ? (
+                <span
+                  aria-hidden="true"
+                  className="planet-race-icon"
+                  style={{ "--race-icon": `url(${raceIcons[fact.value]})` } as CSSProperties}
+                />
+              ) : (
+                <span aria-hidden="true" className="planet-race-unknown">
+                  -
+                </span>
+              )}
             </span>
           )}
           {fact.label !== "common.conflict" && fact.label !== "common.race" && <> {tv(fact.value)}</>}
           {fact.label === "common.economy" && economyStars !== undefined && (
-            <span aria-label={`${economyStars}/3`} className="planet-economy-stars">
+            <span
+              aria-label={t("planet.economy_level", { stars: economyStars })}
+              className="planet-economy-stars"
+              data-tooltip={t("planet.economy_level", { stars: economyStars })}
+              role="img"
+              tabIndex={0}
+            >
               {" "}
               {"★".repeat(economyStars)}
               {"☆".repeat(3 - economyStars)}

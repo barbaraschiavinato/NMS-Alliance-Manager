@@ -682,6 +682,7 @@ export const translations: TranslationCatalog = {
     "planet.filter_star": "Filtra per stella",
     "planet.filter_race": "Filtra per razza",
     "planet.all_economies": "Tutte le economie",
+    "planet.economy_level": "Livello economia: {stars}/3",
     "planet.economy_stars": "Stelle economia",
     "planet.all_economy_stars": "Qualsiasi numero di stelle",
     "planet.all_stars": "Tutte le stelle",

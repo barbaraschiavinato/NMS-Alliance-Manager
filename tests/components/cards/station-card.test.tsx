@@ -167,9 +167,9 @@ describe.each([
     );
     expect(screen.getByText("Star").parentElement).toHaveTextContent("Star Yellow");
     expect(screen.getByText("Economy").parentElement).toHaveTextContent("Economy Fuel Generation ★★☆");
-    expect(screen.getByLabelText("2/3")).toHaveClass("planet-economy-stars");
+    expect(screen.getByRole("img", { name: "Economy level: 2/3" })).toHaveClass("planet-economy-stars");
     expect(screen.getByRole("img", { name: "Low" })).toHaveClass("planet-conflict-dots");
-    expect(screen.getByRole("img", { name: "Gek" })).toHaveClass("planet-race-icon");
+    expect(screen.getByRole("img", { name: "Gek" })).toHaveClass("planet-race");
     for (const label of ["Type", "Weather", "Water"]) expect(screen.queryByText(label)).not.toBeInTheDocument();
     for (const value of ["Lush", "Humid", "Abundant"]) expect(screen.queryByText(value)).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Open details for Verdant World" }));
