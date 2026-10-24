@@ -52,7 +52,15 @@ function planet(response: Record<string, unknown>, galaxy = 0): CachedPlanet {
 const lushPlanet = planet({
   lines: {
     headline: { word: "Verdant World" },
-    band: { type: { word: "Lush" }, weather: { word: "Humid" }, water: { word: "Abundant" }, race: { word: "Gek" } },
+    band: {
+      type: { word: "Lush" },
+      weather: { word: "Humid" },
+      water: { word: "Abundant" },
+      star: { word: "Yellow" },
+      economy: { word: "Fuel Generation", stars: 2 },
+      conflict: { word: "Low" },
+      race: { word: "Gek" },
+    },
   },
   pictures: { disc: "/planets/v.png" },
 });
@@ -157,17 +165,22 @@ describe.each([
       "src",
       "https://nmsalmanac.com/api/planets/v.png",
     );
-    expect(screen.getByText("Weather").nextSibling).toHaveTextContent("Humid");
-    expect(screen.getByText("Type").nextSibling).toHaveTextContent("Lush");
-    expect(screen.queryByText("Star")).not.toBeInTheDocument();
+    expect(screen.getByText("Star").parentElement).toHaveTextContent("Star Yellow");
+    expect(screen.getByText("Economy").parentElement).toHaveTextContent("Economy Fuel Generation ★★☆");
+    expect(screen.getByLabelText("2/3")).toHaveClass("planet-economy-stars");
+    expect(screen.getByRole("img", { name: "Low" })).toHaveClass("planet-conflict-dots");
+    expect(screen.getByRole("img", { name: "Gek" })).toHaveClass("planet-race-icon");
+    for (const label of ["Type", "Weather", "Water"]) expect(screen.queryByText(label)).not.toBeInTheDocument();
+    for (const value of ["Lush", "Humid", "Abundant"]) expect(screen.queryByText(value)).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Open details for Verdant World" }));
     expect(props.onOpenStation).toHaveBeenCalledWith(target);
   });
 
   it("translates planet facts into Italian", () => {
     renderStation({ member: viewer(), station: station({ planet: lushPlanet }) }, "it");
-    expect(screen.getByText("Meteo")).toBeInTheDocument();
-    expect(screen.getByText("Lussureggiante")).toBeInTheDocument();
+    expect(screen.getByText("Razza")).toBeInTheDocument();
+    for (const text of ["Meteo", "Acqua", "Tipo", "Lussureggiante"])
+      expect(screen.queryByText(text)).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Apri la scheda di Verdant World" })).toBeInTheDocument();
     expect(screen.getByText("SCOPRITORE")).toBeInTheDocument();
   });

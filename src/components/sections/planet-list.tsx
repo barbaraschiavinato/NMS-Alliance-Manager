@@ -1,23 +1,13 @@
 "use client";
 
-import { type CSSProperties } from "react";
 import { DetailLink as Link } from "@/components/shared/detail-page";
 import { AlertTriangle, Orbit, Skull } from "lucide-react";
 import { galaxyLabel } from "@/lib/planets/galaxies";
-import {
-  PlanetDestinationCard,
-  conflictLevels,
-  type PlanetDestination,
-} from "@/components/cards/planet-destination-card";
+import { PlanetDestinationCard, type PlanetDestination } from "@/components/cards/planet-destination-card";
 import { useLocale } from "@/components/providers/locale-provider";
+import { SystemFacts } from "@/components/shared/system-facts";
 import { SystemFeatureBadge } from "@/components/shared/system-feature-badge";
 import { stationDetailHref } from "@/lib/navigation/detail-links";
-
-const raceIcons: Record<string, string> = {
-  Gek: "/icons/nms-gek.svg",
-  Korvax: "/icons/nms-korvax.svg",
-  "Vy’keen": "/icons/nms-vykeen.svg",
-};
 
 export function PlanetStationHeading({
   station,
@@ -30,7 +20,7 @@ export function PlanetStationHeading({
   renderedAt: number;
   showStationLink?: boolean;
 }>) {
-  const { t, tv } = useLocale();
+  const { t } = useLocale();
   const createdTime = station?.createdAt ? Date.parse(station.createdAt) : Number.NaN;
   const isNewStation =
     Boolean(station) &&
@@ -73,54 +63,7 @@ export function PlanetStationHeading({
             · {station.portal}
           </p>
         )}
-        {planets[0]?.systemFacts.length > 0 && (
-          <div className="planet-station-facts">
-            {planets[0].systemFacts.map((fact) => (
-              <span key={fact.label}>
-                <b>{t(fact.label)}</b>
-                {fact.label === "common.race" && raceIcons[fact.value] && (
-                  <span
-                    aria-label={tv(fact.value)}
-                    className="planet-race-icon"
-                    data-tooltip={tv(fact.value)}
-                    role="img"
-                    style={{ "--race-icon": `url(${raceIcons[fact.value]})` } as CSSProperties}
-                  />
-                )}
-                {fact.label === "common.race" && !raceIcons[fact.value] && (
-                  <span
-                    aria-label={tv(fact.value)}
-                    className="planet-race-unknown"
-                    data-tooltip={tv(fact.value)}
-                    role="img"
-                  >
-                    -
-                  </span>
-                )}
-                {fact.label !== "common.conflict" && fact.label !== "common.race" && <> {tv(fact.value)}</>}
-                {fact.label === "common.economy" && planets[0].economyStars !== undefined && (
-                  <span aria-label={`${planets[0].economyStars}/3`} className="planet-economy-stars">
-                    {" "}
-                    {"★".repeat(planets[0].economyStars)}
-                    {"☆".repeat(3 - planets[0].economyStars)}
-                  </span>
-                )}
-                {fact.label === "common.conflict" && conflictLevels[fact.value] !== undefined && (
-                  <span
-                    aria-label={tv(fact.value)}
-                    className="planet-conflict-dots"
-                    data-tooltip={tv(fact.value)}
-                    role="img"
-                  >
-                    {[1, 2, 3].map((step) => (
-                      <i className={step <= conflictLevels[fact.value] ? "filled" : undefined} key={step} />
-                    ))}
-                  </span>
-                )}
-              </span>
-            ))}
-          </div>
-        )}
+        {planets[0] && <SystemFacts economyStars={planets[0].economyStars} facts={planets[0].systemFacts} />}
       </div>
       {station && showStationLink && (
         <Link
