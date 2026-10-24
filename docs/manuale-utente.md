@@ -116,6 +116,8 @@ Missioni e Stazioni mostrano fino a 50 elementi per pagina; Pianeti mostra fino 
 ### `Orbit` Stazioni
 Descritta sopra per ogni specializzazione. Il nome della pagina è "Le mie stazioni" per i Ranger.
 
+Se il sistema della stazione ospita un **buco nero**, un'**Interfaccia Atlas** o è un sistema viola ridotto a un **gigante gassoso** (un solo pianeta con cinque lune), sulla scheda compare un'etichetta apposita (viola per il buco nero, rossa con il logo di No Man's Sky per l'Atlas, ambra con un pianeta ad anello per il gigante gassoso). La stessa etichetta appare accanto al nome nell'intestazione del sistema nella pagina Pianeti. Il dato è calcolato dall'indirizzo portale, quindi è sempre disponibile e non dipende da Almanac.
+
 L'azione **Apri dettaglio stazione** sulla scheda apre una pagina dedicata con i blocchi **Stazione**, **Missioni associate**, **Sistema e pianeti**. Il blocco **Missioni associate** appare solo se ci sono missioni e le mostra direttamente, senza tab, ricerca o paginazione. Solo in questo dettaglio sono visibili tutte le missioni dello stesso sistema e della stessa galassia, anche di altre specializzazioni o assegnate ad altri. **Inizia** e **Completa** sono disponibili solo sulle missioni assegnate a te; **Prendi in carico** compare sulle missioni libere per la tua specializzazione o per tutti. Le missioni di altre specializzazioni o assegnate ad altri non mostrano azioni operative. Le azioni di gestione di moderatori e admin restano invariate. Nella pagina **Missioni** restano i consueti filtri di visibilità e la possibilità di prendere in carico le missioni compatibili. **Torna alle stazioni** riapre l'elenco principale.
 
 Il collegamento usa proprietario, portale e galassia: se questi cambiano, cambia anche il link. Dopo una modifica vieni indirizzato al dettaglio aggiornato; dopo l'eliminazione torni all'elenco.
@@ -142,6 +144,8 @@ L'azione di eliminazione, quando consentita, è sempre l'ultima, dopo modifica e
 
 ### `Eclipse` Dettaglio pianeta
 Mostra i dati del pianeta e, tramite l'icona sirena, permette di inviare una **richiesta d'aiuto** (vedi [Richieste d'aiuto](#richieste-daiuto)).
+Il filtro **Sistema speciale** della pagina **Pianeti** mostra solo i sistemi con un buco nero, un'Interfaccia Atlas o un gigante gassoso (le voci disponibili dipendono dai sistemi presenti).
+
 Le etichette **Paradiso** e **Dissonante** compaiono quando indicate dai dati Almanac, senza sostituire le descrizioni delle condizioni del pianeta.
 
 Nella pagina **Pianeti**, le card mostrano anche le icone di flora, fauna e minerali con i conteggi disponibili in Almanac. Gli stessi contatori compaiono nel dettaglio pianeta, prima del codice portale, e si aggiornano selezionando un altro pianeta. I valori mancanti non vengono mostrati; un conteggio pari a zero resta visibile.

@@ -19,6 +19,13 @@
 .station-card-title-copy > span { color: #a4adae; font-size: 8px; }
 .station-card-title-copy > strong { max-width: 100%; overflow: hidden; color: var(--lime); font-size: 14px; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
 .station-card-system-core { color: #a4adae; font-size: 8px; line-height: 1.4; }
+.system-feature { display: inline-flex; align-items: center; gap: 4px; margin-left: 8px; padding: 2px 6px; color: var(--ink); border: 1px solid #394548; border-radius: 3px; background: #1a2124; font-family: "Raleway", sans-serif; font-size: 9px; font-weight: 700; letter-spacing: 0.04em; line-height: 1.3; text-transform: uppercase; vertical-align: middle; }
+.system-feature > svg { flex: none; }
+.system-feature.system-feature-black-hole { color: #c8a4f0; border-color: #5a4572; }
+.system-feature.system-feature-gas-giant { color: #e8b64c; border-color: #6b5426; }
+.system-feature.system-feature-atlas { color: #ff7a6b; border-color: #7a3a36; }
+.station-card-title-copy > .system-feature { align-self: flex-start; margin: 4px 0 0; font-size: 9px; }
+.sidebar-compact ~ .main-panel .system-feature { font-size: 11px; }
 .station-card-title:hover > strong { color: #ff8400; }
 .station-list-cards .station-card-owner { min-width: 0; grid-column: 2; grid-row: 1; justify-self: end; }
 .station-list-cards .station-card-owner .station-owner-card { justify-items: end; margin: 0; }

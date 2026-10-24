@@ -27,6 +27,7 @@ const options: PlanetFilterOptions = {
   plants: ["Faecium"],
   minerals: ["Copper"],
   valuables: ["Gold"],
+  features: ["gas-giant", "atlas", "black-hole"],
 };
 
 function renderFilters(props: Partial<Parameters<typeof PlanetFilters>[0]> = {}) {
@@ -89,6 +90,7 @@ describe("PlanetFilters", () => {
     ["planet.filter_dissonant", "dissonant", "yes"],
     ["planet.filter_paradise", "paradise", "no"],
     ["planet.filter_pirate_system", "pirate", "yes"],
+    ["planet.filter_special_system", "feature", "atlas"],
     ["planet.filter_water", "water", "Yes"],
     ["planet.filter_weather", "weather", "Calm"],
     ["planet.filter_conflict", "conflict", "Low"],
@@ -122,6 +124,16 @@ describe("PlanetFilters", () => {
     expect(onChange).toHaveBeenLastCalledWith("economyStars", null);
   });
 
+  it("lists the special systems with translated names", () => {
+    renderFilters();
+    const select = screen.getByRole("combobox", { name: tr("planet.filter_special_system") });
+    expect(
+      within(select)
+        .getAllByRole("option")
+        .map((option) => option.textContent),
+    ).toEqual(["Any system", "Gas giant", "Atlas Interface", "Black hole"]);
+  });
+
   it("renders only the empty choice when no options are known", () => {
     renderFilters({ options: emptyPlanetFilterOptions });
     const select = screen.getByRole("combobox", { name: tr("planet.filter_water") });
@@ -147,6 +159,7 @@ describe("PlanetActiveFilters", () => {
     plant: "Faecium",
     mineral: "Copper",
     valuable: "Gold",
+    feature: "atlas",
   };
   const tv = (value: string) => translateAlmanacValue("en", value);
 
@@ -171,6 +184,7 @@ describe("PlanetActiveFilters", () => {
       [`${tr("planet.dissonant")}: ${tr("planet.dissonant_yes")}`, "dissonant", ""],
       [`${tr("planet.paradise")}: ${tr("planet.dissonant_no")}`, "paradise", ""],
       [`${tr("planet.pirate_system")}: ${tr("planet.dissonant_yes")}`, "pirate", ""],
+      [`${tr("planet.special_system")}: ${tr("system.atlas_interface")}`, "feature", ""],
       [`${tr("planet.water")}: ${tv("Yes")}`, "water", ""],
       [`${tr("planet.weather")}: ${tv("Calm")}`, "weather", ""],
       [`${tr("common.conflict")}: ${tv("Low")}`, "conflict", ""],

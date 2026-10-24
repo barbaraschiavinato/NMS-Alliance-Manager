@@ -22,7 +22,7 @@ import { renderWithLocale } from "../helpers";
 vi.mock("next/image", async () => (await import("../helpers")).nextImageModule);
 vi.mock("next/link", async () => (await import("../helpers")).nextLinkModule);
 vi.mock("@/lib/nms-core/system.js", () => ({
-  systemAttributes: () => ({ star_type: 1 }),
+  systemAttributes: (address: bigint) => ({ star_type: 1, gas_giant: address === BigInt("0x03EA02304626") }),
   planetSeeds: () => ({ planet_seeds: [1, 2, 3] }),
 }));
 
@@ -120,6 +120,21 @@ describe.each([
     expect(screen.getByText("Alliance hub")).toHaveClass("station-hub-ribbon");
     expect(screen.queryByText("New")).not.toBeInTheDocument();
     expect(screen.getByRole("listitem")).toHaveClass("station-is-new");
+  });
+
+  it.each([
+    ["007902304626", "Black hole"],
+    ["007A02304626", "Atlas Interface"],
+    ["03EA02304626", "Gas giant"],
+  ])("flags the special system at %s with %s", async (featurePortal, label) => {
+    renderStation({ member: viewer(), station: station({ portal: featurePortal }) });
+    expect(await screen.findByText(label)).toHaveClass("system-feature");
+  });
+
+  it("shows no special system badge for an ordinary system", async () => {
+    renderStation({ member: viewer() });
+    await screen.findByText("3 planets · green star");
+    expect(document.querySelector(".system-feature")).toBeNull();
   });
 
   it("shows the station name, system info and opens the station", async () => {

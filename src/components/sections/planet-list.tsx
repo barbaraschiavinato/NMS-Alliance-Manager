@@ -10,6 +10,7 @@ import {
   type PlanetDestination,
 } from "@/components/cards/planet-destination-card";
 import { useLocale } from "@/components/providers/locale-provider";
+import { SystemFeatureBadge } from "@/components/shared/system-feature-badge";
 import { stationDetailHref } from "@/lib/navigation/detail-links";
 
 const raceIcons: Record<string, string> = {
@@ -53,6 +54,9 @@ export function PlanetStationHeading({
             >
               <Skull aria-hidden="true" size={15} />
             </span>
+          )}
+          {(station ?? planets[0]) && (
+            <SystemFeatureBadge galaxy={(station ?? planets[0]).galaxy} portal={(station ?? planets[0]).portal} />
           )}
           {isNewStation && <span className="planet-station-new">{t("stations.new_badge")}</span>}
         </h2>

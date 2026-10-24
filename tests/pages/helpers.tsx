@@ -154,6 +154,11 @@ export const nextAuthReactModule = { signIn: vi.fn(), signOut: vi.fn() };
 // nms-core deterministico: due pianeti, stella gialla, nome di sistema fisso.
 export const nmsCoreModule = {
   planetSeeds: () => ({ planet_seeds: [1, 2] }),
-  systemAttributes: () => ({ star_type: 0 }),
+  // Solo 03EA02304626 è un sistema con gigante gassoso; gli altri indirizzi no.
+  systemAttributes: (address: bigint) => {
+    // 03EB02304626 simula un errore di calcolo di nms-core.
+    if (address === BigInt("0x03EB02304626")) throw new Error("nms-core failure");
+    return { star_type: 0, gas_giant: address === BigInt("0x03EA02304626") };
+  },
   systemName: () => "Testara",
 };
