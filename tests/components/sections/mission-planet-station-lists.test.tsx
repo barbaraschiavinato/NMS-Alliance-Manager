@@ -15,7 +15,7 @@ import { makeMission, renderWithLocale } from "../helpers";
 vi.mock("next/image", async () => (await import("../helpers")).nextImageModule);
 vi.mock("next/link", async () => (await import("../helpers")).nextLinkModule);
 vi.mock("@/lib/nms-core/system.js", () => ({
-  systemAttributes: () => ({ star_type: 0 }),
+  systemAttributes: (address: bigint) => ({ star_type: 0, gas_giant: address === BigInt("0x03EA02304626") }),
   planetSeeds: () => ({ planet_seeds: [BigInt(1)] }),
 }));
 // Il dialog profilo è coperto dai test dei modali: qui basta sapere quando viene aperto.
@@ -391,6 +391,38 @@ describe("PlanetList", () => {
         .closest("div")
         ?.querySelector(".mission-galaxy-alert"),
     ).not.toBeNull();
+  });
+
+  it.each([
+    ["007902304626", "Buco nero"],
+    ["007A02304626", "Interfaccia Atlas"],
+    ["03EA02304626", "Gigante gassoso"],
+  ])("flags the special system at %s next to the heading", async (featurePortal, label) => {
+    renderWithLocale(
+      <PlanetStationHeading
+        planets={[planet({ portal: featurePortal })]}
+        renderedAt={renderedAt}
+        station={{ id: "s", portal: featurePortal, galaxy: 0 }}
+      />,
+      { locale: "it" },
+    );
+    expect(await screen.findByText(label)).toBeInTheDocument();
+  });
+
+  it("falls back to the system address when the system has no station", async () => {
+    renderWithLocale(
+      <PlanetStationHeading
+        planets={[planet({ portal: "007902304626" })]}
+        renderedAt={renderedAt}
+        station={undefined}
+      />,
+    );
+    expect(await screen.findByText("Black hole")).toBeInTheDocument();
+  });
+
+  it("shows no special system badge without a station or planets", () => {
+    renderWithLocale(<PlanetStationHeading planets={[]} renderedAt={renderedAt} station={undefined} />);
+    expect(document.querySelector(".system-feature")).toBeNull();
   });
 
   it("marks new stations and black markets", () => {

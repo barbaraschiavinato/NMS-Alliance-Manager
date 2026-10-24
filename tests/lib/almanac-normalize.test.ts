@@ -139,16 +139,42 @@ describe("normalizeAlmanacPlanet", () => {
 
   it("retries failed metadata requests instead of caching failures", async () => {
     const fetchMock = vi.fn(async (input: RequestInfo | URL) =>
-      String(input).includes("/systems/") ? Response.json(structuredSystem) : new Response("", { status: 429 }),
+      String(input).includes("/systems/") ? Response.json(structuredSystem) : new Response("", { status: 500 }),
     );
     vi.stubGlobal("fetch", fetchMock);
     const { normalizeAlmanacPlanet } = await import("@/lib/almanac/almanac-normalize");
-    await expect(normalizeAlmanacPlanet(structuredPlanet)).rejects.toThrow("429");
+    await expect(normalizeAlmanacPlanet(structuredPlanet)).rejects.toThrow("500");
     fetchMock.mockImplementation(async (input) =>
       Response.json(String(input).includes("/systems/") ? structuredSystem : almanacWords),
     );
     await expect(normalizeAlmanacPlanet(structuredPlanet)).resolves.toHaveProperty("lines");
     expect(fetchMock).toHaveBeenCalledTimes(3);
+  });
+
+  it("stops calling the Almanac for the Retry-After period after a 429", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    try {
+      const fetchMock = vi.fn(async (input: RequestInfo | URL) =>
+        String(input).includes("/systems/")
+          ? Response.json(structuredSystem)
+          : new Response("", { status: 429, headers: { "Retry-After": "30" } }),
+      );
+      vi.stubGlobal("fetch", fetchMock);
+      const { normalizeAlmanacPlanet } = await import("@/lib/almanac/almanac-normalize");
+      await expect(normalizeAlmanacPlanet(structuredPlanet)).rejects.toThrow("429");
+      fetchMock.mockClear();
+      await expect(normalizeAlmanacPlanet(structuredPlanet)).rejects.toThrow("429");
+      expect(fetchMock).not.toHaveBeenCalled();
+
+      vi.setSystemTime(Date.now() + 31_000);
+      fetchMock.mockImplementation(async (input) =>
+        Response.json(String(input).includes("/systems/") ? structuredSystem : almanacWords),
+      );
+      await expect(normalizeAlmanacPlanet(structuredPlanet)).resolves.toHaveProperty("lines");
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it.each([null, [], "invalid"])("rejects an invalid dictionary document: %j", async (words) => {

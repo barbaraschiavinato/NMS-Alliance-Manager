@@ -48,6 +48,8 @@ function sentinelsValue(planet: PlanetDestination) {
   return almanacFactValue(planet, "planet.sentinels");
 }
 
+const systemFeatures = ["gas-giant", "atlas", "black-hole"] as const;
+
 function systemFactValue(planet: PlanetDestination, label: string) {
   return planet.systemFacts.find((fact) => fact.label === label)?.value;
 }
@@ -158,6 +160,7 @@ export function PlanetsPage({
       valuables: [...new Set(planets.flatMap((planet) => planet.valuables))].sort((a, b) =>
         a.localeCompare(b, undefined, { sensitivity: "base" }),
       ),
+      features: systemFeatures.filter((feature) => planets.some((planet) => planet.systemFeature === feature)),
     }),
     [planets],
   );
@@ -188,6 +191,7 @@ export function PlanetsPage({
             (!filters.dissonant || planet.dissonant === (filters.dissonant === "yes")) &&
             (!filters.paradise || planet.paradise === (filters.paradise === "yes")) &&
             (!filters.pirate || planet.blackMarket === (filters.pirate === "yes")) &&
+            (!filters.feature || planet.systemFeature === filters.feature) &&
             (!filters.water || waterValue(planet) === filters.water) &&
             (!filters.weather || weatherValue(planet) === filters.weather) &&
             (!filters.conflict || systemFactValue(planet, "common.conflict") === filters.conflict) &&

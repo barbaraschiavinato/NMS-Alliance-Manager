@@ -45,6 +45,7 @@ function planet(overrides: Partial<PlanetDestination> = {}): PlanetDestination {
     dissonant: false,
     paradise: true,
     blackMarket: false,
+    systemFeature: "gas-giant",
     station: {
       id: "me:1234567890AB:0",
       portal: "1234567890AB",
@@ -79,6 +80,7 @@ const frozen = planet({
   dissonant: true,
   paradise: false,
   blackMarket: true,
+  systemFeature: "atlas",
   station: undefined,
 });
 
@@ -276,6 +278,8 @@ describe("PlanetsPage", () => {
     ["planet.filter_economy_stars", "2", "Verdant"],
     ["planet.filter_paradise", "yes", "Verdant"],
     ["planet.filter_pirate_system", "yes", "Glacia"],
+    ["planet.filter_special_system", "gas-giant", "Verdant"],
+    ["planet.filter_special_system", "atlas", "Glacia"],
   ])("filters by %s", async (label, value, visible) => {
     mockFetch({});
     const { user } = renderPlanets();
@@ -301,6 +305,7 @@ describe("PlanetsPage", () => {
       ["planet.filter_size", "Large"],
       ["planet.filter_paradise", "yes"],
       ["planet.filter_pirate_system", "no"],
+      ["planet.filter_special_system", "gas-giant"],
       ["planet.filter_water", "Ocean"],
       ["planet.filter_weather", "Humid"],
       ["planet.filter_conflict", "Low"],
@@ -315,7 +320,7 @@ describe("PlanetsPage", () => {
     expect(screen.getByText("Verdant")).toBeInTheDocument();
 
     const removeButtons = screen.getAllByRole("button", { name: new RegExp(`^${t("planet.remove_filter")}:`) });
-    expect(removeButtons).toHaveLength(15);
+    expect(removeButtons).toHaveLength(16);
     for (const button of removeButtons) await user.click(button);
     expect(screen.queryByRole("button", { name: t("planet.reset_filters") })).not.toBeInTheDocument();
     expect(screen.getByText("Glacia")).toBeInTheDocument();

@@ -777,6 +777,40 @@ describe("planets route", () => {
     });
   });
 
+  it("flags black hole, Atlas and gas giant systems on their planets", async () => {
+    const addresses = ["007902304626", "007A02304626", "03EA02304626", "007802304626"];
+    vi.mocked(readMissions).mockResolvedValue(
+      addresses.map((systemAddress, index) => makeMission({ id: `feature-${index}`, systemAddress, system: "" })),
+    );
+    vi.mocked(lookupAlmanacPlanets).mockImplementation(
+      async (targets) =>
+        new Map(targets.map(({ portal, galaxy }) => [`${portal}:${galaxy}`, { planet: verdant, failed: false }])),
+    );
+    signIn(moderator);
+
+    const { planets } = props(await PlanetsRoute()) as { planets: { portal: string; systemFeature?: string }[] };
+    const featureOf = (address: string) => [
+      ...new Set(planets.filter((planet) => planet.portal === address).map((planet) => planet.systemFeature)),
+    ];
+    expect(featureOf("007902304626")).toEqual(["black-hole"]);
+    expect(featureOf("007A02304626")).toEqual(["atlas"]);
+    expect(featureOf("03EA02304626")).toEqual(["gas-giant"]);
+    expect(featureOf("007802304626")).toEqual([undefined]);
+  });
+
+  it("keeps the planets of a system whose special feature cannot be calculated", async () => {
+    vi.mocked(readMissions).mockResolvedValue([makeMission({ systemAddress: "03EB02304626", system: "" })]);
+    vi.mocked(lookupAlmanacPlanets).mockImplementation(
+      async (targets) =>
+        new Map(targets.map(({ portal, galaxy }) => [`${portal}:${galaxy}`, { planet: verdant, failed: false }])),
+    );
+    signIn(moderator);
+
+    const { planets } = props(await PlanetsRoute()) as { planets: { portal: string; systemFeature?: string }[] };
+    expect(planets.filter((planet) => planet.portal === "03EB02304626")).not.toHaveLength(0);
+    expect(planets.every((planet) => planet.systemFeature === undefined)).toBe(true);
+  });
+
   it("flags failed almanac lookups and keeps the other planets", async () => {
     vi.mocked(lookupAlmanacPlanets).mockImplementation(
       async (targets) =>

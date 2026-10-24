@@ -6,6 +6,7 @@ import { CirclePlus, Crosshair, FileText, Pencil, Trash2, ExternalLink } from "l
 import { missionDetailHref, stationDetailHref } from "@/lib/navigation/detail-links";
 import { GlyphStrip } from "@/components/shared/portal-address-field";
 import { StationSystemCoreInfo } from "@/components/shared/station-system-core-info";
+import { SystemFeatureBadge } from "@/components/shared/system-feature-badge";
 import { MissionSystemProgress } from "@/components/shared/mission-system-progress";
 import { galaxyLabel } from "@/lib/planets/galaxies";
 import { editableSystemStatusRoles, planetSystemStatusKey } from "@/lib/planets/planet-system-status";
@@ -114,6 +115,7 @@ export function StationCardExtended({
               galaxy={station.galaxy}
               portal={station.portal}
             />
+            <SystemFeatureBadge galaxy={station.galaxy} portal={station.portal} />
           </span>
         </button>
       }

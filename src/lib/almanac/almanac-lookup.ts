@@ -5,14 +5,20 @@ import {
   writeAlmanacResponses,
 } from "@/lib/almanac/almanac-store";
 import { normalizeAlmanacPlanet } from "@/lib/almanac/almanac-normalize";
+import { almanacRetryAfterSeconds, noteAlmanacRateLimit } from "@/lib/almanac/almanac-rate-limit";
 
 async function fetchAlmanacPlanet(address: string, galaxy: number): Promise<Record<string, unknown> | null> {
+  if (almanacRetryAfterSeconds() > 0) throw new Error("planet.almanac_lookup_failed");
   const response = await fetch(`https://nmsalmanac.com/api/planets/${address}?galaxy=${galaxy + 1}`, {
     headers: { Accept: "application/json" },
     signal: AbortSignal.timeout(6000),
     cache: "no-store",
   });
   if (response.status === 404) return null;
+  if (response.status === 429) {
+    noteAlmanacRateLimit(response);
+    throw new Error("planet.almanac_lookup_failed");
+  }
   if (!response.ok) {
     console.error("NMS Almanac returned an error for planet lookup", { address, galaxy, status: response.status });
     throw new Error("planet.almanac_lookup_failed");
@@ -79,7 +85,9 @@ export async function lookupAlmanacPlanets(
           results.set(key, { planet, failed: false });
           if (planet) fetched.push({ portalCode: address, galaxy, response: planet });
         } catch (error) {
-          console.error("Unable to load NMS Almanac planet", { address, galaxy }, error);
+          // While rate limited, the single warning from noteAlmanacRateLimit is enough.
+          if (almanacRetryAfterSeconds() === 0)
+            console.error("Unable to load NMS Almanac planet", { address, galaxy }, error);
           results.set(key, { planet: null, failed: true });
         }
       }),

@@ -1116,7 +1116,8 @@ export async function GuideContent({
             <PlanetFiltersExample />
             <p>
               I filtri restringono ulteriormente i risultati. Le opzioni nei menu dipendono dai dati presenti
-              nell&apos;archivio.
+              nell&apos;archivio. Il filtro «Sistema speciale» mostra solo i sistemi con un buco nero,
+              un&apos;Interfaccia Atlas o un gigante gassoso.
             </p>
             <h5>Esempio con i filtri aperti</h5>
             <PlanetFiltersExample initiallyOpen />
@@ -1141,6 +1142,13 @@ export async function GuideContent({
               sistema. Il pulsante con l&apos;icona della stazione apre la stazione nella sezione Stazioni. Se non
               c&apos;è una stazione associata, il gruppo è indicato come «
               {translate("it", "planet.no_associated_station")}».
+            </p>
+            <p>
+              Se nel sistema c&apos;è un buco nero, un&apos;Interfaccia Atlas o un gigante gassoso (sistema viola con un
+              solo pianeta e cinque lune), accanto al nome compare un&apos;etichetta dedicata (viola per il buco nero,
+              rossa con il logo di No Man&apos;s Sky per l&apos;Atlas, ambra per il gigante gassoso). La stessa
+              etichetta è visibile sulle schede stazione. Si ricava dall&apos;indirizzo portale e non richiede dati
+              Almanac.
             </p>
             <PlanetStationHeadingExample planet={planetExample} />
 

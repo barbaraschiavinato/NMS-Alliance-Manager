@@ -5,6 +5,7 @@ import { isSameSystem } from "@/lib/navigation/detail-links";
 import { availableMissionSpecialties, canCreateMissionFromStation } from "@/lib/missions/station-mission-availability";
 import { serializeMission } from "@/lib/missions/mission-view";
 import { getSystemPlanetAddresses } from "@/lib/planets/planet-addresses";
+import { systemFeature } from "@/lib/planets/system-feature";
 import { almanacSystemLabel, lookupAlmanacPlanets } from "@/lib/almanac/almanac-lookup";
 import type { OwnedStationPortal } from "@/lib/stations/stations-store";
 import { readMissions, writeMissions } from "@/lib/missions/store";
@@ -132,6 +133,7 @@ export async function loadPlanetDestinations(
     await Promise.all(
       [...systemsByAddress.values()].map(async (system) => {
         const planetaryAddresses = await getSystemPlanetAddresses(system.portal, system.galaxy);
+        const feature = await systemFeature(system.portal, system.galaxy).catch(() => null);
         const associatedStation = stations.find(
           (station) =>
             (system.stationOwnerMemberId ? station.ownerId === system.stationOwnerMemberId : true) &&
@@ -139,6 +141,7 @@ export async function loadPlanetDestinations(
         );
         return planetaryAddresses.map(({ portal, number }) => ({
           ...system,
+          ...(feature ? { systemFeature: feature } : {}),
           id: `${portal}:${system.galaxy}`,
           planetPortal: portal,
           planetNumber: number,

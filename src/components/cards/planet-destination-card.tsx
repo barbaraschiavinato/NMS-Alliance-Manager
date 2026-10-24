@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { Droplet, Globe2, Moon } from "lucide-react";
+import type { SystemFeature } from "@/lib/planets/system-feature";
 import type { AlmanacDiscoveryCounts } from "@/lib/almanac/almanac-discovery-counts";
 import { PlanetDiscoveryCounts } from "@/components/shared/planet-discovery-counts";
 import { GlyphStrip } from "@/components/shared/portal-address-field";
@@ -32,6 +33,7 @@ export type PlanetDestination = Readonly<{
   dissonant: boolean;
   paradise: boolean;
   blackMarket: boolean;
+  systemFeature?: SystemFeature;
   station?: Readonly<{
     id: string;
     portal: string;

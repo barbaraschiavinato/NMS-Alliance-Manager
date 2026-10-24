@@ -2,6 +2,13 @@
 
 import { useLocale } from "@/components/providers/locale-provider";
 import { RotateCcw, Search, SlidersHorizontal, X } from "lucide-react";
+import type { SystemFeature } from "@/lib/planets/system-feature";
+
+const featureLabels: Record<SystemFeature, string> = {
+  "gas-giant": "system.gas_giant",
+  atlas: "system.atlas_interface",
+  "black-hole": "system.black_hole",
+};
 
 export type PlanetFilterValues = Readonly<{
   economy: string;
@@ -13,6 +20,7 @@ export type PlanetFilterValues = Readonly<{
   dissonant: string;
   paradise: string;
   pirate: string;
+  feature: string;
   water: string;
   weather: string;
   sentinels: string;
@@ -36,6 +44,7 @@ export type PlanetFilterOptions = Readonly<{
   plants: string[];
   minerals: string[];
   valuables: string[];
+  features: SystemFeature[];
 }>;
 
 export const emptyPlanetFilterValues: PlanetFilterValues = {
@@ -48,6 +57,7 @@ export const emptyPlanetFilterValues: PlanetFilterValues = {
   dissonant: "",
   paradise: "",
   pirate: "",
+  feature: "",
   water: "",
   weather: "",
   sentinels: "",
@@ -71,6 +81,7 @@ export const emptyPlanetFilterOptions: PlanetFilterOptions = {
   plants: [],
   minerals: [],
   valuables: [],
+  features: [],
 };
 
 export function hasActivePlanetFilters(values: PlanetFilterValues) {
@@ -256,6 +267,21 @@ export function PlanetFilters({
             </select>
           </label>
           <label className="planet-filter">
+            <span>{t("planet.special_system")}</span>
+            <select
+              aria-label={t("planet.filter_special_system")}
+              onChange={(event) => onChange("feature", event.target.value)}
+              value={values.feature}
+            >
+              <option value="">{t("planet.all_special_systems")}</option>
+              {options.features.map((value) => (
+                <option key={value} value={value}>
+                  {t(featureLabels[value])}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="planet-filter">
             <span>{t("planet.water")}</span>
             <select
               aria-label={t("planet.filter_water")}
@@ -413,6 +439,11 @@ export function PlanetActiveFilters({
       key: "pirate",
       label: `${t("planet.pirate_system")}: ${t(values.pirate === "yes" ? "planet.dissonant_yes" : "planet.dissonant_no")}`,
       clear: () => onChange("pirate", ""),
+    },
+    values.feature && {
+      key: "feature",
+      label: `${t("planet.special_system")}: ${t(featureLabels[values.feature as SystemFeature])}`,
+      clear: () => onChange("feature", ""),
     },
     values.water && {
       key: "water",
