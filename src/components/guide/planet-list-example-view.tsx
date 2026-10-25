@@ -1,7 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { PlanetDestinationCard, type PlanetDestination } from "@/components/cards/planet-destination-card";
+import {
+  PlanetDestinationCard,
+  type PlanetDestination,
+  type PlanetVisitControls,
+} from "@/components/cards/planet-destination-card";
 import { PlanetCard } from "@/components/modals/planet-card";
 
 export function PlanetListExampleView({
@@ -12,6 +16,12 @@ export function PlanetListExampleView({
   planetData: Readonly<Record<string, unknown>>;
 }>) {
   const [detailsOpen, setDetailsOpen] = useState(true);
+  const [visited, setVisited] = useState(false);
+  const visits: PlanetVisitControls = {
+    isVisited: () => visited,
+    isSaving: () => false,
+    onToggle: (_planet, value) => setVisited(value),
+  };
 
   return (
     <div className="guide-example">
@@ -23,7 +33,7 @@ export function PlanetListExampleView({
           </div>
         </figure>
         <figure className="guide-example">
-          <figcaption>Variante dimostrativa con ribbon Paradiso</figcaption>
+          <figcaption>Variante dimostrativa con simbolo Paradiso</figcaption>
           <div className="planet-mission-list">
             <PlanetDestinationCard
               onOpen={() => undefined}
@@ -36,7 +46,7 @@ export function PlanetListExampleView({
           </div>
         </figure>
         <figure className="guide-example">
-          <figcaption>Variante dimostrativa con ribbon Dissonante</figcaption>
+          <figcaption>Variante dimostrativa con simbolo Dissonante</figcaption>
           <div className="planet-mission-list">
             <PlanetDestinationCard
               onOpen={() => undefined}
@@ -45,6 +55,16 @@ export function PlanetListExampleView({
                 id: `${planet.id}-dissonant`,
                 dissonant: true,
               }}
+            />
+          </div>
+        </figure>
+        <figure className="guide-example">
+          <figcaption>Pianeta che puoi visitare: spunta «Visitato» (solo a scopo dimostrativo)</figcaption>
+          <div className="planet-mission-list">
+            <PlanetDestinationCard
+              onOpen={() => undefined}
+              planet={{ ...planet, id: `${planet.id}-visitable`, canMarkVisited: true }}
+              visits={visits}
             />
           </div>
         </figure>

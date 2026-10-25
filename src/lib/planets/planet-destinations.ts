@@ -6,6 +6,8 @@ import { availableMissionSpecialties, canCreateMissionFromStation } from "@/lib/
 import { serializeMission } from "@/lib/missions/mission-view";
 import { getSystemPlanetAddresses } from "@/lib/planets/planet-addresses";
 import { systemFeature } from "@/lib/planets/system-feature";
+import { canMarkPlanetVisited, planetVisitKey } from "@/lib/planets/planet-visits";
+import { readPlanetVisits } from "@/lib/planets/planet-visits-store";
 import { almanacSystemLabel, lookupAlmanacPlanets } from "@/lib/almanac/almanac-lookup";
 import type { OwnedStationPortal } from "@/lib/stations/stations-store";
 import { readMissions, writeMissions } from "@/lib/missions/store";
@@ -119,6 +121,13 @@ export async function loadPlanetDestinations(
       });
     }
   }
+  // Visited marks are personal.
+  const visits = new Set<string>();
+  try {
+    for (const key of await readPlanetVisits(member.publicId)) visits.add(key);
+  } catch (error) {
+    console.error("Unable to read planet visits", error instanceof Error ? error.message : "Unknown error");
+  }
   const planetCandidates = (
     await Promise.all(
       [...systemsByAddress.values()].map(async (system) => {
@@ -132,6 +141,9 @@ export async function loadPlanetDestinations(
         return planetaryAddresses.map(({ portal, number }) => ({
           ...system,
           ...(feature ? { systemFeature: feature } : {}),
+          ...(canMarkPlanetVisited(member, missions, stations, portal, system.galaxy)
+            ? { canMarkVisited: true, visited: visits.has(planetVisitKey(portal, system.galaxy)) }
+            : {}),
           id: `${portal}:${system.galaxy}`,
           planetPortal: portal,
           planetNumber: number,

@@ -2,12 +2,33 @@ import { after } from "next/server";
 import { readAccessData } from "@/lib/members/access-store";
 import type { MemberRole, MembershipStatus } from "@/lib/members/member-types";
 import { readMemberNotificationSettings } from "@/lib/notifications/member-notifications-store";
-import { appOrigin, escapeTelegramHtml, postJson, telegramUsername } from "@/lib/notifications/notification-transport";
+import {
+  appOrigin,
+  escapeHtml,
+  escapeTelegramHtml,
+  postJson,
+  telegramUsername,
+} from "@/lib/notifications/notification-transport";
 
 function telegramToken() {
   const token = process.env.TELEGRAM_MEMBERS_BOT_TOKEN?.trim();
   if (!token || !/^\d+:[A-Za-z0-9_-]+$/.test(token)) throw new Error("Configure TELEGRAM_MEMBERS_BOT_TOKEN.");
   return token;
+}
+
+function resendApiKey() {
+  const key = process.env.RESEND_API_KEY?.trim();
+  if (!key || !/^re_[A-Za-z0-9_-]+$/.test(key)) throw new Error("Configure RESEND_API_KEY.");
+  return key;
+}
+
+// "name@domain" or "Display Name <name@domain>"; the domain must be verified in Resend.
+function resendSender() {
+  const sender = process.env.RESEND_FROM_EMAIL?.trim();
+  const address = '[^\\s<>@"]+@[^\\s<>@"]+\\.[^\\s<>@"]+';
+  if (!sender || !new RegExp(`^(?:${address}|[^<>\\r\\n"]{1,80} <${address}>)$`).test(sender))
+    throw new Error("Configure RESEND_FROM_EMAIL.");
+  return sender;
 }
 
 export function memberNotificationReadiness() {
@@ -19,7 +40,11 @@ export function memberNotificationReadiness() {
       return false;
     }
   }
-  return { telegram: ready(telegramToken), links: ready(appOrigin) };
+  return {
+    telegram: ready(telegramToken),
+    email: ready(() => [resendApiKey(), resendSender()]),
+    links: ready(appOrigin),
+  };
 }
 
 function singleLine(value: string, fallback: string) {
@@ -45,6 +70,64 @@ async function sendTelegram(title: string, lines: string[]) {
 
 export async function sendMemberNotificationTest() {
   await sendTelegram("Test utenti", ["Notifica di prova per gli avvisi sugli utenti."]);
+}
+
+type Email = Readonly<{ to: string; subject: string; text: string; html: string }>;
+
+async function sendEmail({ to, subject, text, html }: Email) {
+  await postJson("https://api.resend.com/emails", { from: resendSender(), to: [to], subject, text, html }, "Resend", {
+    Authorization: `Bearer ${resendApiKey()}`,
+  });
+}
+
+// Offline players keep a placeholder address (`@offline.invalid`) and cannot receive email.
+function canReceiveEmail(member: Readonly<{ email: string; offline?: boolean }>) {
+  return !member.offline && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(member.email) && !member.email.endsWith(".invalid");
+}
+
+function approvalEmail(to: string, name: string, allianceName: string): Email {
+  const url = appOrigin();
+  const subject = `Accesso approvato · Access approved — ${allianceName}`;
+  const text = `Ciao ${name},
+il tuo account su ${allianceName} è stato approvato: ora puoi accedere e usare le funzioni dell'alleanza.
+Accedi: ${url}
+
+Hi ${name},
+your account on ${allianceName} has been approved: you can now sign in and use the alliance features.
+Sign in: ${url}
+`;
+  const safeName = escapeHtml(name);
+  const safeAlliance = escapeHtml(allianceName);
+  const html = `<p>Ciao ${safeName},<br>il tuo account su <b>${safeAlliance}</b> è stato approvato: ora puoi accedere e usare le funzioni dell'alleanza.<br><a href="${escapeHtml(url)}">Accedi</a></p>
+<p>Hi ${safeName},<br>your account on <b>${safeAlliance}</b> has been approved: you can now sign in and use the alliance features.<br><a href="${escapeHtml(url)}">Sign in</a></p>`;
+  return { to, subject, text, html };
+}
+
+export async function sendMemberEmailTest(to: string) {
+  if (!(await readMemberNotificationSettings()).approvalEmailEnabled)
+    throw new Error("This notification channel is disabled.");
+  const { alliance } = await readAccessData();
+  await sendEmail(approvalEmail(to, "test", singleLine(alliance.name, "NMS Alliance Manager")));
+}
+
+// The member is told once, when their account goes from pending to approved; no other change sends email.
+export async function notifyMemberApprovedByEmail(memberId: string) {
+  try {
+    if (!(await readMemberNotificationSettings()).approvalEmailEnabled) return;
+    const { members, alliance } = await readAccessData();
+    const member = members.find((entry) => entry.publicId === memberId);
+    if (!member || !canReceiveEmail(member)) return;
+    await sendEmail(
+      approvalEmail(
+        member.email,
+        singleLine(member.nmsName || member.name, "Utente"),
+        singleLine(alliance.name, "NMS Alliance Manager"),
+      ),
+    );
+  } catch (error) {
+    // The approval is already saved; a failed email must never surface to the caller.
+    console.error("Approval email failed", error instanceof Error ? error.message : "Unknown error");
+  }
 }
 
 type Alert = Readonly<{ title: string; lines: string[] }>;
@@ -127,10 +210,14 @@ export function notifyMemberRemoved(name: string, actor: Actor) {
   }));
 }
 
-// Schedules delivery after the response only when alerts are enabled, so ordinary requests never touch `after()`.
-export async function scheduleMemberNotification(task: () => Promise<void>) {
+// Schedules delivery after the response only when the channel is enabled, so ordinary requests never touch `after()`.
+export async function scheduleMemberNotification(
+  task: () => Promise<void>,
+  channel: "telegram" | "email" = "telegram",
+) {
   try {
-    if (!(await readMemberNotificationSettings()).telegramEnabled) return;
+    const settings = await readMemberNotificationSettings();
+    if (!(channel === "email" ? settings.approvalEmailEnabled : settings.telegramEnabled)) return;
     after(task);
   } catch (error) {
     console.error("Unable to schedule member notification", error instanceof Error ? error.message : "Unknown error");

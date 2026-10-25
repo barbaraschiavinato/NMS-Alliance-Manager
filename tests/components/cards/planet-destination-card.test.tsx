@@ -61,6 +61,61 @@ describe("PlanetDestinationCard", () => {
     expect(container.querySelector(".planet-discovery-counts")).toBeNull();
   });
 
+  describe("visited checkbox", () => {
+    const controls = (overrides = {}) => ({
+      isVisited: vi.fn(() => false),
+      isSaving: vi.fn(() => false),
+      onToggle: vi.fn(),
+      ...overrides,
+    });
+
+    it("is shown only for planets the member can mark and when controls are provided", () => {
+      const { unmount } = renderWithLocale(
+        <PlanetDestinationCard onOpen={vi.fn()} planet={makePlanet()} visits={controls()} />,
+      );
+      expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
+      unmount();
+      const marked = makePlanet({ canMarkVisited: true });
+      const { unmount: unmountMarked } = renderWithLocale(<PlanetDestinationCard onOpen={vi.fn()} planet={marked} />);
+      expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
+      unmountMarked();
+      renderWithLocale(<PlanetDestinationCard onOpen={vi.fn()} planet={marked} visits={controls()} />);
+      const checkbox = screen.getByRole("checkbox", { name: "Visited" });
+      expect(checkbox).not.toBeChecked();
+      // Top right of the card, with the checkbox after (to the right of) its label.
+      const label = checkbox.closest("label");
+      expect(label).toHaveClass("planet-visited-check");
+      expect(label?.firstElementChild).toHaveTextContent("Visited");
+      expect(label?.lastElementChild).toBe(checkbox);
+      expect(label?.parentElement).toHaveClass("planet-card-with-visit");
+    });
+
+    it("reflects the visited state, reports changes and does not open the planet", async () => {
+      const onOpen = vi.fn();
+      const visits = controls({ isVisited: vi.fn(() => true) });
+      const planet = makePlanet({ canMarkVisited: true });
+      const { user } = renderWithLocale(<PlanetDestinationCard onOpen={onOpen} planet={planet} visits={visits} />, {
+        locale: "it",
+      });
+      const checkbox = screen.getByRole("checkbox", { name: "Visitato" });
+      expect(checkbox).toBeChecked();
+      await user.click(checkbox);
+      expect(visits.onToggle).toHaveBeenCalledWith(planet, false);
+      expect(onOpen).not.toHaveBeenCalled();
+    });
+
+    it("is disabled while the visit is being saved", () => {
+      renderWithLocale(
+        <PlanetDestinationCard
+          onOpen={vi.fn()}
+          planet={makePlanet({ canMarkVisited: true })}
+          visits={controls({ isSaving: vi.fn(() => true) })}
+        />,
+      );
+      expect(screen.getByRole("checkbox")).toBeDisabled();
+    });
+  });
+
   it("exports conflict levels", () => {
     expect(conflictLevels.Outlaw).toBe(3);
     expect(conflictLevels.None).toBe(0);
@@ -80,7 +135,7 @@ describe("PlanetDestinationCard", () => {
     expect(onOpen).toHaveBeenCalledWith(planet);
   });
 
-  it("shows the Almanac name, image, ribbons, facts and indicators", () => {
+  it("shows the Almanac name, image, facts and indicators", () => {
     const { container } = renderWithLocale(
       <PlanetDestinationCard
         onOpen={vi.fn()}
@@ -102,8 +157,9 @@ describe("PlanetDestinationCard", () => {
       "src",
       "https://nmsalmanac.com/api/planets/1.png",
     );
-    expect(screen.getByText("Dissonant")).toBeInTheDocument();
-    expect(screen.getByText("Paradise")).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "Dissonant" })).toHaveClass("planet-dissonant-indicator");
+    expect(screen.getByRole("img", { name: "Paradise" })).toHaveClass("planet-paradise-indicator");
+    expect(container.querySelector(".planet-ribbon-clip")).toBeNull();
     expect(screen.getByText("Type")).toBeInTheDocument();
     expect(screen.getByText("Lush")).toBeInTheDocument();
     expect(screen.queryByText("Size")).not.toBeInTheDocument();
@@ -127,7 +183,7 @@ describe("PlanetDestinationCard", () => {
       { locale: "it" },
     );
     expect(screen.getByRole("button", { name: /Pianeta 1/ })).toBeInTheDocument();
-    expect(screen.getByText("Dissonante")).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "Dissonante" })).toHaveAttribute("data-tooltip", "Dissonante");
     expect(screen.getByText("Tipo")).toBeInTheDocument();
     expect(screen.getByText("Lussureggiante")).toBeInTheDocument();
     expect(screen.getByRole("img", { name: "Luna" })).toBeInTheDocument();
@@ -149,7 +205,109 @@ describe("PlanetDestinationCard", () => {
     );
   });
 
-  it("ignores unknown sizes and dry planets", () => {
+  it.each([
+    ["None", 0],
+    ["Shallow", 1],
+    ["Ocean", 2],
+    ["Deep", 3],
+    ["Abundant", 1],
+  ])("shows a single drop filled to level %s (%i of 3)", (water, level) => {
+    const { container } = renderWithLocale(
+      <PlanetDestinationCard
+        onOpen={vi.fn()}
+        planet={makePlanet({ almanacFacts: [{ label: "planet.water", value: water }] })}
+      />,
+    );
+    const indicator = container.querySelector(".planet-water-indicator");
+    expect(indicator).toHaveAttribute("data-tooltip", water);
+    expect(screen.getByRole("img", { name: water })).toBe(indicator);
+    expect(container.querySelectorAll(".planet-water-indicator svg")).toHaveLength(1);
+    expect(container.querySelectorAll(".planet-water-outline")).toHaveLength(1);
+    expect(indicator?.classList.contains("has-water")).toBe(level > 0);
+    const fill = container.querySelector(".planet-water-fill");
+    if (level === 0) {
+      expect(fill).toBeNull();
+      expect(container.querySelector("clipPath")).toBeNull();
+    } else {
+      // The fill is clipped from the bottom: a higher level starts higher in the drop.
+      const top = Number(container.querySelector("clipPath rect")?.getAttribute("y"));
+      expect(top).toBeCloseTo(22 - (20 * level) / 3);
+      expect(fill?.getAttribute("clip-path")).toBe(`url(#${container.querySelector("clipPath")?.id})`);
+    }
+  });
+
+  it("gives every drop its own clip path", () => {
+    const { container } = renderWithLocale(
+      <>
+        {["Shallow", "Deep"].map((water) => (
+          <PlanetDestinationCard
+            key={water}
+            onOpen={vi.fn()}
+            planet={makePlanet({ id: water, almanacFacts: [{ label: "planet.water", value: water }] })}
+          />
+        ))}
+      </>,
+    );
+    const ids = [...container.querySelectorAll("clipPath")].map((clip) => clip.id);
+    expect(new Set(ids).size).toBe(2);
+    expect(ids.every((id) => /^water-[a-zA-Z0-9]+$/.test(id))).toBe(true);
+  });
+
+  it("shows the paradise and dissonant icons first in the row of indicators, before size and water", () => {
+    const { container } = renderWithLocale(
+      <PlanetDestinationCard
+        onOpen={vi.fn()}
+        planet={makePlanet({
+          paradise: true,
+          dissonant: true,
+          almanacFacts: [
+            { label: "planet.size", value: "Large" },
+            { label: "planet.water", value: "Deep" },
+          ],
+        })}
+      />,
+    );
+    const classes = [...(container.querySelector(".planet-card-indicators")?.children ?? [])].map(
+      (child) => child.className.split(" ")[0],
+    );
+    expect(classes).toEqual([
+      "planet-paradise-indicator",
+      "planet-dissonant-indicator",
+      "planet-size-indicator",
+      "planet-water-indicator",
+    ]);
+  });
+
+  it("shows the paradise icon among the bottom indicators, not over the visited checkbox", () => {
+    const { container } = renderWithLocale(
+      <PlanetDestinationCard
+        onOpen={vi.fn()}
+        planet={makePlanet({ paradise: true, canMarkVisited: true })}
+        visits={{ isVisited: () => false, isSaving: () => false, onToggle: vi.fn() }}
+      />,
+    );
+    expect(container.querySelector(".planet-card-indicators .planet-paradise-indicator")).not.toBeNull();
+    expect(container.querySelector(".planet-visited-check")).not.toBeNull();
+  });
+
+  it("places the water drop to the right of the size indicator", () => {
+    const { container } = renderWithLocale(
+      <PlanetDestinationCard
+        onOpen={vi.fn()}
+        planet={makePlanet({
+          almanacFacts: [
+            { label: "planet.size", value: "Large" },
+            { label: "planet.water", value: "Deep" },
+          ],
+        })}
+      />,
+    );
+    const indicators = container.querySelector(".planet-card-indicators");
+    expect(indicators?.children[0]).toHaveClass("planet-size-indicator");
+    expect(indicators?.children[1]).toHaveClass("planet-water-indicator");
+  });
+
+  it("ignores unknown sizes", () => {
     renderWithLocale(
       <PlanetDestinationCard
         onOpen={vi.fn()}
@@ -161,6 +319,8 @@ describe("PlanetDestinationCard", () => {
         })}
       />,
     );
-    expect(screen.queryByRole("img")).not.toBeInTheDocument();
+    // Only the empty water drop remains: Gigantic is not a known size.
+    expect(screen.getAllByRole("img")).toHaveLength(1);
+    expect(screen.getByRole("img", { name: "None" })).toHaveClass("planet-water-indicator");
   });
 });

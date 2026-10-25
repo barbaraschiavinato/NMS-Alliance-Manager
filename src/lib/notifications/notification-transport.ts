@@ -14,12 +14,17 @@ export function appOrigin() {
   return url.origin;
 }
 
-export async function postJson(url: URL | string, body: unknown, provider: string) {
+export async function postJson(
+  url: URL | string,
+  body: unknown,
+  provider: string,
+  headers: Readonly<Record<string, string>> = {},
+) {
   let response: Response;
   try {
     response = await fetch(url, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...headers },
       body: JSON.stringify(body),
       signal: AbortSignal.timeout(10000),
       redirect: "error",
@@ -36,7 +41,7 @@ export async function postJson(url: URL | string, body: unknown, provider: strin
   }
 }
 
-export function escapeTelegramHtml(value: string) {
+export function escapeHtml(value: string) {
   return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
@@ -44,3 +49,5 @@ export function telegramUsername(value?: string) {
   const username = value?.trim().replace(/^@/, "");
   return username && /^[A-Za-z][A-Za-z0-9_]{4,31}$/.test(username) ? username : undefined;
 }
+
+export const escapeTelegramHtml = escapeHtml;

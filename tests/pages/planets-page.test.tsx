@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import type { PlanetDestination } from "@/components/cards/planet-destination-card";
 import { PlanetsPage } from "@/components/pages/planets-page";
 import { defaultAlliance, makeMember } from "../helpers/members";
-import { mockFetch, renderPage, t } from "./helpers";
+import { json, mockFetch, renderPage, t } from "./helpers";
 
 vi.mock("next/navigation", async () => (await import("./helpers")).nextNavigationModule);
 vi.mock("next/image", async () => (await import("./helpers")).nextImageModule);
@@ -166,8 +166,8 @@ describe("PlanetsPage", () => {
     expect(
       screen.getByRole("link", { name: t("planet.open_station_in_stations", { station: "Home Base" }) }),
     ).not.toHaveClass("station-create-mission-pulse");
-    expect(screen.getByText(t("planet.paradise"))).toBeInTheDocument();
-    expect(screen.getByText(t("planet.dissonant"))).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: t("planet.paradise") })).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: t("planet.dissonant") })).toBeInTheDocument();
     await waitFor(() => expect(window.localStorage.getItem("nms-planet-count")).toBe("2"));
   });
 
@@ -329,6 +329,78 @@ describe("PlanetsPage", () => {
     for (const button of removeButtons) await user.click(button);
     expect(screen.queryByRole("button", { name: t("planet.reset_filters") })).not.toBeInTheDocument();
     expect(screen.getByText("Glacia")).toBeInTheDocument();
+  });
+
+  describe("visited checkbox", () => {
+    const mine = () => planet({ canMarkVisited: true, visited: false });
+
+    it("shows it only on planets of the member's missions and saves the change", async () => {
+      const { requests } = mockFetch({ "PATCH /api/planet-visits": { visited: true } });
+      const { user } = renderPlanets({ planets: [mine(), frozen] });
+      const checkboxes = screen.getAllByRole("checkbox", { name: t("planet.visited") });
+      expect(checkboxes).toHaveLength(1);
+      expect(checkboxes[0]).not.toBeChecked();
+      await user.click(checkboxes[0]);
+      expect(checkboxes[0]).toBeChecked();
+      await waitFor(() => expect(checkboxes[0]).toBeEnabled());
+      expect(requests("PATCH", "/api/planet-visits")[0].body).toEqual({
+        planetPortal: "1234567890AB",
+        galaxy: 0,
+        visited: true,
+      });
+      await user.click(checkboxes[0]);
+      expect(requests("PATCH", "/api/planet-visits")[1].body).toMatchObject({ visited: false });
+    });
+
+    it("filters by visited and to visit, following the checkbox, and ignores planets that cannot be marked", async () => {
+      mockFetch({ "PATCH /api/planet-visits": { visited: true } });
+      const other = planet({ id: "other:0", almanacName: "Elsewhere", canMarkVisited: true, visited: true });
+      const { user } = renderPlanets({ planets: [mine(), other, frozen] });
+      await user.click(screen.getByRole("button", { name: t("planet.filters") }));
+      const select = screen.getByRole("combobox", { name: t("planet.filter_visited") });
+      await user.selectOptions(select, "yes");
+      expect(screen.getByText("Elsewhere")).toBeInTheDocument();
+      expect(screen.queryByText("Verdant")).not.toBeInTheDocument();
+      expect(screen.queryByText("Glacia")).not.toBeInTheDocument();
+      await user.selectOptions(select, "no");
+      expect(screen.getByText("Verdant")).toBeInTheDocument();
+      expect(screen.queryByText("Elsewhere")).not.toBeInTheDocument();
+      expect(screen.queryByText("Glacia")).not.toBeInTheDocument();
+      await user.click(screen.getByRole("checkbox", { name: t("planet.visited") }));
+      expect(screen.queryByText("Verdant")).not.toBeInTheDocument();
+      await user.selectOptions(select, "yes");
+      expect(screen.getAllByText(/Verdant|Elsewhere/)).toHaveLength(2);
+    });
+
+    it("hides the visited filter from members without planets to mark", async () => {
+      mockFetch({});
+      const { user } = renderPlanets({ planets: [frozen] });
+      await user.click(screen.getByRole("button", { name: t("planet.filters") }));
+      expect(screen.queryByRole("combobox", { name: t("planet.filter_visited") })).not.toBeInTheDocument();
+    });
+
+    it("starts from the stored state, also in an embedded system", () => {
+      mockFetch({});
+      renderPlanets({ embedded: true, planets: [planet({ canMarkVisited: true, visited: true })] });
+      expect(screen.getByRole("checkbox", { name: t("planet.visited") })).toBeChecked();
+    });
+
+    it.each([
+      ["the server message", json({ error: "Not allowed." }, 403), "Not allowed."],
+      ["a generic message", json({}, 500), t("planet.visit_save_failed")],
+      ["a generic message for a network error", () => Promise.reject(new Error("")), t("planet.visit_save_failed")],
+      ["a generic message for a non-JSON error", new Response("oops", { status: 500 }), t("planet.visit_save_failed")],
+    ])("reverts the checkbox and shows %s when saving fails", async (_label, response, message) => {
+      mockFetch({ "PATCH /api/planet-visits": response });
+      const { user } = renderPlanets({ planets: [mine()] });
+      const checkbox = screen.getByRole("checkbox", { name: t("planet.visited") });
+      await user.click(checkbox);
+      const alert = await screen.findByRole("alert");
+      expect(alert).toHaveTextContent(message);
+      expect(checkbox).not.toBeChecked();
+      await user.click(within(alert).getByRole("button", { name: t("common.close_notification") }));
+      expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    });
   });
 
   it("opens the planet card on the selected planet", async () => {

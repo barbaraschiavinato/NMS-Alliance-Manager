@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { screen, within } from "@testing-library/react";
+import { fireEvent, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createPlanetListExamplePlanet, PlanetListExample } from "@/components/guide/planet-list-example";
 import { renderWithLocale } from "../helpers";
@@ -113,7 +113,7 @@ describe("createPlanetListExamplePlanet", () => {
 });
 
 describe("PlanetListExample", () => {
-  it("shows the Almanac discovery counts on all three example cards", async () => {
+  it("shows the Almanac discovery counts on all example cards", async () => {
     useSample("1123456789AB", {
       lines: {
         headline: { word: "Verdant" },
@@ -128,7 +128,7 @@ describe("PlanetListExample", () => {
     renderWithLocale(<PlanetListExample planet={planet} />);
 
     const cards = screen.getAllByRole("button", { name: /Verdant/ });
-    expect(cards).toHaveLength(3);
+    expect(cards).toHaveLength(4);
     for (const card of cards) {
       for (const label of ["Flora: 19", "Fauna: 0", "Minerals: 23"]) {
         expect(within(card).getByRole("img", { name: label })).toHaveAttribute("data-tooltip", label);
@@ -140,7 +140,17 @@ describe("PlanetListExample", () => {
     useSample("1123456789AB", { name: "Station Name", lines: { headline: { word: "Verdant" } } });
     const planet = await createPlanetListExamplePlanet();
     const { container } = renderWithLocale(<PlanetListExample planet={planet} />);
-    expect(container.querySelectorAll(".planet-mission-card")).toHaveLength(3);
+    expect(container.querySelectorAll(".planet-mission-card")).toHaveLength(4);
     expect(within(screen.getByRole("dialog")).getByRole("heading", { level: 2 })).toHaveTextContent("Station Name");
+  });
+
+  it("lets the reader toggle the demo visited checkbox", async () => {
+    useSample("1123456789AB", { lines: { headline: { word: "Verdant" } } });
+    const planet = await createPlanetListExamplePlanet();
+    renderWithLocale(<PlanetListExample planet={planet} />);
+    const checkbox = screen.getByRole("checkbox", { name: "Visited" });
+    expect(checkbox).not.toBeChecked();
+    fireEvent.click(checkbox);
+    expect(checkbox).toBeChecked();
   });
 });

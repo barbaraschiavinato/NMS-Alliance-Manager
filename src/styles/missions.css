@@ -83,7 +83,7 @@
 .mission-table th:nth-child(6) { width: 15%; }
 .mission-table td { height: 65px; padding: 7px 10px; border-bottom: 1px solid #333e41; color: #d4dad6; font-size: 9px; white-space: nowrap; }
 .mission-table td:first-child { padding-left: 3px; }
-.mission-name-cell { display: flex; align-items: center; gap: 10px; }
+.mission-name-cell { display: flex; align-items: flex-start; gap: 10px; }
 .mission-icon { width: 29px; height: 29px; display: grid; flex: 0 0 29px; place-items: center; color: #d0d4d0; border: 1px solid #394548; border-radius: 3px; background: #1a2124; }
 .mission-icon-done { color: var(--lime); border-color: var(--lime); background: #252d30; }
 .mission-name-cell > div { min-width: 0; }

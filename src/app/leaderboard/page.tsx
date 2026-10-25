@@ -9,6 +9,7 @@ import { readMissions } from "@/lib/missions/store";
 import { coveredSpecialties } from "@/lib/missions/missions";
 import { missionSystemStatuses, missionSystemStatusRoles } from "@/lib/planets/planet-system-status";
 import { readPlanetSystemStatuses } from "@/lib/planets/planet-system-status-store";
+import { readPlanetVisitCounts } from "@/lib/planets/planet-visits-store";
 import { readAlmanacCache } from "@/lib/almanac/almanac-store";
 import { getSystemPlanetAddresses } from "@/lib/planets/planet-addresses";
 import { readAllStationPortals, readStationPortals } from "@/lib/stations/stations-store";
@@ -93,6 +94,12 @@ export default async function LeaderboardRoute() {
         count: counts.get(candidate.publicId) ?? 0,
       }))
       .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+  let visitedByMember = new Map<string, number>();
+  try {
+    visitedByMember = await readPlanetVisitCounts();
+  } catch (error) {
+    console.error("Unable to read planet visits", error instanceof Error ? error.message : "Unknown error");
+  }
   const approvedMembers = accessData.members.filter((candidate) => candidate.membershipStatus === "approved");
   const completedTasks = Object.values(planetStatuses).reduce(
     (total, statuses) => total + statuses.filter((task) => task !== "data_error").length,
@@ -141,13 +148,22 @@ export default async function LeaderboardRoute() {
       id: "stations",
       title: "leaderboard.board_stations",
       empty: "leaderboard.empty_stations",
+      accent: "stations" as const,
       entries: buildEntries(stationsByMember),
     },
     {
       id: "missions",
       title: "leaderboard.board_missions",
       empty: "leaderboard.empty_missions",
+      accent: "missions" as const,
       entries: buildEntries(missionsByMember),
+    },
+    {
+      id: "planets_visited",
+      title: "leaderboard.board_planets_visited",
+      empty: "leaderboard.empty_planets_visited",
+      accent: "planets" as const,
+      entries: buildEntries(visitedByMember),
     },
     ...(["ranger", "explorer", "builder"] as const).map((role) => ({
       id: `${role}_tasks`,

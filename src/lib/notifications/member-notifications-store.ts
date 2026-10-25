@@ -28,7 +28,12 @@ export async function readMemberNotificationSettings(): Promise<MemberNotificati
   // Existing installations have no document: alerts start disabled.
   if (json === undefined) return { ...defaultMemberNotificationSettings };
   const value: unknown = JSON.parse(json);
-  const settings = value && typeof value === "object" ? (value as Record<string, unknown>).settings : undefined;
+  const stored = value && typeof value === "object" ? (value as Record<string, unknown>).settings : undefined;
+  // Documents written before the approval email existed have no flag: it starts disabled.
+  const settings =
+    stored && typeof stored === "object" && !("approvalEmailEnabled" in stored)
+      ? { ...stored, approvalEmailEnabled: false }
+      : stored;
   if (!isMemberNotificationSettings(settings)) throw new Error("Invalid member notification storage.");
   return settings;
 }
@@ -41,6 +46,7 @@ export async function saveMemberNotificationSettings(settings: MemberNotificatio
         telegramEnabled: settings.telegramEnabled,
         telegramChatId: settings.telegramChatId,
         telegramThreadId: settings.telegramThreadId,
+        approvalEmailEnabled: settings.approvalEmailEnabled,
       },
     },
     null,

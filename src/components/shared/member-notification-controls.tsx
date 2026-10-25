@@ -7,7 +7,7 @@ import type { MemberNotificationSettings } from "@/lib/notifications/member-noti
 
 type AdminState = {
   settings: MemberNotificationSettings;
-  readiness: { telegram: boolean; links: boolean };
+  readiness: { telegram: boolean; email: boolean; links: boolean };
 };
 
 const adminUrl = "/api/admin/member-notifications";
@@ -67,10 +67,10 @@ export function MemberNotificationAdmin() {
     });
   }
 
-  function test() {
+  function test(channel: "telegram" | "email") {
     return run(async () => {
-      await requestJson("POST");
-      setFeedback("User test notification sent.");
+      await requestJson("POST", { channel });
+      setFeedback(channel === "email" ? "Test email sent to your address." : "User test notification sent.");
     });
   }
 
@@ -84,7 +84,9 @@ export function MemberNotificationAdmin() {
       {data && (
         <form className="taxi-notification-form" onSubmit={(event) => save(event, data.settings)}>
           <p className="field-hint">
-            {t("Telegram alerts for new registrations and for approvals, blocks, role changes and removals of users.")}
+            {t(
+              "Telegram alerts for new registrations and for approvals, blocks, role changes and removals of users, plus an email when an account is approved.",
+            )}
           </p>
           {!data.readiness.links && (
             <p className="form-error">{t("Configure AUTH_URL for notification detail links.")}</p>
@@ -109,7 +111,7 @@ export function MemberNotificationAdmin() {
               type="button"
               className="quiet-button"
               disabled={busy || !data.settings.telegramEnabled || !data.readiness.telegram || !data.readiness.links}
-              onClick={() => void test()}
+              onClick={() => void test("telegram")}
             >
               <Send size={14} />
               {t("Send test")} — Telegram
@@ -143,6 +145,33 @@ export function MemberNotificationAdmin() {
             <p className="field-hint" id="member-telegram-topic-hint">
               {t("Leave empty to send without selecting a Telegram topic.")}
             </p>
+          </div>
+          <div className="taxi-notification-channel">
+            <label className="message-acknowledgement">
+              <input
+                type="checkbox"
+                checked={data.settings.approvalEmailEnabled}
+                disabled={busy}
+                onChange={(event) =>
+                  setData({ ...data, settings: { ...data.settings, approvalEmailEnabled: event.target.checked } })
+                }
+              />
+              <span>Email — {t("Enabled")}</span>
+            </label>
+            <p className="field-hint">{t("Sends the user one email when their account is approved.")}</p>
+            <p className={`taxi-notification-status ${data.readiness.email ? "is-ready" : "is-missing"}`}>
+              {data.readiness.email ? <CheckCircle2 size={14} /> : <CircleAlert size={14} />}
+              {t(data.readiness.email ? "Credentials configured" : "Credentials missing or invalid")}
+            </p>
+            <button
+              type="button"
+              className="quiet-button"
+              disabled={busy || !data.settings.approvalEmailEnabled || !data.readiness.email || !data.readiness.links}
+              onClick={() => void test("email")}
+            >
+              <Send size={14} />
+              {t("Send test email to my address")}
+            </button>
           </div>
           <div className="dialog-actions taxi-notification-actions">
             <button className="primary-button" disabled={busy} type="submit">

@@ -22,6 +22,7 @@ export type PlanetFilterValues = Readonly<{
   paradise: string;
   pirate: string;
   feature: string;
+  visited: string;
   water: string;
   weather: string;
   sentinels: string;
@@ -47,6 +48,7 @@ export type PlanetFilterOptions = Readonly<{
   minerals: string[];
   valuables: string[];
   features: SystemFeature[];
+  visitable: boolean;
 }>;
 
 export const emptyPlanetFilterValues: PlanetFilterValues = {
@@ -61,6 +63,7 @@ export const emptyPlanetFilterValues: PlanetFilterValues = {
   paradise: "",
   pirate: "",
   feature: "",
+  visited: "",
   water: "",
   weather: "",
   sentinels: "",
@@ -86,6 +89,7 @@ export const emptyPlanetFilterOptions: PlanetFilterOptions = {
   minerals: [],
   valuables: [],
   features: [],
+  visitable: false,
 };
 
 export function hasActivePlanetFilters(values: PlanetFilterValues) {
@@ -285,6 +289,20 @@ export function PlanetFilters({
               <option value="no">{t("planet.dissonant_no")}</option>
             </select>
           </label>
+          {options.visitable && (
+            <label className="planet-filter">
+              <span>{t("planet.visited_by_me")}</span>
+              <select
+                aria-label={t("planet.filter_visited")}
+                onChange={(event) => onChange("visited", event.target.value)}
+                value={values.visited}
+              >
+                <option value="">{t("planet.all_visited")}</option>
+                <option value="yes">{t("planet.visited_yes")}</option>
+                <option value="no">{t("planet.visited_no")}</option>
+              </select>
+            </label>
+          )}
           <label className="planet-filter">
             <span>{t("planet.special_system")}</span>
             <select
@@ -463,6 +481,11 @@ export function PlanetActiveFilters({
       key: "pirate",
       label: `${t("planet.pirate_system")}: ${t(values.pirate === "yes" ? "planet.dissonant_yes" : "planet.dissonant_no")}`,
       clear: () => onChange("pirate", ""),
+    },
+    values.visited && {
+      key: "visited",
+      label: `${t("planet.visited_by_me")}: ${t(values.visited === "yes" ? "planet.visited_yes" : "planet.visited_no")}`,
+      clear: () => onChange("visited", ""),
     },
     values.feature && {
       key: "feature",

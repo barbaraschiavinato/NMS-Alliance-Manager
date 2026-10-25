@@ -305,7 +305,6 @@ body:has(.sidebar-compact) .dialog-heading .icon-button { width: 48px; height: 4
 body:has(.sidebar-compact) .dialog-heading .icon-button svg { width: 26px; height: 26px; }
 .button-spinner { animation: loading-spin 1.2s linear infinite; }
 .planet-water-indicator.has-water { color: #4fc3f7; }
-.planet-water-indicator.has-water svg { fill: #4fc3f7; stroke: #4fc3f7; }
 .planet-conflict-dots > i.filled { background: var(--lime); }
 @media (max-width: 720px) {
   .main-panel .mission-card-system .glyph-strip,

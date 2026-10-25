@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import HelpRequestsRoute from "@/app/help-requests/page";
 import TaxiRoute from "@/app/taxi/page";
 import RootLayout, { metadata } from "@/app/layout";
@@ -37,6 +37,7 @@ import { readMissions, writeMissions } from "@/lib/missions/store";
 import { readAllStationPortals, readStationPortals, type OwnedStationPortal } from "@/lib/stations/stations-store";
 import { lookupAlmanacPlanets } from "@/lib/almanac/almanac-lookup";
 import { readPlanetSystemStatuses } from "@/lib/planets/planet-system-status-store";
+import * as visitsStore from "@/lib/planets/planet-visits-store";
 import { readAlmanacCache } from "@/lib/almanac/almanac-store";
 import { signInAs } from "../helpers/auth";
 import { makeMember, seedMembers, writeDataFile } from "../helpers/members";
@@ -804,6 +805,87 @@ describe("planets route", () => {
     expect(featureOf("007802304626")).toEqual([undefined]);
   });
 
+  describe("visited marks", () => {
+    beforeEach(() => writeDataFile("planet-visits.json", {}));
+    afterEach(() => writeDataFile("planet-visits.json", {}));
+    const withMissions = (assignedMemberId: string | undefined) => {
+      vi.mocked(readMissions).mockResolvedValue([
+        makeMission({ id: "mine", systemAddress: "1234567890AB", assignedMemberId }),
+        makeMission({ id: "other", systemAddress: "3234567890AD", assignedMemberId: id.builder }),
+      ]);
+      vi.mocked(lookupAlmanacPlanets).mockImplementation(
+        async (targets) =>
+          new Map(targets.map(({ portal, galaxy }) => [`${portal}:${galaxy}`, { planet: verdant, failed: false }])),
+      );
+    };
+    const planetsOf = async () =>
+      (props(await PlanetsRoute()) as { planets: { portal: string; planetPortal: string }[] }).planets as {
+        portal: string;
+        planetPortal: string;
+        canMarkVisited?: boolean;
+        visited?: boolean;
+      }[];
+
+    it("offers the checkbox on the planets of the explorer's own missions, with the stored state", async () => {
+      withMissions(id.user);
+      writeDataFile("planet-visits.json", { [id.user]: ["0:2234567890AB"], [id.builder]: ["0:1234567890AB"] });
+      signIn(user);
+      const planets = await planetsOf();
+      const mine = planets.filter((planet) => planet.portal === "1234567890AB");
+      expect(mine.map((planet) => [planet.planetPortal, planet.canMarkVisited, planet.visited])).toEqual([
+        ["1234567890AB", true, false],
+        ["2234567890AB", true, true],
+      ]);
+      expect(planets.filter((planet) => planet.portal === "3234567890AD").every((p) => !("canMarkVisited" in p))).toBe(
+        true,
+      );
+    });
+
+    it("offers it to builders but never to other specialties or unassigned missions", async () => {
+      withMissions(id.builder);
+      signIn(builder);
+      expect((await planetsOf()).some((planet) => planet.canMarkVisited)).toBe(true);
+      withMissions(id.plain);
+      vi.mocked(readStationPortals).mockResolvedValue([]);
+      signIn(plainUser);
+      expect((await planetsOf()).some((planet) => "canMarkVisited" in planet)).toBe(false);
+      withMissions(undefined);
+      vi.mocked(readAllStationPortals).mockResolvedValue([]);
+      signIn(user);
+      expect((await planetsOf()).some((planet) => "canMarkVisited" in planet)).toBe(false);
+    });
+
+    it("offers it to the discoverer of a station whatever their specialty, only for that station's system", async () => {
+      withMissions(id.builder);
+      vi.mocked(readStationPortals).mockResolvedValue([{ portal: "1234567890AB", galaxy: 0 }]);
+      signIn(plainUser);
+      const planets = await planetsOf();
+      expect(planets.filter((planet) => planet.canMarkVisited).map((planet) => planet.portal)).toEqual([
+        "1234567890AB",
+        "1234567890AB",
+      ]);
+    });
+
+    it("logs a non-Error failure to read the stored marks and keeps the planets", async () => {
+      withMissions(id.user);
+      const log = vi.spyOn(console, "error").mockImplementation(() => {});
+      vi.spyOn(visitsStore, "readPlanetVisits").mockRejectedValue("unexpected");
+      signIn(user);
+      expect((await planetsOf()).some((planet) => planet.canMarkVisited)).toBe(true);
+      expect(log).toHaveBeenCalledWith("Unable to read planet visits", "Unknown error");
+    });
+
+    it("keeps the planets and the checkbox when the stored marks cannot be read", async () => {
+      withMissions(id.user);
+      writeDataFile("planet-visits.json", "corrupted");
+      const log = vi.spyOn(console, "error").mockImplementation(() => {});
+      signIn(user);
+      const planets = await planetsOf();
+      expect(planets.some((planet) => planet.canMarkVisited && planet.visited === false)).toBe(true);
+      expect(log).toHaveBeenCalledWith("Unable to read planet visits", "Invalid planet visit storage.");
+    });
+  });
+
   it("keeps the planets of a system whose special feature cannot be calculated", async () => {
     vi.mocked(readMissions).mockResolvedValue([makeMission({ systemAddress: "03EB02304626", system: "" })]);
     vi.mocked(lookupAlmanacPlanets).mockImplementation(
@@ -958,6 +1040,11 @@ describe("leaderboard route", () => {
       ].sort(),
     );
     expect(board("missions").entries.map((entry) => [entry.publicId, entry.count])).toEqual([[id.user, 2]]);
+    expect([board("stations").accent, board("missions").accent, board("planets_visited").accent]).toEqual([
+      "stations",
+      "missions",
+      "planets",
+    ]);
     const section = (role: string, task: string) => board(`${role}_tasks`).sections!.find((item) => item.id === task)!;
     expect(section("explorer", "mapped").entries.map((entry) => entry.publicId)).toEqual([id.user]);
     expect(section("explorer", "mapped").title).toBe("leaderboard.task_mapped");
@@ -966,6 +1053,46 @@ describe("leaderboard route", () => {
     // La missione costruttori su 1234567890AC dà il merito all'assegnatario, non al proprietario della stazione.
     expect(section("builder", "buildings_built").entries.map((entry) => entry.publicId)).toEqual([id.user]);
     expect(props(element)).toMatchObject({ stationCount: 1, offlineCount: undefined });
+  });
+
+  it("ranks members by the planets they visited, counting only approved members", async () => {
+    vi.mocked(readMissions).mockResolvedValue([]);
+    vi.mocked(readPlanetSystemStatuses).mockResolvedValue({});
+    vi.mocked(readAlmanacCache).mockResolvedValue(() => null);
+    writeDataFile("planet-visits.json", {
+      [id.user]: ["0:1234567890AB", "0:2234567890AB", "0:3234567890AB"],
+      [id.builder]: ["0:1234567890AB"],
+      [id.pending]: ["0:1234567890AB", "0:2234567890AB"],
+      ghost: ["0:1234567890AB"],
+    });
+    signIn(user);
+    const board = (props(await LeaderboardRoute()).boards as LeaderboardBoard[]).find(
+      (item) => item.id === "planets_visited",
+    )!;
+    expect(board).toMatchObject({ title: "leaderboard.board_planets_visited", accent: "planets" });
+    expect(board.entries.map((entry) => [entry.publicId, entry.count])).toEqual([
+      [id.user, 3],
+      [id.builder, 1],
+    ]);
+    writeDataFile("planet-visits.json", {});
+  });
+
+  it("keeps the leaderboard when the stored visits cannot be read", async () => {
+    vi.mocked(readMissions).mockResolvedValue([]);
+    vi.mocked(readPlanetSystemStatuses).mockResolvedValue({});
+    vi.mocked(readAlmanacCache).mockResolvedValue(() => null);
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.spyOn(visitsStore, "readPlanetVisitCounts")
+      .mockRejectedValueOnce("unexpected")
+      .mockRejectedValueOnce(new Error("disk"));
+    signIn(user);
+    for (const message of ["Unknown error", "disk"]) {
+      const board = (props(await LeaderboardRoute()).boards as LeaderboardBoard[]).find(
+        (item) => item.id === "planets_visited",
+      )!;
+      expect(board.entries).toEqual([]);
+      expect(log).toHaveBeenLastCalledWith("Unable to read planet visits", message);
+    }
   });
 
   it("credits a task once, names members without NMS name and skips invalid systems", async () => {

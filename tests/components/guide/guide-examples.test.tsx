@@ -255,7 +255,7 @@ describe("PlanetListExampleView", () => {
       <PlanetListExampleView planet={planet} planetData={guideStationInit.response} />,
     );
     const cards = container.querySelectorAll(".planet-mission-card");
-    expect(cards).toHaveLength(3);
+    expect(cards).toHaveLength(4);
     for (const card of cards) fireEvent.click(card);
     expect(screen.getAllByRole("dialog")).toHaveLength(1);
   });

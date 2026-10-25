@@ -43,7 +43,8 @@ Colori delle specializzazioni:
 **Primo accesso.**
 1. Accedi con Google.
 2. L'account parte come **in attesa di approvazione**. Finché un moderatore o un admin non lo approva puoi solo completare il profilo ed uscire.
-3. Se l'accesso viene bloccato, compare un messaggio con l'invito a contattare i moderatori.
+3. Quando l'account viene approvato, se l'alleanza ha attivato l'avviso ricevi un'**email** all'indirizzo Google con cui hai fatto l'accesso (solo per l'approvazione, non per altri cambi di stato). Puoi anche semplicemente riaccedere.
+4. Se l'accesso viene bloccato, compare un messaggio con l'invito a contattare i moderatori.
 
 **Profilo.** Si apre dall'header ed è modificabile solo dal proprietario. Contiene:
 - nome in gioco;
@@ -148,11 +149,13 @@ L'azione di eliminazione, quando consentita, è sempre l'ultima, dopo modifica e
 
 ### `Eclipse` Dettaglio pianeta
 Mostra i dati del pianeta e, tramite l'icona sirena, permette di inviare una **richiesta d'aiuto** (vedi [Richieste d'aiuto](#richieste-daiuto)).
+Sulle card della pagina **Pianeti** compare in alto a destra la casella **Visitato** (etichetta con la spunta a destra) per i pianeti dei sistemi in cui hai una **missione assegnata** (se sei Esploratore o Costruttore) oppure di cui sei lo **scopritore della stazione** (qualunque specializzazione). La spunta è personale: la vedi solo tu. Il filtro **Visitati da me** mostra solo i pianeti che hai già visitato oppure quelli **da visitare** (spuntabili ma non ancora visitati); compare solo se hai almeno un pianeta spuntabile. Se in seguito perdi il diritto a un pianeta (per esempio la missione viene riassegnata), quel pianeta esce dai due filtri e perde la casella, ma la tua spunta resta salvata e continua a contare in classifica. La quantità d'acqua è indicata da **una goccia** in basso a destra, a destra degli indicatori della dimensione: vuota se il pianeta è asciutto, piena per un terzo con acqua bassa, per due terzi con l'oceano e completamente piena con l'acqua profonda.
+
 Il filtro **Ricchezza** della pagina **Pianeti** raggruppa i sistemi per la descrizione economica fornita da Almanac (per esempio Indigente, Promettente, Benestante), che affina le stelle dell'economia. I valori Almanac dell'economia e della ricchezza sono tradotti in italiano.
 
 Il filtro **Sistema speciale** della pagina **Pianeti** mostra solo i sistemi con un buco nero, un'Interfaccia Atlas o un gigante gassoso (le voci disponibili dipendono dai sistemi presenti).
 
-Le etichette **Paradiso** e **Dissonante** compaiono quando indicate dai dati Almanac, senza sostituire le descrizioni delle condizioni del pianeta.
+Sulle card dei pianeti il simbolo **Paradiso** (palma verde) e il simbolo **Dissonante** (onda viola) compaiono tra gli indicatori in basso a destra, insieme a dimensione e acqua: appaiono quando indicati dai dati Almanac, senza sostituire le descrizioni delle condizioni del pianeta.
 
 Nella pagina **Pianeti**, le card mostrano anche le icone di flora, fauna e minerali con i conteggi disponibili in Almanac. Gli stessi contatori compaiono nel dettaglio pianeta, prima del codice portale, e si aggiornano selezionando un altro pianeta. I valori mancanti non vengono mostrati; un conteggio pari a zero resta visibile.
 
@@ -170,7 +173,7 @@ Le card stazione dello stesso sistema e della stessa galassia dell'hub configura
 <a id="classifica"></a>
 
 ### `Trophy` Classifica
-Mostra la posizione dei membri per punti: stazioni scoperte, missioni completate e voci spuntate, più i totali dell'alleanza (pianeti, membri, stazioni, missioni, task). È solo in lettura.
+Mostra la posizione dei membri per punti: stazioni scoperte, missioni completate, **pianeti visitati** (con l'icona e i colori della sezione Pianeti, come i tabelloni Stazioni scoperte e Missioni completate hanno quelli delle rispettive sezioni; conta solo quanti pianeti ha spuntato ciascuno, non quali) e voci spuntate, più i totali dell'alleanza (pianeti, membri, stazioni, missioni, task). È solo in lettura.
 
 ### `CarTaxiFront` Servizio taxi
 

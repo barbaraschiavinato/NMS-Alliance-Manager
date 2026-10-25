@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { sortByCreatedAtDescending } from "@/lib/utils/created-at";
 import { Sidebar, storePlanetCount } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
@@ -8,7 +8,8 @@ import { Hero } from "@/components/layout/hero";
 import { AdminPanel } from "@/components/modals/admin-panel";
 import { MemberProfilePanel } from "@/components/modals/member-profile-panel";
 import { PlanetList } from "@/components/sections/planet-list";
-import type { PlanetDestination } from "@/components/cards/planet-destination-card";
+import type { PlanetDestination, PlanetVisitControls } from "@/components/cards/planet-destination-card";
+import { Toast } from "@/components/shared/toast";
 import { PlanetCard } from "@/components/modals/planet-card";
 import type { AllianceMember, AllianceSettings } from "@/lib/members/access-store";
 import { useLocale } from "@/components/providers/locale-provider";
@@ -88,6 +89,36 @@ export function PlanetsPage({
   const [search, setSearch] = useState("");
   const [filters, setFilters] = useState(emptyPlanetFilterValues);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [visitOverrides, setVisitOverrides] = useState<Record<string, boolean>>({});
+  const [savingVisits, setSavingVisits] = useState<readonly string[]>([]);
+  const [visitError, setVisitError] = useState("");
+  const dismissVisitError = useCallback(() => setVisitError(""), []);
+  const visitControls = useMemo<PlanetVisitControls>(
+    () => ({
+      isVisited: (planet) => visitOverrides[planet.id] ?? planet.visited === true,
+      isSaving: (planet) => savingVisits.includes(planet.id),
+      onToggle: (planet, visited) => {
+        const previous = visitOverrides[planet.id] ?? planet.visited === true;
+        setVisitError("");
+        setVisitOverrides((current) => ({ ...current, [planet.id]: visited }));
+        setSavingVisits((current) => [...current, planet.id]);
+        fetch("/api/planet-visits", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ planetPortal: planet.planetPortal, galaxy: planet.galaxy, visited }),
+        })
+          .then(async (response) => {
+            if (!response.ok) throw new Error(((await response.json().catch(() => ({}))) as { error?: string }).error);
+          })
+          .catch((error: unknown) => {
+            setVisitOverrides((current) => ({ ...current, [planet.id]: previous }));
+            setVisitError(error instanceof Error && error.message ? error.message : "planet.visit_save_failed");
+          })
+          .finally(() => setSavingVisits((current) => current.filter((id) => id !== planet.id)));
+      },
+    }),
+    [savingVisits, visitOverrides],
+  );
   const updateFilter = <K extends keyof PlanetFilterValues>(key: K, value: PlanetFilterValues[K]) => {
     setFilters((current) => ({ ...current, [key]: value }));
   };
@@ -164,6 +195,7 @@ export function PlanetsPage({
       valuables: [...new Set(planets.flatMap((planet) => planet.valuables))].sort((a, b) =>
         a.localeCompare(b, undefined, { sensitivity: "base" }),
       ),
+      visitable: planets.some((planet) => planet.canMarkVisited === true),
       features: systemFeatures.filter((feature) => planets.some((planet) => planet.systemFeature === feature)),
     }),
     [planets],
@@ -198,6 +230,9 @@ export function PlanetsPage({
             (!filters.paradise || planet.paradise === (filters.paradise === "yes")) &&
             (!filters.pirate || planet.blackMarket === (filters.pirate === "yes")) &&
             (!filters.feature || planet.systemFeature === filters.feature) &&
+            (!filters.visited ||
+              (planet.canMarkVisited === true &&
+                (visitOverrides[planet.id] ?? planet.visited === true) === (filters.visited === "yes"))) &&
             (!filters.water || waterValue(planet) === filters.water) &&
             (!filters.weather || weatherValue(planet) === filters.weather) &&
             (!filters.conflict || systemFactValue(planet, "common.conflict") === filters.conflict) &&
@@ -208,7 +243,7 @@ export function PlanetsPage({
         );
         return matchingPlanets.length > 0 ? [{ ...group, planets: matchingPlanets }] : [];
       }),
-    [filters, planetGroups],
+    [filters, planetGroups, visitOverrides],
   );
   const visiblePlanetGroups = useMemo(() => {
     if (!searchQuery) return filteredPlanetGroups;
@@ -296,6 +331,7 @@ export function PlanetsPage({
               groups={pagination.items}
               onOpen={setSelectedPlanet}
               showStationLink={!embedded}
+              visits={visitControls}
             />
           )}
           <Pagination {...pagination} />
@@ -320,6 +356,7 @@ export function PlanetsPage({
           title={selectedPlanet.station?.name ?? selectedPlanet.title ?? t("planet.mission_planet")}
         />
       )}
+      {visitError && <Toast message={visitError} onClose={dismissVisitError} tone="error" />}
       {adminOpen && pageMember.role === "admin" && (
         <AdminPanel onClose={() => setAdminOpen(false)} onSaved={setAllianceSettings} />
       )}

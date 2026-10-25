@@ -7,6 +7,7 @@ import {
 import { isMemberNotificationSettings } from "@/lib/notifications/member-notifications";
 import {
   memberNotificationReadiness,
+  sendMemberEmailTest,
   sendMemberNotificationTest,
 } from "@/lib/notifications/member-notification-delivery";
 
@@ -21,8 +22,21 @@ async function authorize() {
   return { member };
 }
 
+// Resend answers with a status the administrator can act on; its message is never forwarded.
+const resendErrors: Record<string, string> = {
+  "401": "Resend rejected the API key. Check RESEND_API_KEY.",
+  "403":
+    "Resend rejected the sender. Use an address on a domain verified in Resend (onboarding@resend.dev only sends tests to your own Resend account address).",
+  "422":
+    "Resend rejected the sender. Use an address on a domain verified in Resend (onboarding@resend.dev only sends tests to your own Resend account address).",
+};
+
 function failure(error: unknown) {
-  console.error("Member notification administration failed", error instanceof Error ? error.message : "Unknown error");
+  const message = error instanceof Error ? error.message : "Unknown error";
+  console.error("Member notification administration failed", message);
+  const resendStatus = /^Resend: HTTP (\d+)/.exec(message)?.[1];
+  if (resendStatus && resendErrors[resendStatus])
+    return NextResponse.json({ error: resendErrors[resendStatus] }, { status: 502 });
   return NextResponse.json(
     { error: "Unable to configure or send member notifications. Check the channel configuration and server logs." },
     { status: 503 },
@@ -49,7 +63,11 @@ export async function PATCH(request: Request) {
   if (!isMemberNotificationSettings(value))
     return NextResponse.json({ error: "Invalid member notification settings." }, { status: 400 });
   const readiness = memberNotificationReadiness();
-  if (value.telegramEnabled && (!readiness.telegram || !readiness.links))
+  if (
+    (value.telegramEnabled && !readiness.telegram) ||
+    (value.approvalEmailEnabled && !readiness.email) ||
+    ((value.telegramEnabled || value.approvalEmailEnabled) && !readiness.links)
+  )
     return NextResponse.json(
       { error: "Configure the environment credentials before enabling this channel." },
       { status: 400 },
@@ -62,11 +80,17 @@ export async function PATCH(request: Request) {
   }
 }
 
-export async function POST() {
+export async function POST(request?: Request) {
   const auth = await authorize();
   if (auth.error) return auth.error;
+  const value: unknown = await request?.json().catch(() => null);
+  const channel = value && typeof value === "object" && "channel" in value ? value.channel : "telegram";
+  if (channel !== "telegram" && channel !== "email")
+    return NextResponse.json({ error: "Invalid notification channel." }, { status: 400 });
   try {
-    await sendMemberNotificationTest();
+    // The email test goes only to the administrator who asked for it.
+    if (channel === "email") await sendMemberEmailTest(auth.member.email);
+    else await sendMemberNotificationTest();
     return NextResponse.json({ ok: true });
   } catch (error) {
     return failure(error);

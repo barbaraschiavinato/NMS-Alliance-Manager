@@ -14,6 +14,9 @@
 .leaderboard-widget .leaderboard-list { max-width: none; }
 .leaderboard-widget h3 { display: flex; align-items: center; gap: 6px; }
 .leaderboard-widget-ranger { border-color: #2f6a43; background: #17291e55; }
+.leaderboard-widget-planets { border-color: #5a4a8a; background: #231c3a55; }
+.leaderboard-widget-stations { border-color: #3a5f8a; background: #16253855; }
+.leaderboard-widget-missions { border-color: #2f6b63; background: #13292755; }
 .leaderboard-widgets + .leaderboard-widgets { margin-top: 16px; }
 @media (max-width: 1080px) {
   .leaderboard-widgets { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
@@ -22,6 +25,9 @@
 .leaderboard-section + .leaderboard-section { margin-top: 14px; }
 .leaderboard-section h4 { margin: 0 0 8px; font-size: 12px; }
 .leaderboard-widget-ranger h3, .leaderboard-widget-ranger h4 { color: #5fd68a; }
+.leaderboard-widget-planets h3, .leaderboard-widget-planets h4 { color: #b48cf2; }
+.leaderboard-widget-stations h3, .leaderboard-widget-stations h4 { color: #6cb4ff; }
+.leaderboard-widget-missions h3, .leaderboard-widget-missions h4 { color: #72d1c4; }
 .leaderboard-widget-builder { border-color: #6a4a28; background: #2b211555; }
 .leaderboard-widget-builder h3, .leaderboard-widget-builder h4 { color: #ffb45d; }
 .leaderboard-widget-explorer { border-color: #2b538c; background: #16233a55; }
@@ -31,6 +37,9 @@
 }
 
 .leaderboard-widget-ranger .leaderboard-score { color: #5fd68a; }
+.leaderboard-widget-planets .leaderboard-score { color: #b48cf2; }
+.leaderboard-widget-stations .leaderboard-score { color: #6cb4ff; }
+.leaderboard-widget-missions .leaderboard-score { color: #72d1c4; }
 .leaderboard-widget-builder .leaderboard-score { color: #ffb45d; }
 .leaderboard-widget-explorer .leaderboard-score { color: #4d9bff; }
 .leaderboard-row-top-1 .leaderboard-name { color: var(--lime); }

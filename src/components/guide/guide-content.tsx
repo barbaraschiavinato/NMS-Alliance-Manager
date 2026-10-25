@@ -487,7 +487,9 @@ export async function GuideContent({
               <ul>
                 <li>
                   Accedi con Google. L&apos;account resta <strong>in attesa</strong> finché un moderatore o un admin non
-                  lo approva; nel frattempo puoi solo completare il profilo.
+                  lo approva; nel frattempo puoi solo completare il profilo. Se l&apos;alleanza ha attivato
+                  l&apos;avviso, quando vieni approvato ricevi anche un&apos;email all&apos;indirizzo Google con cui hai
+                  fatto l&apos;accesso.
                 </li>
                 <li>
                   Profilo: nome in gioco, codice amico NMS (13 caratteri alfanumerici, i trattini sono ignorati), una o
@@ -885,7 +887,11 @@ export async function GuideContent({
               </li>
               <li>
                 La scheda mostra il pianeta con i dati di Server Pianeti (se il pianeta è presente nel server), il nome,
-                la galassia, lo scopritore e le note.
+                la galassia, lo scopritore e le note. Sotto il nome indica quanti pianeti e quante lune ha il sistema
+                (le lune solo se ci sono) e il colore della stella; in basso mostra stella, economia con le sue stelle,
+                conflitto con i pallini e razza con la sua icona, gli stessi dati dell&apos;intestazione di Pianeti
+                (passando sopra razza, stelle e pallini compare un suggerimento). Un&apos;etichetta segnala se il
+                sistema ha un buco nero, un&apos;Interfaccia Atlas o un gigante gassoso.
               </li>
               <li>La scheda stazione ha due voci da spuntare: Stazione riscattata e Sistema rinominato.</li>
               <li>
@@ -1100,6 +1106,18 @@ export async function GuideContent({
                 scheda del pianeta per leggere le note condivise o lanciare un&apos;aiuto.
               </li>
               <li>
+                In basso a destra ogni scheda mostra, da sinistra a destra, il simbolo Paradiso (palma verde, solo se il
+                pianeta lo è), il simbolo Dissonante (onda viola, solo se il pianeta lo è), la dimensione del pianeta o
+                della luna e una goccia d&apos;acqua che si riempie in base alla quantità: vuota se il pianeta è
+                asciutto, un terzo con acqua bassa, due terzi con l&apos;oceano e piena con l&apos;acqua profonda.
+              </li>
+              <li>
+                In alto a destra compare la casella personale «Visitato» sui pianeti dei sistemi della tua stazione (se
+                ne sei lo scopritore) o della tua missione (se sei Esploratore o Costruttore). Il filtro «Visitati da
+                me» mostra i pianeti visitati o ancora da visitare, e il totale di ciascuno entra nella classifica
+                «Pianeti visitati».
+              </li>
+              <li>
                 Le informazioni sono raggruppate per sistema/stazione, così puoi vedere subito tutti i pianeti legati a
                 una stessa stazione e scorrere le loro caratteristiche.
               </li>
@@ -1116,8 +1134,10 @@ export async function GuideContent({
             <PlanetFiltersExample />
             <p>
               I filtri restringono ulteriormente i risultati. Le opzioni nei menu dipendono dai dati presenti
-              nell&apos;archivio. Il filtro «Sistema speciale» mostra solo i sistemi con un buco nero,
-              un&apos;Interfaccia Atlas o un gigante gassoso.
+              nell&apos;archivio. Il filtro «Ricchezza» raggruppa i sistemi per la descrizione economica (per esempio
+              Indigente, Promettente, Benestante); il filtro «Sistema speciale» mostra solo i sistemi con un buco nero,
+              un&apos;Interfaccia Atlas o un gigante gassoso; il filtro «Visitati da me» compare solo se hai pianeti da
+              spuntare e mostra quelli già visitati o ancora da visitare.
             </p>
             <h5>Esempio con i filtri aperti</h5>
             <PlanetFiltersExample initiallyOpen />
@@ -1139,9 +1159,10 @@ export async function GuideContent({
 
             <p>
               L&apos;intestazione mostra il nome della stazione, la galassia, l&apos;indirizzo portale e i dati del
-              sistema. Il pulsante con l&apos;icona della stazione apre la stazione nella sezione Stazioni. Se non
-              c&apos;è una stazione associata, il gruppo è indicato come «
-              {translate("it", "planet.no_associated_station")}».
+              sistema: stella, economia con le sue stelle, conflitto con i pallini e razza con la sua icona (passando
+              sopra razza, stelle e pallini compare un suggerimento con il valore esatto). Il pulsante con l&apos;icona
+              della stazione apre la stazione nella sezione Stazioni. Se non c&apos;è una stazione associata, il gruppo
+              è indicato come «{translate("it", "planet.no_associated_station")}».
             </p>
             <p>
               Se nel sistema c&apos;è un buco nero, un&apos;Interfaccia Atlas o un gigante gassoso (sistema viola con un
@@ -1157,7 +1178,9 @@ export async function GuideContent({
             </h4>
             <p>
               Ogni scheda mostra il nome restituito da Server Pianeti o il numero del pianeta, l&apos;indirizzo portale
-              con i glifi e i dati disponibili. Selezionando la scheda si apre il dettaglio del pianeta.
+              con i glifi e i dati disponibili. Selezionando la scheda si apre il dettaglio del pianeta. Negli esempi
+              trovi anche un pianeta che puoi visitare, con la casella «Visitato» in alto a destra: provala, nella guida
+              non salva nulla.
             </p>
             <PlanetListExample planet={planetExample} />
           </section>
@@ -1174,8 +1197,9 @@ export async function GuideContent({
                 pianeti e membri approvati.
               </li>
               <li>
-                Le classifiche individuali mostrano chi ha registrato più stazioni e completato più missioni, con un
-                massimo di 10 membri per classifica.
+                Le classifiche individuali mostrano chi ha registrato più stazioni, completato più missioni e visitato
+                più pianeti (conta solo quanti, non quali), con un massimo di 10 membri per classifica. Ogni classifica
+                usa l&apos;icona e i colori della sua sezione: Stazioni, Missioni e Pianeti.
               </li>
               <li>
                 Le classifiche dei task sono divise per specializzazione: Ranger, Esploratore e Costruttore. Per ogni
