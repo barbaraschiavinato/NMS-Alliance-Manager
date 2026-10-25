@@ -7,7 +7,11 @@ import * as admin from "@/app/api/admin/member-notifications/route";
 import { PATCH as patchMembers } from "@/app/api/admin/members/route";
 import { defaultMemberNotificationSettings } from "@/lib/notifications/member-notifications";
 import { saveMemberNotificationSettings } from "@/lib/notifications/member-notifications-store";
-import { memberNotificationReadiness } from "@/lib/notifications/member-notification-delivery";
+import * as notificationStore from "@/lib/notifications/member-notifications-store";
+import {
+  memberNotificationReadiness,
+  notifyMemberApprovedByEmail,
+} from "@/lib/notifications/member-notification-delivery";
 
 vi.mock("@/auth", async () => (await import("../helpers/auth")).authMock);
 vi.mock("next/server", async (original) => ({
@@ -164,6 +168,20 @@ describe("approval email", () => {
     const body = JSON.parse(fetch.mock.calls[0][1].body);
     expect(body.subject).toContain("NMS Alliance Manager");
     expect(body.text).toContain("Ciao Utente");
+  });
+
+  it("does nothing when the option was turned off after the approval was scheduled", async () => {
+    const fetch = stubResend();
+    await notifyMemberApprovedByEmail(pending.publicId);
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it("logs non-Error failures of the approval email", async () => {
+    stubResend();
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.spyOn(notificationStore, "readMemberNotificationSettings").mockRejectedValue("unexpected");
+    await notifyMemberApprovedByEmail(pending.publicId);
+    expect(error).toHaveBeenCalledWith("Approval email failed", "Unknown error");
   });
 
   it("never lets a failed email surface to the caller", async () => {

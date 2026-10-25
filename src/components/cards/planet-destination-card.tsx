@@ -1,7 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { Droplet, Globe2, Moon } from "lucide-react";
+import { useId } from "react";
+import { AudioWaveform, Globe2, Moon } from "lucide-react";
 import type { SystemFeature } from "@/lib/planets/system-feature";
 import type { AlmanacDiscoveryCounts } from "@/lib/almanac/almanac-discovery-counts";
 import { PlanetDiscoveryCounts } from "@/components/shared/planet-discovery-counts";
@@ -35,6 +36,8 @@ export type PlanetDestination = Readonly<{
   paradise: boolean;
   blackMarket: boolean;
   systemFeature?: SystemFeature;
+  canMarkVisited?: boolean;
+  visited?: boolean;
   station?: Readonly<{
     id: string;
     portal: string;
@@ -70,27 +73,56 @@ function PlanetSizeIndicator({ size, label }: Readonly<{ size?: string; label: (
 
 export const conflictLevels: Record<string, number> = { None: 0, Low: 1, Medium: 2, High: 3, Outlaw: 3 };
 
+// One drop that fills up with the amount of water: empty when dry, a third for Shallow, two thirds for Ocean and full
+// for Deep. An unknown word shows a third, so a planet with some water never looks dry.
+const planetWaterLevels: Record<string, number> = { None: 0, Shallow: 1, Ocean: 2, Deep: 3 };
+const dropPath =
+  "M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z";
+
 function PlanetWaterIndicator({ water, label }: Readonly<{ water?: string; label: (value: string) => string }>) {
-  if (!water || water === "None") return null;
+  const clipId = `water-${useId().replace(/[^a-zA-Z0-9]/g, "")}`;
+  if (!water) return null;
+  const level = planetWaterLevels[water] ?? 1;
   return (
-    <span aria-label={label(water)} className="planet-water-indicator has-water" data-tooltip={label(water)} role="img">
-      <Droplet aria-hidden="true" size={14} />
+    <span
+      aria-label={label(water)}
+      className={`planet-water-indicator${level > 0 ? " has-water" : ""}`}
+      data-tooltip={label(water)}
+      role="img"
+    >
+      <svg aria-hidden="true" height={14} viewBox="0 0 24 24" width={14}>
+        {level > 0 && (
+          <>
+            <clipPath id={clipId}>
+              <rect height="24" width="24" x="0" y={22 - (20 * level) / 3} />
+            </clipPath>
+            <path className="planet-water-fill" clipPath={`url(#${clipId})`} d={dropPath} />
+          </>
+        )}
+        <path className="planet-water-outline" d={dropPath} />
+      </svg>
     </span>
   );
 }
 
+export type PlanetVisitControls = Readonly<{
+  isVisited: (planet: PlanetDestination) => boolean;
+  isSaving: (planet: PlanetDestination) => boolean;
+  onToggle: (planet: PlanetDestination, visited: boolean) => void;
+}>;
+
 export function PlanetDestinationCard({
   planet,
   onOpen,
-}: Readonly<{ planet: PlanetDestination; onOpen: (planet: PlanetDestination) => void }>) {
+  visits,
+}: Readonly<{
+  planet: PlanetDestination;
+  onOpen: (planet: PlanetDestination) => void;
+  visits?: PlanetVisitControls;
+}>) {
   const { t, tv } = useLocale();
   return (
-    <div>
-      {planet.dissonant && (
-        <span className="planet-ribbon-clip">
-          <span className="planet-dissonant-ribbon">{t("planet.dissonant")}</span>
-        </span>
-      )}
+    <div className={planet.canMarkVisited && visits ? "planet-card-with-visit" : undefined}>
       {planet.paradise && (
         <span className="planet-ribbon-clip planet-ribbon-clip-left">
           <span className="planet-paradise-ribbon">{t("planet.paradise")}</span>
@@ -119,15 +151,38 @@ export function PlanetDestinationCard({
           )}
           <PlanetDiscoveryCounts counts={planet.discoveryCounts} />
         </span>
-        <PlanetWaterIndicator
-          label={tv}
-          water={planet.almanacFacts.find((fact) => fact.label === "planet.water")?.value}
-        />
-        <PlanetSizeIndicator
-          size={planet.almanacFacts.find((fact) => fact.label === "planet.size")?.value}
-          label={tv}
-        />
+        <span className="planet-card-indicators">
+          {planet.dissonant && (
+            <span
+              aria-label={t("planet.dissonant")}
+              className="planet-dissonant-indicator"
+              data-tooltip={t("planet.dissonant")}
+              role="img"
+            >
+              <AudioWaveform aria-hidden="true" size={14} />
+            </span>
+          )}
+          <PlanetSizeIndicator
+            size={planet.almanacFacts.find((fact) => fact.label === "planet.size")?.value}
+            label={tv}
+          />
+          <PlanetWaterIndicator
+            label={tv}
+            water={planet.almanacFacts.find((fact) => fact.label === "planet.water")?.value}
+          />
+        </span>
       </button>
+      {planet.canMarkVisited && visits && (
+        <label className="planet-visited-check">
+          <span>{t("planet.visited")}</span>
+          <input
+            checked={visits.isVisited(planet)}
+            disabled={visits.isSaving(planet)}
+            onChange={(event) => visits.onToggle(planet, event.target.checked)}
+            type="checkbox"
+          />
+        </label>
+      )}
     </div>
   );
 }

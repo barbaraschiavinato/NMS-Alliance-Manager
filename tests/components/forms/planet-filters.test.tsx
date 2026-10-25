@@ -29,6 +29,7 @@ const options: PlanetFilterOptions = {
   minerals: ["Copper"],
   valuables: ["Gold"],
   features: ["gas-giant", "atlas", "black-hole"],
+  visitable: true,
 };
 
 function renderFilters(props: Partial<Parameters<typeof PlanetFilters>[0]> = {}) {
@@ -93,6 +94,7 @@ describe("PlanetFilters", () => {
     ["planet.filter_paradise", "paradise", "no"],
     ["planet.filter_pirate_system", "pirate", "yes"],
     ["planet.filter_special_system", "feature", "atlas"],
+    ["planet.filter_visited", "visited", "no"],
     ["planet.filter_water", "water", "Yes"],
     ["planet.filter_weather", "weather", "Calm"],
     ["planet.filter_conflict", "conflict", "Low"],
@@ -136,6 +138,30 @@ describe("PlanetFilters", () => {
     ).toEqual(["Any system", "Gas giant", "Atlas Interface", "Black hole"]);
   });
 
+  it("lists the visited choices only when the member can mark planets", () => {
+    const { unmount } = renderFilters();
+    const select = screen.getByRole("combobox", { name: tr("planet.filter_visited") });
+    expect(
+      within(select)
+        .getAllByRole("option")
+        .map((option) => option.textContent),
+    ).toEqual(["Any", "Visited", "To visit"]);
+    unmount();
+    renderFilters({ options: { ...options, visitable: false } });
+    expect(screen.queryByRole("combobox", { name: tr("planet.filter_visited") })).not.toBeInTheDocument();
+  });
+
+  it("labels the opposite visited answer in the active tags", () => {
+    renderWithLocale(
+      <PlanetActiveFilters
+        onChange={vi.fn()}
+        onReset={vi.fn()}
+        values={{ ...emptyPlanetFilterValues, visited: "no" }}
+      />,
+    );
+    expect(screen.getByText(`${tr("planet.visited_by_me")}: ${tr("planet.visited_no")}`)).toBeInTheDocument();
+  });
+
   it("renders only the empty choice when no options are known", () => {
     renderFilters({ options: emptyPlanetFilterOptions });
     const select = screen.getByRole("combobox", { name: tr("planet.filter_water") });
@@ -163,6 +189,7 @@ describe("PlanetActiveFilters", () => {
     mineral: "Copper",
     valuable: "Gold",
     feature: "atlas",
+    visited: "yes",
   };
   const tv = (value: string) => translateAlmanacValue("en", value);
 
@@ -189,6 +216,7 @@ describe("PlanetActiveFilters", () => {
       [`${tr("planet.paradise")}: ${tr("planet.dissonant_no")}`, "paradise", ""],
       [`${tr("planet.pirate_system")}: ${tr("planet.dissonant_yes")}`, "pirate", ""],
       [`${tr("planet.special_system")}: ${tr("system.atlas_interface")}`, "feature", ""],
+      [`${tr("planet.visited_by_me")}: ${tr("planet.visited_yes")}`, "visited", ""],
       [`${tr("planet.water")}: ${tv("Yes")}`, "water", ""],
       [`${tr("planet.weather")}: ${tv("Calm")}`, "weather", ""],
       [`${tr("common.conflict")}: ${tv("Low")}`, "conflict", ""],

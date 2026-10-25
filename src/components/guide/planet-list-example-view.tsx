@@ -36,7 +36,7 @@ export function PlanetListExampleView({
           </div>
         </figure>
         <figure className="guide-example">
-          <figcaption>Variante dimostrativa con ribbon Dissonante</figcaption>
+          <figcaption>Variante dimostrativa con simbolo Dissonante</figcaption>
           <div className="planet-mission-list">
             <PlanetDestinationCard
               onOpen={() => undefined}

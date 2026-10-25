@@ -3,7 +3,11 @@
 import { DetailLink as Link } from "@/components/shared/detail-page";
 import { AlertTriangle, Orbit, Skull } from "lucide-react";
 import { galaxyLabel } from "@/lib/planets/galaxies";
-import { PlanetDestinationCard, type PlanetDestination } from "@/components/cards/planet-destination-card";
+import {
+  PlanetDestinationCard,
+  type PlanetDestination,
+  type PlanetVisitControls,
+} from "@/components/cards/planet-destination-card";
 import { useLocale } from "@/components/providers/locale-provider";
 import { SystemFacts } from "@/components/shared/system-facts";
 import { SystemFeatureBadge } from "@/components/shared/system-feature-badge";
@@ -86,11 +90,13 @@ export function PlanetList({
   renderedAt,
   onOpen,
   showStationLink = true,
+  visits,
 }: Readonly<{
   renderedAt: number;
   groups: { station: PlanetDestination["station"]; planets: PlanetDestination[] }[];
   onOpen: (planet: PlanetDestination) => void;
   showStationLink?: boolean;
+  visits?: PlanetVisitControls;
 }>) {
   return (
     <div className="planet-station-groups">
@@ -107,7 +113,7 @@ export function PlanetList({
           />
           <div className="planet-mission-list">
             {groupPlanets.map((planet) => (
-              <PlanetDestinationCard key={planet.id} onOpen={onOpen} planet={planet} />
+              <PlanetDestinationCard key={planet.id} onOpen={onOpen} planet={planet} visits={visits} />
             ))}
           </div>
         </section>

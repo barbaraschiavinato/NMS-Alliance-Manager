@@ -149,11 +149,13 @@ L'azione di eliminazione, quando consentita, è sempre l'ultima, dopo modifica e
 
 ### `Eclipse` Dettaglio pianeta
 Mostra i dati del pianeta e, tramite l'icona sirena, permette di inviare una **richiesta d'aiuto** (vedi [Richieste d'aiuto](#richieste-daiuto)).
+Sulle card della pagina **Pianeti** compare in alto a destra la casella **Visitato** (etichetta con la spunta a destra) per i pianeti dei sistemi in cui hai una **missione assegnata** (se sei Esploratore o Costruttore) oppure di cui sei lo **scopritore della stazione** (qualunque specializzazione). La spunta è personale: la vedi solo tu. Il filtro **Visitati da me** mostra solo i pianeti che hai già visitato oppure quelli **da visitare** (spuntabili ma non ancora visitati); compare solo se hai almeno un pianeta spuntabile. La quantità d'acqua è indicata da **una goccia** in basso a destra, a destra degli indicatori della dimensione: vuota se il pianeta è asciutto, piena per un terzo con acqua bassa, per due terzi con l'oceano e completamente piena con l'acqua profonda.
+
 Il filtro **Ricchezza** della pagina **Pianeti** raggruppa i sistemi per la descrizione economica fornita da Almanac (per esempio Indigente, Promettente, Benestante), che affina le stelle dell'economia. I valori Almanac dell'economia e della ricchezza sono tradotti in italiano.
 
 Il filtro **Sistema speciale** della pagina **Pianeti** mostra solo i sistemi con un buco nero, un'Interfaccia Atlas o un gigante gassoso (le voci disponibili dipendono dai sistemi presenti).
 
-Le etichette **Paradiso** e **Dissonante** compaiono quando indicate dai dati Almanac, senza sostituire le descrizioni delle condizioni del pianeta.
+Sulle card dei pianeti l'etichetta (nastro) **Paradiso** compare in alto a sinistra e il simbolo **Dissonante** (onda viola) tra gli indicatori in basso a destra, insieme a dimensione e acqua: appaiono quando indicati dai dati Almanac, senza sostituire le descrizioni delle condizioni del pianeta.
 
 Nella pagina **Pianeti**, le card mostrano anche le icone di flora, fauna e minerali con i conteggi disponibili in Almanac. Gli stessi contatori compaiono nel dettaglio pianeta, prima del codice portale, e si aggiornano selezionando un altro pianeta. I valori mancanti non vengono mostrati; un conteggio pari a zero resta visibile.
 
