@@ -14,7 +14,7 @@ import {
 } from "@/lib/navigation/detail-links";
 
 describe("contextual detail navigation", () => {
-  it.each(["stations", "missions", "planets", "messages", "help-requests", "taxi"])(
+  it.each(["stations", "missions", "planets", "map", "messages", "help-requests", "taxi"])(
     "retains %s list and detail destinations with encoded query values",
     (section) => {
       for (const source of [`/${section}?search=Pilot%20One%26Two`, `/${section}/record?from=messages`]) {
@@ -100,7 +100,7 @@ describe("contextual detail navigation", () => {
 describe("station detail links", () => {
   const station = { ownerId: "member-id", portal: "1234567890ab", galaxy: 255 };
 
-  it.each(["stations", "planets", "missions", "messages", "taxi"] as const)(
+  it.each(["stations", "planets", "map", "missions", "messages", "taxi"] as const)(
     "encodes the %s origin with a safe return destination",
     (origin) => {
       expect(parseDetailOrigin(origin)).toBe(origin);

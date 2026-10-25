@@ -5,6 +5,7 @@ import HelpRequestsRoute from "@/app/help-requests/page";
 import TaxiRoute from "@/app/taxi/page";
 import RootLayout, { metadata } from "@/app/layout";
 import LeaderboardRoute from "@/app/leaderboard/page";
+import StationMapRoute from "@/app/map/page";
 import Loading from "@/app/loading";
 import MemberGuideRoute from "@/app/member-guide/page";
 import MessagesRoute from "@/app/messages/page";
@@ -23,6 +24,7 @@ import UsersPage from "@/app/users/page";
 import { GuideAppPage } from "@/components/pages/guide-app-page";
 import { HelpRequestsPage } from "@/components/pages/help-requests-page";
 import { LeaderboardPage, type LeaderboardBoard } from "@/components/pages/leaderboard-page";
+import { StationMapPage } from "@/components/pages/station-map-page";
 import { LoginScreen } from "@/components/pages/login-screen";
 import { MembersPage } from "@/components/pages/members-page";
 import { MessagesPage } from "@/components/pages/messages-page";
@@ -184,6 +186,7 @@ const sectionRoutes: [string, () => Promise<ReactElement>, unknown][] = [
   ["taxi", () => TaxiRoute(), HelpRequestsPage],
   ["planets", () => PlanetsRoute(), PlanetsPage],
   ["leaderboard", () => LeaderboardRoute(), LeaderboardPage],
+  ["station map", () => StationMapRoute(), StationMapPage],
   ["users", () => UsersPage(), MembersPage],
   ["offline players", () => OfflinePlayersRoute(), OfflinePlayersPage],
   ["member guide", () => MemberGuideRoute(), GuideAppPage],
@@ -989,6 +992,36 @@ describe("planets route", () => {
     await PlanetsRoute();
     expect(readStationPortals).toHaveBeenCalledWith(id.plain);
     expect(readAllStationPortals).not.toHaveBeenCalled();
+  });
+});
+
+describe("station map route", () => {
+  it("lists every station for members with a specialty, with owner names", async () => {
+    signIn(user);
+    const element = await StationMapRoute();
+    expect(element.type).toBe(StationMapPage);
+    expect(props(element).stations).toEqual([
+      { portal: "1234567890AB", galaxy: 0, name: "Home Base", ownerId: id.user, ownerName: user.nmsName || user.name },
+      { portal: "1234567890AC", galaxy: 0, name: "", ownerId: id.builder, ownerName: builder.nmsName || builder.name },
+    ]);
+    expect(props(element).stationCount).toBe(2);
+  });
+
+  it("lists only their own stations for members without a specialty", async () => {
+    signIn(plainUser);
+    const element = await StationMapRoute();
+    expect(props(element).stations).toEqual([
+      expect.objectContaining({ portal: "1234567890AB", ownerId: plainUser.publicId }),
+    ]);
+  });
+
+  it("gives managers the counters of the other sections and an empty owner name for unknown owners", async () => {
+    signIn(moderator);
+    vi.mocked(readAllStationPortals).mockResolvedValue([{ ...stationList[0], ownerId: "ghost" }]);
+    const element = await StationMapRoute();
+    expect(props(element).stations).toEqual([expect.objectContaining({ ownerId: "ghost", ownerName: "" })]);
+    expect(props(element).userCount).toBe(7);
+    expect(props(element).offlineCount).toBe(1);
   });
 });
 

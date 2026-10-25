@@ -7,6 +7,7 @@ import {
   BookOpen,
   Crosshair,
   Eclipse,
+  Map as MapIcon,
   Siren,
   Mail,
   Orbit,
@@ -69,7 +70,17 @@ export function Sidebar({
   currentMember: AllianceMember;
   settings: AllianceSettings;
   activeSection:
-    "missioni" | "pianeti" | "utenti" | "offline" | "stazioni" | "messaggi" | "aiuto" | "taxi" | "classifica" | "guida";
+    | "missioni"
+    | "pianeti"
+    | "mappa"
+    | "utenti"
+    | "offline"
+    | "stazioni"
+    | "messaggi"
+    | "aiuto"
+    | "taxi"
+    | "classifica"
+    | "guida";
 }>) {
   const { t } = useLocale();
   const resetSearch = useRequestSearchReset();
@@ -175,6 +186,15 @@ export function Sidebar({
           {shownPlanetCount !== null && Number.isFinite(shownPlanetCount) && (
             <span className="nav-count">{shownPlanetCount}</span>
           )}
+        </Link>
+        <Link
+          className={`nav-item ${activeSection === "mappa" ? "active" : ""}`}
+          href="/map"
+          data-tooltip={t("navigation.map")}
+          onClick={resetSearch}
+        >
+          <MapIcon size={17} />
+          <span>{t("navigation.map")}</span>
         </Link>
         {(currentMember.role === "admin" || currentMember.role === "moderator") && (
           <Link

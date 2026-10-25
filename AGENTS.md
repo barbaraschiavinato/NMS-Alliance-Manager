@@ -59,6 +59,8 @@ Each `src/app/<section>/page.tsx` is a thin server component. It loads access da
 
 ### NMS domain
 
+- **Station map** (`/map`, `app/map/page.tsx` + `components/pages/station-map-page.tsx`): top-down SVG of Euclid (galaxy 0) with one marker per region. Coordinates come from `decodePortalAddress` (signed X/Z, centre at 0, Y as detail); `lib/stations/station-map.ts` holds the pure grouping and zoom/pan maths. The route applies the same station visibility as the Stations page (admin, moderator and any specialty see all; no specialty only their own). Stations of other galaxies or with an invalid address are only counted. Selecting a marker opens a small dialog (names and detail links with `from=map`, the `map` entry of `detailOrigins`); keep it keyboard-accessible (markers are focusable buttons, Esc closes the dialog).
+
 - Station details live at `/stations/[id]`, with an encoded composite `ownerId:PORTAL:galaxy` ID (no new stored field). Changing a coordinate or owner changes the URL; navigate to the updated URL after an edit and to `/stations` after deletion.
 - Decode the station route ID exactly once in `parseStationId`: this Next.js version can supply encoded separators in route params. Reject malformed and double-encoded IDs rather than decoding repeatedly.
 - The list and detail routes share `components/pages/stations-route.tsx` for authentication, membership gates and station visibility. Return 404 for invalid, missing or inaccessible station IDs.

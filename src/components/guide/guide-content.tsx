@@ -28,6 +28,7 @@ import {
   Search,
   Siren,
   Trash2,
+  Map as MapIcon,
   Trophy,
   UserRound,
   UserRoundPlus,
@@ -253,6 +254,12 @@ const sections = [
     tasks: "Consulti e filtri per proprietà i pianeti dell'archivio e trovi la stazione associata",
   },
   {
+    name: "Mappa",
+    icon: MapIcon,
+    color: "#5fd0e8",
+    tasks: "Vedi le stazioni dell'alleanza in Euclide posizionate sulla mappa della galassia",
+  },
+  {
     name: "Classifica",
     icon: Trophy,
     color: "#e040c8",
@@ -434,6 +441,12 @@ export async function GuideContent({
                 </ul>
               </li>
             </ul>
+          </li>
+          <li>
+            <a className="guide-index-map" href="#mappa">
+              <MapIcon aria-hidden="true" size={15} />
+              Mappa
+            </a>
           </li>
           <li>
             <a className="guide-index-leaderboard" href="#classifica">
@@ -1176,6 +1189,33 @@ export async function GuideContent({
               non salva nulla.
             </p>
             <PlanetListExample planet={planetExample} />
+          </section>
+
+          <section id="mappa">
+            <h2 style={{ color: "#5fd0e8" }}>
+              <MapIcon aria-hidden="true" size={20} />
+              Mappa
+            </h2>
+            <p>
+              La mappa mostra dall&apos;alto la galassia Euclide: ogni marker è una regione con almeno una stazione,
+              posizionata in base alle coordinate del portale. I cerchi tratteggiati sono guide di distanza dal centro
+              galattico, segnato in giallo.
+            </p>
+            <ul>
+              <li>
+                Trascina la mappa per spostarti e usa la rotellina o i pulsanti «+» e «−» per ingrandire; il pulsante
+                con il mirino mostra di nuovo tutta la galassia.
+              </li>
+              <li>
+                Seleziona un marker (o spostati sul marker con la tastiera e premi Invio): si apre una finestrella con
+                il nome della stazione e il link alla sua scheda di dettaglio; si chiude con la X, con Esc o cliccando
+                fuori. Un numero sul marker indica più stazioni nella stessa regione, tutte elencate nella finestrella.
+              </li>
+              <li>
+                Vedi le stesse stazioni dell&apos;elenco Stazioni. Quelle in altre galassie o senza un indirizzo valido
+                non compaiono e vengono solo contate sotto l&apos;elenco.
+              </li>
+            </ul>
           </section>
 
           <section id="classifica">

@@ -1,0 +1,39 @@
+/* Same two equal columns as the station cards: the map in the first one, legend and notes in the second. */
+.station-map-layout { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-items: start; }
+.station-map-frame { position: relative; min-width: 0; border: 1px solid #394548; border-radius: 4px; background: #0d1214; overflow: hidden; }
+.station-map { display: block; width: 100%; height: auto; aspect-ratio: 1; cursor: grab; touch-action: none; user-select: none; }
+.station-map:active { cursor: grabbing; }
+.station-map-bounds { fill: none; stroke: #394548; stroke-width: 1; }
+.station-map-ring { fill: none; stroke: #26313a; stroke-width: 1; stroke-dasharray: 4 6; }
+.station-map-centre line { stroke: #f2c94c; stroke-width: 1.5; }
+.station-map-marker { cursor: pointer; outline: none; }
+.station-map-marker-other { --marker: #6cb4ff; }
+.station-map-marker-mine { --marker: #4cd37d; }
+.station-map-marker-hub { --marker: #ff4d4f; }
+.station-map-marker circle { fill: var(--marker); stroke: #0d1214; stroke-width: 1; vector-effect: non-scaling-stroke; }
+.station-map-marker text { fill: #0d1214; font-weight: 700; text-anchor: middle; pointer-events: none; }
+.station-map-marker:hover circle, .station-map-marker:focus-visible circle { stroke: #f1eee7; stroke-width: 2; }
+.station-map-marker.selected circle { stroke: #f1eee7; stroke-width: 2.5; }
+.station-map-controls { position: absolute; z-index: 2; top: 8px; right: 8px; display: grid; gap: 6px; }
+.station-map-dialog { width: min(380px, 100%); }
+.station-map-dialog .dialog-heading { margin-bottom: 14px; }
+.station-map-stations { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; font-size: 11px; }
+.station-map-stations li { display: grid; gap: 2px; padding-top: 12px; border-top: 1px solid #354044; }
+.station-map-stations li:first-child { padding-top: 0; border-top: 0; }
+.station-map-stations a strong { color: var(--lime); font-size: 14px; }
+.station-map-stations a:hover strong { text-decoration: underline; text-underline-offset: 2px; }
+.station-map-stations code { color: #a4adae; font-family: "SFMono-Regular", Consolas, monospace; }
+.station-map-stations small { color: #9aa4a6; }
+.station-map-hint { margin: 10px 0 0; color: #9aa4a6; font-size: 11px; }
+.station-map-side { min-width: 0; padding: 14px; border: 1px solid #3a5f8a; border-radius: 4px; background: #16253855; }
+.station-map-side h3 { margin: 0 0 8px; color: #6cb4ff; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; }
+.station-map-side .station-map-hint:first-of-type { margin-top: 12px; }
+.station-map-legend { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; color: #c0c8c6; font-size: 11px; }
+.station-map-legend li { display: flex; align-items: center; gap: 6px; }
+.station-map-legend-dot { width: 10px; height: 10px; flex: none; border-radius: 50%; background: var(--marker); }
+@media (max-width: 720px) {
+  .station-map-layout { grid-template-columns: 1fr; }
+}
+@media (max-width: 950px) {
+  .sidebar-compact ~ .main-panel .station-map-layout { grid-template-columns: 1fr; }
+}
