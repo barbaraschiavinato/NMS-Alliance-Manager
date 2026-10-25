@@ -149,7 +149,7 @@ L'azione di eliminazione, quando consentita, è sempre l'ultima, dopo modifica e
 
 ### `Eclipse` Dettaglio pianeta
 Mostra i dati del pianeta e, tramite l'icona sirena, permette di inviare una **richiesta d'aiuto** (vedi [Richieste d'aiuto](#richieste-daiuto)).
-Sulle card della pagina **Pianeti** compare in alto a destra la casella **Visitato** (etichetta con la spunta a destra) per i pianeti dei sistemi in cui hai una **missione assegnata** (se sei Esploratore o Costruttore) oppure di cui sei lo **scopritore della stazione** (qualunque specializzazione). La spunta è personale: la vedi solo tu. Il filtro **Visitati da me** mostra solo i pianeti che hai già visitato oppure quelli **da visitare** (spuntabili ma non ancora visitati); compare solo se hai almeno un pianeta spuntabile. La quantità d'acqua è indicata da **una goccia** in basso a destra, a destra degli indicatori della dimensione: vuota se il pianeta è asciutto, piena per un terzo con acqua bassa, per due terzi con l'oceano e completamente piena con l'acqua profonda.
+Sulle card della pagina **Pianeti** compare in alto a destra la casella **Visitato** (etichetta con la spunta a destra) per i pianeti dei sistemi in cui hai una **missione assegnata** (se sei Esploratore o Costruttore) oppure di cui sei lo **scopritore della stazione** (qualunque specializzazione). La spunta è personale: la vedi solo tu. Il filtro **Visitati da me** mostra solo i pianeti che hai già visitato oppure quelli **da visitare** (spuntabili ma non ancora visitati); compare solo se hai almeno un pianeta spuntabile. Se in seguito perdi il diritto a un pianeta (per esempio la missione viene riassegnata), quel pianeta esce dai due filtri e perde la casella, ma la tua spunta resta salvata e continua a contare in classifica. La quantità d'acqua è indicata da **una goccia** in basso a destra, a destra degli indicatori della dimensione: vuota se il pianeta è asciutto, piena per un terzo con acqua bassa, per due terzi con l'oceano e completamente piena con l'acqua profonda.
 
 Il filtro **Ricchezza** della pagina **Pianeti** raggruppa i sistemi per la descrizione economica fornita da Almanac (per esempio Indigente, Promettente, Benestante), che affina le stelle dell'economia. I valori Almanac dell'economia e della ricchezza sono tradotti in italiano.
 
@@ -173,7 +173,7 @@ Le card stazione dello stesso sistema e della stessa galassia dell'hub configura
 <a id="classifica"></a>
 
 ### `Trophy` Classifica
-Mostra la posizione dei membri per punti: stazioni scoperte, missioni completate e voci spuntate, più i totali dell'alleanza (pianeti, membri, stazioni, missioni, task). È solo in lettura.
+Mostra la posizione dei membri per punti: stazioni scoperte, missioni completate, **pianeti visitati** (con l'icona e i colori della sezione Pianeti, come i tabelloni Stazioni scoperte e Missioni completate hanno quelli delle rispettive sezioni; conta solo quanti pianeti ha spuntato ciascuno, non quali) e voci spuntate, più i totali dell'alleanza (pianeti, membri, stazioni, missioni, task). È solo in lettura.
 
 ### `CarTaxiFront` Servizio taxi
 

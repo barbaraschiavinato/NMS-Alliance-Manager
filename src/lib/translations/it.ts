@@ -336,6 +336,8 @@ export const translations: TranslationCatalog = {
     "leaderboard.stat_missions_completed": "Missioni completate",
     "leaderboard.stat_tasks": "Task completati",
     "leaderboard.board_missions": "Missioni completate",
+    "leaderboard.board_planets_visited": "Pianeti visitati",
+    "leaderboard.empty_planets_visited": "Nessun pianeta visitato per ora.",
     "leaderboard.rank": "Posizione",
     "leaderboard.member": "Membro",
     "help.help_requests": "Richieste d'aiuto",

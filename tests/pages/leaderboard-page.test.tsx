@@ -90,6 +90,61 @@ describe("LeaderboardPage", () => {
     expect(within(ranger).getAllByRole("img", { name: t("common.ranger") }).length).toBeGreaterThan(0);
   });
 
+  it.each([
+    ["stations", "leaderboard.board_stations", "leaderboard.empty_stations"],
+    ["missions", "leaderboard.board_missions", "leaderboard.empty_missions"],
+  ] as const)("shows the %s accent with its section icon", (accent, title, empty) => {
+    mockFetch({});
+    renderPage(
+      <LeaderboardPage
+        alliance={defaultAlliance}
+        boards={[{ id: accent, title, empty, accent, entries: [] }]}
+        currentMember={me}
+        missionCount={0}
+        stationCount={0}
+      />,
+    );
+    const section = screen.getByRole("heading", { name: t(title), level: 3 }).closest("section")!;
+    expect(section).toHaveClass(`leaderboard-widget-${accent}`);
+    expect(section.querySelector("h3 svg")).not.toBeNull();
+  });
+
+  it("shows the planets visited board with the planets icon and accent", () => {
+    mockFetch({});
+    renderPage(
+      <LeaderboardPage
+        alliance={defaultAlliance}
+        boards={[
+          {
+            id: "planets_visited",
+            title: "leaderboard.board_planets_visited",
+            empty: "leaderboard.empty_planets_visited",
+            accent: "planets",
+            entries: [entry(0), entry(1)],
+          },
+          {
+            id: "empty_planets",
+            title: "leaderboard.board_planets_visited",
+            empty: "leaderboard.empty_planets_visited",
+            accent: "planets",
+            entries: [],
+          },
+        ]}
+        currentMember={me}
+        missionCount={0}
+        stationCount={0}
+      />,
+    );
+    const [board, empty] = screen
+      .getAllByRole("heading", { name: t("leaderboard.board_planets_visited"), level: 3 })
+      .map((heading) => heading.closest("section")!);
+    expect(board).toHaveClass("leaderboard-widget-planets");
+    expect(board.querySelector("h3 svg")).not.toBeNull();
+    expect(within(board).getAllByRole("listitem")).toHaveLength(2);
+    expect(within(board).getAllByLabelText(t("leaderboard.board_planets_visited"))[0]).toHaveTextContent("20");
+    expect(within(empty).getByText(t("leaderboard.empty_planets_visited"))).toBeInTheDocument();
+  });
+
   it("opens the own profile panel", async () => {
     mockFetch({});
     const { user } = renderPage(

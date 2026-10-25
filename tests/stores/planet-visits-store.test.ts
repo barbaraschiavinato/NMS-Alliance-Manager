@@ -29,6 +29,26 @@ describe("planet visit persistence", () => {
     expect(stored).toEqual({ a: ["0:1123456789AB", "0:2123456789AB"] });
   });
 
+  it.each([false, true])(
+    "counts the planets visited by each member and nothing else (Blob=%s)",
+    async (blobBackend) => {
+      if (blobBackend) useBlobBackend();
+      const { readPlanetVisitCounts, setPlanetVisit } = await load();
+      expect(await readPlanetVisitCounts()).toEqual(new Map());
+      await setPlanetVisit("a", "0:1123456789AB", true);
+      await setPlanetVisit("a", "0:2123456789AB", true);
+      await setPlanetVisit("b", "0:1123456789AB", true);
+      await setPlanetVisit("c", "0:1123456789AB", true);
+      await setPlanetVisit("c", "0:1123456789AB", false);
+      expect(await readPlanetVisitCounts()).toEqual(
+        new Map([
+          ["a", 2],
+          ["b", 1],
+        ]),
+      );
+    },
+  );
+
   it.each([null, [], "text", { a: "0:1" }, { a: [1] }])("rejects a malformed document %j", async (value) => {
     writeDataFile(file, value);
     const { readPlanetVisits } = await load();

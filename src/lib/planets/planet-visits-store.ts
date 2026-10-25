@@ -60,6 +60,11 @@ export async function readPlanetVisits(memberId: string): Promise<string[]> {
   return (await readVisits())[memberId] ?? [];
 }
 
+// Only how many planets each member visited is shared (the leaderboard), never which ones.
+export async function readPlanetVisitCounts(): Promise<Map<string, number>> {
+  return new Map(Object.entries(await readVisits()).map(([memberId, keys]) => [memberId, keys.length]));
+}
+
 export async function setPlanetVisit(memberId: string, key: string, visited: boolean): Promise<void> {
   const data = await readVisits();
   const keys = new Set(data[memberId] ?? []);

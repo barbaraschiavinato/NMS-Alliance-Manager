@@ -10,6 +10,13 @@ import {
   type PlanetFilterValues,
 } from "@/components/forms/planet-filters";
 
+// The example lists the filters whose options depend on the data: the special systems and the visited filter.
+const exampleOptions = {
+  ...emptyPlanetFilterOptions,
+  features: ["gas-giant", "atlas", "black-hole"],
+  visitable: true,
+} as const satisfies typeof emptyPlanetFilterOptions;
+
 export function PlanetFiltersExample({
   initiallyOpen = false,
   initialFilters = emptyPlanetFilterValues,
@@ -30,7 +37,7 @@ export function PlanetFiltersExample({
         onSearchChange={() => undefined}
         onToggle={() => setOpen((current) => !current)}
         open={open}
-        options={emptyPlanetFilterOptions}
+        options={exampleOptions}
         search=""
         values={filters}
       />

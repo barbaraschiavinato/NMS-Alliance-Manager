@@ -1040,6 +1040,11 @@ describe("leaderboard route", () => {
       ].sort(),
     );
     expect(board("missions").entries.map((entry) => [entry.publicId, entry.count])).toEqual([[id.user, 2]]);
+    expect([board("stations").accent, board("missions").accent, board("planets_visited").accent]).toEqual([
+      "stations",
+      "missions",
+      "planets",
+    ]);
     const section = (role: string, task: string) => board(`${role}_tasks`).sections!.find((item) => item.id === task)!;
     expect(section("explorer", "mapped").entries.map((entry) => entry.publicId)).toEqual([id.user]);
     expect(section("explorer", "mapped").title).toBe("leaderboard.task_mapped");
@@ -1048,6 +1053,46 @@ describe("leaderboard route", () => {
     // La missione costruttori su 1234567890AC dà il merito all'assegnatario, non al proprietario della stazione.
     expect(section("builder", "buildings_built").entries.map((entry) => entry.publicId)).toEqual([id.user]);
     expect(props(element)).toMatchObject({ stationCount: 1, offlineCount: undefined });
+  });
+
+  it("ranks members by the planets they visited, counting only approved members", async () => {
+    vi.mocked(readMissions).mockResolvedValue([]);
+    vi.mocked(readPlanetSystemStatuses).mockResolvedValue({});
+    vi.mocked(readAlmanacCache).mockResolvedValue(() => null);
+    writeDataFile("planet-visits.json", {
+      [id.user]: ["0:1234567890AB", "0:2234567890AB", "0:3234567890AB"],
+      [id.builder]: ["0:1234567890AB"],
+      [id.pending]: ["0:1234567890AB", "0:2234567890AB"],
+      ghost: ["0:1234567890AB"],
+    });
+    signIn(user);
+    const board = (props(await LeaderboardRoute()).boards as LeaderboardBoard[]).find(
+      (item) => item.id === "planets_visited",
+    )!;
+    expect(board).toMatchObject({ title: "leaderboard.board_planets_visited", accent: "planets" });
+    expect(board.entries.map((entry) => [entry.publicId, entry.count])).toEqual([
+      [id.user, 3],
+      [id.builder, 1],
+    ]);
+    writeDataFile("planet-visits.json", {});
+  });
+
+  it("keeps the leaderboard when the stored visits cannot be read", async () => {
+    vi.mocked(readMissions).mockResolvedValue([]);
+    vi.mocked(readPlanetSystemStatuses).mockResolvedValue({});
+    vi.mocked(readAlmanacCache).mockResolvedValue(() => null);
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.spyOn(visitsStore, "readPlanetVisitCounts")
+      .mockRejectedValueOnce("unexpected")
+      .mockRejectedValueOnce(new Error("disk"));
+    signIn(user);
+    for (const message of ["Unknown error", "disk"]) {
+      const board = (props(await LeaderboardRoute()).boards as LeaderboardBoard[]).find(
+        (item) => item.id === "planets_visited",
+      )!;
+      expect(board.entries).toEqual([]);
+      expect(log).toHaveBeenLastCalledWith("Unable to read planet visits", message);
+    }
   });
 
   it("credits a task once, names members without NMS name and skips invalid systems", async () => {

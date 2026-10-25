@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Compass, Hammer, Search } from "lucide-react";
+import { Compass, Crosshair, Eclipse, Hammer, Orbit, Search } from "lucide-react";
 
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
@@ -25,6 +25,7 @@ export type LeaderboardBoard = Readonly<{
   title: string;
   empty: string;
   role?: string;
+  accent?: "planets" | "stations" | "missions";
   entries: readonly LeaderboardEntry[];
   stats?: readonly Readonly<{ label: string; value: number }>[];
   sections?: readonly Readonly<{ id: string; title: string; entries: readonly LeaderboardEntry[] }>[];
@@ -79,7 +80,7 @@ export function LeaderboardPage({
             <div className={"leaderboard-widgets"} key={groupIndex}>
               {group.map((board) => (
                 <section
-                  className={`leaderboard-widget${board.role ? ` leaderboard-widget-${board.role}` : ""}`}
+                  className={`leaderboard-widget${board.role ? ` leaderboard-widget-${board.role}` : ""}${board.accent ? ` leaderboard-widget-${board.accent}` : ""}`}
                   key={board.id}
                 >
                   <h3>
@@ -89,6 +90,12 @@ export function LeaderboardPage({
                       <Hammer size={14} />
                     ) : board.role === "explorer" ? (
                       <Search size={14} />
+                    ) : board.accent === "planets" ? (
+                      <Eclipse size={14} />
+                    ) : board.accent === "stations" ? (
+                      <Orbit size={14} />
+                    ) : board.accent === "missions" ? (
+                      <Crosshair size={14} />
                     ) : null}
                     {t(board.title)}
                   </h3>
