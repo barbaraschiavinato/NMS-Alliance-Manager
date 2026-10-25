@@ -264,7 +264,8 @@ const sections = [
     name: "Mappa",
     icon: GalaxyIcon,
     color: "#8b8dff",
-    tasks: "Vedi le stazioni dell'alleanza posizionate sulla mappa della loro galassia",
+    tasks:
+      "Vedi le stazioni dell'alleanza sulla mappa della loro galassia (hub in rosso, quelle con missioni per te in verde, le tue in arancione) e arrivi qui dalle schede stazione e dai sistemi di Pianeti",
   },
   {
     name: "Classifica",
@@ -1174,8 +1175,9 @@ export async function GuideContent({
               L&apos;intestazione mostra il nome della stazione, la galassia, l&apos;indirizzo portale e i dati del
               sistema: stella, economia con le sue stelle, conflitto con i pallini e razza con la sua icona (passando
               sopra razza, stelle e pallini compare un suggerimento con il valore esatto). Il pulsante con l&apos;icona
-              della stazione apre la stazione nella sezione Stazioni. Se non c&apos;è una stazione associata, il gruppo
-              è indicato come «{translate("it", "planet.no_associated_station")}».
+              della stazione apre la stazione nella sezione Stazioni; accanto, il pulsante con l&apos;icona della
+              galassia mostra il sistema sulla mappa (marker giallo e pulsante). Se non c&apos;è una stazione associata,
+              il gruppo è indicato come «{translate("it", "planet.no_associated_station")}».
             </p>
             <p>
               Se nel sistema c&apos;è un buco nero, un&apos;Interfaccia Atlas o un gigante gassoso (sistema viola con un
@@ -1218,6 +1220,19 @@ export async function GuideContent({
                 Seleziona un marker (o spostati sul marker con la tastiera e premi Invio): si apre una finestrella con
                 il nome della stazione e il link alla sua scheda di dettaglio; si chiude con la X, con Esc o cliccando
                 fuori. Un numero sul marker indica più stazioni nella stessa regione, tutte elencate nella finestrella.
+              </li>
+              <li>
+                I colori dei marker sono spiegati dalla legenda a destra: <strong>rosso</strong> il hub
+                dell&apos;alleanza, <strong>verde</strong> le stazioni per cui c&apos;è già una missione libera per la
+                tua specializzazione o ne puoi ancora creare una (le stesse regole del pulsante «+» sulla scheda
+                stazione), <strong>arancione</strong> le tue stazioni (se non c&apos;è nulla da fare),{" "}
+                <strong>blu</strong> le altre. Con più stazioni nella stessa regione vince il colore più importante.
+              </li>
+              <li>
+                Il pulsante con l&apos;icona della galassia sulle schede stazione e nell&apos;intestazione del sistema
+                in Pianeti apre la mappa sulla galassia giusta: il marker di quel sistema diventa{" "}
+                <strong>giallo e pulsante</strong> (lo stesso vale per l&apos;indirizzo{" "}
+                <code>/map?galaxy=numero&amp;portal=codice</code>).
               </li>
               <li>
                 Vedi le stesse stazioni dell&apos;elenco Stazioni. Quelle senza un indirizzo valido non compaiono e

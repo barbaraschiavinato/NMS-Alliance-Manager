@@ -1027,8 +1027,22 @@ describe("station map route", () => {
     const element = await StationMapRoute();
     expect(element.type).toBe(StationMapPage);
     expect(props(element).stations).toEqual([
-      { portal: "1234567890AB", galaxy: 0, name: "Home Base", ownerId: id.user, ownerName: user.nmsName || user.name },
-      { portal: "1234567890AC", galaxy: 0, name: "", ownerId: id.builder, ownerName: builder.nmsName || builder.name },
+      {
+        portal: "1234567890AB",
+        galaxy: 0,
+        name: "Home Base",
+        ownerId: id.user,
+        ownerName: user.nmsName || user.name,
+        missionAvailable: true,
+      },
+      {
+        portal: "1234567890AC",
+        galaxy: 0,
+        name: "",
+        ownerId: id.builder,
+        ownerName: builder.nmsName || builder.name,
+        missionAvailable: true,
+      },
     ]);
     expect(props(element).stationCount).toBe(2);
   });

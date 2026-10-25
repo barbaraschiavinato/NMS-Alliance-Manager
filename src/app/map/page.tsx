@@ -6,6 +6,7 @@ import { StationMapPage } from "@/components/pages/station-map-page";
 import { getCurrentMember } from "@/lib/auth/authorization";
 import { readAccessData } from "@/lib/members/access-store";
 import { readMissions } from "@/lib/missions/store";
+import { stationHasMissionOpportunity } from "@/lib/missions/station-mission-availability";
 import { readAllStationPortals, readStationPortals } from "@/lib/stations/stations-store";
 
 export const dynamic = "force-dynamic";
@@ -79,6 +80,7 @@ export default async function StationMapRoute({
         name: station.name ?? "",
         ownerId: station.ownerId,
         ownerName: ownerName(station.ownerId),
+        missionAvailable: stationHasMissionOpportunity(station, missions, member, canManage),
       }))}
       userCount={canManage ? accessData.members.filter((item) => !item.offline).length : undefined}
     />

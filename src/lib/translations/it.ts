@@ -332,6 +332,7 @@ export const translations: TranslationCatalog = {
     "map.marker_label": "{count} stazioni in X {x}, Z {z}",
     "map.legend": "Legenda",
     "map.legend_highlight": "Indicata dal link",
+    "map.legend_available": "Missioni disponibili per te",
     "map.legend_hub": "Hub dell'alleanza",
     "map.legend_mine": "Le mie stazioni",
     "map.legend_other": "Altre stazioni",

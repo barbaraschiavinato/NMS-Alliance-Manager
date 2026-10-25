@@ -92,6 +92,19 @@ describe("stationMapMarkerKind", () => {
     stations: owners.map((ownerId, index) => station({ ownerId, portal: `${index + 1}234567890AB` })),
   });
 
+  it("puts stations with a mission available for the member between the hub and their own stations", () => {
+    const withMission = {
+      ...marker("me", "other"),
+      stations: [
+        station({ ownerId: "me" }),
+        station({ ownerId: "other", portal: "2234567890AB", missionAvailable: true }),
+      ],
+    };
+    expect(stationMapMarkerKind(withMission, "me", null)).toBe("available");
+    expect(stationMapMarkerKind(withMission, "me", { portal: "1234567890AB", galaxy: 0 })).toBe("hub");
+    expect(stationMapMarkerKind(marker("me"), "me", null)).toBe("mine");
+  });
+
   it("flags the hub system first, then the member's own stations", () => {
     const hub = { portal: "9234567890AB", galaxy: 0 };
     expect(stationMapMarkerKind(marker("me", "other"), "me", hub)).toBe("hub");

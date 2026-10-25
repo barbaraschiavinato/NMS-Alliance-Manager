@@ -33,8 +33,14 @@ const zoomStep = 1.6;
 const dragThresholdPx = 4;
 const fallbackMapPx = 800;
 const guideRings = [512, 1024, 1536, 2048];
-const markerOrder: Record<StationMapMarkerKind | "highlight", number> = { other: 0, mine: 1, hub: 2, highlight: 3 };
-const legendKinds: readonly (StationMapMarkerKind | "highlight")[] = ["highlight", "hub", "mine", "other"];
+const markerOrder: Record<StationMapMarkerKind | "highlight", number> = {
+  other: 0,
+  mine: 1,
+  available: 2,
+  hub: 3,
+  highlight: 4,
+};
+const legendKinds: readonly (StationMapMarkerKind | "highlight")[] = ["highlight", "hub", "available", "mine", "other"];
 
 export function StationMapPage({
   currentMember,

@@ -1,6 +1,8 @@
 "use client";
 
+import NextLink from "next/link";
 import { DetailLink as Link } from "@/components/shared/detail-page";
+import { GalaxyIcon } from "@/components/shared/galaxy-icon";
 import { AlertTriangle, Orbit, Skull } from "lucide-react";
 import { galaxyLabel } from "@/lib/planets/galaxies";
 import {
@@ -18,13 +20,16 @@ export function PlanetStationHeading({
   planets,
   renderedAt,
   showStationLink = true,
+  showMapLink = true,
 }: Readonly<{
   station: PlanetDestination["station"];
   planets: readonly PlanetDestination[];
   renderedAt: number;
   showStationLink?: boolean;
+  showMapLink?: boolean;
 }>) {
   const { t } = useLocale();
+  const system = station ?? planets[0];
   const createdTime = station?.createdAt ? Date.parse(station.createdAt) : Number.NaN;
   const isNewStation =
     Boolean(station) &&
@@ -69,17 +74,31 @@ export function PlanetStationHeading({
         )}
         {planets[0] && <SystemFacts economyStars={planets[0].economyStars} facts={planets[0].systemFacts} />}
       </div>
-      {station && showStationLink && (
-        <Link
-          aria-label={t("planet.open_station_in_stations", { station: station.name || station.portal })}
-          className={`member-icon-action member-station-filter planet-station-link${
-            station.canCreateMission ? " station-create-mission-pulse" : ""
-          }`}
-          data-tooltip={t("planet.open_station_in_stations", { station: station.name || station.portal })}
-          href={stationDetailHref(station.id, "planets")}
-        >
-          <Orbit aria-hidden="true" size={15} />
-        </Link>
+      {((station && showStationLink) || (system && showMapLink)) && (
+        <div className="planet-station-actions">
+          {station && showStationLink && (
+            <Link
+              aria-label={t("planet.open_station_in_stations", { station: station.name || station.portal })}
+              className={`member-icon-action member-station-filter planet-station-link${
+                station.canCreateMission ? " station-create-mission-pulse" : ""
+              }`}
+              data-tooltip={t("planet.open_station_in_stations", { station: station.name || station.portal })}
+              href={stationDetailHref(station.id, "planets")}
+            >
+              <Orbit aria-hidden="true" size={15} />
+            </Link>
+          )}
+          {system && showMapLink && (
+            <NextLink
+              aria-label={t("stations.show_on_map_for_portal", { portal: system.portal })}
+              className="member-icon-action planet-station-link planet-map-link"
+              data-tooltip={t("stations.show_on_map")}
+              href={`/map?${new URLSearchParams({ galaxy: String(system.galaxy), portal: system.portal })}`}
+            >
+              <GalaxyIcon aria-hidden="true" size={15} />
+            </NextLink>
+          )}
+        </div>
       )}
     </div>
   );

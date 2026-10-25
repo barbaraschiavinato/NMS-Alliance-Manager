@@ -80,6 +80,7 @@
 .planet-station-address { margin: 0 0 10px; color: #a4adae; font-family: "SFMono-Regular", Consolas, monospace; font-size: 9px; }
 .planet-station-facts { display: flex; flex-wrap: wrap; gap: 4px 12px; color: #a4adae; font-size: 8px; }
 .planet-station-facts b { color: #75847a; font-weight: 600; }
+.planet-station-actions { display: flex; flex: 0 0 auto; align-items: center; gap: 6px; }
 .planet-station-link { position: relative; flex: 0 0 auto; text-decoration: none; }
 .planet-station-link[data-tooltip]::after { position: absolute; z-index: 30; top: calc(100% + 7px); right: 0; padding: 6px 8px; color: #f1eee7; border: 1px solid #394548; border-radius: 3px; background: #111719; box-shadow: 0 4px 14px #0008; content: attr(data-tooltip); font-size: 9px; font-weight: 500; line-height: 1.2; opacity: 0; pointer-events: none; transform: translateY(-3px); transition: opacity .12s, transform .12s; white-space: nowrap; }
 .planet-station-link[data-tooltip]:hover::after, .planet-station-link[data-tooltip]:focus-visible::after { opacity: 1; transform: translateY(0); }
@@ -323,7 +324,7 @@ body:has(.sidebar-compact) .planet-notes-list li { font-size: 17px; }
 }
 
 @media (max-width: 720px) {
-  .main-panel.main-panel .planet-station-link { align-self: flex-start; }
+  .main-panel.main-panel .planet-station-actions { align-self: flex-start; }
 }
 
 .main-panel .planet-sticky-filters { position: sticky; top: 61px; z-index: 9; max-height: calc(100vh - 61px); margin-bottom: 12px; border-bottom: 1px solid #303a3d; background: var(--paper); box-shadow: 0 0 30px 0 rgba(0, 0, 0, 1); }

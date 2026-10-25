@@ -8,7 +8,8 @@
 .station-map-centre line { stroke: #f2c94c; stroke-width: 1.5; }
 .station-map-marker { cursor: pointer; outline: none; }
 .station-map-marker-other { --marker: #6cb4ff; }
-.station-map-marker-mine { --marker: #4cd37d; }
+.station-map-marker-mine { --marker: var(--lime); }
+.station-map-marker-available { --marker: #4cd37d; }
 .station-map-marker-hub { --marker: #ff4d4f; }
 .station-map-marker-highlight { --marker: #f5c518; }
 .station-map-marker circle { fill: var(--marker); stroke: #0d1214; stroke-width: 1; vector-effect: non-scaling-stroke; }

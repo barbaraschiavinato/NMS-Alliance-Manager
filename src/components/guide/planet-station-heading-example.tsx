@@ -4,7 +4,7 @@ import type { PlanetDestination } from "@/components/cards/planet-destination-ca
 export function PlanetStationHeadingExample({ planet }: Readonly<{ planet: PlanetDestination }>) {
   return (
     <div className="planet-station-group">
-      <PlanetStationHeading planets={[planet]} renderedAt={0} station={planet.station} />
+      <PlanetStationHeading planets={[planet]} renderedAt={0} showMapLink={false} station={planet.station} />
     </div>
   );
 }

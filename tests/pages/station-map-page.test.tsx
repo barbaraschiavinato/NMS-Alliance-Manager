@@ -55,13 +55,15 @@ afterEach(() => {
 });
 
 describe("StationMapPage", () => {
-  it("colours the hub red and the member's own stations green, with a legend", () => {
+  it("colours the hub red, stations with missions for the member green and the member's own stations orange", () => {
     const { container } = renderMap(
       [
         station({ portal: "1234567890AB", ownerId: "me", name: "Mine" }),
-        station({ portal: "2234567890CD", ownerId: "other", name: "Theirs" }),
+        station({ portal: "2234567890CD", ownerId: "other", name: "Plain" }),
         station({ portal: "3234567890EF", ownerId: "other", name: "Hub" }),
         station({ portal: "4234567890EF", ownerId: "me", name: "Mine in the hub region" }),
+        station({ portal: "6234567890BB", ownerId: "other", name: "With a mission", missionAvailable: true }),
+        station({ portal: "1234567890AC", ownerId: "me", name: "Mine with a mission", missionAvailable: true }),
       ],
       undefined,
       { ...defaultAlliance, portalCode: "5234567890EF", galaxy: 0 },
@@ -69,14 +71,25 @@ describe("StationMapPage", () => {
     const kinds = [...container.querySelectorAll(".station-map-marker")].map((marker) =>
       [...marker.classList].find((name) => name.startsWith("station-map-marker-")),
     );
-    // Painted last is on top: others first, then the member's own, the hub last.
-    expect(kinds).toEqual(["station-map-marker-other", "station-map-marker-mine", "station-map-marker-hub"]);
+    // Painted last is on top: others first, then the member's own, the available ones, the hub last.
+    expect(kinds).toEqual([
+      "station-map-marker-other",
+      "station-map-marker-mine",
+      "station-map-marker-available",
+      "station-map-marker-available",
+      "station-map-marker-hub",
+    ]);
     const legend = screen.getByRole("list", { name: t("map.legend") });
     expect(
       within(legend)
         .getAllByRole("listitem")
         .map((item) => item.textContent),
-    ).toEqual([t("map.legend_hub"), t("map.legend_mine"), t("map.legend_other")]);
+    ).toEqual([t("map.legend_hub"), t("map.legend_available"), t("map.legend_mine"), t("map.legend_other")]);
+  });
+
+  it("keeps the member's own stations in the primary colour when nothing is available there", () => {
+    const { container } = renderMap([station({ ownerId: "me" })]);
+    expect(container.querySelector(".station-map-marker-mine")).not.toBeNull();
   });
 
   it("opens on the galaxy of the link and shows its marker in yellow with a pulse, on top of the others", async () => {
@@ -121,7 +134,7 @@ describe("StationMapPage", () => {
     renderMap([station()]);
     const legend = screen.getByRole("list", { name: t("map.legend") });
     expect(within(legend).queryByText(t("map.legend_hub"))).not.toBeInTheDocument();
-    expect(within(legend).getAllByRole("listitem")).toHaveLength(2);
+    expect(within(legend).getAllByRole("listitem")).toHaveLength(3);
   });
 
   it("lets an admin save the alliance settings and the own profile from the header", async () => {

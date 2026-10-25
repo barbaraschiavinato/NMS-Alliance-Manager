@@ -12,6 +12,8 @@ export type StationMapStation = Readonly<{
   name: string;
   ownerId: string;
   ownerName: string;
+  // A free mission waits for the member here, or the member can still create one.
+  missionAvailable?: boolean;
 }>;
 
 export type StationMapMarker = Readonly<{
@@ -22,15 +24,17 @@ export type StationMapMarker = Readonly<{
   stations: readonly StationMapStation[];
 }>;
 
-export type StationMapMarkerKind = "hub" | "mine" | "other";
+export type StationMapMarkerKind = "hub" | "available" | "mine" | "other";
 
-// A region with several stations takes the most notable kind: the alliance hub, then the member's own stations.
+// A region with several stations takes the most notable kind: the alliance hub, then stations with a mission available
+// for the member, then the member's own stations.
 export function stationMapMarkerKind(
   marker: StationMapMarker,
   memberId: string,
   hub: SystemIdentity | null,
 ): StationMapMarkerKind {
   if (hub && marker.stations.some((station) => isSameSystem(station, hub))) return "hub";
+  if (marker.stations.some((station) => station.missionAvailable)) return "available";
   return marker.stations.some((station) => station.ownerId === memberId) ? "mine" : "other";
 }
 
