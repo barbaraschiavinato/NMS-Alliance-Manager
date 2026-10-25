@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { GalaxyIcon } from "@/components/shared/galaxy-icon";
 import { Hero } from "@/components/layout/hero";
 import { AddStationButtonExample } from "@/components/guide/add-station-button-example";
 import { MessageComposerExamples } from "@/components/guide/message-composer-examples";
@@ -28,7 +29,6 @@ import {
   Search,
   Siren,
   Trash2,
-  Map as MapIcon,
   Trophy,
   UserRound,
   UserRoundPlus,
@@ -255,8 +255,8 @@ const sections = [
   },
   {
     name: "Mappa",
-    icon: MapIcon,
-    color: "#5fd0e8",
+    icon: GalaxyIcon,
+    color: "#8b8dff",
     tasks: "Vedi le stazioni dell'alleanza in Euclide posizionate sulla mappa della galassia",
   },
   {
@@ -444,7 +444,7 @@ export async function GuideContent({
           </li>
           <li>
             <a className="guide-index-map" href="#mappa">
-              <MapIcon aria-hidden="true" size={15} />
+              <GalaxyIcon aria-hidden="true" size={15} />
               Mappa
             </a>
           </li>
@@ -1192,8 +1192,8 @@ export async function GuideContent({
           </section>
 
           <section id="mappa">
-            <h2 style={{ color: "#5fd0e8" }}>
-              <MapIcon aria-hidden="true" size={20} />
+            <h2 style={{ color: "#8b8dff" }}>
+              <GalaxyIcon aria-hidden="true" size={20} />
               Mappa
             </h2>
             <p>

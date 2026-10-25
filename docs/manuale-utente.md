@@ -172,7 +172,8 @@ Le card stazione dello stesso sistema e della stessa galassia dell'hub configura
 
 <a id="mappa"></a>
 
-### `Map` Mappa
+### `Galaxy` Mappa
+L'icona della sezione (una spirale con due bracci) è disegnata per l'app e non fa parte di Lucide; il suo colore è l'indaco.
 Su desktop la mappa occupa la stessa colonna delle schede stazione, con legenda e note a destra. Mostra dall'alto la galassia **Euclide** con un marker per ogni regione che contiene almeno una stazione, posizionato in base alle coordinate del portale (**rosso** il hub dell'alleanza, **verde** le tue stazioni, **blu** le altre, come indica la legenda; il centro galattico è in giallo, i cerchi tratteggiati sono guide di distanza). Si sposta trascinando, si ingrandisce con la rotellina o con i pulsanti **+**/**−**, e il pulsante con il mirino mostra di nuovo tutta la galassia. Selezionando un marker (anche da tastiera) si apre una finestrella con il nome della stazione e il link alla sua scheda (si chiude con la X, con Esc o cliccando fuori): dal dettaglio, **Torna alla mappa** riporta qui. Un numero sul marker indica più stazioni nella stessa regione. Valgono le stesse regole di visibilità dell'elenco Stazioni; le stazioni in altre galassie o senza un indirizzo valido non compaiono e vengono solo contate.
 
 <a id="classifica"></a>

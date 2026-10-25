@@ -7,7 +7,6 @@ import {
   BookOpen,
   Crosshair,
   Eclipse,
-  Map as MapIcon,
   Siren,
   Mail,
   Orbit,
@@ -19,6 +18,7 @@ import {
 } from "lucide-react";
 import type { AllianceMember, AllianceSettings } from "@/lib/members/access-store";
 import { useLocale } from "@/components/providers/locale-provider";
+import { GalaxyIcon } from "@/components/shared/galaxy-icon";
 import { useRequestSearchReset } from "@/components/shared/navigation-search-reset";
 
 const counterRefreshMs = 2 * 60 * 1000;
@@ -193,7 +193,7 @@ export function Sidebar({
           data-tooltip={t("navigation.map")}
           onClick={resetSearch}
         >
-          <MapIcon size={17} />
+          <GalaxyIcon size={17} />
           <span>{t("navigation.map")}</span>
         </Link>
         {(currentMember.role === "admin" || currentMember.role === "moderator") && (
