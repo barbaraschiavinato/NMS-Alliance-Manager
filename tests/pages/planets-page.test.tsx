@@ -166,7 +166,7 @@ describe("PlanetsPage", () => {
     expect(
       screen.getByRole("link", { name: t("planet.open_station_in_stations", { station: "Home Base" }) }),
     ).not.toHaveClass("station-create-mission-pulse");
-    expect(screen.getByText(t("planet.paradise"))).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: t("planet.paradise") })).toBeInTheDocument();
     expect(screen.getByRole("img", { name: t("planet.dissonant") })).toBeInTheDocument();
     await waitFor(() => expect(window.localStorage.getItem("nms-planet-count")).toBe("2"));
   });

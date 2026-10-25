@@ -1106,10 +1106,10 @@ export async function GuideContent({
                 scheda del pianeta per leggere le note condivise o lanciare un&apos;aiuto.
               </li>
               <li>
-                In basso a destra ogni scheda mostra, da sinistra a destra, il simbolo Dissonante (onda viola, solo se
-                il pianeta lo è), la dimensione del pianeta o della luna e una goccia d&apos;acqua che si riempie in
-                base alla quantità: vuota se il pianeta è asciutto, un terzo con acqua bassa, due terzi con
-                l&apos;oceano e piena con l&apos;acqua profonda. Il nastro Paradiso è in alto a sinistra.
+                In basso a destra ogni scheda mostra, da sinistra a destra, il simbolo Paradiso (palma verde, solo se il
+                pianeta lo è), il simbolo Dissonante (onda viola, solo se il pianeta lo è), la dimensione del pianeta o
+                della luna e una goccia d&apos;acqua che si riempie in base alla quantità: vuota se il pianeta è
+                asciutto, un terzo con acqua bassa, due terzi con l&apos;oceano e piena con l&apos;acqua profonda.
               </li>
               <li>
                 In alto a destra compare la casella personale «Visitato» sui pianeti dei sistemi della tua stazione (se

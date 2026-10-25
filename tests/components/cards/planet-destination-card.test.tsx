@@ -135,7 +135,7 @@ describe("PlanetDestinationCard", () => {
     expect(onOpen).toHaveBeenCalledWith(planet);
   });
 
-  it("shows the Almanac name, image, ribbons, facts and indicators", () => {
+  it("shows the Almanac name, image, facts and indicators", () => {
     const { container } = renderWithLocale(
       <PlanetDestinationCard
         onOpen={vi.fn()}
@@ -158,8 +158,8 @@ describe("PlanetDestinationCard", () => {
       "https://nmsalmanac.com/api/planets/1.png",
     );
     expect(screen.getByRole("img", { name: "Dissonant" })).toHaveClass("planet-dissonant-indicator");
-    expect(container.querySelector(".planet-dissonant-ribbon")).toBeNull();
-    expect(screen.getByText("Paradise")).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "Paradise" })).toHaveClass("planet-paradise-indicator");
+    expect(container.querySelector(".planet-ribbon-clip")).toBeNull();
     expect(screen.getByText("Type")).toBeInTheDocument();
     expect(screen.getByText("Lush")).toBeInTheDocument();
     expect(screen.queryByText("Size")).not.toBeInTheDocument();
@@ -253,11 +253,12 @@ describe("PlanetDestinationCard", () => {
     expect(ids.every((id) => /^water-[a-zA-Z0-9]+$/.test(id))).toBe(true);
   });
 
-  it("shows the dissonant icon first in the row of indicators, before size and water", () => {
+  it("shows the paradise and dissonant icons first in the row of indicators, before size and water", () => {
     const { container } = renderWithLocale(
       <PlanetDestinationCard
         onOpen={vi.fn()}
         planet={makePlanet({
+          paradise: true,
           dissonant: true,
           almanacFacts: [
             { label: "planet.size", value: "Large" },
@@ -269,10 +270,15 @@ describe("PlanetDestinationCard", () => {
     const classes = [...(container.querySelector(".planet-card-indicators")?.children ?? [])].map(
       (child) => child.className.split(" ")[0],
     );
-    expect(classes).toEqual(["planet-dissonant-indicator", "planet-size-indicator", "planet-water-indicator"]);
+    expect(classes).toEqual([
+      "planet-paradise-indicator",
+      "planet-dissonant-indicator",
+      "planet-size-indicator",
+      "planet-water-indicator",
+    ]);
   });
 
-  it("keeps the paradise ribbon on the left, away from the visited checkbox", () => {
+  it("shows the paradise icon among the bottom indicators, not over the visited checkbox", () => {
     const { container } = renderWithLocale(
       <PlanetDestinationCard
         onOpen={vi.fn()}
@@ -280,8 +286,8 @@ describe("PlanetDestinationCard", () => {
         visits={{ isVisited: () => false, isSaving: () => false, onToggle: vi.fn() }}
       />,
     );
-    expect(container.querySelector(".planet-ribbon-clip-left .planet-paradise-ribbon")).not.toBeNull();
-    expect(container.querySelectorAll(".planet-ribbon-clip")).toHaveLength(1);
+    expect(container.querySelector(".planet-card-indicators .planet-paradise-indicator")).not.toBeNull();
+    expect(container.querySelector(".planet-visited-check")).not.toBeNull();
   });
 
   it("places the water drop to the right of the size indicator", () => {

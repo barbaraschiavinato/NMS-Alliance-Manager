@@ -155,7 +155,7 @@ Il filtro **Ricchezza** della pagina **Pianeti** raggruppa i sistemi per la desc
 
 Il filtro **Sistema speciale** della pagina **Pianeti** mostra solo i sistemi con un buco nero, un'Interfaccia Atlas o un gigante gassoso (le voci disponibili dipendono dai sistemi presenti).
 
-Sulle card dei pianeti l'etichetta (nastro) **Paradiso** compare in alto a sinistra e il simbolo **Dissonante** (onda viola) tra gli indicatori in basso a destra, insieme a dimensione e acqua: appaiono quando indicati dai dati Almanac, senza sostituire le descrizioni delle condizioni del pianeta.
+Sulle card dei pianeti il simbolo **Paradiso** (palma verde) e il simbolo **Dissonante** (onda viola) compaiono tra gli indicatori in basso a destra, insieme a dimensione e acqua: appaiono quando indicati dai dati Almanac, senza sostituire le descrizioni delle condizioni del pianeta.
 
 Nella pagina **Pianeti**, le card mostrano anche le icone di flora, fauna e minerali con i conteggi disponibili in Almanac. Gli stessi contatori compaiono nel dettaglio pianeta, prima del codice portale, e si aggiornano selezionando un altro pianeta. I valori mancanti non vengono mostrati; un conteggio pari a zero resta visibile.
 

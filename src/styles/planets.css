@@ -227,10 +227,6 @@ body:has(.sidebar-compact) .planet-notes-list li { font-size: 17px; }
 .planet-help-form { display: grid; gap: 8px; margin-top: 10px; }
 .planet-station-new { margin-left: 8px; padding: 2px 6px; color: #10130f; background: var(--lime); font-size: 10px; font-weight: 750; letter-spacing: 0.06em; text-transform: uppercase; vertical-align: middle; }
 .sidebar-compact ~ .main-panel .planet-station-new { font-size: 12px; }
-.planet-ribbon-clip { position: absolute; z-index: 2; top: 0; right: 0; width: 96px; height: 96px; overflow: hidden; border-radius: 0 4px 0 0; pointer-events: none; }
-.planet-ribbon-clip-left { right: auto; left: 0; border-radius: 4px 0 0; }
-.planet-paradise-ribbon { position: absolute; top: 14px; left: -30px; width: 110px; padding: 2px 0; color: #fff; background: #2e9e5b; font-size: 8px; font-weight: 750; letter-spacing: 0.04em; text-align: center; text-transform: uppercase; transform: rotate(-45deg); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35); }
-.sidebar-compact ~ .main-panel .planet-paradise-ribbon { top: 19px; left: -32px; width: 125px; font-size: 10px; }
 .planet-station-black-market { position: relative; display: inline-flex; margin-left: 8px; color: var(--lime); vertical-align: middle; cursor: default; }
 .sidebar-compact ~ .main-panel .planet-station-black-market svg { width: 19px; height: 19px; }
 .planet-station-black-market[data-tooltip]::after { position: absolute; z-index: 30; left: 0; bottom: calc(100% + 7px); padding: 6px 8px; color: #f1eee7; border: 1px solid #394548; border-radius: 3px; background: #111719; box-shadow: 0 4px 14px #0008; content: attr(data-tooltip); font-size: 9px; font-weight: 500; line-height: 1.2; opacity: 0; pointer-events: none; transform: translateY(3px); transition: opacity .12s, transform .12s; white-space: nowrap; }
@@ -252,12 +248,14 @@ body:has(.sidebar-compact) .planet-notes-list li { font-size: 17px; }
 .planet-mission-card-copy .planet-mission-facts { padding-right: 96px; }
 .sidebar-compact ~ .main-panel .planet-mission-card-copy .planet-mission-facts { padding-right: 120px; }
 .planet-water-indicator { position: relative; display: inline-flex; color: #75847a; line-height: 0; }
-.planet-dissonant-indicator { position: relative; display: inline-flex; color: #b57cf0; line-height: 0; }
-.sidebar-compact ~ .main-panel .planet-dissonant-indicator svg { width: 18px; height: 18px; }
+.planet-dissonant-indicator, .planet-paradise-indicator { position: relative; display: inline-flex; line-height: 0; }
+.planet-dissonant-indicator { color: #b57cf0; }
+.planet-paradise-indicator { color: #3fbf73; }
+.sidebar-compact ~ .main-panel :is(.planet-dissonant-indicator, .planet-paradise-indicator) svg { width: 18px; height: 18px; }
 .planet-water-outline { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .planet-water-fill { fill: currentColor; stroke: none; }
-:is(.planet-water-indicator, .planet-dissonant-indicator)[data-tooltip]::after { position: absolute; z-index: 30; right: 0; bottom: calc(100% + 7px); padding: 6px 8px; color: #f1eee7; border: 1px solid #394548; border-radius: 3px; background: #111719; box-shadow: 0 4px 14px #0008; content: attr(data-tooltip); font-size: 9px; font-weight: 500; line-height: 1.2; opacity: 0; pointer-events: none; transform: translateY(-3px); transition: opacity .12s, transform .12s; white-space: nowrap; }
-:is(.planet-water-indicator, .planet-dissonant-indicator)[data-tooltip]:hover::after { opacity: 1; transform: translateY(0); }
+:is(.planet-water-indicator, .planet-dissonant-indicator, .planet-paradise-indicator)[data-tooltip]::after { position: absolute; z-index: 30; right: 0; bottom: calc(100% + 7px); padding: 6px 8px; color: #f1eee7; border: 1px solid #394548; border-radius: 3px; background: #111719; box-shadow: 0 4px 14px #0008; content: attr(data-tooltip); font-size: 9px; font-weight: 500; line-height: 1.2; opacity: 0; pointer-events: none; transform: translateY(-3px); transition: opacity .12s, transform .12s; white-space: nowrap; }
+:is(.planet-water-indicator, .planet-dissonant-indicator, .planet-paradise-indicator)[data-tooltip]:hover::after { opacity: 1; transform: translateY(0); }
 .sidebar-compact ~ .main-panel .planet-water-indicator svg { width: 18px; height: 18px; }
 .planet-visited-check { position: absolute; z-index: 3; top: 6px; right: 6px; display: flex; align-items: center; gap: 6px; padding: 3px 7px; color: #d4dad6; border: 1px solid #394548; border-radius: 3px; background: #111719e6; font-size: 9px; cursor: pointer; }
 .planet-visited-check input { margin: 0; accent-color: var(--lime); cursor: pointer; }

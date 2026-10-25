@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useId } from "react";
-import { AudioWaveform, Globe2, Moon } from "lucide-react";
+import { AudioWaveform, Globe2, Moon, Palmtree } from "lucide-react";
 import type { SystemFeature } from "@/lib/planets/system-feature";
 import type { AlmanacDiscoveryCounts } from "@/lib/almanac/almanac-discovery-counts";
 import { PlanetDiscoveryCounts } from "@/components/shared/planet-discovery-counts";
@@ -123,11 +123,6 @@ export function PlanetDestinationCard({
   const { t, tv } = useLocale();
   return (
     <div className={planet.canMarkVisited && visits ? "planet-card-with-visit" : undefined}>
-      {planet.paradise && (
-        <span className="planet-ribbon-clip planet-ribbon-clip-left">
-          <span className="planet-paradise-ribbon">{t("planet.paradise")}</span>
-        </span>
-      )}
       <button className="planet-mission-card" onClick={() => onOpen(planet)} type="button">
         {planet.imageUrl ? (
           <Image alt="" className="planet-mission-image" height={96} src={planet.imageUrl} unoptimized width={96} />
@@ -152,6 +147,16 @@ export function PlanetDestinationCard({
           <PlanetDiscoveryCounts counts={planet.discoveryCounts} />
         </span>
         <span className="planet-card-indicators">
+          {planet.paradise && (
+            <span
+              aria-label={t("planet.paradise")}
+              className="planet-paradise-indicator"
+              data-tooltip={t("planet.paradise")}
+              role="img"
+            >
+              <Palmtree aria-hidden="true" size={14} />
+            </span>
+          )}
           {planet.dissonant && (
             <span
               aria-label={t("planet.dissonant")}
