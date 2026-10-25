@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
-import { screen, waitFor, within } from "@testing-library/react";
+import { act, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { StationsPage } from "@/components/pages/stations-page";
+import { setFlashNotice } from "@/lib/navigation/flash-notice";
 import { galaxyLabel } from "@/lib/planets/galaxies";
 import { defaultAlliance, makeMember } from "../helpers/members";
 import { json, makeMission, mockFetch, renderPage, router, t } from "./helpers";
@@ -77,6 +78,7 @@ function emptyMissionRoutes() {
 }
 
 afterEach(() => {
+  window.sessionStorage.clear();
   window.history.replaceState(null, "", "/");
   vi.unstubAllGlobals();
 });
@@ -183,13 +185,13 @@ describe("StationsPage as a member", () => {
       );
       expect(screen.getAllByText(mission.title)).toHaveLength(associatedFirst ? 1 : 2);
       expect(screen.getAllByText(other.title)).toHaveLength(1);
-      expect(screen.getByRole("link", { name: t("details.open_station") })).toHaveAttribute(
+      expect(container.querySelector("a.station-card-title")).toHaveAttribute(
         "href",
         `/stations/${encodeURIComponent(`${ranger.publicId}:1234567890AB:0`)}`,
       );
-      const otherMissionLink = screen.getByRole("link", { name: t("details.open_mission") });
+      const otherMissionLink = screen.getByRole("link", { name: other.title });
       expect(otherMissionLink).toHaveAttribute("href", "/missions/other-mission?from=missions");
-      expect(screen.getAllByRole("link", { name: t("details.open_mission") })).toHaveLength(1);
+      expect(screen.getAllByRole("link", { name: other.title })).toHaveLength(1);
       if (origin === "stations") {
         expect(screen.getByRole("link", { name: t("details.back_to_stations") })).toHaveAttribute("href", "/stations");
       }
@@ -279,7 +281,7 @@ describe("StationsPage as a member", () => {
         screen.queryByRole("textbox", { name: t("stations.search_stations_by_portal_owner_or_galaxy_or_notes") }),
       ).not.toBeInTheDocument();
       expect(container.querySelector(".mission-section .toolbar")).toBeNull();
-      expect(screen.queryByRole("link", { name: t("details.open_station") })).not.toBeInTheDocument();
+      expect(container.querySelector("a.station-card-title")).toBeNull();
 
       expect(
         screen.getByRole("button", { name: t("stations.edit_station_portal", { portal: "1234567890AB" }) }),
@@ -628,9 +630,9 @@ describe("StationsPage as a member", () => {
     expect(screen.queryAllByText("Home Base")).toHaveLength(0);
   });
 
-  it("opens the planet card for a station", async () => {
+  it("opens the planet card from the station title in the station detail", async () => {
     mockFetch(stationRoutes([station()]));
-    const { user } = renderStations();
+    const { user } = renderStations(ranger, detailProps());
 
     const [title] = await screen.findAllByRole("button", { name: /Home Base/ });
     await user.click(title);
@@ -936,13 +938,37 @@ describe("StationsPage owners and missions", () => {
     await waitFor(() => expect(create).toBeEnabled(), { timeout: 2000 });
     await user.click(create);
 
-    expect(await screen.findByText(t("stations.mission_created_from_station"))).toBeInTheDocument();
+    await waitFor(() => expect(router.push).toHaveBeenCalledWith("/missions/a?from=stations"));
+    expect(window.sessionStorage.getItem("nms-flash-notice")).toContain("missions.mission_created");
     expect(requests("POST", "/api/missions")[0].body).toMatchObject({
       targetSpecialty: "explorer",
       assignedMemberId: "explorer-1",
       assignedTo: "Explorer Real",
       stationOwnerMemberId: "other-1",
     });
+  });
+
+  it("shows a one-off notice on the mission detail opened after creating a mission", async () => {
+    const mission = makeMission({ targetSpecialty: "ranger" });
+    mockFetch(stationRoutes([station()], { ...emptyMissionRoutes(), "GET /api/missions": [mission] }));
+    act(() => setFlashNotice("missions.mission_created"));
+    const props = detailProps();
+    const { user } = renderStations(ranger, {
+      ...props,
+      detail: { ...props.detail, missionId: mission.id, origin: "stations" },
+    });
+    const toast = await screen.findByText(t("missions.mission_created"));
+    expect(toast.closest("output")).not.toBeNull();
+    await user.click(screen.getByRole("button", { name: t("common.close_notification") }));
+    expect(screen.queryByText(t("missions.mission_created"))).not.toBeInTheDocument();
+  });
+
+  it("does not show the notice on the plain station detail", async () => {
+    mockFetch(stationRoutes([station()], emptyMissionRoutes()));
+    act(() => setFlashNotice("missions.mission_created"));
+    renderStations(ranger, detailProps());
+    await screen.findAllByText("Home Base");
+    expect(screen.queryByText(t("missions.mission_created"))).not.toBeInTheDocument();
   });
 
   it("lets a ranger open an explorer mission on their own station", async () => {
@@ -963,6 +989,7 @@ describe("StationsPage owners and missions", () => {
     await user.click(create);
 
     expect(await screen.findByText(t("stations.mission_created_from_station"))).toBeInTheDocument();
+    expect(router.push).not.toHaveBeenCalled();
     expect(requests("POST", "/api/missions")[0].body).toMatchObject({ targetSpecialty: "builder" });
   });
 

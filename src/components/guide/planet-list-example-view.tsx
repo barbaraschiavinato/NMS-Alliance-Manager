@@ -21,6 +21,7 @@ export function PlanetListExampleView({
     isVisited: () => visited,
     isSaving: () => false,
     onToggle: (_planet, value) => setVisited(value),
+    onRequestHelp: () => undefined,
   };
 
   return (

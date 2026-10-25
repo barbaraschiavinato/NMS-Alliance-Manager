@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useId } from "react";
-import { AudioWaveform, Globe2, Moon, Palmtree } from "lucide-react";
+import { AudioWaveform, Globe2, Moon, Palmtree, Siren } from "lucide-react";
 import type { SystemFeature } from "@/lib/planets/system-feature";
 import type { AlmanacDiscoveryCounts } from "@/lib/almanac/almanac-discovery-counts";
 import { PlanetDiscoveryCounts } from "@/components/shared/planet-discovery-counts";
@@ -109,6 +109,7 @@ export type PlanetVisitControls = Readonly<{
   isVisited: (planet: PlanetDestination) => boolean;
   isSaving: (planet: PlanetDestination) => boolean;
   onToggle: (planet: PlanetDestination, visited: boolean) => void;
+  onRequestHelp: (planet: PlanetDestination) => void;
 }>;
 
 export function PlanetDestinationCard({
@@ -122,7 +123,7 @@ export function PlanetDestinationCard({
 }>) {
   const { t, tv } = useLocale();
   return (
-    <div className={planet.canMarkVisited && visits ? "planet-card-with-visit" : undefined}>
+    <div className={planet.canMarkVisited && visits ? "planet-card-with-visit planet-card-with-help" : undefined}>
       <button className="planet-mission-card" onClick={() => onOpen(planet)} type="button">
         {planet.imageUrl ? (
           <Image alt="" className="planet-mission-image" height={96} src={planet.imageUrl} unoptimized width={96} />
@@ -177,6 +178,17 @@ export function PlanetDestinationCard({
           />
         </span>
       </button>
+      {planet.canMarkVisited && visits && (
+        <button
+          aria-label={t("help.request_help")}
+          className="member-icon-action planet-card-help"
+          data-tooltip={t("help.request_help")}
+          onClick={() => visits.onRequestHelp(planet)}
+          type="button"
+        >
+          <Siren aria-hidden="true" size={14} />
+        </button>
+      )}
       {planet.canMarkVisited && visits && (
         <label className="planet-visited-check">
           <span>{t("planet.visited")}</span>

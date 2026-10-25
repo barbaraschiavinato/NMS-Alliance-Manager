@@ -352,6 +352,18 @@ describe("PlanetsPage", () => {
       expect(requests("PATCH", "/api/planet-visits")[1].body).toMatchObject({ visited: false });
     });
 
+    it("opens the planet with the help form ready from the card's help button, and plain opens keep it closed", async () => {
+      mockFetch({ "/api/missions/planet": { planet: { lines: { headline: { word: "Verdant" } } } } });
+      const { user } = renderPlanets({ planets: [mine()] });
+      await user.click(screen.getByRole("button", { name: t("help.request_help") }));
+      const dialog = await screen.findByRole("dialog");
+      expect(await within(dialog).findByRole("textbox", { name: /^Help request for/ })).toBeInTheDocument();
+      await user.click(within(dialog).getByRole("button", { name: t("planet.close_planet_details") }));
+      await user.click(screen.getByRole("button", { name: new RegExp(String(planet().almanacName)) }));
+      const reopened = await screen.findByRole("dialog");
+      expect(within(reopened).queryByRole("textbox")).not.toBeInTheDocument();
+    });
+
     it("filters by visited and to visit, following the checkbox, and ignores planets that cannot be marked", async () => {
       mockFetch({ "PATCH /api/planet-visits": { visited: true } });
       const other = planet({ id: "other:0", almanacName: "Elsewhere", canMarkVisited: true, visited: true });

@@ -9,6 +9,8 @@ import { Hero, HeroAddButton } from "@/components/layout/hero";
 import { AdminPanel } from "@/components/modals/admin-panel";
 import { MemberProfilePanel } from "@/components/modals/member-profile-panel";
 import { SystemAddressField, type SystemAddressValidation } from "@/components/shared/portal-address-field";
+import { Toast } from "@/components/shared/toast";
+import { setFlashNotice, useFlashNotice } from "@/lib/navigation/flash-notice";
 import { MissionForm } from "@/components/modals/mission-form";
 import { PlanetCard } from "@/components/modals/planet-card";
 import { MemberCardDialog, type MemberMessageContext } from "@/components/modals/member-card-dialog";
@@ -46,6 +48,7 @@ import type { PlanetDestination } from "@/components/cards/planet-destination-ca
 import {
   detailOrigins,
   contextualDetailHref,
+  missionDetailHref,
   stationDetailHref,
   type DetailOrigin,
   type StationIdentity,
@@ -127,6 +130,8 @@ export function StationsPage({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [flashNotice, dismissFlashNotice] = useFlashNotice();
+  const toast = detail?.missionId ? flashNotice : "";
   const [search, setSearch] = useNavigationSearchState(initialSearch);
   const [adminOpen, setAdminOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -547,6 +552,17 @@ export function StationsPage({
         ? t("stations.count_missions_created_from_the_station", { count: created.length })
         : t("stations.mission_created_from_station"),
     );
+    // Explorers and builders always create a single mission assigned to themselves: open it right away.
+    if (canCreateOwnSpecialtyMission && created.length === 1) {
+      setFlashNotice("missions.mission_created");
+      router.push(
+        contextualDetailHref(
+          missionDetailHref(created[0].id, "stations"),
+          `${window.location.pathname}${window.location.search}`,
+        ),
+      );
+      return;
+    }
     try {
       await refreshStations();
       if (detail) setDetailRevision((current) => current + 1);
@@ -706,6 +722,7 @@ export function StationsPage({
           )}
         </main>
       </section>
+      {toast && <Toast autoCloseMs={5000} message={toast} onClose={dismissFlashNotice} />}
       {addOpen && (
         <div className="dialog-backdrop">
           <dialog

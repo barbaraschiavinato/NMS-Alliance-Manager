@@ -87,6 +87,45 @@ describe("MissionCard variants", () => {
     expect(container.querySelector(".mission-card-system-text")).not.toBeNull();
   });
 
+  it("replaces the system label with the Almanac system facts and uses its planet image", async () => {
+    const fetchMock = stubFetch({
+      planet: () =>
+        new Response(
+          JSON.stringify({
+            planet: {
+              pictures: { disc: "/planets/v.png" },
+              lines: {
+                band: {
+                  star: { word: "Yellow" },
+                  economy: { word: "Fuel Generation", stars: 2 },
+                  conflict: { word: "Low" },
+                  race: { word: "Gek" },
+                },
+              },
+            },
+          }),
+        ),
+    });
+    const { container } = renderMissionCard({ mission: mission({ system: "Alpha · Lush" }) });
+    expect(await screen.findByText("Yellow", { exact: false })).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "Economy level: 2/3" })).toHaveClass("planet-economy-stars");
+    expect(screen.getByRole("img", { name: "Gek" })).toHaveClass("planet-race");
+    expect(container.querySelector(".mission-card-system-text")).toBeNull();
+    expect(container.querySelector(".mission-card-planet-thumb img")).toHaveAttribute(
+      "src",
+      "https://nmsalmanac.com/api/planets/v.png",
+    );
+    expect(fetchMock.mock.calls.filter(([url]) => String(url).startsWith("/api/missions/planet?"))).toHaveLength(1);
+  });
+
+  it("does not repeat the portal code when the system label is the portal code", () => {
+    const { container } = renderMissionCard({
+      mission: mission({ system: "0123456789ab", systemAddress: "0123456789AB" }),
+    });
+    expect(screen.getAllByText("0123456789AB")).toHaveLength(1);
+    expect(container.querySelector(".mission-card-system-text")).toBeNull();
+  });
+
   it("falls back to a generic system label in the extended card", () => {
     renderMissionCard();
     expect(screen.getByText("System", { selector: ".mission-card-system-text" })).toBeInTheDocument();
@@ -102,18 +141,41 @@ describe("MissionCard variants", () => {
     expect(screen.queryByText("Alpha")).not.toBeInTheDocument();
   });
 
-  it("uses the given planet image in the simple card without fetching it", async () => {
+  it("uses the given planet image and record in the simple card without fetching them", async () => {
     const fetchMock = stubFetch();
     const { container } = renderMissionCard({
       currentMember: makeMember({ publicId: "me", simpleView: true }),
       planetImageUrl: "https://example.com/p.png",
+      systemPlanet: { lines: { band: { star: { word: "Yellow" } } } },
     });
     expect(container.querySelector(".mission-card-planet-thumb img")).toHaveAttribute(
       "src",
       "https://example.com/p.png",
     );
+    expect(screen.getByText("Yellow", { exact: false })).toBeInTheDocument();
     await waitFor(() => expect(fetchMock).toHaveBeenCalled());
     expect(fetchMock.mock.calls.some(([url]) => String(url).startsWith("/api/missions/planet?"))).toBe(false);
+  });
+
+  it("shows the Almanac system facts in the simple card too", async () => {
+    stubFetch({
+      planet: () =>
+        new Response(
+          JSON.stringify({
+            planet: {
+              pictures: { disc: "/planets/s.png" },
+              lines: { band: { star: { word: "Red" }, economy: { word: "Mining", stars: 1 } } },
+            },
+          }),
+        ),
+    });
+    const { container } = renderMissionCard({ currentMember: makeMember({ publicId: "me", simpleView: true }) });
+    expect(await screen.findByText("Red", { exact: false })).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "Economy level: 1/3" })).toHaveClass("planet-economy-stars");
+    expect(container.querySelector(".mission-card-planet-thumb img")).toHaveAttribute(
+      "src",
+      "https://nmsalmanac.com/api/planets/s.png",
+    );
   });
 });
 
@@ -123,20 +185,42 @@ describe.each([
 ])("MissionCard (%s) content", (_variant, simpleView) => {
   const viewer = () => makeMember({ publicId: "me", nmsName: "Me", specialty: "explorer", role: "user", simpleView });
 
-  it("shows title, description, specialty and priority, and opens the planet", async () => {
+  it("shows title, description, specialty and priority, and links the title to the mission", () => {
     const target = mission({
       title: "Deep Survey",
       description: "Map it all",
       priority: "urgent",
       targetSpecialty: "builder",
     });
-    const { user, props } = renderMissionCard({ currentMember: viewer(), mission: target });
+    const { props } = renderMissionCard({ currentMember: viewer(), mission: target });
     expect(screen.getByText("Map it all")).toBeInTheDocument();
     expect(screen.getByText("Builders")).toBeInTheDocument();
     expect(screen.getByText("Urgent")).toBeInTheDocument();
     expect(screen.getByText("Euclide")).not.toHaveClass("mission-galaxy-alert");
-    await user.click(screen.getByRole("button", { name: "Open system details for Deep Survey" }));
-    expect(props.onOpenPlanet).toHaveBeenCalledWith(target);
+    expect(screen.getByRole("link", { name: "Deep Survey" })).toHaveAttribute(
+      "href",
+      `/missions/${target.id}?from=missions`,
+    );
+    expect(screen.queryByRole("link", { name: "Open mission details" })).not.toBeInTheDocument();
+    expect(props.onOpenPlanet).not.toHaveBeenCalled();
+  });
+
+  it("shows the uppercase portal code right after the title", () => {
+    const { container } = renderMissionCard({
+      currentMember: viewer(),
+      mission: mission({ title: "Deep Survey", systemAddress: "0123456789ab" }),
+    });
+    const code = screen.getByText("0123456789AB", { selector: ".mission-card-portal-code" });
+    expect(code.previousElementSibling).toBe(container.querySelector(".mission-title-with-info"));
+    expect(code.parentElement).toHaveClass("mission-card-title-copy");
+  });
+
+  it("shows the system facts and special system badge in the title block", async () => {
+    renderMissionCard({ currentMember: viewer(), mission: mission({ systemAddress: "007902304626" }) });
+    expect(await screen.findByText("2 planets · blue star")).toHaveClass("station-card-system-core");
+    const badge = await screen.findByText("Black hole");
+    expect(badge).toHaveClass("system-feature");
+    expect(badge.parentElement).toHaveClass("mission-card-title-copy");
   });
 
   it("warns about missions in other galaxies", () => {
@@ -276,29 +360,28 @@ describe("MissionCard row actions", () => {
 
 describe("MissionCard station link", () => {
   it.each([false, true])(
-    "opens mission details without changing the planet title action, simple view %s",
+    "links the title to the mission details unless already showing them, simple view %s",
     async (simpleView) => {
       const selected = mission();
-      const { user, props, unmount } = renderMissionCard({
+      const { props, unmount } = renderMissionCard({
         mission: selected,
         currentMember: makeMember({ ...me(), simpleView }),
       });
-      expect(screen.getByRole("link", { name: "Open mission details" })).toHaveAttribute(
+      expect(screen.getByRole("link", { name: selected.title })).toHaveAttribute(
         "href",
         `/missions/${selected.id}?from=missions`,
       );
-      expect(screen.getByRole("link", { name: "Open mission details" })).toHaveAttribute(
-        "data-tooltip",
-        "Open mission details",
-      );
-      expect(screen.getByRole("link", { name: "Open mission details" }).nextElementSibling).toBe(
-        screen.getByRole("button", { name: "Claim" }),
-      );
-      await user.click(screen.getByRole("button", { name: `Open system details for ${selected.title}` }));
-      expect(props.onOpenPlanet).toHaveBeenCalledWith(selected);
+      expect(screen.queryByRole("button", { name: `Open system details for ${selected.title}` })).toBeNull();
       unmount();
-      renderMissionCard({ hideDetailLink: true, currentMember: makeMember({ ...me(), simpleView }) });
-      expect(screen.queryByRole("link", { name: "Open mission details" })).not.toBeInTheDocument();
+      const { user, props: hiddenProps } = renderMissionCard({
+        hideDetailLink: true,
+        mission: selected,
+        currentMember: makeMember({ ...me(), simpleView }),
+      });
+      expect(screen.queryByRole("link", { name: selected.title })).not.toBeInTheDocument();
+      await user.click(screen.getByRole("button", { name: `Open system details for ${selected.title}` }));
+      expect(hiddenProps.onOpenPlanet).toHaveBeenCalledWith(selected);
+      expect(props.onOpenPlanet).not.toHaveBeenCalled();
     },
   );
   const manager = () => makeMember({ publicId: "me", role: "moderator", simpleView: false });

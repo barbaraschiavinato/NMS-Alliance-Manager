@@ -36,24 +36,6 @@ describe("guide page", () => {
       expect(row.textContent).toContain("moderatori e gli amministratori");
     }
   });
-  it("lists station and mission detail links with their shared icon, distinct colors and every specialty", async () => {
-    mockFetch({});
-    const { container } = renderPage(await GuideContent({ alliance: defaultAlliance, standalone: false }));
-    const legend = container.querySelector("#legenda")!;
-    for (const [label, color] of [
-      ["Apri scheda stazione", "#6cb4ff"],
-      ["Apri scheda missione", "#72d1c4"],
-    ]) {
-      const row = within(legend as HTMLElement)
-        .getByText(label)
-        .closest("tr")!;
-      expect(row.querySelector(".guide-icon")).toHaveStyle({ color });
-      expect(row.querySelector(".lucide-external-link")).toBeInTheDocument();
-      for (const specialty of ["Ranger", "Esploratore", "Costruttore"]) {
-        expect(within(row).getByLabelText(specialty)).toBeInTheDocument();
-      }
-    }
-  });
   it("renders the Italian guide with its live examples", async () => {
     mockFetch({});
     const route = GuideRoute();

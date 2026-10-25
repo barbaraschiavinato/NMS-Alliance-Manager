@@ -1,4 +1,3 @@
-.mission-card-system .station-card-system-core { flex-basis: 100%; }
 .station-list-empty.station-list-loading { padding: 0; border: 0; }
 .station-list-section { width: min(1180px, 100%); margin: 0 auto; }
 .station-dialog { width: min(560px, 100%); }
@@ -16,7 +15,7 @@
 .station-card-title { min-width: 0; display: flex; grid-column: 1; grid-row: 1; align-items: flex-start; gap: 10px; padding: 0; color: #f1eee7; border: 0; background: transparent; cursor: pointer; text-align: left; }
 .station-card-planet-image { width: 58px; height: 58px; flex: 0 0 58px; border: 1px solid #394548; border-radius: 3px; object-fit: cover; }
 .station-card-title-copy { min-width: 0; display: grid; align-content: center; gap: 5px; }
-.station-card-title-copy > span { color: #a4adae; font-size: 8px; }
+.station-card-title-copy > span, .station-list .station-card-title-copy > code { color: #a4adae; font-size: 8px; }
 .station-card-title-copy > strong { max-width: 100%; overflow: hidden; color: var(--lime); font-size: 14px; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
 .station-card-system-core { color: #a4adae; font-size: 8px; line-height: 1.4; }
 .system-feature { display: inline-flex; align-items: center; gap: 4px; margin-left: 8px; padding: 2px 6px; color: var(--ink); border: 1px solid #394548; border-radius: 3px; background: #1a2124; font-family: "Raleway", sans-serif; font-size: 9px; font-weight: 700; letter-spacing: 0.04em; line-height: 1.3; text-transform: uppercase; vertical-align: middle; }
@@ -31,7 +30,6 @@
 .station-list-cards .station-card-owner .station-owner-card { justify-items: end; margin: 0; }
 .station-list-cards .station-card-owner .station-owner-link { justify-content: flex-end; }
 .station-list-cards .station-portal-code { grid-column: 1 / -1; grid-row: 2; display: grid; grid-template-columns: minmax(0, 1fr) max-content; align-items: start; gap: 4px; padding-top: 10px; border-top: 1px solid #354044; }
-.station-list-cards .station-portal-code > code { grid-column: 2; grid-row: 1; align-self: start; text-align: right; }
 .station-list-cards .station-planet-info-list { grid-column: 1 / -1; grid-row: 3; }
 .station-list-cards .station-planet-info { grid-template-columns: minmax(0, 1fr); }
 .station-list-cards .station-planet-open { display: none; }
@@ -45,7 +43,6 @@
 .station-owner-card > small { color: #aab4b4; font-family: "SFMono-Regular", Consolas, monospace; font-size: 7px; letter-spacing: .5px; }
 .station-owner-link { min-width: 0; max-width: 100%; font-size: 9px; }
 .station-actions .station-notes-action { color: #e4b478; }
-.station-actions .station-detail-link { color: #6cb4ff; }
 .station-notes-dialog { width: min(460px, 100%); }
 .station-notes-content { margin: 0; color: #d4dad6; font-size: 11px; line-height: 1.6; text-align: left; white-space: pre-wrap; overflow-wrap: anywhere; }
 .station-list code { color: var(--lime); font-family: "SFMono-Regular", Consolas, monospace; font-size: 9px; }
@@ -146,11 +143,10 @@
   .station-planet-info .planet-station-facts { grid-column: 1 / span 2; }
 }
 
-.sidebar-compact ~ .main-panel .station-card-title-copy > span { font-size: 11px; }
+.sidebar-compact ~ .main-panel .station-card-title-copy > :is(span, code) { font-size: 11px; }
 .sidebar-compact ~ .main-panel .station-card-title-copy > strong { font-size: 17px; }
 .sidebar-compact ~ .main-panel .station-card-no-planet { font-size: 12px; }
 .sidebar-compact ~ .main-panel .station-card-planet-image { width: 84px; height: 84px; flex-basis: 84px; }
-.sidebar-compact ~ .main-panel .station-portal-code > code { display: none; }
 .sidebar-compact ~ .main-panel .station-planet-info { grid-template-columns: minmax(0, 1fr); padding: 8px 0; }
 .sidebar-compact ~ .main-panel .station-system-status > strong { font-size: 11px; }
 .sidebar-compact ~ .main-panel .station-owner-link { font-size: 14px; }
@@ -188,7 +184,6 @@ body:has(.sidebar-compact) .station-dialog textarea { min-height: 110px; }
 .station-list-cards li { grid-template-rows: auto auto 1fr auto; }
 .station-list-cards .station-card-footer { align-self: end; }
 @media (max-width: 720px) {
-  .main-panel .station-list-cards .station-portal-code > code { grid-column: 1 / -1; grid-row: 2; text-align: left; }
 }
 
 @media (max-width: 720px) {
@@ -260,7 +255,6 @@ body:has(.sidebar-compact) .station-dialog textarea { min-height: 110px; }
 
 .sidebar-compact ~ .main-panel .station-card-footer .station-actions { margin-left: auto; justify-content: flex-end; }
 @media (max-width: 950px) {
-  .main-panel.main-panel .station-list-cards .station-card-extended .station-portal-code > code { grid-column: 1 / -1; grid-row: 2; text-align: left; }
 }
 
 @media (max-width: 950px) {

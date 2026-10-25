@@ -222,9 +222,9 @@ body:has(.sidebar-compact) .planet-notes-list li { font-size: 17px; }
   .sidebar-compact ~ .main-panel .planet-resource-groups { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
-.planet-help-button { width: 36px; height: 36px; flex: none; margin-left: auto; color: #ff4d4f; border-color: #ff4d4f; }
+.member-icon-action.planet-help-button { position: relative; width: 36px; height: 36px; flex: none; margin-left: auto; color: #ff4d4f; }
 .planet-help-button svg { width: 20px; height: 20px; }
-.planet-help-button:hover { color: #ff7577; border-color: #ff7577; }
+.member-icon-action.planet-help-button:hover, .planet-card-with-help > .planet-card-help:hover { color: #ff4d4f; border-color: #ff4d4f; }
 .planet-help-form { display: grid; gap: 8px; margin-top: 10px; }
 .planet-station-new { margin-left: 8px; padding: 2px 6px; color: #10130f; background: var(--lime); font-size: 10px; font-weight: 750; letter-spacing: 0.06em; text-transform: uppercase; vertical-align: middle; }
 .sidebar-compact ~ .main-panel .planet-station-new { font-size: 12px; }
@@ -255,9 +255,15 @@ body:has(.sidebar-compact) .planet-notes-list li { font-size: 17px; }
 .sidebar-compact ~ .main-panel :is(.planet-dissonant-indicator, .planet-paradise-indicator) svg { width: 18px; height: 18px; }
 .planet-water-outline { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .planet-water-fill { fill: currentColor; stroke: none; }
-:is(.planet-water-indicator, .planet-dissonant-indicator, .planet-paradise-indicator)[data-tooltip]::after { position: absolute; z-index: 30; right: 0; bottom: calc(100% + 7px); padding: 6px 8px; color: #f1eee7; border: 1px solid #394548; border-radius: 3px; background: #111719; box-shadow: 0 4px 14px #0008; content: attr(data-tooltip); font-size: 9px; font-weight: 500; line-height: 1.2; opacity: 0; pointer-events: none; transform: translateY(-3px); transition: opacity .12s, transform .12s; white-space: nowrap; }
-:is(.planet-water-indicator, .planet-dissonant-indicator, .planet-paradise-indicator)[data-tooltip]:hover::after { opacity: 1; transform: translateY(0); }
+:is(.planet-water-indicator, .planet-dissonant-indicator, .planet-paradise-indicator, .planet-card-help, .planet-help-button)[data-tooltip]::after { position: absolute; z-index: 30; right: 0; bottom: calc(100% + 7px); padding: 6px 8px; color: #f1eee7; border: 1px solid #394548; border-radius: 3px; background: #111719; box-shadow: 0 4px 14px #0008; content: attr(data-tooltip); font-size: 9px; font-weight: 500; line-height: 1.2; opacity: 0; pointer-events: none; transform: translateY(-3px); transition: opacity .12s, transform .12s; white-space: nowrap; }
+:is(.planet-water-indicator, .planet-dissonant-indicator, .planet-paradise-indicator, .planet-card-help, .planet-help-button)[data-tooltip]:hover::after { opacity: 1; transform: translateY(0); }
+.planet-help-button[data-tooltip]::after { top: calc(100% + 7px); bottom: auto; }
 .sidebar-compact ~ .main-panel .planet-water-indicator svg { width: 18px; height: 18px; }
+.planet-card-with-help > .planet-card-help { position: absolute; z-index: 3; right: 5px; bottom: 5px; width: 24px; height: 24px; color: #ff4d4f; }
+.planet-card-with-help .planet-card-indicators { right: 35px; }
+.sidebar-compact ~ .main-panel .planet-card-with-help > .planet-card-help { width: 30px; height: 30px; }
+.sidebar-compact ~ .main-panel .planet-card-with-help > .planet-card-help svg { width: 17px; height: 17px; }
+.sidebar-compact ~ .main-panel .planet-card-with-help .planet-card-indicators { right: 41px; }
 .planet-visited-check { position: absolute; z-index: 3; top: 6px; right: 6px; display: flex; align-items: center; gap: 6px; padding: 3px 7px; color: #d4dad6; border: 1px solid #394548; border-radius: 3px; background: #111719e6; font-size: 9px; cursor: pointer; }
 .planet-visited-check input { margin: 0; accent-color: var(--lime); cursor: pointer; }
 .planet-card-with-visit .planet-mission-card-copy strong { box-sizing: border-box; padding-right: 84px; }

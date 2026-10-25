@@ -165,6 +165,7 @@ export function PlanetCard({
   missionDescription,
   initialPlanetPortal,
   initialPlanetData,
+  initialHelpOpen = false,
   inlinePreview = false,
   onClose,
 }: Readonly<{
@@ -175,6 +176,7 @@ export function PlanetCard({
   missionDescription?: string;
   initialPlanetPortal?: string;
   initialPlanetData?: PlanetRecord;
+  initialHelpOpen?: boolean;
   inlinePreview?: boolean;
   onClose: () => void;
 }>) {
@@ -185,7 +187,7 @@ export function PlanetCard({
   const [selectedPortal, setSelectedPortal] = useState(initialPlanetPortal ?? portal);
   const [loading, setLoading] = useState(!initialPlanetData);
   const [error, setError] = useState("");
-  const [helpOpen, setHelpOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(initialHelpOpen);
   const [helpBody, setHelpBody] = useState("");
   const [helpError, setHelpError] = useState("");
   const [helpAcknowledged, setHelpAcknowledged] = useState(false);
@@ -369,7 +371,7 @@ export function PlanetCard({
                         setHelpAcknowledged(false);
                         setHelpOpen((open) => !open);
                       }}
-                      title={t("help.request_help")}
+                      data-tooltip={t("help.request_help")}
                       type="button"
                     >
                       <Siren size={15} />

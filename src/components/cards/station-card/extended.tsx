@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { DetailLink as Link } from "@/components/shared/detail-page";
-import { CirclePlus, Crosshair, FileText, Pencil, Trash2, ExternalLink } from "lucide-react";
+import { CirclePlus, Crosshair, FileText, Pencil, Trash2 } from "lucide-react";
 import { missionDetailHref, stationDetailHref } from "@/lib/navigation/detail-links";
 import { GlyphStrip } from "@/components/shared/portal-address-field";
 import { StationSystemCoreInfo } from "@/components/shared/station-system-core-info";
@@ -83,6 +83,7 @@ export function StationCardExtended({
       station={station}
     />
   );
+  const titleClassName = `station-card-title${planetImageUrl ? " station-card-title-with-image" : ""}`;
   return (
     <li
       className={`station-card-extended${isAllianceHub || isNewStation ? " station-is-new" : ""}${
@@ -91,12 +92,8 @@ export function StationCardExtended({
     >
       {newRibbon}
       {createMissionRibbon}
-      {
-        <button
-          className={`station-card-title${planetImageUrl ? " station-card-title-with-image" : ""}`}
-          onClick={() => onOpenStation(station)}
-          type="button"
-        >
+      {showDetailLink ? (
+        <Link className={titleClassName} href={stationDetailHref(station)}>
           {planetImageUrl && (
             <Image
               alt=""
@@ -110,6 +107,31 @@ export function StationCardExtended({
           <span className="station-card-title-copy">
             <GalaxyLabel galaxy={station.galaxy} />
             <strong>{stationDisplayName}</strong>
+            <code>{station.portal}</code>
+            <StationSystemCoreInfo
+              key={`${station.portal}:${station.galaxy}`}
+              galaxy={station.galaxy}
+              portal={station.portal}
+            />
+            <SystemFeatureBadge galaxy={station.galaxy} portal={station.portal} />
+          </span>
+        </Link>
+      ) : (
+        <button className={titleClassName} onClick={() => onOpenStation(station)} type="button">
+          {planetImageUrl && (
+            <Image
+              alt=""
+              className="station-card-planet-image"
+              height={112}
+              src={planetImageUrl}
+              unoptimized
+              width={112}
+            />
+          )}
+          <span className="station-card-title-copy">
+            <GalaxyLabel galaxy={station.galaxy} />
+            <strong>{stationDisplayName}</strong>
+            <code>{station.portal}</code>
             <StationSystemCoreInfo
               key={`${station.portal}:${station.galaxy}`}
               galaxy={station.galaxy}
@@ -118,12 +140,11 @@ export function StationCardExtended({
             <SystemFeatureBadge galaxy={station.galaxy} portal={station.portal} />
           </span>
         </button>
-      }
+      )}
       <div className="station-card-owner">{stationOwner}</div>
       <div className="station-portal-code">
         <strong className="station-name">{stationDisplayName}</strong>
         <GlyphStrip address={station.portal} />
-        <code>{station.portal}</code>
       </div>
       <div className="station-planet-info-list">
         {station.planet ? (
@@ -201,16 +222,6 @@ export function StationCardExtended({
               </Link>
             ) : null
           ) : null}
-          {showDetailLink && (
-            <Link
-              aria-label={t("details.open_station")}
-              className="member-icon-action station-detail-link"
-              data-tooltip={t("details.open_station")}
-              href={stationDetailHref(station)}
-            >
-              <ExternalLink size={14} />
-            </Link>
-          )}
           {canEditStation && (
             <button
               aria-label={t("stations.edit_station_portal", { portal: station.portal })}

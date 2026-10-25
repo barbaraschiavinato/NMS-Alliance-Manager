@@ -51,9 +51,7 @@ function renderDashboard(member: AllianceMember = explorer) {
 }
 
 function missionCard(title: string) {
-  const card = screen
-    .getByRole("button", { name: `${t("planet.open_planet_details_for")} ${title}` })
-    .closest("article");
+  const card = screen.getByRole("link", { name: title }).closest("article");
   if (!card) throw new Error(`No card for ${title}`);
   return card;
 }

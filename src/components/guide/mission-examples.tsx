@@ -273,6 +273,7 @@ function MissionExamples({
                 onCreateRangerMission={noop}
                 onDeleteMission={noop}
                 onEdit={noop}
+                hideDetailLink
                 onOpenPlanet={noop}
                 onOpenProfile={noop}
                 onReopen={noop}
@@ -282,6 +283,7 @@ function MissionExamples({
                 onViewNotes={noop}
                 onViewPlanetNotes={noop}
                 planetImageUrl={planetImageUrl}
+                systemPlanet={sample.response}
                 requestedSpecialty={() => (scenario.request && request ? request : null)}
                 stationOwners={[]}
                 stationOwnersLoaded

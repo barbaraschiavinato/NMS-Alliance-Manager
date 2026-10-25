@@ -27,7 +27,7 @@
 .mission-card { min-width: 0; display: grid; gap: 13px; padding: 15px; border: 1px solid #394548; border-radius: 4px; background: #171e21; }
 .mission-card-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
 .mission-card-heading .mission-name-cell { min-width: 0; }
-.mission-card-planet-thumb { width: 56px; height: 56px; display: grid; flex: 0 0 56px; place-items: center; overflow: hidden; border: 1px solid #394548; border-radius: 3px; background: #1a2124; }
+.mission-card-planet-thumb { width: 58px; height: 58px; display: grid; flex: 0 0 58px; place-items: center; overflow: hidden; border: 1px solid #394548; border-radius: 3px; background: #1a2124; }
 .mission-card-planet-thumb img { width: 100%; height: 100%; object-fit: cover; }
 .mission-card-planet-thumb-done { border-color: var(--lime); }
 .mission-card-planet-fallback { color: #d0d4d0; }
@@ -96,7 +96,11 @@
 .mission-notes-field { margin-top: 16px; }
 .mission-notes-field textarea { min-height: 64px; resize: vertical; }
 .assignee-cell { display: inline-flex; align-items: center; gap: 7px; }
-.mission-galaxy { color: #68756c; font-size: 8px; overflow-wrap: anywhere; }
+.mission-galaxy { color: #a4adae; font-size: 8px; overflow-wrap: anywhere; }
+.mission-card-title-copy { min-width: 0; display: grid; align-content: center; gap: 5px; }
+.mission-card-title-copy > .mission-description { margin-top: 0; }
+.mission-card-title-copy > .system-feature { align-self: flex-start; margin: 4px 0 0; font-size: 9px; }
+.mission-card-portal-code { display: block; color: #a4adae; font-family: "SFMono-Regular", Consolas, monospace; font-size: 8px; }
 .mission-galaxy-alert { width: fit-content; display: inline-flex; align-items: center; gap: 4px; padding: 2px 5px; color: #fff; font-weight: 700; background: #c62828; }
 .mission-galaxy-alert { position: relative; cursor: default; }
 .mission-galaxy-alert[data-tooltip]::after { position: absolute; z-index: 30; left: 0; bottom: calc(100% + 7px); padding: 6px 8px; color: #f1eee7; border: 1px solid #394548; border-radius: 3px; background: #111719; box-shadow: 0 4px 14px #0008; content: attr(data-tooltip); font-size: 9px; font-weight: 500; line-height: 1.2; opacity: 0; pointer-events: none; transform: translateY(3px); transition: opacity .12s, transform .12s; white-space: nowrap; }
@@ -134,13 +138,11 @@
 .mission-row-actions [data-tooltip]:hover::after,
 .mission-row-actions [data-tooltip]:focus-visible::after { opacity: 1; transform: translateY(0); }
 .mission-create-station { position: relative; }
-.mission-station-link, .mission-station-link[data-tooltip], .mission-create-station[data-tooltip], .mission-detail-link[data-tooltip] { position: relative; }
-.mission-station-link[data-tooltip]::after, .mission-create-station[data-tooltip]::after, .mission-detail-link[data-tooltip]::after { position: absolute; z-index: 30; right: 0; bottom: calc(100% + 7px); padding: 6px 8px; color: #f1eee7; border: 1px solid #394548; border-radius: 3px; background: #111719; box-shadow: 0 4px 14px #0008; content: attr(data-tooltip); font-size: 9px; font-weight: 500; line-height: 1.2; opacity: 0; pointer-events: none; text-transform: none; transform: translateY(3px); transition: opacity .12s, transform .12s; white-space: nowrap; }
+.mission-station-link, .mission-station-link[data-tooltip], .mission-create-station[data-tooltip] { position: relative; }
+.mission-station-link[data-tooltip]::after, .mission-create-station[data-tooltip]::after { position: absolute; z-index: 30; right: 0; bottom: calc(100% + 7px); padding: 6px 8px; color: #f1eee7; border: 1px solid #394548; border-radius: 3px; background: #111719; box-shadow: 0 4px 14px #0008; content: attr(data-tooltip); font-size: 9px; font-weight: 500; line-height: 1.2; opacity: 0; pointer-events: none; text-transform: none; transform: translateY(3px); transition: opacity .12s, transform .12s; white-space: nowrap; }
 .mission-station-link[data-tooltip]:hover::after,
 .mission-station-link[data-tooltip]:focus-visible::after,
 .mission-create-station[data-tooltip]:hover::after,
-.mission-detail-link[data-tooltip]:hover::after,
-.mission-detail-link[data-tooltip]:focus-visible::after,
 .mission-create-station[data-tooltip]:focus-visible::after { opacity: 1; transform: translateY(0); }
 .claim-button { min-height: 27px; padding: 0 9px; color: #355b43; border: 1px solid #cbd9c6; background: #eef4e9; cursor: pointer; font-size: 9px; font-weight: 700; }
 .claim-button:hover { background: #e2edd9; }
@@ -257,6 +259,8 @@
 }
 
 .sidebar-compact ~ .main-panel .mission-card .mission-title { font-size: 17px; }
+.sidebar-compact ~ .main-panel .mission-card :is(.mission-galaxy, .mission-card-portal-code, .station-card-system-core) { font-size: 11px; }
+.sidebar-compact ~ .main-panel .mission-card-planet-thumb { width: 84px; height: 84px; flex-basis: 84px; }
 .sidebar-compact ~ .main-panel .mission-card-system { font-size: 12px; }
 .sidebar-compact ~ .main-panel .mission-card-people > div > small { font-size: 10px; }
 .sidebar-compact ~ .main-panel .mission-card-people .assignee-cell { font-size: 12px; }
@@ -464,7 +468,6 @@ body:has(.sidebar-compact) .mission-notes-content { font-size: 17px; }
   .main-panel.main-panel .station-card-extended .mission-system-progress-square { width: 14px; height: 14px; }
 }
 .mission-card-grid.mission-card-grid-full-width { grid-template-columns: minmax(0, 1fr); }
-.mission-card-action-buttons .mission-detail-link { color: #72d1c4; }
 @media (min-width: 951px) {
   .mission-card-actions { flex-wrap: wrap; gap: 5px; }
   .mission-card-actions > .mission-system-progress { margin-right: auto; }

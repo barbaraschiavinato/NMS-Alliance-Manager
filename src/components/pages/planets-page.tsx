@@ -86,6 +86,11 @@ export function PlanetsPage({
   const [adminOpen, setAdminOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [selectedPlanet, setSelectedPlanet] = useState<PlanetDestination | null>(null);
+  const [helpOnOpen, setHelpOnOpen] = useState(false);
+  const openPlanet = useCallback((planet: PlanetDestination) => {
+    setHelpOnOpen(false);
+    setSelectedPlanet(planet);
+  }, []);
   const [search, setSearch] = useState("");
   const [filters, setFilters] = useState(emptyPlanetFilterValues);
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -97,6 +102,10 @@ export function PlanetsPage({
     () => ({
       isVisited: (planet) => visitOverrides[planet.id] ?? planet.visited === true,
       isSaving: (planet) => savingVisits.includes(planet.id),
+      onRequestHelp: (planet) => {
+        setHelpOnOpen(true);
+        setSelectedPlanet(planet);
+      },
       onToggle: (planet, visited) => {
         const previous = visitOverrides[planet.id] ?? planet.visited === true;
         setVisitError("");
@@ -329,7 +338,7 @@ export function PlanetsPage({
             <PlanetList
               renderedAt={renderedAt}
               groups={pagination.items}
-              onOpen={setSelectedPlanet}
+              onOpen={openPlanet}
               showStationLink={!embedded}
               visits={visitControls}
             />
@@ -350,6 +359,7 @@ export function PlanetsPage({
           missionDescription={selectedPlanet.description}
           galaxy={selectedPlanet.galaxy}
           key={selectedPlanet.id}
+          initialHelpOpen={helpOnOpen}
           initialPlanetPortal={selectedPlanet.planetPortal}
           onClose={() => setSelectedPlanet(null)}
           portal={selectedPlanet.portal}

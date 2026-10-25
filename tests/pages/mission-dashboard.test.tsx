@@ -95,8 +95,9 @@ describe("MissionDashboard as a normal user", () => {
       );
       expect(container.querySelectorAll(".app-shell")).toHaveLength(0);
       expect(container.querySelector(".toolbar")).toBeNull();
-      expect(within(featured).queryByRole("link", { name: t("details.open_mission") })).not.toBeInTheDocument();
-      expect(within(associated).getAllByRole("link", { name: t("details.open_mission") })).toHaveLength(1);
+      expect(within(featured).queryByRole("link", { name: selected.title })).not.toBeInTheDocument();
+      expect(within(associated).queryByRole("link", { name: selected.title })).not.toBeInTheDocument();
+      expect(within(associated).getAllByRole("link", { name: other.title })).toHaveLength(1);
       expect(requests("GET", "/api/missions")[0].url.searchParams.get("detailMission")).toBe(selected.id);
       await user.click(within(featured).getByRole("button", { name: t("missions.claim") }));
       await waitFor(() => expect(screen.queryAllByRole("button", { name: t("missions.claim") })).toHaveLength(0));
@@ -285,9 +286,7 @@ describe("MissionDashboard as a normal user", () => {
     );
     const { user } = renderDashboard();
 
-    expect(
-      await screen.findByRole("button", { name: `${t("planet.open_planet_details_for")} Free survey` }),
-    ).toBeInTheDocument();
+    expect(await screen.findByRole("link", { name: "Free survey" })).toBeInTheDocument();
     expect(screen.queryByText("Builder job")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: t("New mission") })).not.toBeInTheDocument();
     expect(requests("GET", "/api/members")).toHaveLength(0);
@@ -492,11 +491,26 @@ describe("MissionDashboard as a normal user", () => {
     expect(screen.getByRole("dialog", { name: t("profile.my_nms_profile") })).toBeInTheDocument();
   });
 
-  it("opens the planet card from the mission title", async () => {
+  it("links the mission title to the mission detail in the list", async () => {
     mockFetch(dashboardRoutes([makeMission({ id: "m-a", title: "Alpha", description: "Scan everything" })]));
-    const { user } = renderDashboard();
+    renderDashboard();
 
-    await user.click(await screen.findByRole("button", { name: `${t("planet.open_planet_details_for")} Alpha` }));
+    expect(await screen.findByRole("link", { name: "Alpha" })).toHaveAttribute("href", "/missions/m-a?from=missions");
+    expect(screen.queryByRole("button", { name: `${t("planet.open_planet_details_for")} Alpha` })).toBeNull();
+  });
+
+  it("opens the planet card from the featured mission title in the mission detail", async () => {
+    const alpha = makeMission({ id: "m-a", title: "Alpha", description: "Scan everything" });
+    mockFetch(dashboardRoutes([alpha]));
+    const { user } = renderDashboard(explorer, {
+      systemScope: { portal: alpha.systemAddress, galaxy: alpha.galaxy },
+      featuredMissionId: alpha.id,
+    });
+
+    const featured = (await screen.findByRole("heading", { name: t("details.mission") })).closest("section")!;
+    await user.click(
+      await within(featured).findByRole("button", { name: `${t("planet.open_planet_details_for")} Alpha` }),
+    );
 
     const dialog = await screen.findByRole("dialog", { name: "Alpha" });
     expect(within(dialog).getByText("Scan everything")).toBeInTheDocument();
