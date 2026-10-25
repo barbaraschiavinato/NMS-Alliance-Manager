@@ -38,18 +38,39 @@ export type StationMapView = Readonly<{ x: number; y: number; size: number }>;
 
 export const fullMapView: StationMapView = { x: -galaxyExtent, y: -galaxyExtent, size: galaxyExtent * 2 };
 
-// Stations of the same region share one marker; `hidden` counts the stations that cannot be placed on the Euclid map.
-export function stationMapMarkers(stations: readonly StationMapStation[]) {
+// Galaxies that hold stations, Euclid (the default) always included.
+export function stationMapGalaxies(stations: readonly StationMapStation[]): number[] {
+  return [...new Set([euclidGalaxy, ...stations.map((station) => station.galaxy)])].sort((a, b) => a - b);
+}
+
+function placedRegion(portal: string) {
+  const decoded = decodePortalAddress(portal);
+  return decoded && decoded.errors.length === 0 && decoded.x !== null && decoded.z !== null
+    ? { x: decoded.x, y: decoded.y, z: decoded.z }
+    : null;
+}
+
+const regionKey = (region: Readonly<{ x: number; z: number }>) => `${region.x}:${region.z}`;
+
+// Key of the marker that holds a portal address (the region it belongs to), or null for an invalid address.
+export function stationMapRegionKey(portal: string): string | null {
+  const region = placedRegion(portal);
+  return region ? regionKey(region) : null;
+}
+
+// Stations of the same region share one marker; `hidden` counts the stations of the galaxy without a valid address.
+export function stationMapMarkers(stations: readonly StationMapStation[], galaxy = euclidGalaxy) {
   const byRegion = new Map<string, { x: number; y: number; z: number; stations: StationMapStation[] }>();
   let hidden = 0;
   for (const station of stations) {
-    const decoded = station.galaxy === euclidGalaxy ? decodePortalAddress(station.portal) : null;
-    if (!decoded || decoded.errors.length > 0 || decoded.x === null || decoded.z === null) {
+    if (station.galaxy !== galaxy) continue;
+    const placed = placedRegion(station.portal);
+    if (!placed) {
       hidden += 1;
       continue;
     }
-    const key = `${decoded.x}:${decoded.z}`;
-    const region = byRegion.get(key) ?? { x: decoded.x, y: decoded.y, z: decoded.z, stations: [] };
+    const key = regionKey(placed);
+    const region = byRegion.get(key) ?? { ...placed, stations: [] };
     region.stations.push(station);
     byRegion.set(key, region);
   }

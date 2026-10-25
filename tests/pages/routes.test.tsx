@@ -995,6 +995,32 @@ describe("planets route", () => {
   });
 });
 
+describe("station map route parameters", () => {
+  const highlightFor = async (params: { galaxy?: string; portal?: string }) => {
+    signIn(user);
+    return props(await StationMapRoute({ searchParams: Promise.resolve(params) })).highlight;
+  };
+
+  it("passes a valid galaxy and portal to the page, with the portal in uppercase", async () => {
+    expect(await highlightFor({ galaxy: "255", portal: "1234567890ab" })).toEqual({
+      portal: "1234567890AB",
+      galaxy: 255,
+    });
+  });
+
+  it.each([
+    [{ galaxy: "256", portal: "1234567890AB" }],
+    [{ galaxy: "-1", portal: "1234567890AB" }],
+    [{ galaxy: "abc", portal: "1234567890AB" }],
+    [{ galaxy: "2", portal: "not-a-portal" }],
+    [{ galaxy: "2" }],
+    [{ portal: "1234567890AB" }],
+    [{}],
+  ])("ignores incomplete or invalid parameters: %j", async (params) => {
+    expect(await highlightFor(params)).toBeUndefined();
+  });
+});
+
 describe("station map route", () => {
   it("lists every station for members with a specialty, with owner names", async () => {
     signIn(user);

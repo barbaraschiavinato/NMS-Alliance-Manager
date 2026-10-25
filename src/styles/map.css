@@ -10,6 +10,7 @@
 .station-map-marker-other { --marker: #6cb4ff; }
 .station-map-marker-mine { --marker: #4cd37d; }
 .station-map-marker-hub { --marker: #ff4d4f; }
+.station-map-marker-highlight { --marker: #f5c518; }
 .station-map-marker circle { fill: var(--marker); stroke: #0d1214; stroke-width: 1; vector-effect: non-scaling-stroke; }
 .station-map-marker text { fill: #0d1214; font-weight: 700; text-anchor: middle; pointer-events: none; }
 .station-map-marker:hover circle, .station-map-marker:focus-visible circle { stroke: #f1eee7; stroke-width: 2; }
@@ -26,6 +27,8 @@
 .station-map-stations small { color: #9aa4a6; }
 .station-map-hint { margin: 10px 0 0; color: #9aa4a6; font-size: 11px; }
 .station-map-side { min-width: 0; padding: 14px; border: 1px solid #4a4f8a; border-radius: 4px; background: #1c1e3a55; }
+.station-map-galaxy { margin-bottom: 14px; }
+.station-map-galaxy select { width: 100%; }
 .station-map-side h3 { margin: 0 0 8px; color: #8b8dff; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; }
 .station-map-side .station-map-hint:first-of-type { margin-top: 12px; }
 .station-map-legend { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; color: #c0c8c6; font-size: 11px; }
@@ -37,3 +40,9 @@
 @media (max-width: 950px) {
   .sidebar-compact ~ .main-panel .station-map-layout { grid-template-columns: 1fr; }
 }
+.station-map-controls [data-tooltip] { position: relative; }
+.station-map-controls [data-tooltip]::after { position: absolute; z-index: 30; top: 50%; right: calc(100% + 7px); padding: 6px 8px; color: #f1eee7; border: 1px solid #394548; border-radius: 3px; background: #111719; box-shadow: 0 4px 14px #0008; content: attr(data-tooltip); font-size: 10px; font-weight: 500; line-height: 1.2; opacity: 0; pointer-events: none; transform: translateY(-50%); transition: opacity .15s; white-space: nowrap; }
+.station-map-controls [data-tooltip]:hover::after, .station-map-controls [data-tooltip]:focus-visible::after { opacity: 1; }
+.station-map-marker .station-map-pulse { fill: none; stroke: #f5c518; stroke-width: 2; transform-box: fill-box; transform-origin: center; animation: station-map-pulse 1.6s ease-out infinite; pointer-events: none; }
+@keyframes station-map-pulse { from { opacity: .9; transform: scale(1); } to { opacity: 0; transform: scale(3); } }
+.pulse-effects-disabled .station-map-pulse { animation: none !important; }

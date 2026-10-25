@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { galaxyLabel } from "@/lib/planets/galaxies";
 import { StationMapPage } from "@/components/pages/station-map-page";
 import type { StationMapStation } from "@/lib/stations/station-map";
 import { defaultAlliance, makeMember } from "../helpers/members";
@@ -24,10 +25,12 @@ function renderMap(
   stations: StationMapStation[],
   currentMember = makeMember({ publicId: "me", role: "user", specialty: "explorer" }),
   alliance = defaultAlliance,
+  highlight?: { portal: string; galaxy: number },
 ) {
   return renderPage(
     <StationMapPage
       alliance={alliance}
+      highlight={highlight}
       currentMember={currentMember}
       missionCount={0}
       stationCount={stations.length}
@@ -76,6 +79,44 @@ describe("StationMapPage", () => {
     ).toEqual([t("map.legend_hub"), t("map.legend_mine"), t("map.legend_other")]);
   });
 
+  it("opens on the galaxy of the link and shows its marker in yellow with a pulse, on top of the others", async () => {
+    const { container, user } = renderMap(
+      [
+        station({ galaxy: 5, portal: "2234567890AB", name: "Linked", ownerId: "me" }),
+        station({ galaxy: 5, portal: "3234567890AC", name: "Neighbour" }),
+        station({ name: "In Euclid" }),
+      ],
+      undefined,
+      { ...defaultAlliance, portalCode: "3234567890AC", galaxy: 5 },
+      { portal: "5234567890AB", galaxy: 5 },
+    );
+    expect(screen.getByRole("combobox", { name: t("stations.galaxy") })).toHaveValue("5");
+    const markers = [...container.querySelectorAll(".station-map-marker")];
+    expect(
+      markers.map((marker) => [...marker.classList].find((name) => name.startsWith("station-map-marker-"))),
+    ).toEqual(["station-map-marker-hub", "station-map-marker-highlight"]);
+    expect(markers[1].querySelector(".station-map-pulse")).not.toBeNull();
+    expect(container.querySelectorAll(".station-map-pulse")).toHaveLength(1);
+    const legend = screen.getByRole("list", { name: t("map.legend") });
+    expect(within(legend).getAllByRole("listitem")[0]).toHaveTextContent(t("map.legend_highlight"));
+
+    await user.selectOptions(screen.getByRole("combobox", { name: t("stations.galaxy") }), "0");
+    expect(container.querySelector(".station-map-pulse")).toBeNull();
+    expect(
+      within(screen.getByRole("list", { name: t("map.legend") })).queryByText(t("map.legend_highlight")),
+    ).toBeNull();
+  });
+
+  it("falls back to Euclid and highlights nothing when the linked galaxy has no stations or the portal is unplaceable", () => {
+    const { container, unmount } = renderMap([station()], undefined, undefined, { portal: "1234567890AB", galaxy: 9 });
+    expect(screen.getByRole("combobox", { name: t("stations.galaxy") })).toHaveValue("0");
+    expect(container.querySelector(".station-map-pulse")).toBeNull();
+    unmount();
+    const second = renderMap([station()], undefined, undefined, { portal: "123456789000", galaxy: 0 });
+    expect(second.container.querySelector(".station-map-pulse")).toBeNull();
+    expect(second.container.querySelector(".station-map-marker-highlight")).toBeNull();
+  });
+
   it("leaves the hub out of the legend when the alliance has none", () => {
     renderMap([station()]);
     const legend = screen.getByRole("list", { name: t("map.legend") });
@@ -109,12 +150,49 @@ describe("StationMapPage", () => {
     );
   });
 
-  it("shows an empty message without stations to place", () => {
-    renderMap([station({ galaxy: 3 })]);
+  it("shows an empty message and the invalid-address count when there is nothing to place", () => {
+    renderMap([station({ portal: "123456789000" })]);
     expect(screen.getByText(t("map.empty"))).toBeInTheDocument();
     expect(screen.getByText(t("map.hidden_station"))).toBeInTheDocument();
     expect(screen.getByText(t("map.select_hint"))).toBeInTheDocument();
     expect(screen.queryAllByRole("button", { name: /stations? at X/ })).toHaveLength(0);
+  });
+
+  it("offers the galaxies with stations, Euclid first and selected, and switches the map", async () => {
+    const { user } = renderMap([
+      station(),
+      station({ galaxy: 5, portal: "2234567890AB", name: "Elsewhere" }),
+      station({ galaxy: 5, portal: "3234567890AC", name: "Elsewhere Too" }),
+      station({ galaxy: 2, portal: "123456789000", name: "Broken" }),
+    ]);
+    const select = screen.getByRole("combobox", { name: t("stations.galaxy") });
+    expect(
+      within(select)
+        .getAllByRole("option")
+        .map((option) => option.textContent),
+    ).toEqual([galaxyLabel(0), galaxyLabel(2), galaxyLabel(5)]);
+    expect(select).toHaveValue("0");
+    expect(screen.getAllByRole("button", { name: /at X/ })).toHaveLength(1);
+
+    await user.click(screen.getByRole("button", { name: t("map.zoom_in") }));
+    await user.click(screen.getAllByRole("button", { name: /at X/ })[0]);
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    await user.click(within(screen.getByRole("dialog")).getByRole("button", { name: t("common.close") }));
+    await user.click(screen.getAllByRole("button", { name: /at X/ })[0]);
+
+    await user.selectOptions(select, "5");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(viewBox()).toEqual([-2048, -2048, 4096, 4096]);
+    expect(screen.getAllByRole("button", { name: /at X/ })).toHaveLength(2);
+    await user.click(screen.getAllByRole("button", { name: /at X/ })[0]);
+    expect(screen.getByRole("link", { name: "Elsewhere" })).toHaveAttribute(
+      "href",
+      "/stations/owner-1%3A2234567890AB%3A5?from=map",
+    );
+
+    await user.selectOptions(select, "2");
+    expect(screen.getByText(t("map.empty"))).toBeInTheDocument();
+    expect(screen.getByText(t("map.hidden_station"))).toBeInTheDocument();
   });
 
   it("marks the stations of Euclid and lists those of the selected region", async () => {
@@ -123,7 +201,8 @@ describe("StationMapPage", () => {
       station({ portal: "2345567890AB", name: "Second Base", ownerId: "owner-2", ownerName: "Owner Two" }),
       station({ portal: "3ABC00FEDC12", name: "Far Away" }),
       station({ galaxy: 5, name: "Elsewhere" }),
-      station({ galaxy: 6, name: "Elsewhere Again" }),
+      station({ portal: "123456789000", name: "Broken" }),
+      station({ portal: "123456789800", name: "Reserved" }),
     ]);
     expect(screen.getByText(t("map.hidden_stations", { count: 2 }))).toBeInTheDocument();
     const markers = screen.getAllByRole("button", { name: /at X/ });

@@ -12,12 +12,16 @@ import { useLocale } from "@/components/providers/locale-provider";
 import { DetailLink } from "@/components/shared/detail-page";
 import type { AllianceMember, AllianceSettings } from "@/lib/members/access-store";
 import { stationDetailHref } from "@/lib/navigation/detail-links";
+import { galaxyLabel } from "@/lib/planets/galaxies";
 import {
   fullMapView,
   galaxyExtent,
   panMapView,
+  euclidGalaxy,
+  stationMapGalaxies,
   stationMapMarkerKind,
   stationMapMarkers,
+  stationMapRegionKey,
   zoomMapView,
   type StationMapMarker,
   type StationMapMarkerKind,
@@ -29,13 +33,14 @@ const zoomStep = 1.6;
 const dragThresholdPx = 4;
 const fallbackMapPx = 800;
 const guideRings = [512, 1024, 1536, 2048];
-const markerOrder: Record<StationMapMarkerKind, number> = { other: 0, mine: 1, hub: 2 };
-const legendKinds: readonly StationMapMarkerKind[] = ["hub", "mine", "other"];
+const markerOrder: Record<StationMapMarkerKind | "highlight", number> = { other: 0, mine: 1, hub: 2, highlight: 3 };
+const legendKinds: readonly (StationMapMarkerKind | "highlight")[] = ["highlight", "hub", "mine", "other"];
 
 export function StationMapPage({
   currentMember,
   alliance,
   stations,
+  highlight,
   missionCount,
   stationCount,
   userCount,
@@ -44,6 +49,7 @@ export function StationMapPage({
   currentMember: AllianceMember;
   alliance: AllianceSettings;
   stations: readonly StationMapStation[];
+  highlight?: Readonly<{ portal: string; galaxy: number }>;
   missionCount: number;
   stationCount: number;
   userCount?: number;
@@ -59,14 +65,23 @@ export function StationMapPage({
       /^[0-9A-F]{12}$/i.test(settings.portalCode) ? { portal: settings.portalCode, galaxy: settings.galaxy } : null,
     [settings.portalCode, settings.galaxy],
   );
-  const { markers: placedMarkers, hidden } = useMemo(() => stationMapMarkers(stations), [stations]);
+  const galaxies = useMemo(() => stationMapGalaxies(stations), [stations]);
+  const [galaxy, setGalaxy] = useState(
+    highlight && galaxies.includes(highlight.galaxy) ? highlight.galaxy : euclidGalaxy,
+  );
+  const highlightKey = highlight && highlight.galaxy === galaxy ? stationMapRegionKey(highlight.portal) : null;
+  const { markers: placedMarkers, hidden } = useMemo(() => stationMapMarkers(stations, galaxy), [stations, galaxy]);
   // Painted last means on top: the hub and the member's own stations stay visible over the others.
   const markers = useMemo(
     () =>
       placedMarkers
-        .map((marker) => ({ marker, kind: stationMapMarkerKind(marker, member.publicId, hub) }))
+        .map((marker) => ({
+          marker,
+          kind:
+            marker.key === highlightKey ? ("highlight" as const) : stationMapMarkerKind(marker, member.publicId, hub),
+        }))
         .sort((a, b) => markerOrder[a.kind] - markerOrder[b.kind]),
-    [placedMarkers, member.publicId, hub],
+    [placedMarkers, member.publicId, hub, highlightKey],
   );
   const [view, setView] = useState<StationMapView>(fullMapView);
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
@@ -105,6 +120,12 @@ export function StationMapPage({
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [selectedKey]);
+
+  function changeGalaxy(value: number) {
+    setGalaxy(value);
+    setSelectedKey(null);
+    setView(fullMapView);
+  }
 
   function onPointerDown(event: PointerEvent<SVGSVGElement>) {
     drag.current = { pointerId: event.pointerId, x: event.clientX, y: event.clientY, moved: false };
@@ -244,6 +265,9 @@ export function StationMapPage({
                     role="button"
                     tabIndex={0}
                   >
+                    {kind === "highlight" && (
+                      <circle className="station-map-pulse" cx={marker.x} cy={marker.z} r={markerRadius * 1.6} />
+                    )}
                     <circle cx={marker.x} cy={marker.z} r={markerRadius * (marker.stations.length > 1 ? 1.5 : 1)} />
                     {marker.stations.length > 1 && (
                       <text dy="0.35em" fontSize={markerRadius * 1.5} x={marker.x} y={marker.z}>
@@ -255,10 +279,20 @@ export function StationMapPage({
               </svg>
             </div>
             <aside className="station-map-side">
+              <label className="planet-filter station-map-galaxy">
+                <span>{t("stations.galaxy")}</span>
+                <select onChange={(event) => changeGalaxy(Number(event.target.value))} value={galaxy}>
+                  {galaxies.map((value) => (
+                    <option key={value} value={value}>
+                      {galaxyLabel(value)}
+                    </option>
+                  ))}
+                </select>
+              </label>
               <h3>{t("map.legend")}</h3>
               <ul aria-label={t("map.legend")} className="station-map-legend">
                 {legendKinds
-                  .filter((kind) => kind !== "hub" || hub)
+                  .filter((kind) => (kind !== "hub" || hub) && (kind !== "highlight" || highlightKey))
                   .map((kind) => (
                     <li key={kind}>
                       <span aria-hidden="true" className={`station-map-legend-dot station-map-marker-${kind}`} />

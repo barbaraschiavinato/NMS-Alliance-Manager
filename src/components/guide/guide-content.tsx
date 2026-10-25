@@ -134,6 +134,13 @@ const buttons: ReadonlyArray<{
       "Apre il dettaglio della missione per la tua specializzazione, mostrando prima tutte le missioni associate alla stazione.",
   },
   {
+    label: "Mostra sulla mappa",
+    specialty: ["ranger", "explorer", "builder"],
+    icon: GalaxyIcon,
+    color: "#8b8dff",
+    meaning: "Apre la mappa sulla galassia della stazione, con il suo marker giallo e pulsante.",
+  },
+  {
     label: "Crea missione dalla stazione",
     specialty: ["ranger"],
     icon: CirclePlus,
@@ -257,7 +264,7 @@ const sections = [
     name: "Mappa",
     icon: GalaxyIcon,
     color: "#8b8dff",
-    tasks: "Vedi le stazioni dell'alleanza in Euclide posizionate sulla mappa della galassia",
+    tasks: "Vedi le stazioni dell'alleanza posizionate sulla mappa della loro galassia",
   },
   {
     name: "Classifica",
@@ -1197,9 +1204,10 @@ export async function GuideContent({
               Mappa
             </h2>
             <p>
-              La mappa mostra dall&apos;alto la galassia Euclide: ogni marker è una regione con almeno una stazione,
-              posizionata in base alle coordinate del portale. I cerchi tratteggiati sono guide di distanza dal centro
-              galattico, segnato in giallo.
+              La mappa mostra dall&apos;alto una galassia alla volta (Euclide di default; la select «Galassia» elenca
+              quelle in cui ci sono stazioni): ogni marker è una regione con almeno una stazione, posizionata in base
+              alle coordinate del portale. I cerchi tratteggiati sono guide di distanza dal centro galattico, segnato in
+              giallo.
             </p>
             <ul>
               <li>
@@ -1212,8 +1220,8 @@ export async function GuideContent({
                 fuori. Un numero sul marker indica più stazioni nella stessa regione, tutte elencate nella finestrella.
               </li>
               <li>
-                Vedi le stesse stazioni dell&apos;elenco Stazioni. Quelle in altre galassie o senza un indirizzo valido
-                non compaiono e vengono solo contate sotto l&apos;elenco.
+                Vedi le stesse stazioni dell&apos;elenco Stazioni. Quelle senza un indirizzo valido non compaiono e
+                vengono solo contate sotto la legenda.
               </li>
             </ul>
           </section>

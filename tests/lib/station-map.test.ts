@@ -3,8 +3,10 @@ import {
   fullMapView,
   galaxyExtent,
   panMapView,
+  stationMapGalaxies,
   stationMapMarkerKind,
   stationMapMarkers,
+  stationMapRegionKey,
   zoomMapView,
   type StationMapStation,
 } from "@/lib/stations/station-map";
@@ -46,16 +48,38 @@ describe("stationMapMarkers", () => {
     ]);
   });
 
-  it("leaves out stations of other galaxies and invalid or reserved addresses", () => {
-    const { markers, hidden } = stationMapMarkers([
+  it("places only the stations of the requested galaxy and counts the invalid or reserved addresses", () => {
+    const stations = [
       station(),
-      station({ galaxy: 1 }),
+      station({ galaxy: 1, name: "Hilbert base" }),
       station({ portal: "not-a-portal" }),
       station({ portal: "123456789000" }),
       station({ portal: "123456789800" }),
+    ];
+    const euclid = stationMapMarkers(stations);
+    expect(euclid.markers).toHaveLength(1);
+    expect(euclid.hidden).toBe(3);
+    const hilbert = stationMapMarkers(stations, 1);
+    expect(hilbert.markers.map((marker) => marker.stations[0].name)).toEqual(["Hilbert base"]);
+    expect(hilbert.hidden).toBe(0);
+  });
+});
+
+describe("stationMapRegionKey", () => {
+  it("returns the key of the marker that holds the portal, and null when it cannot be placed", () => {
+    const { markers } = stationMapMarkers([station({ portal: "1234567890AB" })]);
+    expect(stationMapRegionKey("5234567890AB")).toBe(markers[0].key);
+    expect(stationMapRegionKey("not-a-portal")).toBeNull();
+    expect(stationMapRegionKey("123456789000")).toBeNull();
+  });
+});
+
+describe("stationMapGalaxies", () => {
+  it("lists the galaxies with stations in order, always with Euclid", () => {
+    expect(stationMapGalaxies([station({ galaxy: 5 }), station({ galaxy: 2 }), station({ galaxy: 5 })])).toEqual([
+      0, 2, 5,
     ]);
-    expect(markers).toHaveLength(1);
-    expect(hidden).toBe(4);
+    expect(stationMapGalaxies([])).toEqual([0]);
   });
 });
 

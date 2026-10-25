@@ -329,6 +329,17 @@ describe.each([
     expect(screen.queryByRole("button", { name: /Remove portal/ })).not.toBeInTheDocument();
   });
 
+  it("links to the map highlighting the station, unless the map link is hidden", () => {
+    const { unmount } = renderStation({ station: station({ galaxy: 5 }) });
+    const link = screen.getByRole("link", { name: `Show station ${portal} on the map` });
+    expect(link).toHaveAttribute("href", `/map?galaxy=5&portal=${portal}`);
+    expect(link).toHaveAttribute("data-tooltip", "Show on the map");
+    expect(link).toHaveClass("station-map-link");
+    unmount();
+    renderStation({ showMapLink: false });
+    expect(screen.queryByRole("link", { name: `Show station ${portal} on the map` })).not.toBeInTheDocument();
+  });
+
   it("does not link the title when already showing the detail", () => {
     renderStation({ showDetailLink: false });
     expect(document.querySelector("a.station-card-title")).toBeNull();
@@ -353,7 +364,9 @@ describe.each([
     renderStation({ canSeeAll: true, member: moderator(), station: station({ note }) });
     const editButton = screen.getByRole("button", { name: `Edit station ${portal}` });
     const deleteButton = screen.getByRole("button", { name: /Remove portal/ });
-    expect(editButton.previousElementSibling).toBeNull();
+    expect(editButton.previousElementSibling).toBe(
+      screen.getByRole("link", { name: `Show station ${portal} on the map` }),
+    );
     expect(deleteButton.parentElement?.lastElementChild).toBe(deleteButton);
     if (note) {
       expect(editButton.nextElementSibling).toBe(screen.getByRole("button", { name: /View notes for/ }));
