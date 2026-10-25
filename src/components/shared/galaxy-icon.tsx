@@ -1,8 +1,7 @@
 import { createLucideIcon } from "lucide-react";
 
-// Spiral galaxy: a core and two arms, drawn with the same stroke style as the lucide icons.
+// Spiral galaxy made of two arms, redrawn in a 24x24 box with the same stroke style as the lucide icons.
 export const GalaxyIcon = createLucideIcon("Galaxy", [
-  ["circle", { cx: "12", cy: "12", r: "1.2", key: "core" }],
-  ["path", { d: "M12 12c-1.5-2.5-.5-5.5 2.5-6.5 3.5-1 7 1.5 7 5.5", key: "arm-a" }],
-  ["path", { d: "M12 12c1.5 2.5.5 5.5-2.5 6.5-3.5 1-7-1.5-7-5.5", key: "arm-b" }],
+  ["path", { d: "M2.72 15.05C0.32 6.79 18.32 0.04 17.67 10.12C17.05 15.25 8.65 17.08 9.5 13.53", key: "arm-a" }],
+  ["path", { d: "M20.93 6.33C25.03 17.28 5.64 24.1 6.28 14.02C6.9 8.88 15.3 7.06 14.46 10.6", key: "arm-b" }],
 ]);
