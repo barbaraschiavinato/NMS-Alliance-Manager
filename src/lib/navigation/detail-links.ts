@@ -3,6 +3,7 @@ export type StationIdentity = SystemIdentity & Readonly<{ ownerId: string }>;
 export const detailOrigins = {
   stations: { href: "/stations", label: "details.back_to_stations" },
   planets: { href: "/planets", label: "details.back_to_planets" },
+  map: { href: "/map", label: "details.back_to_map" },
   missions: { href: "/missions", label: "details.back_to_missions" },
   messages: { href: "/messages", label: "details.back_to_messages" },
   help: { href: "/help-requests", label: "details.back_to_help" },
@@ -12,7 +13,7 @@ export type DetailOrigin = keyof typeof detailOrigins;
 
 export function internalDetailDestination(value: unknown): string | undefined {
   if (typeof value !== "string" || value.length > 8192 || /[\\\s#]/.test(value)) return undefined;
-  if (!/^\/(stations|missions|planets|messages|help-requests|taxi)(\/[^/?]+)?(?:\?[^#]*)?$/.test(value))
+  if (!/^\/(stations|missions|planets|map|messages|help-requests|taxi)(\/[^/?]+)?(?:\?[^#]*)?$/.test(value))
     return undefined;
   if (
     value

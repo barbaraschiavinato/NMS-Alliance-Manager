@@ -1,7 +1,9 @@
 "use client";
 
 import Image from "next/image";
+import NextLink from "next/link";
 import { DetailLink as Link } from "@/components/shared/detail-page";
+import { GalaxyIcon } from "@/components/shared/galaxy-icon";
 import { CirclePlus, Crosshair, FileText, Pencil, Trash2 } from "lucide-react";
 import { missionDetailHref, stationDetailHref } from "@/lib/navigation/detail-links";
 import { GlyphStrip } from "@/components/shared/portal-address-field";
@@ -41,6 +43,7 @@ export function StationCardSimple({
   onViewNote,
   showDetailLink = true,
   showAssociatedMissionsLink = true,
+  showMapLink = true,
   isAllianceHub = false,
 }: StationCardProps) {
   const { t } = useLocale();
@@ -220,6 +223,16 @@ export function StationCardSimple({
               </Link>
             ) : null
           ) : null}
+          {showMapLink && (
+            <NextLink
+              aria-label={t("stations.show_on_map_for_portal", { portal: station.portal })}
+              className="member-icon-action station-map-link"
+              data-tooltip={t("stations.show_on_map")}
+              href={`/map?${new URLSearchParams({ galaxy: String(station.galaxy), portal: station.portal })}`}
+            >
+              <GalaxyIcon size={14} />
+            </NextLink>
+          )}
           {canEditStation && (
             <button
               aria-label={t("stations.edit_station_portal", { portal: station.portal })}

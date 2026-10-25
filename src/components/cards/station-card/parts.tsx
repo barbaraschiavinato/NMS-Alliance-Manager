@@ -228,6 +228,7 @@ export type StationCardProps = Readonly<{
   canCreateMissions: boolean;
   showDetailLink?: boolean;
   showAssociatedMissionsLink?: boolean;
+  showMapLink?: boolean;
   renderedAt: number;
   planetStatuses: PlanetSystemStatuses;
   planetStatusesLoaded: boolean;

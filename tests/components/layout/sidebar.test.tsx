@@ -42,6 +42,7 @@ describe("Sidebar", () => {
       "/stations",
       "/missions",
       "/planets",
+      "/map",
       "/leaderboard",
       "/taxi",
       "/messages",
@@ -135,6 +136,7 @@ describe("Sidebar", () => {
   it.each([
     ["missioni", "/missions"],
     ["pianeti", "/planets"],
+    ["mappa", "/map"],
     ["offline", "/offline-players"],
     ["classifica", "/leaderboard"],
     ["aiuto", "/help-requests"],

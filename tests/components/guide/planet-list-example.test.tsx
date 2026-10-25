@@ -144,6 +144,15 @@ describe("PlanetListExample", () => {
     expect(within(screen.getByRole("dialog")).getByRole("heading", { level: 2 })).toHaveTextContent("Station Name");
   });
 
+  it("offers an inert help button on the visitable example card", async () => {
+    useSample("1123456789AB", { lines: { headline: { word: "Verdant" } } });
+    const planet = await createPlanetListExamplePlanet();
+    renderWithLocale(<PlanetListExample planet={planet} />);
+    const dialogs = screen.queryAllByRole("dialog").length;
+    fireEvent.click(document.querySelector(".planet-card-help")!);
+    expect(screen.queryAllByRole("dialog")).toHaveLength(dialogs);
+  });
+
   it("lets the reader toggle the demo visited checkbox", async () => {
     useSample("1123456789AB", { lines: { headline: { word: "Verdant" } } });
     const planet = await createPlanetListExamplePlanet();

@@ -25,7 +25,7 @@
 .system-feature.system-feature-atlas { color: #ff7a6b; border-color: #7a3a36; }
 .station-card-title-copy > .system-feature { align-self: flex-start; margin: 4px 0 0; font-size: 9px; }
 .sidebar-compact ~ .main-panel .system-feature { font-size: 11px; }
-.station-card-title:hover > strong { color: #ff8400; }
+.station-card-title:hover .station-card-title-copy > strong { color: #ff8400; text-decoration: underline; text-underline-offset: 2px; }
 .station-list-cards .station-card-owner { min-width: 0; grid-column: 2; grid-row: 1; justify-self: end; }
 .station-list-cards .station-card-owner .station-owner-card { justify-items: end; margin: 0; }
 .station-list-cards .station-card-owner .station-owner-link { justify-content: flex-end; }
@@ -43,6 +43,7 @@
 .station-owner-card > small { color: #aab4b4; font-family: "SFMono-Regular", Consolas, monospace; font-size: 7px; letter-spacing: .5px; }
 .station-owner-link { min-width: 0; max-width: 100%; font-size: 9px; }
 .station-actions .station-notes-action { color: #e4b478; }
+.station-actions .station-map-link { color: #8b8dff; }
 .station-notes-dialog { width: min(460px, 100%); }
 .station-notes-content { margin: 0; color: #d4dad6; font-size: 11px; line-height: 1.6; text-align: left; white-space: pre-wrap; overflow-wrap: anywhere; }
 .station-list code { color: var(--lime); font-family: "SFMono-Regular", Consolas, monospace; font-size: 9px; }
@@ -83,6 +84,10 @@
 }
 .station-actions .member-icon-action.delete-member { color: #ef8067; }
 .station-actions .member-icon-action.delete-member:hover:not(:disabled) { border-color: #ef8067; background: #3a2724; }
+/* Each action keeps its own colour on hover (icon, border and a dark tint), like the create-mission and delete buttons. */
+.station-actions .member-icon-action.station-missions-link:hover { color: #72d1c4; border-color: #72d1c4; background: #1f3a37; }
+.station-actions .member-icon-action.station-map-link:hover { color: #8b8dff; border-color: #8b8dff; background: #25264a; }
+.station-actions .member-icon-action.station-notes-action:hover { color: #e4b478; border-color: #e4b478; background: #3a2f1f; }
 .station-actions [data-tooltip] { position: relative; }
 .station-actions [data-tooltip]::after { position: absolute; z-index: 30; right: 0; bottom: calc(100% + 7px); padding: 6px 8px; color: #f1eee7; border: 1px solid #394548; border-radius: 3px; background: #111719; box-shadow: 0 4px 14px #0008; content: attr(data-tooltip); font-size: 9px; font-weight: 500; line-height: 1.2; opacity: 0; pointer-events: none; text-transform: none; transform: translateY(3px); transition: opacity .12s, transform .12s; white-space: nowrap; }
 .station-actions [data-tooltip]:hover::after,

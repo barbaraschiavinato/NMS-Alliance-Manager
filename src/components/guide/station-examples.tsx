@@ -220,6 +220,7 @@ function StationExamples({
                 onOpenProfile={noop}
                 onOpenStation={noop}
                 showDetailLink={false}
+                showMapLink={false}
                 onRemove={noop}
                 onToggleStatus={noop}
                 onViewNote={noop}

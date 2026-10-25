@@ -485,7 +485,51 @@ describe("PlanetList", () => {
     expect(conflict.querySelectorAll("i.filled")).toHaveLength(3);
     expect(screen.getByText("Weather").parentElement).toHaveTextContent("Weather Humid");
     expect(screen.getByText("Economy").parentElement).toHaveTextContent("Trading");
+    expect(screen.queryByRole("link", { name: /Apri .* in Stazioni/ })).not.toBeInTheDocument();
+  });
+
+  it("links the system to the map next to the station link, using the first planet when there is no station", () => {
+    const { unmount } = renderWithLocale(
+      <PlanetStationHeading
+        planets={[planet()]}
+        renderedAt={renderedAt}
+        station={{ id: "s", portal: "0123456789AB", galaxy: 3 }}
+      />,
+    );
+    const links = screen.getAllByRole("link");
+    expect(links).toHaveLength(2);
+    expect(links[0]).toHaveClass("planet-station-link");
+    expect(links[1]).toHaveAttribute("href", "/map?galaxy=3&portal=0123456789AB");
+    expect(links[1]).toHaveAttribute("data-tooltip", "Show on the map");
+    expect(links[1].parentElement).toBe(links[0].parentElement);
+    unmount();
+
+    const first = planet({ portal: "1123456789AB", galaxy: 2 });
+    renderWithLocale(<PlanetStationHeading planets={[first]} renderedAt={renderedAt} station={undefined} />);
+    expect(screen.getByRole("link", { name: "Show station 1123456789AB on the map" })).toHaveAttribute(
+      "href",
+      "/map?galaxy=2&portal=1123456789AB",
+    );
+  });
+
+  it("keeps the map link when the station link is hidden, and can hide it", () => {
+    const station = { id: "s", portal: "0123456789AB", galaxy: 0 };
+    const { unmount } = renderWithLocale(
+      <PlanetStationHeading planets={[planet()]} renderedAt={renderedAt} showStationLink={false} station={station} />,
+    );
+    expect(screen.getAllByRole("link")).toHaveLength(1);
+    unmount();
+    renderWithLocale(
+      <PlanetStationHeading
+        planets={[planet()]}
+        renderedAt={renderedAt}
+        showMapLink={false}
+        showStationLink={false}
+        station={station}
+      />,
+    );
     expect(screen.queryByRole("link")).not.toBeInTheDocument();
+    expect(document.querySelector(".planet-station-actions")).toBeNull();
   });
 
   it("shows a placeholder for unknown races", () => {

@@ -1,5 +1,7 @@
 // @vitest-environment jsdom
 import { act, renderHook } from "@testing-library/react";
+import { createElement } from "react";
+import { renderToString } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { setFlashNotice, useFlashNotice } from "@/lib/navigation/flash-notice";
 
@@ -16,6 +18,14 @@ describe("flash notice", () => {
     expect(result.current[0]).toBe("missions.mission_created");
     act(() => result.current[1]());
     expect(result.current[0]).toBe("");
+  });
+
+  it("renders no message on the server", () => {
+    setFlashNotice("missions.mission_created");
+    function Probe() {
+      return createElement("p", null, useFlashNotice()[0] || "empty");
+    }
+    expect(renderToString(createElement(Probe))).toContain("empty");
   });
 
   it("keeps a message that contains the separator", () => {
