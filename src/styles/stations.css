@@ -13,7 +13,7 @@
 .station-list li { min-height: 48px; display: grid; grid-template-columns: minmax(215px, 235px) minmax(0, 1fr) minmax(30px, max-content); align-items: center; gap: 12px; padding: 10px 3px; border-bottom: 1px solid #e5e9e2; }
 .station-list-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 12px; border-top: 0; }
 .station-list-cards li { min-height: 0; grid-template-columns: minmax(0, 1fr) max-content; align-items: start; gap: 10px; padding: 14px; color: #f1eee7; border: 1px solid #394548; border-radius: 4px; background: #171e21; }
-.station-card-title { min-width: 0; display: flex; grid-column: 1; grid-row: 1; align-items: center; gap: 10px; padding: 0; color: #f1eee7; border: 0; background: transparent; cursor: pointer; text-align: left; }
+.station-card-title { min-width: 0; display: flex; grid-column: 1; grid-row: 1; align-items: flex-start; gap: 10px; padding: 0; color: #f1eee7; border: 0; background: transparent; cursor: pointer; text-align: left; }
 .station-card-planet-image { width: 58px; height: 58px; flex: 0 0 58px; border: 1px solid #394548; border-radius: 3px; object-fit: cover; }
 .station-card-title-copy { min-width: 0; display: grid; align-content: center; gap: 5px; }
 .station-card-title-copy > span { color: #a4adae; font-size: 8px; }

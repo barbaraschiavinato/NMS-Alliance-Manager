@@ -85,7 +85,7 @@
 .planet-station-link[data-tooltip]:hover::after, .planet-station-link[data-tooltip]:focus-visible::after { opacity: 1; transform: translateY(0); }
 .planet-mission-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 0; padding: 0; }
 .planet-mission-list > div { position: relative; display: flex; min-width: 0; }
-.planet-mission-card { position: relative; flex: 1; width: 100%; min-width: 0; min-height: 96px; display: flex; align-items: center; gap: 12px; padding: 10px; color: var(--lime); border: 1px solid #394548; border-radius: 4px; background: #171e21; cursor: pointer; text-align: left; }
+.planet-mission-card { position: relative; flex: 1; width: 100%; min-width: 0; min-height: 96px; display: flex; align-items: flex-start; gap: 12px; padding: 10px; color: var(--lime); border: 1px solid #394548; border-radius: 4px; background: #171e21; cursor: pointer; text-align: left; }
 .planet-mission-card:hover { border-color: var(--lime); background: #1d2527; }
 .planet-mission-image { width: 76px; height: 76px; flex: 0 0 76px; border: 1px solid #394548; border-radius: 3px; object-fit: cover; }
 .planet-mission-icon { flex: 0 0 auto; margin: 0 28px; }
@@ -93,8 +93,9 @@
 .planet-mission-card-copy strong { overflow: hidden; color: #f1eee7; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
 .planet-mission-card-copy > span { overflow: hidden; color: #a4adae; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
 .planet-mission-card-copy code { color: var(--lime); font-family: "SFMono-Regular", Consolas, monospace; font-size: 9px; }
-.planet-mission-card-copy .planet-mission-facts { display: flex; flex-wrap: wrap; gap: 4px 10px; overflow: visible; white-space: normal; }
-.planet-mission-facts > span { color: #a4adae; font-size: 8px; }
+.planet-mission-card-copy .planet-mission-facts { display: block; overflow: visible; white-space: normal; }
+.planet-mission-facts > span { display: block; color: #a4adae; font-size: 8px; }
+.planet-mission-facts > span + span { margin-top: 4px; }
 .planet-mission-facts b { color: #75847a; font-weight: 600; }
 .planet-discovery-counts { display: flex; flex-wrap: wrap; gap: 12px; color: #a4adae; font-size: 9px; }
 .planet-mission-card-copy .planet-discovery-counts { overflow: visible; padding-right: 96px; white-space: normal; }
