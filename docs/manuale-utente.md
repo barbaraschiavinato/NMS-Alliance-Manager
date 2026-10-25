@@ -98,7 +98,7 @@ Hanno lo stesso funzionamento, ciascuno con le proprie voci.
 
 **Stazioni**
 - Vedono tutte le stazioni ma non possono registrarne né modificarne di altrui.
-- Possono creare una missione **per la propria specializzazione** da una stazione (icona "+"). Viene assegnata automaticamente a loro. Il sistema impedisce di crearla se quella specializzazione è già coperta, o se c'è già un altro pianeta dello stesso sistema.
+- Possono creare una missione **per la propria specializzazione** da una stazione (icona "+"). Viene assegnata automaticamente a loro e, appena creata, si apre il **dettaglio della nuova missione**. Il sistema impedisce di crearla se quella specializzazione è già coperta, o se c'è già un altro pianeta dello stesso sistema.
 - Se una missione esiste già, l'icona con il mirino apre il dettaglio della missione per la tua specializzazione: trovi prima tutte le missioni associate, poi la stazione e i pianeti del sistema, senza duplicare la missione in un blocco separato. Se è già in carico a un altro membro compare l'etichetta "missione associata".
 
 **Missioni**
@@ -123,7 +123,7 @@ Sotto il nome della stazione, la scheda indica quanti **pianeti** e quante **lun
 
 Se il sistema della stazione ospita un **buco nero**, un'**Interfaccia Atlas** o è un sistema viola ridotto a un **gigante gassoso** (un solo pianeta con cinque lune), sulla scheda compare un'etichetta apposita (viola per il buco nero, rossa con il logo di No Man's Sky per l'Atlas, ambra con un pianeta ad anello per il gigante gassoso). La stessa etichetta appare accanto al nome nell'intestazione del sistema nella pagina Pianeti. Il dato è calcolato dall'indirizzo portale, quindi è sempre disponibile e non dipende da Almanac.
 
-L'azione **Apri dettaglio stazione** sulla scheda apre una pagina dedicata con i blocchi **Stazione**, **Missioni associate**, **Sistema e pianeti**. Il blocco **Missioni associate** appare solo se ci sono missioni e le mostra direttamente, senza tab, ricerca o paginazione. Solo in questo dettaglio sono visibili tutte le missioni dello stesso sistema e della stessa galassia, anche di altre specializzazioni o assegnate ad altri. **Inizia** e **Completa** sono disponibili solo sulle missioni assegnate a te; **Prendi in carico** compare sulle missioni libere per la tua specializzazione o per tutti. Le missioni di altre specializzazioni o assegnate ad altri non mostrano azioni operative. Le azioni di gestione di moderatori e admin restano invariate. Nella pagina **Missioni** restano i consueti filtri di visibilità e la possibilità di prendere in carico le missioni compatibili. **Torna alle stazioni** riapre l'elenco principale.
+Il **titolo** della scheda stazione (nome, galassia e dati del sistema) apre una pagina dedicata con i blocchi **Stazione**, **Missioni associate**, **Sistema e pianeti**. Il blocco **Missioni associate** appare solo se ci sono missioni e le mostra direttamente, senza tab, ricerca o paginazione. Solo in questo dettaglio sono visibili tutte le missioni dello stesso sistema e della stessa galassia, anche di altre specializzazioni o assegnate ad altri. **Inizia** e **Completa** sono disponibili solo sulle missioni assegnate a te; **Prendi in carico** compare sulle missioni libere per la tua specializzazione o per tutti. Le missioni di altre specializzazioni o assegnate ad altri non mostrano azioni operative. Le azioni di gestione di moderatori e admin restano invariate. Nella pagina **Missioni** restano i consueti filtri di visibilità e la possibilità di prendere in carico le missioni compatibili. **Torna alle stazioni** riapre l'elenco principale.
 
 Il collegamento usa proprietario, portale e galassia: se questi cambiano, cambia anche il link. Dopo una modifica vieni indirizzato al dettaglio aggiornato; dopo l'eliminazione torni all'elenco.
 I collegamenti a una stazione specifica da Pianeti, Missioni, Messaggi e Servizio taxi aprono direttamente questo dettaglio, nella galassia corretta. Se la stazione non è più disponibile, nei messaggi e nelle richieste taxi non viene mostrato un link non valido. I collegamenti alle stazioni di un membro continuano invece ad aprire l'elenco filtrato.
@@ -132,7 +132,7 @@ Il link di ritorno indica la pagina di provenienza: **Torna ai pianeti**, **Torn
 Nel blocco **Sistema e pianeti** del dettaglio non viene mostrato il collegamento alla stazione, perché sei già nella sua pagina.
 Se il sistema ha richieste d'aiuto, il dettaglio mostra anche **Richieste d'aiuto** come ultimo blocco, dopo **Sistema e pianeti**. Sono incluse le richieste per qualsiasi pianeta dello stesso sistema e della stessa galassia, con le risposte e le consuete azioni consentite. Il blocco non appare se non ci sono richieste associate.
 La scheda stazione nel dettaglio occupa tutta la larghezza del blocco.
-Il link al dettaglio è blu e segue l'icona delle missioni associate, quando presente. Nella pagina di dettaglio il link non viene mostrato.
+Il titolo è un normale link, quindi si può aprire anche in una nuova scheda. Nella pagina di dettaglio il titolo non è un link: apre invece il dettaglio del pianeta; il modale del pianeta resta raggiungibile anche dalle schede del blocco **Sistema e pianeti**.
 Nel dettaglio è nascosta anche l'azione **Apri missioni associate**, perché le missioni sono già elencate sotto la stazione. Il pulsante **+** per creare una missione resta disponibile quando consentito dal ruolo e dalla specializzazione.
 L'azione di eliminazione, quando consentita, è sempre l'ultima, dopo modifica ed eventuali note.
 
@@ -141,7 +141,7 @@ L'azione di eliminazione, quando consentita, è sempre l'ultima, dopo modifica e
 ### `Crosshair` Missioni
 - Filtri per stato: Tutte, In corso, In attesa, Completate (assegnate o libere).
 - Ogni scheda mostra pianeta e galassia, specializzazione richiesta, scopritore, assegnatario, priorità e avanzamento.
-- Il titolo apre il **dettaglio pianeta**.
+- Il titolo apre il **dettaglio missione**; subito sotto compare il codice alfanumerico del portale (anche sulle schede stazione, sotto il titolo).
 - Il nome di scopritore e assegnatario apre il profilo del membro, da cui si può scrivere un messaggio.
 - Una missione completata non si modifica più. Chi l'ha completata può riaprirla.
 
@@ -149,7 +149,7 @@ L'azione di eliminazione, quando consentita, è sempre l'ultima, dopo modifica e
 
 ### `Eclipse` Dettaglio pianeta
 Mostra i dati del pianeta e, tramite l'icona sirena, permette di inviare una **richiesta d'aiuto** (vedi [Richieste d'aiuto](#richieste-daiuto)).
-Sulle card della pagina **Pianeti** compare in alto a destra la casella **Visitato** (etichetta con la spunta a destra) per i pianeti dei sistemi in cui hai una **missione assegnata** (se sei Esploratore o Costruttore) oppure di cui sei lo **scopritore della stazione** (qualunque specializzazione). La spunta è personale: la vedi solo tu. Il filtro **Visitati da me** mostra solo i pianeti che hai già visitato oppure quelli **da visitare** (spuntabili ma non ancora visitati); compare solo se hai almeno un pianeta spuntabile. Se in seguito perdi il diritto a un pianeta (per esempio la missione viene riassegnata), quel pianeta esce dai due filtri e perde la casella, ma la tua spunta resta salvata e continua a contare in classifica. La quantità d'acqua è indicata da **una goccia** in basso a destra, a destra degli indicatori della dimensione: vuota se il pianeta è asciutto, piena per un terzo con acqua bassa, per due terzi con l'oceano e completamente piena con l'acqua profonda.
+Sulle card della pagina **Pianeti** compare in alto a destra la casella **Visitato** (etichetta con la spunta a destra) per i pianeti dei sistemi in cui hai una **missione assegnata** (se sei Esploratore o Costruttore) oppure di cui sei lo **scopritore della stazione** (qualunque specializzazione). La spunta è personale: la vedi solo tu. Il filtro **Visitati da me** mostra solo i pianeti che hai già visitato oppure quelli **da visitare** (spuntabili ma non ancora visitati); compare solo se hai almeno un pianeta spuntabile. Se in seguito perdi il diritto a un pianeta (per esempio la missione viene riassegnata), quel pianeta esce dai due filtri e perde la casella, ma la tua spunta resta salvata e continua a contare in classifica. Sugli stessi pianeti, in basso a destra dopo le icone, compare il pulsante con la **sirena** (bordo grigio, rosso al passaggio del mouse): apre la scheda del pianeta con il modulo di **richiesta d'aiuto** già pronto per quel pianeta. La quantità d'acqua è indicata da **una goccia** in basso a destra, a destra degli indicatori della dimensione: vuota se il pianeta è asciutto, piena per un terzo con acqua bassa, per due terzi con l'oceano e completamente piena con l'acqua profonda.
 
 Il filtro **Ricchezza** della pagina **Pianeti** raggruppa i sistemi per la descrizione economica fornita da Almanac (per esempio Indigente, Promettente, Benestante), che affina le stelle dell'economia. I valori Almanac dell'economia e della ricchezza sono tradotti in italiano.
 
@@ -161,7 +161,7 @@ Nella pagina **Pianeti**, le card mostrano anche le icone di flora, fauna e mine
 
 ### Dettaglio missione
 
-L'icona **Apri dettaglio missione** nelle card apre una pagina dedicata; il titolo continua ad aprire il dettaglio del pianeta/sistema.
+Sotto i glifi la card missione, in tutte le viste, mostra gli stessi dati di sistema della stazione (stella, economia con le stelle, conflitto con i pallini, razza con la sua icona); se Almanac non ha dati, la vista estesa mostra la descrizione testuale del sistema. Il **titolo** della card missione apre una pagina dedicata; nella pagina di dettaglio della missione il titolo apre invece il dettaglio del pianeta/sistema.
 La pagina mostra prima la missione selezionata a tutta larghezza, poi gli stessi blocchi del dettaglio stazione: **Stazione**, **Missioni associate**, **Sistema e pianeti** ed eventuali **Richieste d'aiuto**.
 La missione selezionata resta anche nell'elenco delle associate: azioni e avanzamento si aggiornano in entrambe le copie.
 Valgono gli stessi permessi del dettaglio stazione: puoi prendere in carico missioni libere compatibili con la tua specializzazione e gestire le tue missioni; le altre restano consultabili.

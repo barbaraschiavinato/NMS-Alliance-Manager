@@ -232,6 +232,13 @@ describe("PlanetCard", () => {
     expect(onClose).toHaveBeenCalled();
   });
 
+  it("opens the help form straight away when asked to", () => {
+    renderCard({ initialPlanetData: lushPlanet, initialHelpOpen: true });
+    expect(
+      screen.getByRole("textbox", { name: t("help.request_help_for", { subject: "Verdant Moon" }) }),
+    ).toBeInTheDocument();
+  });
+
   it("sends a help request for the selected planet", async () => {
     const changed = vi.fn();
     window.addEventListener("help-requests-changed", changed);

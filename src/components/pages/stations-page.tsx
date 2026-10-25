@@ -46,6 +46,7 @@ import type { PlanetDestination } from "@/components/cards/planet-destination-ca
 import {
   detailOrigins,
   contextualDetailHref,
+  missionDetailHref,
   stationDetailHref,
   type DetailOrigin,
   type StationIdentity,
@@ -547,6 +548,16 @@ export function StationsPage({
         ? t("stations.count_missions_created_from_the_station", { count: created.length })
         : t("stations.mission_created_from_station"),
     );
+    // Explorers and builders always create a single mission assigned to themselves: open it right away.
+    if (canCreateOwnSpecialtyMission && created.length === 1) {
+      router.push(
+        contextualDetailHref(
+          missionDetailHref(created[0].id, "stations"),
+          `${window.location.pathname}${window.location.search}`,
+        ),
+      );
+      return;
+    }
     try {
       await refreshStations();
       if (detail) setDetailRevision((current) => current + 1);

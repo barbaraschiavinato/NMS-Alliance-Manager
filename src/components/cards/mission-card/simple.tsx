@@ -6,6 +6,9 @@ import { galaxyLabel } from "@/lib/planets/galaxies";
 import { planetSystemStatusKey } from "@/lib/planets/planet-system-status";
 import { useLocale } from "@/components/providers/locale-provider";
 import { StationSystemCoreInfo } from "@/components/shared/station-system-core-info";
+import { almanacStarCount, almanacSystemFacts } from "@/lib/almanac/almanac-facts";
+import { SystemFacts } from "@/components/shared/system-facts";
+import { SystemFeatureBadge } from "@/components/shared/system-feature-badge";
 import { editableSystemStatusRoles, systemProgressCap, systemProgressFloor } from "@/lib/planets/planet-system-status";
 import { MissionSystemProgress } from "@/components/shared/mission-system-progress";
 import {
@@ -13,7 +16,10 @@ import {
   targetSpecialtyNames,
   MissionRowAction,
   MissionStationLink,
-  MissionDetailLink,
+  MissionTitle,
+  almanacDiscImageUrl,
+  asRecord,
+  useMissionAlmanacPlanet,
   AssigneeCell,
   DiscovererCell,
   MissionProgress,
@@ -48,11 +54,15 @@ export function MissionCardSimple({
   onOpenProfile,
   getDiscovererImage,
   planetImageUrl,
+  systemPlanet,
   assigneeActionsOnly,
   hideDetailLink,
   detailOrigin,
 }: MissionCardProps) {
   const { t } = useLocale();
+  const planet = useMissionAlmanacPlanet(mission, systemPlanet);
+  const band = asRecord(asRecord(planet?.lines)?.band);
+  const systemFacts = almanacSystemFacts(band);
   const statuses = systemStatuses[planetSystemStatusKey(mission.systemAddress, mission.galaxy)] ?? [];
   const locked = mission.status === "completed" && (currentMember.simpleView === true || !canManage);
   const canUpdateSystemStatus =
@@ -64,8 +74,8 @@ export function MissionCardSimple({
       <NewMissionRibbon mission={mission} />
       <div className="mission-card-heading">
         <div className="mission-name-cell">
-          <MissionPlanetThumbnail imageUrl={planetImageUrl} mission={mission} />
-          <div>
+          <MissionPlanetThumbnail imageUrl={planetImageUrl ?? almanacDiscImageUrl(planet)} mission={mission} />
+          <div className="mission-card-title-copy">
             <span
               className={`mission-galaxy${(mission.galaxy ?? 0) !== 0 ? " mission-galaxy-alert" : ""}`}
               data-tooltip={(mission.galaxy ?? 0) !== 0 ? t("missions.galaxy_portals_warning") : undefined}
@@ -75,16 +85,21 @@ export function MissionCardSimple({
               {galaxyLabel(mission.galaxy ?? 0)}
             </span>
             <div className="mission-title-with-info">
-              <button
-                aria-label={`${t("planet.open_planet_details_for")} ${mission.title}`}
-                className="mission-title"
-                onClick={() => onOpenPlanet(mission)}
-                type="button"
-              >
-                {mission.title}
-              </button>
+              <MissionTitle
+                hideDetailLink={hideDetailLink}
+                mission={mission}
+                onOpenPlanet={onOpenPlanet}
+                origin={detailOrigin}
+              />
               <PlanetNotesButton mission={mission} onView={onViewPlanetNotes} />
             </div>
+            <code className="mission-card-portal-code">{mission.systemAddress.toUpperCase()}</code>
+            <StationSystemCoreInfo
+              key={`${mission.systemAddress}:${mission.galaxy}`}
+              galaxy={mission.galaxy ?? 0}
+              portal={mission.systemAddress}
+            />
+            <SystemFeatureBadge galaxy={mission.galaxy ?? 0} portal={mission.systemAddress} />
             {mission.description && <span className="mission-description">{mission.description}</span>}
           </div>
         </div>
@@ -94,11 +109,7 @@ export function MissionCardSimple({
       </div>
       <div className="mission-card-system">
         <GlyphStrip address={mission.systemAddress ?? ""} />
-        <StationSystemCoreInfo
-          key={`${mission.systemAddress}:${mission.galaxy}`}
-          galaxy={mission.galaxy ?? 0}
-          portal={mission.systemAddress ?? ""}
-        />
+        <SystemFacts economyStars={almanacStarCount(band?.economy)} facts={systemFacts} />
       </div>
       <div className="mission-card-people">
         <div>
@@ -150,7 +161,6 @@ export function MissionCardSimple({
             stationOwners={stationOwners}
             stationOwnersLoaded={stationOwnersLoaded}
           />
-          {!hideDetailLink && <MissionDetailLink mission={mission} origin={detailOrigin} />}
           <MissionRowAction
             assigneeActionsOnly={assigneeActionsOnly}
             tasksDone={systemProgressFloor(statuses, currentMember.specialty ?? "") >= systemProgressCap}

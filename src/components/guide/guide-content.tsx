@@ -15,7 +15,6 @@ import {
   Compass,
   Crosshair,
   Eclipse,
-  ExternalLink,
   FileText,
   Hammer,
   Info,
@@ -118,20 +117,6 @@ const buttons: ReadonlyArray<{
   meaning: string;
   crossed?: boolean;
 }> = [
-  {
-    label: "Apri scheda stazione",
-    specialty: ["ranger", "explorer", "builder"],
-    icon: ExternalLink,
-    color: "#6cb4ff",
-    meaning: "Apre la pagina di dettaglio della stazione, con le missioni associate e i pianeti del sistema.",
-  },
-  {
-    label: "Apri scheda missione",
-    specialty: ["ranger", "explorer", "builder"],
-    icon: ExternalLink,
-    color: "#72d1c4",
-    meaning: "Apre la pagina di dettaglio con la missione in alto e i dettagli della stazione e del sistema.",
-  },
   {
     label: "Vai alla stazione",
     specialty: ["ranger", "explorer", "builder"],
@@ -615,6 +600,7 @@ export async function GuideContent({
                 </p>
               </li>
             </ol>
+            <p>Quando crei la missione dall&apos;icona «+», si apre subito il suo dettaglio.</p>
             <p>
               Dopo esserti creato la missione, la troverai nella pagina{" "}
               <span className="guide-destination guide-destination-missions">
@@ -709,6 +695,7 @@ export async function GuideContent({
                 </p>
               </li>
             </ol>
+            <p>Quando crei la missione dall&apos;icona «+», si apre subito il suo dettaglio.</p>
             <p>
               Dopo esserti creato la missione, la troverai nella pagina{" "}
               <span className="guide-destination guide-destination-missions">
@@ -891,7 +878,9 @@ export async function GuideContent({
                 (le lune solo se ci sono) e il colore della stella; in basso mostra stella, economia con le sue stelle,
                 conflitto con i pallini e razza con la sua icona, gli stessi dati dell&apos;intestazione di Pianeti
                 (passando sopra razza, stelle e pallini compare un suggerimento). Un&apos;etichetta segnala se il
-                sistema ha un buco nero, un&apos;Interfaccia Atlas o un gigante gassoso.
+                sistema ha un buco nero, un&apos;Interfaccia Atlas o un gigante gassoso. Il titolo della scheda, sotto
+                il quale trovi il codice del portale, apre il dettaglio della stazione, con le missioni associate e i
+                pianeti del sistema.
               </li>
               <li>La scheda stazione ha due voci da spuntare: Stazione riscattata e Sistema rinominato.</li>
               <li>
@@ -1115,7 +1104,8 @@ export async function GuideContent({
                 In alto a destra compare la casella personale «Visitato» sui pianeti dei sistemi della tua stazione (se
                 ne sei lo scopritore) o della tua missione (se sei Esploratore o Costruttore). Il filtro «Visitati da
                 me» mostra i pianeti visitati o ancora da visitare, e il totale di ciascuno entra nella classifica
-                «Pianeti visitati».
+                «Pianeti visitati». Sugli stessi pianeti, dopo le icone in basso a destra, il pulsante con la sirena
+                apre la scheda del pianeta con la richiesta d&apos;aiuto già pronta.
               </li>
               <li>
                 Le informazioni sono raggruppate per sistema/stazione, così puoi vedere subito tutti i pianeti legati a

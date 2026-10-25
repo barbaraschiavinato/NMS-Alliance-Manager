@@ -5,7 +5,6 @@ import {
   FileText,
   Hammer,
   Info,
-  ExternalLink,
   Orbit,
   Pencil,
   RotateCcw,
@@ -252,17 +251,33 @@ export function MissionStationLink({
   );
 }
 
-export function MissionDetailLink({ mission, origin }: Readonly<{ mission: Mission; origin?: DetailOrigin }>) {
+export function MissionTitle({
+  mission,
+  origin,
+  hideDetailLink,
+  onOpenPlanet,
+}: Readonly<{
+  mission: Mission;
+  origin?: DetailOrigin;
+  hideDetailLink?: boolean;
+  onOpenPlanet: (mission: Mission) => void;
+}>) {
   const { t } = useLocale();
+  if (!hideDetailLink)
+    return (
+      <DetailLink className="mission-title" href={missionDetailHref(mission.id, origin)}>
+        {mission.title}
+      </DetailLink>
+    );
   return (
-    <DetailLink
-      aria-label={t("details.open_mission")}
-      className="member-icon-action mission-detail-link"
-      data-tooltip={t("details.open_mission")}
-      href={missionDetailHref(mission.id, origin)}
+    <button
+      aria-label={`${t("planet.open_planet_details_for")} ${mission.title}`}
+      className="mission-title"
+      onClick={() => onOpenPlanet(mission)}
+      type="button"
     >
-      <ExternalLink size={14} />
-    </DetailLink>
+      {mission.title}
+    </button>
   );
 }
 
@@ -536,19 +551,20 @@ export function MemberAvatar({ image, label }: Readonly<{ image?: string; label:
   );
 }
 
-export function MissionPlanetThumbnail({
-  mission,
-  imageUrl: fixedImageUrl,
-}: Readonly<{ mission: Mission; imageUrl?: string }>) {
-  const [fetchedImageUrl, setImageUrl] = useState("");
-  const imageUrl = fixedImageUrl ?? fetchedImageUrl;
-  const [imageFailed, setImageFailed] = useState(false);
-  const address = mission.systemAddress ?? "";
+// Archived Almanac record of the mission's system, fetched once per card and shared by the thumbnail and the system facts.
+// A given record (even null) replaces the request, e.g. for the guide examples.
+export function useMissionAlmanacPlanet(
+  mission: Mission,
+  provided?: Record<string, unknown> | null,
+): Record<string, unknown> | null {
+  const [planet, setPlanet] = useState<Record<string, unknown> | null>(null);
+  const enabled = provided === undefined;
+  const address = mission.systemAddress;
   const validPortalAddress = /^[0-9a-f]{12}$/i.test(address);
 
   useEffect(() => {
     if (
-      fixedImageUrl !== undefined ||
+      !enabled ||
       !validPortalAddress ||
       !Number.isInteger(mission.galaxy) ||
       mission.galaxy < 0 ||
@@ -560,22 +576,33 @@ export function MissionPlanetThumbnail({
 
     fetch(`/api/missions/planet?${params}`, { signal: controller.signal, cache: "no-store" })
       .then(async (response) => {
-        // The image is optional (it only exists when the planet comes from Almanac): any failed lookup keeps the fallback icon.
+        // The record is optional (it only exists when the planet comes from Almanac): any failed lookup keeps the fallbacks.
         if (!response.ok) return;
         const body: unknown = await response.json();
-        const planet = asRecord(asRecord(body)?.planet);
-        const pictures = asRecord(planet?.pictures);
-        const disc = pictures?.disc;
-        if (typeof disc === "string" && disc.startsWith("/planets/")) {
-          setImageUrl(`https://nmsalmanac.com/api${disc}`);
-        }
+        setPlanet(asRecord(asRecord(body)?.planet));
       })
       .catch(() => {
-        // Nothing to report: the server already logs lookup failures, and the fallback icon is shown.
+        // Nothing to report: the server already logs lookup failures.
       });
 
     return () => controller.abort();
-  }, [address, fixedImageUrl, mission.galaxy, validPortalAddress]);
+  }, [address, enabled, mission.galaxy, validPortalAddress]);
+
+  return provided ?? planet;
+}
+
+export function almanacDiscImageUrl(planet: Record<string, unknown> | null): string {
+  const disc = asRecord(planet?.pictures)?.disc;
+  return typeof disc === "string" && disc.startsWith("/planets/") ? `https://nmsalmanac.com/api${disc}` : "";
+}
+
+export function MissionPlanetThumbnail({
+  mission,
+  imageUrl: fixedImageUrl,
+}: Readonly<{ mission: Mission; imageUrl?: string }>) {
+  const planet = useMissionAlmanacPlanet(mission, fixedImageUrl === undefined ? undefined : null);
+  const imageUrl = fixedImageUrl ?? almanacDiscImageUrl(planet);
+  const [imageFailed, setImageFailed] = useState(false);
 
   const completed = mission.status === "completed";
   if (imageUrl && !imageFailed) {
@@ -643,4 +670,5 @@ export type MissionCardProps = Readonly<{
   onOpenProfile: (memberId: string, context: MemberMessageContext) => void;
   getDiscovererImage: (memberId?: string) => string | undefined;
   planetImageUrl?: string;
+  systemPlanet?: Record<string, unknown> | null;
 }>;

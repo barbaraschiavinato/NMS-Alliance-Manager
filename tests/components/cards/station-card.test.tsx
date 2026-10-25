@@ -96,18 +96,18 @@ function renderStation(overrides: Partial<StationCardProps> = {}, locale: Locale
 }
 
 describe("StationCard variants", () => {
-  it("renders the extended card with the portal code", () => {
+  it("renders the extended card with the portal code under the title", () => {
     renderStation();
     const item = screen.getByRole("listitem");
     expect(item).toHaveClass("station-card-extended");
-    expect(within(item).getByText(portal, { selector: "code" })).toBeInTheDocument();
+    expect(within(item).getByText(portal, { selector: ".station-card-title-copy > code" })).toBeInTheDocument();
   });
 
-  it("renders the simple card without the portal code", () => {
+  it("renders the simple card with the portal code under the title too", () => {
     renderStation({ member: makeMember({ publicId: "viewer", simpleView: true }) });
     const item = screen.getByRole("listitem");
     expect(item).not.toHaveClass("station-card-extended");
-    expect(within(item).queryByText(portal, { selector: "code" })).not.toBeInTheDocument();
+    expect(within(item).getByText(portal, { selector: ".station-card-title-copy > code" })).toBeInTheDocument();
   });
 });
 
@@ -145,14 +145,25 @@ describe.each([
     expect(document.querySelector(".system-feature")).toBeNull();
   });
 
-  it("shows the station name, system info and opens the station", async () => {
+  it("shows the station name and system info, and the title links to the station detail", async () => {
     const target = station({ name: "Haven" });
-    const { user, props } = renderStation({ member: viewer(), station: target });
-    const title = screen.getAllByText("Haven")[0].closest("button");
-    expect(title).not.toBeNull();
+    const { props } = renderStation({ member: viewer(), station: target });
+    const title = screen.getAllByText("Haven")[0].closest("a");
+    expect(title).toHaveClass("station-card-title");
+    expect(title).toHaveAttribute("href", `/stations/owner%3A${portal}%3A0`);
     expect(await screen.findByText("3 planets · green star")).toBeInTheDocument();
     expect(screen.getByText("No Almanac data")).toBeInTheDocument();
     expect(screen.getByLabelText("Glyphs entered: 12 of 12")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Open station details" })).not.toBeInTheDocument();
+    expect(props.onOpenStation).not.toHaveBeenCalled();
+  });
+
+  it("opens the planet dialog from the title when already showing the station detail", async () => {
+    const target = station({ name: "Haven" });
+    const { user, props } = renderStation({ member: viewer(), station: target, showDetailLink: false });
+    const title = screen.getAllByText("Haven")[0].closest("button");
+    expect(title).toHaveClass("station-card-title");
+    expect(document.querySelector("a.station-card-title")).toBeNull();
     await user.click(title as HTMLElement);
     expect(props.onOpenStation).toHaveBeenCalledWith(target);
   });
@@ -316,15 +327,11 @@ describe.each([
       "/missions/mission-1?from=stations&source=station-card",
     );
     expect(screen.queryByRole("button", { name: /Remove portal/ })).not.toBeInTheDocument();
-    const missionLink = screen.getByRole("link", { name: `Open missions for planet ${portal}` });
-    const detailLink = screen.getByRole("link", { name: "Open station details" });
-    expect(missionLink.nextElementSibling).toBe(detailLink);
-    expect(detailLink).toHaveClass("station-detail-link");
   });
 
-  it("hides the station detail link when already showing the detail", () => {
+  it("does not link the title when already showing the detail", () => {
     renderStation({ showDetailLink: false });
-    expect(screen.queryByRole("link", { name: "Open station details" })).not.toBeInTheDocument();
+    expect(document.querySelector("a.station-card-title")).toBeNull();
   });
 
   it("hides associated mission navigation without hiding permitted mission creation", async () => {
@@ -344,10 +351,9 @@ describe.each([
 
   it.each([undefined, "Station notes"])("places delete last, after edit and optional notes: %s", (note) => {
     renderStation({ canSeeAll: true, member: moderator(), station: station({ note }) });
-    const detailLink = screen.getByRole("link", { name: "Open station details" });
     const editButton = screen.getByRole("button", { name: `Edit station ${portal}` });
     const deleteButton = screen.getByRole("button", { name: /Remove portal/ });
-    expect(detailLink.nextElementSibling).toBe(editButton);
+    expect(editButton.previousElementSibling).toBeNull();
     expect(deleteButton.parentElement?.lastElementChild).toBe(deleteButton);
     if (note) {
       expect(editButton.nextElementSibling).toBe(screen.getByRole("button", { name: /View notes for/ }));
@@ -374,7 +380,7 @@ describe.each([
   it("does not link to a search or an unrelated mission when no specialty mission exists", () => {
     renderStation({ canSeeAll: true, member: moderator(), station: station({ hasMissions: true }) });
     expect(screen.queryByRole("link", { name: `Open missions for planet ${portal}` })).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Open station details" })).toBeInTheDocument();
+    expect(document.querySelector("a.station-card-title")).not.toBeNull();
   });
 
   it.each([
@@ -385,10 +391,7 @@ describe.each([
     renderStation({ member: viewer({ specialty }), station: station({ hasMissions: true }) });
     expect(screen.getByRole("img", { name: label })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: `Open missions for planet ${portal}` })).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Open station details" })).toHaveAttribute(
-      "href",
-      `/stations/owner%3A${portal}%3A0`,
-    );
+    expect(document.querySelector("a.station-card-title")).toHaveAttribute("href", `/stations/owner%3A${portal}%3A0`);
   });
 
   it("lets an explorer create a mission when explorers are still needed", () => {

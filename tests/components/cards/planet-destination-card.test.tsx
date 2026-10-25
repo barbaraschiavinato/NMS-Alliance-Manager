@@ -66,12 +66,17 @@ describe("PlanetDestinationCard", () => {
       isVisited: vi.fn(() => false),
       isSaving: vi.fn(() => false),
       onToggle: vi.fn(),
+      onRequestHelp: vi.fn(),
       ...overrides,
     });
 
     it("is shown only for planets the member can mark and when controls are provided", () => {
       const { unmount } = renderWithLocale(
-        <PlanetDestinationCard onOpen={vi.fn()} planet={makePlanet()} visits={controls()} />,
+        <PlanetDestinationCard
+          onOpen={vi.fn()}
+          planet={makePlanet()}
+          visits={{ isVisited: () => false, isSaving: () => false, onToggle: vi.fn(), onRequestHelp: vi.fn() }}
+        />,
       );
       expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
       unmount();
@@ -283,11 +288,42 @@ describe("PlanetDestinationCard", () => {
       <PlanetDestinationCard
         onOpen={vi.fn()}
         planet={makePlanet({ paradise: true, canMarkVisited: true })}
-        visits={{ isVisited: () => false, isSaving: () => false, onToggle: vi.fn() }}
+        visits={{ isVisited: () => false, isSaving: () => false, onToggle: vi.fn(), onRequestHelp: vi.fn() }}
       />,
     );
     expect(container.querySelector(".planet-card-indicators .planet-paradise-indicator")).not.toBeNull();
     expect(container.querySelector(".planet-visited-check")).not.toBeNull();
+  });
+
+  it("offers a help button after the indicators on markable planets, without opening the planet", async () => {
+    const onOpen = vi.fn();
+    const onRequestHelp = vi.fn();
+    const planet = makePlanet({ canMarkVisited: true });
+    const { user, container } = renderWithLocale(
+      <PlanetDestinationCard
+        onOpen={onOpen}
+        planet={planet}
+        visits={{ isVisited: () => false, isSaving: () => false, onToggle: vi.fn(), onRequestHelp }}
+      />,
+    );
+    const help = screen.getByRole("button", { name: "Request help for this planet" });
+    expect(help).toHaveClass("planet-card-help");
+    expect(container.querySelector(".planet-mission-card")?.nextElementSibling).toBe(help);
+    expect(container.querySelector(".planet-mission-card .planet-card-indicators")).not.toBeNull();
+    await user.click(help);
+    expect(onRequestHelp).toHaveBeenCalledWith(planet);
+    expect(onOpen).not.toHaveBeenCalled();
+  });
+
+  it("has no help button on planets that cannot be marked", () => {
+    renderWithLocale(
+      <PlanetDestinationCard
+        onOpen={vi.fn()}
+        planet={makePlanet()}
+        visits={{ isVisited: () => false, isSaving: () => false, onToggle: vi.fn(), onRequestHelp: vi.fn() }}
+      />,
+    );
+    expect(screen.queryByRole("button", { name: "Request help for this planet" })).not.toBeInTheDocument();
   });
 
   it("places the water drop to the right of the size indicator", () => {

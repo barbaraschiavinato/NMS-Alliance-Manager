@@ -219,6 +219,7 @@ function StationExamples({
                 onEdit={noop}
                 onOpenProfile={noop}
                 onOpenStation={noop}
+                showDetailLink={false}
                 onRemove={noop}
                 onToggleStatus={noop}
                 onViewNote={noop}

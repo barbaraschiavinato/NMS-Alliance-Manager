@@ -6,6 +6,9 @@ import { galaxyLabel } from "@/lib/planets/galaxies";
 import { planetSystemStatusKey } from "@/lib/planets/planet-system-status";
 import { useLocale } from "@/components/providers/locale-provider";
 import { StationSystemCoreInfo } from "@/components/shared/station-system-core-info";
+import { SystemFacts } from "@/components/shared/system-facts";
+import { SystemFeatureBadge } from "@/components/shared/system-feature-badge";
+import { almanacStarCount, almanacSystemFacts } from "@/lib/almanac/almanac-facts";
 import { editableSystemStatusRoles, systemProgressCap, systemProgressFloor } from "@/lib/planets/planet-system-status";
 import { MissionSystemProgress } from "@/components/shared/mission-system-progress";
 import {
@@ -13,7 +16,10 @@ import {
   targetSpecialtyNames,
   MissionRowAction,
   MissionStationLink,
-  MissionDetailLink,
+  MissionTitle,
+  almanacDiscImageUrl,
+  asRecord,
+  useMissionAlmanacPlanet,
   AssigneeCell,
   DiscovererCell,
   MissionProgress,
@@ -47,11 +53,16 @@ export function MissionCardExtended({
   onViewPlanetNotes,
   onOpenProfile,
   getDiscovererImage,
+  systemPlanet,
   assigneeActionsOnly,
   hideDetailLink,
   detailOrigin,
 }: MissionCardProps) {
   const { t, systemLabel } = useLocale();
+  const planet = useMissionAlmanacPlanet(mission, systemPlanet);
+  const band = asRecord(asRecord(planet?.lines)?.band);
+  const systemFacts = almanacSystemFacts(band);
+  const systemTextIsPortal = systemLabel(mission).trim().toUpperCase() === mission.systemAddress.toUpperCase();
   const statuses = systemStatuses[planetSystemStatusKey(mission.systemAddress, mission.galaxy)] ?? [];
   const locked = mission.status === "completed" && (currentMember.simpleView === true || !canManage);
   const canUpdateSystemStatus =
@@ -63,8 +74,8 @@ export function MissionCardExtended({
       <NewMissionRibbon mission={mission} />
       <div className="mission-card-heading">
         <div className="mission-name-cell">
-          <MissionPlanetThumbnail mission={mission} />
-          <div>
+          <MissionPlanetThumbnail imageUrl={almanacDiscImageUrl(planet)} mission={mission} />
+          <div className="mission-card-title-copy">
             <span
               className={`mission-galaxy${(mission.galaxy ?? 0) !== 0 ? " mission-galaxy-alert" : ""}`}
               data-tooltip={(mission.galaxy ?? 0) !== 0 ? t("missions.galaxy_portals_warning") : undefined}
@@ -74,16 +85,21 @@ export function MissionCardExtended({
               {galaxyLabel(mission.galaxy ?? 0)}
             </span>
             <div className="mission-title-with-info">
-              <button
-                aria-label={`${t("planet.open_planet_details_for")} ${mission.title}`}
-                className="mission-title"
-                onClick={() => onOpenPlanet(mission)}
-                type="button"
-              >
-                {mission.title}
-              </button>
+              <MissionTitle
+                hideDetailLink={hideDetailLink}
+                mission={mission}
+                onOpenPlanet={onOpenPlanet}
+                origin={detailOrigin}
+              />
               <PlanetNotesButton mission={mission} onView={onViewPlanetNotes} />
             </div>
+            <code className="mission-card-portal-code">{mission.systemAddress.toUpperCase()}</code>
+            <StationSystemCoreInfo
+              key={`${mission.systemAddress}:${mission.galaxy}`}
+              galaxy={mission.galaxy ?? 0}
+              portal={mission.systemAddress}
+            />
+            <SystemFeatureBadge galaxy={mission.galaxy ?? 0} portal={mission.systemAddress} />
             {mission.description && <span className="mission-description">{mission.description}</span>}
           </div>
         </div>
@@ -93,12 +109,13 @@ export function MissionCardExtended({
       </div>
       <div className="mission-card-system">
         <GlyphStrip address={mission.systemAddress ?? ""} />
-        <span className="mission-card-system-text">{systemLabel(mission) || t("system.system_label")}</span>
-        <StationSystemCoreInfo
-          key={`${mission.systemAddress}:${mission.galaxy}`}
-          galaxy={mission.galaxy ?? 0}
-          portal={mission.systemAddress ?? ""}
-        />
+        {systemFacts.length > 0 ? (
+          <SystemFacts economyStars={almanacStarCount(band?.economy)} facts={systemFacts} />
+        ) : (
+          !systemTextIsPortal && (
+            <span className="mission-card-system-text">{systemLabel(mission) || t("system.system_label")}</span>
+          )
+        )}
       </div>
       <div className="mission-card-people">
         <div>
@@ -150,7 +167,6 @@ export function MissionCardExtended({
             stationOwners={stationOwners}
             stationOwnersLoaded={stationOwnersLoaded}
           />
-          {!hideDetailLink && <MissionDetailLink mission={mission} origin={detailOrigin} />}
           <MissionRowAction
             assigneeActionsOnly={assigneeActionsOnly}
             tasksDone={systemProgressFloor(statuses, currentMember.specialty ?? "") >= systemProgressCap}
