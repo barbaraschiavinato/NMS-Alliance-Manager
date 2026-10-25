@@ -600,7 +600,10 @@ export async function GuideContent({
                 </p>
               </li>
             </ol>
-            <p>Quando crei la missione dall&apos;icona «+», si apre subito il suo dettaglio.</p>
+            <p>
+              Quando crei la missione dall&apos;icona «+», si apre subito il suo dettaglio, con la notifica «Missione
+              creata».
+            </p>
             <p>
               Dopo esserti creato la missione, la troverai nella pagina{" "}
               <span className="guide-destination guide-destination-missions">

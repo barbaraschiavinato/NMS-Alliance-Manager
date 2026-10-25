@@ -73,6 +73,7 @@ export const translations: TranslationCatalog = {
     "common.page_of_total": "Page {page} of {total}",
     "common.moderator": "Moderator",
     "common.operations": "Operations",
+    "missions.mission_created": "Mission created.",
     "missions.create_ranger_mission": "Request Ranger intervention",
     "missions.create_explorer_mission": "Request Explorer intervention",
     "missions.create_builder_mission": "Request Builder intervention",

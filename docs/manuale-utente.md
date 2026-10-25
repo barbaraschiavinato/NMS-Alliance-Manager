@@ -98,7 +98,7 @@ Hanno lo stesso funzionamento, ciascuno con le proprie voci.
 
 **Stazioni**
 - Vedono tutte le stazioni ma non possono registrarne né modificarne di altrui.
-- Possono creare una missione **per la propria specializzazione** da una stazione (icona "+"). Viene assegnata automaticamente a loro e, appena creata, si apre il **dettaglio della nuova missione**. Il sistema impedisce di crearla se quella specializzazione è già coperta, o se c'è già un altro pianeta dello stesso sistema.
+- Possono creare una missione **per la propria specializzazione** da una stazione (icona "+"). Viene assegnata automaticamente a loro e, appena creata, si apre il **dettaglio della nuova missione** con la notifica **Missione creata**. Il sistema impedisce di crearla se quella specializzazione è già coperta, o se c'è già un altro pianeta dello stesso sistema.
 - Se una missione esiste già, l'icona con il mirino apre il dettaglio della missione per la tua specializzazione: trovi prima tutte le missioni associate, poi la stazione e i pianeti del sistema, senza duplicare la missione in un blocco separato. Se è già in carico a un altro membro compare l'etichetta "missione associata".
 
 **Missioni**
