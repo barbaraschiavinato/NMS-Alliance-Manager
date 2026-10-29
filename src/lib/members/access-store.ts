@@ -51,10 +51,6 @@ const defaultData: AccessData = {
     discordUrl: "",
     telegramUrl: "",
     heroGradientMode: "full",
-    faviconUrl: "",
-    appleIconUrl: "",
-    appIcon192Url: "",
-    appIcon512Url: "",
   },
 };
 
@@ -92,10 +88,6 @@ function normalizeAccessData(value: unknown): AccessData {
           : storedAlliance?.heroGradientEnabled === false
             ? "none"
             : "full",
-      faviconUrl: typeof storedAlliance?.faviconUrl === "string" ? storedAlliance.faviconUrl : "",
-      appleIconUrl: typeof storedAlliance?.appleIconUrl === "string" ? storedAlliance.appleIconUrl : "",
-      appIcon192Url: typeof storedAlliance?.appIcon192Url === "string" ? storedAlliance.appIcon192Url : "",
-      appIcon512Url: typeof storedAlliance?.appIcon512Url === "string" ? storedAlliance.appIcon512Url : "",
     },
   };
 }

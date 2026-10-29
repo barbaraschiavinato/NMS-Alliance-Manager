@@ -8,8 +8,6 @@ import { galaxyNames } from "@/lib/planets/galaxies";
 import { TaxiNotificationAdmin } from "@/components/shared/taxi-notification-controls";
 import { MemberNotificationAdmin } from "@/components/shared/member-notification-controls";
 
-const maxIconSourceBytes = 5 * 1024 * 1024;
-
 export function AdminPanel({
   onClose,
   onSaved,
@@ -27,10 +25,6 @@ export function AdminPanel({
     discordUrl: "",
     telegramUrl: "",
     heroGradientMode: "full",
-    faviconUrl: "",
-    appleIconUrl: "",
-    appIcon192Url: "",
-    appIcon512Url: "",
   });
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
@@ -48,78 +42,21 @@ export function AdminPanel({
       );
   }, [t]);
 
-  async function uploadImageFile(file: File) {
-    const formData = new FormData();
-    formData.set("image", file);
-    const response = await fetch("/api/admin/upload", { method: "POST", body: formData });
-    const body = await response.json();
-    if (!response.ok) throw new Error(body.error ?? "Upload failed.");
-    if (typeof body.url !== "string") throw new Error(t("errors.upload_failed"));
-    return body.url;
-  }
-
   async function uploadImage(kind: "logoUrl" | "bannerUrl", file?: File) {
     if (!file) return;
     setBusy(true);
     setError("");
+    const formData = new FormData();
+    formData.set("image", file);
     try {
-      const url = await uploadImageFile(file);
-      setSettings((current) => ({ ...current, [kind]: url }));
+      const response = await fetch("/api/admin/upload", { method: "POST", body: formData });
+      const body = await response.json();
+      if (!response.ok) throw new Error(body.error ?? "Upload failed.");
+      setSettings((current) => ({ ...current, [kind]: body.url }));
       setMessage(t("admin.image_uploaded_save_to_publish_the_changes"));
     } catch (error_) {
       setError(error_ instanceof Error ? error_.message : t("errors.upload_failed"));
     } finally {
-      setBusy(false);
-    }
-  }
-
-  async function generateAppIcons(file?: File) {
-    if (!file) return;
-    setBusy(true);
-    setError("");
-    setMessage("");
-    let bitmap: ImageBitmap | undefined;
-    try {
-      if (file.size > maxIconSourceBytes) throw new Error(t("admin.icon_source_too_large"));
-      bitmap = await createImageBitmap(file);
-      if (bitmap.width > 4096 || bitmap.height > 4096) throw new Error(t("admin.icon_source_too_large"));
-      const generated: Pick<AllianceSettings, "faviconUrl" | "appleIconUrl" | "appIcon192Url" | "appIcon512Url"> = {
-        faviconUrl: "",
-        appleIconUrl: "",
-        appIcon192Url: "",
-        appIcon512Url: "",
-      };
-      const sourceSize = Math.min(bitmap.width, bitmap.height);
-      const sourceX = (bitmap.width - sourceSize) / 2;
-      const sourceY = (bitmap.height - sourceSize) / 2;
-
-      for (const [size, field] of [
-        [32, "faviconUrl"],
-        [180, "appleIconUrl"],
-        [192, "appIcon192Url"],
-        [512, "appIcon512Url"],
-      ] as const) {
-        const canvas = document.createElement("canvas");
-        canvas.width = size;
-        canvas.height = size;
-        const context = canvas.getContext("2d");
-        if (!context) throw new Error(t("admin.icon_generation_failed"));
-        context.drawImage(bitmap, sourceX, sourceY, sourceSize, sourceSize, 0, 0, size, size);
-        const image = await new Promise<Blob>((resolve, reject) => {
-          canvas.toBlob(
-            (blob) => (blob ? resolve(blob) : reject(new Error(t("admin.icon_generation_failed")))),
-            "image/png",
-          );
-        });
-        generated[field] = await uploadImageFile(new File([image], `app-icon-${size}.png`, { type: "image/png" }));
-      }
-
-      setSettings((current) => ({ ...current, ...generated }));
-      setMessage(t("admin.app_icons_generated_save_to_publish"));
-    } catch (error_) {
-      setError(error_ instanceof Error ? error_.message : t("admin.icon_generation_failed"));
-    } finally {
-      bitmap?.close();
       setBusy(false);
     }
   }
@@ -275,25 +212,6 @@ export function AdminPanel({
             <p className="field-hint">
               {t("admin.png_jpeg_webp_or_avif_5_mb_max_images_remain_in_the_alliance_s_private_blob")}
             </p>
-            <label className="upload-field">
-              <span>{t("admin.app_icons_and_favicon")}</span>
-              <span
-                className="image-preview app-icon-preview"
-                style={settings.appIcon192Url ? { backgroundImage: `url("${settings.appIcon192Url}")` } : undefined}
-              >
-                {!settings.appIcon192Url && <ImagePlus size={20} />}
-              </span>
-              <input
-                accept="image/png,image/jpeg,image/webp,image/avif"
-                disabled={busy}
-                onChange={(event) => {
-                  void generateAppIcons(event.target.files?.[0]);
-                  event.target.value = "";
-                }}
-                type="file"
-              />
-            </label>
-            <p className="field-hint">{t("admin.choose_a_square_source_image_to_generate_icons")}</p>
           </section>
           <section className="admin-section admin-community-section">
             <h3>{t("admin.community_links")}</h3>
