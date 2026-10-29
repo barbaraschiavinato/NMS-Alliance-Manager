@@ -5,6 +5,7 @@ import { signInAs } from "../../helpers/auth";
 import { jsonRequest } from "../../helpers/http";
 import { makeMember, seedMembers, writeDataFile } from "../../helpers/members";
 import { PORTAL, corruptDataFile, resetData } from "./fixtures";
+import { resetAlmanacRateLimit } from "@/lib/almanac/almanac-rate-limit";
 
 vi.mock("@/auth", async () => (await import("../../helpers/auth")).authMock);
 
@@ -19,6 +20,7 @@ const lookup = (query: string) => GET(jsonRequest(`/api/missions/planet?${query}
 const fetchMock = vi.fn<typeof fetch>();
 
 beforeEach(() => {
+  resetAlmanacRateLimit();
   resetData();
   signInAs(null);
   seedMembers([user, moderator, simpleAdmin]);
@@ -87,6 +89,23 @@ describe("GET /api/missions/planet", () => {
     const res = await lookup(`address=${PORTAL}&galaxy=0`);
     expect(res.status).toBe(404);
     expect(await res.json()).toEqual({ error: "planet.no_almanac_details_are_archived_for_this_mission" });
+  });
+
+  it("returns Retry-After without repeating errors or requests during an Almanac cooldown", async () => {
+    fetchMock.mockResolvedValue(new Response("", { status: 429, headers: { "Retry-After": "120" } }));
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    signInAs(user);
+
+    const first = await lookup(`address=${PORTAL}&galaxy=0`);
+    const second = await lookup(`address=${PORTAL}&galaxy=0`);
+
+    expect(first.status).toBe(503);
+    expect(second.status).toBe(503);
+    expect(Number(second.headers.get("Retry-After"))).toBeGreaterThan(0);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(console.error).not.toHaveBeenCalled();
+    expect(console.warn).toHaveBeenCalledTimes(1);
   });
 
   it.each([

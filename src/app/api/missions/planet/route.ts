@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentMember } from "@/lib/auth/authorization";
 import { lookupAlmanacPlanet } from "@/lib/almanac/almanac-lookup";
 import { decodePortalAddress } from "@/lib/missions/missions";
+import { almanacRetryAfterSeconds } from "@/lib/almanac/almanac-rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -34,7 +35,14 @@ export async function GET(request: Request) {
     }
     return NextResponse.json({ planet }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
-    console.error("Unable to read archived Almanac planet", error);
+    const retryAfter = almanacRetryAfterSeconds();
+    if (retryAfter > 0) {
+      return NextResponse.json(
+        { error: "planet.almanac_lookup_failed" },
+        { status: 503, headers: { "Retry-After": String(retryAfter), "Cache-Control": "no-store" } },
+      );
+    }
+    console.error("Unable to read archived Almanac planet", { address, galaxy }, error);
     return NextResponse.json({ error: "planet.almanac_lookup_failed" }, { status: 503 });
   }
 }

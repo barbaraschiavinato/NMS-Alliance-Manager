@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server";
 import { getCurrentMember, hasRole } from "@/lib/auth/authorization";
 import { readAccessData, type AllianceMember } from "@/lib/members/access-store";
-import { lookupAlmanacPlanet } from "@/lib/almanac/almanac-lookup";
-import { readAlmanacResponse, readAlmanacResponses, writeAlmanacResponse } from "@/lib/almanac/almanac-store";
+import { lookupAlmanacPlanet, lookupAlmanacPlanets, type AlmanacLookupResult } from "@/lib/almanac/almanac-lookup";
+import {
+  readAlmanacResponse,
+  readAlmanacResponses,
+  writeAlmanacResponse,
+  writeAlmanacResponses,
+} from "@/lib/almanac/almanac-store";
 import { coveredSpecialties, decodePortalAddress, isDifferentPlanetInSameSystem } from "@/lib/missions/missions";
 import { availableMissionSpecialties } from "@/lib/missions/station-mission-availability";
 import { isEmailAddress } from "@/lib/members/member-types";
@@ -295,14 +300,44 @@ async function readStations(member: AllianceMember, loadMissingZeroPlanets = tru
     ? await readAllStationPortals()
     : (await readStationPortals(member.publicId)).map((station) => ({ ...station, ownerId: member.publicId }));
   const [missions, accessData] = await Promise.all([readMissions(), readAccessData()]);
-  if (loadMissingZeroPlanets) {
-    await Promise.all(
-      stations
-        .filter((station) => station.portal.startsWith("0"))
-        .map((station) => cacheStationPlanet(station.portal, station.galaxy)),
-    );
-  }
   const almanacByPortal = await readAlmanacResponses(stations.map((station) => station.portal));
+  if (loadMissingZeroPlanets) {
+    const missing = stations.filter((station) => {
+      const cached = almanacByPortal[station.portal]?.find((entry) => entry.galaxy === station.galaxy)?.response;
+      return station.portal.startsWith("0") && (!cached || !hasStationPlanetData(cached));
+    });
+    if (missing.length > 0) {
+      const fallbacks = await lookupAlmanacPlanets(
+        missing.map(({ portal, galaxy }) => ({ portal: `1${portal.slice(1)}`, galaxy })),
+      );
+      const unresolved = missing.filter(({ portal, galaxy }) => {
+        const fallback = fallbacks.get(`1${portal.slice(1)}:${galaxy}`)?.planet;
+        return (
+          (!fallback || !hasStationPlanetData(fallback)) &&
+          !almanacByPortal[portal]?.some((entry) => entry.galaxy === galaxy)
+        );
+      });
+      const originals =
+        unresolved.length > 0 ? await lookupAlmanacPlanets(unresolved) : new Map<string, AlmanacLookupResult>();
+      const aliases: { portalCode: string; galaxy: number; response: Record<string, unknown> }[] = [];
+      for (const { portal, galaxy } of missing) {
+        const fallback = fallbacks.get(`1${portal.slice(1)}:${galaxy}`)?.planet;
+        const planet =
+          fallback && hasStationPlanetData(fallback) ? fallback : originals.get(`${portal}:${galaxy}`)?.planet;
+        if (!planet) continue;
+        almanacByPortal[portal] = [
+          ...(almanacByPortal[portal] ?? []).filter((entry) => entry.galaxy !== galaxy),
+          { galaxy, response: planet },
+        ];
+        aliases.push({ portalCode: portal, galaxy, response: planet });
+      }
+      try {
+        await writeAlmanacResponses(aliases);
+      } catch (error) {
+        console.error("Unable to cache station Almanac fallbacks", error);
+      }
+    }
+  }
   return stations.map((station) => {
     const owner = accessData.members.find(
       (candidate) => candidate.publicId === station.ownerId && candidate.membershipStatus === "approved",

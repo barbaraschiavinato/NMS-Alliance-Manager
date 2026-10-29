@@ -9,6 +9,7 @@ export default defineConfig({
   test: {
     // The stores compute the data/ path from process.cwd(): each file needs its own process (forks) to chdir.
     pool: "forks",
+    maxWorkers: 2,
     environment: "node",
     include: ["tests/**/*.test.{ts,tsx}"],
     setupFiles: ["tests/setup.ts"],
