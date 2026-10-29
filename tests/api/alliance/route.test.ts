@@ -28,6 +28,10 @@ function settings(overrides: Record<string, unknown> = {}) {
     discordUrl: " https://discord.com/invite/xyz ",
     telegramUrl: "https://t.me/alliance",
     heroGradientMode: "left",
+    faviconUrl: "",
+    appleIconUrl: "",
+    appIcon192Url: "",
+    appIcon512Url: "",
     ...overrides,
   };
 }
@@ -119,6 +123,10 @@ describe("PATCH /api/alliance", () => {
       discordUrl: "https://discord.com/invite/xyz",
       telegramUrl: "https://t.me/alliance",
       heroGradientMode: "left",
+      faviconUrl: "",
+      appleIconUrl: "",
+      appIcon192Url: "",
+      appIcon512Url: "",
       portalCode: "",
       galaxy: 0,
     };
@@ -148,6 +156,32 @@ describe("PATCH /api/alliance", () => {
       portalCode: "0123456789AB",
       galaxy: 255,
     });
+  });
+
+  it("saves generated app icon URLs", async () => {
+    signInAs(cast.admin);
+    const uploadId = "11111111-2222-4333-8444-555555555555";
+    const iconUrls = {
+      faviconUrl: `/api/alliance/image?path=alliance-manager%2Fbranding%2F${uploadId}-1.png`,
+      appleIconUrl: `/api/alliance/image?path=alliance-manager%2Fbranding%2F${uploadId}-2.png`,
+      appIcon192Url: `/api/alliance/image?path=alliance-manager%2Fbranding%2F${uploadId}-3.png`,
+      appIcon512Url: `/api/alliance/image?path=alliance-manager%2Fbranding%2F${uploadId}-4.png`,
+    };
+    const response = await patch(settings(iconUrls));
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject(iconUrls);
+  });
+
+  it("rejects non-string app icon URLs", async () => {
+    signInAs(cast.admin);
+    const response = await patch(settings({ appIcon192Url: null }));
+    expect(response.status).toBe(400);
+  });
+
+  it("rejects app icon URLs outside the private alliance branding uploads", async () => {
+    signInAs(cast.admin);
+    const response = await patch(settings({ appIcon192Url: "https://example.com/icon.png" }));
+    expect(response.status).toBe(400);
   });
 
   it("accepts an empty portal code", async () => {

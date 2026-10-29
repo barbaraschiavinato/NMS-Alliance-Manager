@@ -4,8 +4,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { signInAs } from "../../helpers/auth";
 import { jsonRequest } from "../../helpers/http";
 import { makeMember, seedMembers, writeDataFile } from "../../helpers/members";
-import { PORTAL, corruptDataFile, resetData } from "./fixtures";
+import { PORTAL, SAME_SYSTEM_OTHER_PLANET, corruptDataFile, resetData } from "./fixtures";
 import { almanacWords, structuredPlanet, structuredSystem } from "../../helpers/almanac";
+import { noteAlmanacRateLimit, resetAlmanacRateLimit } from "@/lib/almanac/almanac-rate-limit";
 
 vi.mock("@/auth", async () => (await import("../../helpers/auth")).authMock);
 
@@ -37,6 +38,7 @@ function readCache() {
 
 beforeEach(() => {
   resetData();
+  resetAlmanacRateLimit();
   signInAs(null);
   seedMembers([user, moderator, simpleAdmin]);
   fetchMock.mockReset();
@@ -84,6 +86,7 @@ describe("GET /api/missions/verify-system", () => {
   it.each([
     ["a missing address", "galaxy=0"],
     ["a non-hex address", "address=ZZZZZZZZZZZZ&galaxy=0"],
+    ["a system address instead of a portal address", "address=12345678&galaxy=0"],
     ["an address with decode errors", "address=0123458000AB&galaxy=0"],
     ["a missing galaxy", `address=${PORTAL}`],
     ["a non-numeric galaxy", `address=${PORTAL}&galaxy=abc`],
@@ -126,6 +129,70 @@ describe("GET /api/missions/verify-system", () => {
     });
     expect(String(fetchMock.mock.calls[0][0])).toBe(`https://nmsalmanac.com/api/planets/${PORTAL}?galaxy=8`);
     expect(readCache()).toEqual({ [PORTAL]: { 7: almanacPlanet } });
+  });
+
+  it("verifies a non-zero-leading portal without using a planet-one fallback", async () => {
+    fetchMock.mockResolvedValue(Response.json({ ...almanacPlanet, portal: SAME_SYSTEM_OTHER_PLANET }));
+    signInAs(user);
+
+    const res = await verify(`address=${SAME_SYSTEM_OTHER_PLANET}&galaxy=0`);
+
+    expect(res.status).toBe(200);
+    expect(await res.json()).toMatchObject({ found: true, cached: false, planetType: "Lush" });
+    expect(String(fetchMock.mock.calls[0][0])).toBe(
+      `https://nmsalmanac.com/api/planets/${SAME_SYSTEM_OTHER_PLANET}?galaxy=1`,
+    );
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("verifies a zero-leading portal against planet one and caches it for the entered address", async () => {
+    const planetOnePortal = `1${PORTAL.slice(1)}`;
+    const planetOne = { ...almanacPlanet, portal: planetOnePortal };
+    fetchMock.mockResolvedValue(Response.json(planetOne));
+    signInAs(user);
+
+    const res = await verify(`address=${PORTAL}&galaxy=0`);
+
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({
+      found: true,
+      systemLabel: "Yellow · Trading · Gek",
+      planetType: "Lush",
+      cached: false,
+    });
+    expect(String(fetchMock.mock.calls[0][0])).toBe(`https://nmsalmanac.com/api/planets/${PORTAL}?galaxy=1`);
+    expect(readCache()).toEqual({ [planetOnePortal]: { 0: planetOne }, [PORTAL]: { 0: planetOne } });
+  });
+
+  it("uses a cached planet-one response when verifying a zero-leading portal", async () => {
+    const planetOnePortal = `1${PORTAL.slice(1)}`;
+    const planetOne = { ...almanacPlanet, portal: planetOnePortal };
+    writeDataFile("almanac.json", { [planetOnePortal]: { 0: planetOne } });
+    signInAs(user);
+
+    const res = await verify(`address=${PORTAL}&galaxy=0`);
+
+    expect(res.status).toBe(200);
+    expect(await res.json()).toMatchObject({ found: true, cached: true, planetType: "Lush" });
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(readCache()[PORTAL]["0"]).toMatchObject({ portal: planetOnePortal });
+  });
+
+  it("tries planet one when the entered zero-leading portal is not in the Almanac", async () => {
+    const planetOnePortal = `1${PORTAL.slice(1)}`;
+    fetchMock
+      .mockResolvedValueOnce(new Response("", { status: 404 }))
+      .mockResolvedValueOnce(Response.json({ ...almanacPlanet, portal: planetOnePortal }));
+    signInAs(user);
+
+    const res = await verify(`address=${PORTAL}&galaxy=0`);
+
+    expect(res.status).toBe(200);
+    expect(await res.json()).toMatchObject({ found: true, cached: false, planetType: "Lush" });
+    expect(fetchMock.mock.calls.map(([url]) => String(url))).toEqual([
+      `https://nmsalmanac.com/api/planets/${PORTAL}?galaxy=1`,
+      `https://nmsalmanac.com/api/planets/${planetOnePortal}?galaxy=1`,
+    ]);
   });
 
   it("falls back to the band type and null labels", async () => {
@@ -172,6 +239,27 @@ describe("GET /api/missions/verify-system", () => {
     expect(res.headers.get("Retry-After")).toBe("120");
   });
 
+  it("uses the active Almanac cooldown without making another request", async () => {
+    noteAlmanacRateLimit(new Response("", { status: 429, headers: { "Retry-After": "120" } }));
+    signInAs(user);
+
+    const res = await verify(`address=${PORTAL}&galaxy=0`);
+
+    expect(res.status).toBe(429);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("uses the default cooldown when a rate-limited response has no Retry-After", async () => {
+    fetchMock.mockResolvedValue(new Response("", { status: 429 }));
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    signInAs(user);
+
+    const res = await verify(`address=${PORTAL}&galaxy=0`);
+
+    expect(res.status).toBe(429);
+    expect(res.headers.get("Retry-After")).toBeNull();
+  });
+
   it("maps other Almanac errors to 502", async () => {
     fetchMock.mockResolvedValue(new Response("", { status: 500 }));
     signInAs(user);
@@ -180,8 +268,19 @@ describe("GET /api/missions/verify-system", () => {
     expect(res.headers.get("Retry-After")).toBeNull();
   });
 
+  it("forwards Retry-After for other Almanac errors", async () => {
+    fetchMock.mockResolvedValue(new Response("", { status: 503, headers: { "Retry-After": "30" } }));
+    signInAs(user);
+
+    const res = await verify(`address=${PORTAL}&galaxy=0`);
+
+    expect(res.status).toBe(502);
+    expect(res.headers.get("Retry-After")).toBe("30");
+  });
+
   it.each([
     ["an unexpected payload", () => Promise.resolve(Response.json(["not", "a", "planet"]))],
+    ["a response for a different portal", () => Promise.resolve(Response.json({ portal: "FFFFFFFFFFFF" }))],
     ["a network failure", () => Promise.reject(new Error("offline"))],
   ])("returns 502 on %s", async (_label, response) => {
     fetchMock.mockImplementation(response);

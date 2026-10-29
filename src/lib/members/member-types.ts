@@ -56,4 +56,8 @@ export type AllianceSettings = {
   discordUrl: string;
   telegramUrl: string;
   heroGradientMode: "none" | "left" | "full";
+  faviconUrl: string;
+  appleIconUrl: string;
+  appIcon192Url: string;
+  appIcon512Url: string;
 };

@@ -45,6 +45,10 @@ export const defaultAlliance: AllianceSettings = {
   discordUrl: "",
   telegramUrl: "",
   heroGradientMode: "full",
+  faviconUrl: "",
+  appleIconUrl: "",
+  appIcon192Url: "",
+  appIcon512Url: "",
   portalCode: "",
   galaxy: 0,
 };

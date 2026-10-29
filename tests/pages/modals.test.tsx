@@ -97,6 +97,166 @@ describe("AdminPanel", () => {
     expect(await screen.findByText("Too large.")).toBeInTheDocument();
   });
 
+  it("generates four centered PNG app icons and saves their URLs", async () => {
+    const uploads: string[] = [];
+    const { requests } = mockFetch({
+      "GET /api/alliance": defaultAlliance,
+      "POST /api/admin/upload": () => {
+        const url = `/api/alliance/image?path=alliance-manager/branding/icon-${uploads.length}.png`;
+        uploads.push(url);
+        return { url };
+      },
+    });
+    const bitmap = { width: 1024, height: 512, close: vi.fn() };
+    const drawImage = vi.fn();
+    vi.stubGlobal("createImageBitmap", vi.fn().mockResolvedValue(bitmap));
+    vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockImplementation(
+      () => ({ drawImage }) as unknown as CanvasRenderingContext2D,
+    );
+    vi.spyOn(HTMLCanvasElement.prototype, "toBlob").mockImplementation((callback) => {
+      callback(new Blob(["icon"], { type: "image/png" }));
+    });
+    const { user, container } = renderAdmin();
+    await waitFor(() =>
+      expect(screen.getByRole("textbox", { name: t("admin.alliance_name") })).toHaveValue("Test Alliance"),
+    );
+    const inputs = container.ownerDocument.querySelectorAll<HTMLInputElement>('input[type="file"]');
+    const iconInput = inputs[2];
+
+    await user.upload(iconInput, new File(["source"], "source.png", { type: "image/png" }));
+
+    expect(await screen.findByText(t("admin.app_icons_generated_save_to_publish"))).toBeInTheDocument();
+    expect(requests("POST", "/api/admin/upload")).toHaveLength(4);
+    expect(requests("POST", "/api/admin/upload").map((request) => (request.body as FormData).get("image"))).toEqual([
+      expect.objectContaining({ name: "app-icon-32.png", type: "image/png" }),
+      expect.objectContaining({ name: "app-icon-180.png", type: "image/png" }),
+      expect.objectContaining({ name: "app-icon-192.png", type: "image/png" }),
+      expect.objectContaining({ name: "app-icon-512.png", type: "image/png" }),
+    ]);
+    expect(drawImage).toHaveBeenNthCalledWith(1, bitmap, 256, 0, 512, 512, 0, 0, 32, 32);
+    expect(bitmap.close).toHaveBeenCalledOnce();
+    expect(container.ownerDocument.querySelector(".app-icon-preview")).toHaveStyle({
+      backgroundImage: `url("${uploads[2]}")`,
+    });
+    await user.click(screen.getByRole("button", { name: t("admin.save_settings") }));
+    await waitFor(() => expect(requests("PATCH", "/api/alliance")).toHaveLength(1));
+    expect(requests("PATCH", "/api/alliance")[0].body).toMatchObject({
+      faviconUrl: uploads[0],
+      appleIconUrl: uploads[1],
+      appIcon192Url: uploads[2],
+      appIcon512Url: uploads[3],
+    });
+  });
+
+  it("rejects oversized app icon source images without decoding them", async () => {
+    const bitmap = vi.fn();
+    vi.stubGlobal("createImageBitmap", bitmap);
+    mockFetch({ "GET /api/alliance": defaultAlliance });
+    const { user, container } = renderAdmin();
+    await waitFor(() =>
+      expect(screen.getByRole("textbox", { name: t("admin.alliance_name") })).toHaveValue("Test Alliance"),
+    );
+    const iconInput = container.ownerDocument.querySelectorAll<HTMLInputElement>('input[type="file"]')[2];
+
+    await user.upload(iconInput, new File([new Uint8Array(5 * 1024 * 1024 + 1)], "large.png", { type: "image/png" }));
+
+    expect(await screen.findByText(t("admin.icon_source_too_large"))).toBeInTheDocument();
+    expect(bitmap).not.toHaveBeenCalled();
+  });
+
+  it("rejects oversized decoded images and releases the bitmap", async () => {
+    const bitmap = { width: 512, height: 5000, close: vi.fn() };
+    vi.stubGlobal("createImageBitmap", vi.fn().mockResolvedValue(bitmap));
+    mockFetch({ "GET /api/alliance": defaultAlliance });
+    const { user, container } = renderAdmin();
+    await waitFor(() =>
+      expect(screen.getByRole("textbox", { name: t("admin.alliance_name") })).toHaveValue("Test Alliance"),
+    );
+    const iconInput = container.ownerDocument.querySelectorAll<HTMLInputElement>('input[type="file"]')[2];
+
+    await user.upload(iconInput, new File(["source"], "source.png", { type: "image/png" }));
+
+    expect(await screen.findByText(t("admin.icon_source_too_large"))).toBeInTheDocument();
+    expect(bitmap.close).toHaveBeenCalledOnce();
+  });
+
+  it("reports when the canvas cannot provide a rendering context", async () => {
+    const bitmap = { width: 512, height: 512, close: vi.fn() };
+    vi.stubGlobal("createImageBitmap", vi.fn().mockResolvedValue(bitmap));
+    vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
+    mockFetch({ "GET /api/alliance": defaultAlliance });
+    const { user, container } = renderAdmin();
+    await waitFor(() =>
+      expect(screen.getByRole("textbox", { name: t("admin.alliance_name") })).toHaveValue("Test Alliance"),
+    );
+    const iconInput = container.ownerDocument.querySelectorAll<HTMLInputElement>('input[type="file"]')[2];
+
+    await user.upload(iconInput, new File(["source"], "source.png", { type: "image/png" }));
+
+    expect(await screen.findByText(t("admin.icon_generation_failed"))).toBeInTheDocument();
+    expect(bitmap.close).toHaveBeenCalledOnce();
+  });
+
+  it("reports failures when creating or encoding app icons", async () => {
+    const bitmap = { width: 512, height: 512, close: vi.fn() };
+    const createBitmap = vi.fn().mockRejectedValueOnce(new Error("unsupported image")).mockResolvedValueOnce(bitmap);
+    vi.stubGlobal("createImageBitmap", createBitmap);
+    vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue({
+      drawImage: vi.fn(),
+    } as unknown as CanvasRenderingContext2D);
+    vi.spyOn(HTMLCanvasElement.prototype, "toBlob").mockImplementation((callback) => callback(null));
+    mockFetch({ "GET /api/alliance": defaultAlliance });
+    const { user, container } = renderAdmin();
+    await waitFor(() =>
+      expect(screen.getByRole("textbox", { name: t("admin.alliance_name") })).toHaveValue("Test Alliance"),
+    );
+    const iconInput = container.ownerDocument.querySelectorAll<HTMLInputElement>('input[type="file"]')[2];
+    const source = new File(["source"], "source.png", { type: "image/png" });
+
+    await user.upload(iconInput, source);
+    expect(await screen.findByText("unsupported image")).toBeInTheDocument();
+    await user.upload(iconInput, source);
+    expect(await screen.findByText(t("admin.icon_generation_failed"))).toBeInTheDocument();
+    expect(bitmap.close).toHaveBeenCalledOnce();
+  });
+
+  it("uses the generic image error when a non-Error decode failure occurs", async () => {
+    vi.stubGlobal("createImageBitmap", vi.fn().mockRejectedValue("decode failed"));
+    mockFetch({ "GET /api/alliance": defaultAlliance });
+    const { user, container } = renderAdmin();
+    await waitFor(() =>
+      expect(screen.getByRole("textbox", { name: t("admin.alliance_name") })).toHaveValue("Test Alliance"),
+    );
+    const iconInput = container.ownerDocument.querySelectorAll<HTMLInputElement>('input[type="file"]')[2];
+
+    await user.upload(iconInput, new File(["source"], "source.png", { type: "image/png" }));
+
+    expect(await screen.findByText(t("admin.icon_generation_failed"))).toBeInTheDocument();
+  });
+
+  it("reports missing upload URLs for generated icons", async () => {
+    mockFetch({
+      "GET /api/alliance": defaultAlliance,
+      "POST /api/admin/upload": {},
+    });
+    vi.stubGlobal("createImageBitmap", vi.fn().mockResolvedValue({ width: 512, height: 512, close: vi.fn() }));
+    vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue({
+      drawImage: vi.fn(),
+    } as unknown as CanvasRenderingContext2D);
+    vi.spyOn(HTMLCanvasElement.prototype, "toBlob").mockImplementation((callback) => {
+      callback(new Blob(["icon"], { type: "image/png" }));
+    });
+    const { user, container } = renderAdmin();
+    await waitFor(() =>
+      expect(screen.getByRole("textbox", { name: t("admin.alliance_name") })).toHaveValue("Test Alliance"),
+    );
+    const iconInput = container.ownerDocument.querySelectorAll<HTMLInputElement>('input[type="file"]')[2];
+
+    await user.upload(iconInput, new File(["source"], "source.png", { type: "image/png" }));
+
+    expect(await screen.findByText(t("errors.upload_failed"))).toBeInTheDocument();
+  });
+
   it("normalizes the portal code, picks galaxy and gradient, and ignores an empty file selection", async () => {
     const { requests } = mockFetch({ "GET /api/alliance": { ...defaultAlliance, bannerUrl: "/banner.png" } });
     const { user, container } = renderAdmin();
@@ -118,8 +278,11 @@ describe("AdminPanel", () => {
     expect(screen.getByRole("button", { name: t("common.full") })).toHaveAttribute("aria-pressed", "true");
     expect((banner as HTMLElement).style.backgroundImage).toContain("linear-gradient(100deg");
 
-    const [logoInput] = Array.from(container.ownerDocument.querySelectorAll<HTMLInputElement>("input[type=file]"));
+    const [logoInput, , appIconInput] = Array.from(
+      container.ownerDocument.querySelectorAll<HTMLInputElement>("input[type=file]"),
+    );
     fireEvent.change(logoInput, { target: { files: [] } });
+    fireEvent.change(appIconInput, { target: { files: [] } });
     expect(requests("POST", "/api/admin/upload")).toHaveLength(0);
   });
 
