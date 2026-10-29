@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import HelpRequestsRoute from "@/app/help-requests/page";
 import TaxiRoute from "@/app/taxi/page";
-import RootLayout, { metadata } from "@/app/layout";
+import RootLayout, { generateMetadata } from "@/app/layout";
 import LeaderboardRoute from "@/app/leaderboard/page";
 import StationMapRoute from "@/app/map/page";
 import Loading from "@/app/loading";
@@ -333,8 +333,8 @@ describe("home route", () => {
 });
 
 describe("layout and loading", () => {
-  it("wraps pages in the providers with Italian as the server language", () => {
-    expect(metadata.title).toBe("NMS Alliance Manager");
+  it("wraps pages in the providers with Italian as the server language", async () => {
+    expect((await generateMetadata()).title).toBe("NMS Alliance Manager");
     const html = renderToStaticMarkup(
       <RootLayout>
         <p>Content</p>
