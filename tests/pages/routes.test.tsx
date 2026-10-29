@@ -42,7 +42,7 @@ import { readPlanetSystemStatuses } from "@/lib/planets/planet-system-status-sto
 import * as visitsStore from "@/lib/planets/planet-visits-store";
 import { readAlmanacCache } from "@/lib/almanac/almanac-store";
 import { signInAs } from "../helpers/auth";
-import { makeMember, seedMembers, writeDataFile } from "../helpers/members";
+import { defaultAlliance, makeMember, seedMembers, writeDataFile } from "../helpers/members";
 import { makeMission } from "./helpers";
 
 vi.mock("@/auth", async () => (await import("../helpers/auth")).authMock);
@@ -342,6 +342,27 @@ describe("layout and loading", () => {
     );
     expect(html).toContain('<html lang="it">');
     expect(html).toContain("<p>Content</p>");
+  });
+
+  it("uses configured alliance favicon and Apple icon metadata", async () => {
+    writeDataFile("access.json", {
+      members: [],
+      alliance: {
+        ...defaultAlliance,
+        faviconUrl: "/api/alliance/image?path=alliance-manager/branding/favicon.png",
+        appleIconUrl: "/api/alliance/image?path=alliance-manager/branding/apple.png",
+      },
+    });
+
+    expect(await generateMetadata()).toMatchObject({
+      icons: {
+        icon: [
+          { url: "/api/alliance/app-icon?size=32", sizes: "32x32", type: "image/png" },
+          { url: "/api/alliance/app-icon?size=192", sizes: "192x192", type: "image/png" },
+        ],
+        apple: "/api/alliance/app-icon?size=180",
+      },
+    });
   });
 
   it("shows a spinner while loading", () => {
