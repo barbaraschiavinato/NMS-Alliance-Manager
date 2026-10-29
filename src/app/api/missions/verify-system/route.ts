@@ -3,7 +3,6 @@ import { getCurrentMember } from "@/lib/auth/authorization";
 import { readAlmanacResponse, writeAlmanacResponse } from "@/lib/almanac/almanac-store";
 import { decodePortalAddress } from "@/lib/missions/missions";
 import { normalizeAlmanacPlanet } from "@/lib/almanac/almanac-normalize";
-import { almanacRetryAfterSeconds, noteAlmanacRateLimit } from "@/lib/almanac/almanac-rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -29,7 +28,8 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Indirizzo portale o galassia non validi." }, { status: 400 });
   }
 
-  const planetOneAddress = address.startsWith("0") ? `1${address.slice(1)}` : null;
+  const url = new URL(`https://nmsalmanac.com/api/planets/${address}`);
+  url.searchParams.set("galaxy", String(galaxy + 1));
 
   try {
     const cachedResponse = await readAlmanacResponse(address, galaxy);
@@ -47,74 +47,45 @@ export async function GET(request: Request) {
       );
     }
 
-    if (almanacRetryAfterSeconds() > 0) {
+    const response = await fetch(url, {
+      headers: { Accept: "application/json" },
+      signal: AbortSignal.timeout(6000),
+      cache: "no-store",
+    });
+    if (response.status === 404) {
+      return NextResponse.json({ found: false }, { headers: { "Cache-Control": "no-store" } });
+    }
+    if (!response.ok) {
+      const headers = new Headers({ "Cache-Control": "no-store" });
+      const retryAfter = response.headers.get("Retry-After");
+      if (retryAfter) headers.set("Retry-After", retryAfter);
       return NextResponse.json(
         { error: "NMS Almanac non disponibile." },
-        { status: 429, headers: { "Cache-Control": "no-store" } },
-      );
-    }
-
-    const cachedPlanetOne = planetOneAddress ? await readAlmanacResponse(planetOneAddress, galaxy) : null;
-    if (cachedPlanetOne) {
-      await writeAlmanacResponse(address, galaxy, cachedPlanetOne);
-      return NextResponse.json(
         {
-          found: true,
-          systemLabel: almanacSystemLabel(cachedPlanetOne),
-          planetType: almanacPlanetType(cachedPlanetOne),
-          cached: true,
+          status: response.status === 429 ? 429 : 502,
+          headers,
         },
-        { headers: { "Cache-Control": "no-store" } },
       );
     }
 
-    for (const lookupAddress of planetOneAddress ? [address, planetOneAddress] : [address]) {
-      const url = new URL(`https://nmsalmanac.com/api/planets/${lookupAddress}`);
-      url.searchParams.set("galaxy", String(galaxy + 1));
-      const response = await fetch(url, {
-        headers: { Accept: "application/json" },
-        signal: AbortSignal.timeout(6000),
-        cache: "no-store",
-      });
-      if (response.status === 404) continue;
-      if (response.status === 429) {
-        noteAlmanacRateLimit(response);
-        const headers = new Headers({ "Cache-Control": "no-store" });
-        const retryAfter = response.headers.get("Retry-After");
-        if (retryAfter) headers.set("Retry-After", retryAfter);
-        return NextResponse.json({ error: "NMS Almanac non disponibile." }, { status: 429, headers });
-      }
-      if (!response.ok) {
-        const headers = new Headers({ "Cache-Control": "no-store" });
-        const retryAfter = response.headers.get("Retry-After");
-        if (retryAfter) headers.set("Retry-After", retryAfter);
-        return NextResponse.json({ error: "NMS Almanac non disponibile." }, { status: 502, headers });
-      }
+    const result: unknown = await response.json();
+    const found = isRecord(result) && typeof result.portal === "string" && result.portal.toUpperCase() === address;
+    if (!found) throw new Error("NMS Almanac returned an unexpected response");
 
-      const result: unknown = await response.json();
-      if (!isRecord(result) || typeof result.portal !== "string")
-        throw new Error("NMS Almanac returned an unexpected response");
-      const responsePortal = result.portal.toUpperCase();
-      if (responsePortal !== lookupAddress && !(lookupAddress === address && responsePortal === planetOneAddress))
-        throw new Error("NMS Almanac returned an unexpected response");
+    const normalized = await normalizeAlmanacPlanet(result);
+    await writeAlmanacResponse(address, galaxy, normalized);
 
-      const normalized = await normalizeAlmanacPlanet(result);
-      if (responsePortal !== address) await writeAlmanacResponse(responsePortal, galaxy, normalized);
-      if (lookupAddress !== address) await writeAlmanacResponse(lookupAddress, galaxy, normalized);
-      await writeAlmanacResponse(address, galaxy, normalized);
-
-      return NextResponse.json(
-        {
-          found: true,
-          systemLabel: almanacSystemLabel(normalized),
-          planetType: almanacPlanetType(normalized),
-          cached: false,
-        },
-        { headers: { "Cache-Control": "no-store" } },
-      );
-    }
-
-    return NextResponse.json({ found: false }, { headers: { "Cache-Control": "no-store" } });
+    return NextResponse.json(
+      {
+        found: true,
+        systemLabel: almanacSystemLabel(normalized),
+        planetType: almanacPlanetType(normalized),
+        cached: false,
+      },
+      {
+        headers: { "Cache-Control": "no-store" },
+      },
+    );
   } catch (error) {
     console.error("Unable to verify portal address in NMS Almanac", error);
     return NextResponse.json({ error: "NMS Almanac non disponibile." }, { status: 502 });

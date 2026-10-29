@@ -36,10 +36,6 @@ export async function PATCH(request: Request) {
     typeof value.telegramUrl !== "string" ||
     value.telegramUrl.length > 300 ||
     !isCommunityInviteUrl(value.telegramUrl, ["t.me", "telegram.me", "t.co"]) ||
-    !isIconUrl(value.faviconUrl) ||
-    !isIconUrl(value.appleIconUrl) ||
-    !isIconUrl(value.appIcon192Url) ||
-    !isIconUrl(value.appIcon512Url) ||
     (value.heroGradientMode !== "none" && value.heroGradientMode !== "left" && value.heroGradientMode !== "full")
   ) {
     return NextResponse.json(
@@ -56,30 +52,8 @@ export async function PATCH(request: Request) {
     discordUrl: value.discordUrl.trim(),
     telegramUrl: value.telegramUrl.trim(),
     heroGradientMode: value.heroGradientMode,
-    faviconUrl: value.faviconUrl,
-    appleIconUrl: value.appleIconUrl,
-    appIcon192Url: value.appIcon192Url,
-    appIcon512Url: value.appIcon512Url,
   });
   return NextResponse.json(settings);
-}
-
-function isIconUrl(value: unknown): value is string {
-  if (typeof value !== "string" || value.length > 500) return false;
-  if (!value) return true;
-  try {
-    const url = new URL(value, "http://localhost");
-    const path = url.searchParams.get("path");
-    return (
-      url.origin === "http://localhost" &&
-      url.pathname === "/api/alliance/image" &&
-      url.searchParams.size === 1 &&
-      !!path &&
-      /^alliance-manager\/branding\/[a-f0-9-]+\.png$/i.test(path)
-    );
-  } catch {
-    return false;
-  }
 }
 
 function isCommunityInviteUrl(value: string, allowedHosts: readonly string[]) {

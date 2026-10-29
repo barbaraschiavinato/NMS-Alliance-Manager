@@ -679,12 +679,6 @@ export const translations: TranslationCatalog = {
     "admin.alliance_member": "Alliance member",
     "admin.png_jpeg_webp_or_avif_5_mb_max_images_remain_in_the_alliance_s_private_blob":
       "PNG, JPEG, WebP, or AVIF · 5 MB max. Images remain in the alliance's private Blob.",
-    "admin.app_icons_and_favicon": "App icons and favicon",
-    "admin.choose_a_square_source_image_to_generate_icons":
-      "Choose a source image (max 5 MB). It will be center-cropped to square and generate favicon, iOS, and Android icons.",
-    "admin.app_icons_generated_save_to_publish": "Icons generated. Save settings to publish them.",
-    "admin.icon_generation_failed": "Unable to generate app icons from this image.",
-    "admin.icon_source_too_large": "Choose an image up to 5 MB and 4096 pixels per side.",
     "admin.role_assigned_by_administrator_role": "Role assigned by administrator: {role}",
     "admin.role_updated_administrator": "Role updated: Administrator.",
     "admin.only_an_administrator_can_change_roles": "Only an administrator can change roles.",

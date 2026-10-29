@@ -320,8 +320,7 @@ export const translations: TranslationCatalog = {
     "messages.tab_all": "Tutti i messaggi",
     "navigation.map": "Mappa",
     "map.title": "Mappa della galassia",
-    "map.description":
-      "Le stazioni dell'alleanza, posizionate sulla mappa della loro galassia secondo le coordinate del portale.",
+    "map.description": "Le stazioni dell'alleanza, posizionate sulla mappa della loro galassia secondo le coordinate del portale.",
     "map.aria_label": "Mappa delle stazioni dell'alleanza nella galassia selezionata",
     "map.zoom_in": "Ingrandisci",
     "map.zoom_out": "Riduci",
@@ -693,12 +692,6 @@ export const translations: TranslationCatalog = {
     "admin.alliance_member": "Membro dell’alleanza",
     "admin.png_jpeg_webp_or_avif_5_mb_max_images_remain_in_the_alliance_s_private_blob":
       "PNG, JPEG, WebP o AVIF · massimo 5 MB. Le immagini restano nel Blob privato dell’alleanza.",
-    "admin.app_icons_and_favicon": "Icone dell’app e favicon",
-    "admin.choose_a_square_source_image_to_generate_icons":
-      "Scegli un’immagine (massimo 5 MB): verrà ritagliata al centro in formato quadrato per creare favicon e icone iOS e Android.",
-    "admin.app_icons_generated_save_to_publish": "Icone generate. Salva le impostazioni per pubblicarle.",
-    "admin.icon_generation_failed": "Impossibile creare le icone dell’app da questa immagine.",
-    "admin.icon_source_too_large": "Scegli un’immagine fino a 5 MB e 4096 pixel per lato.",
     "admin.role_assigned_by_administrator_role": "Ruolo assegnato dall’amministratore: {role}",
     "admin.role_updated_administrator": "Ruolo aggiornato: Admin.",
     "admin.only_an_administrator_can_change_roles": "Solo un admin può cambiare i ruoli.",
