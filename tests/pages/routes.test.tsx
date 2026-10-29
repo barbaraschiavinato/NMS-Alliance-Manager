@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import HelpRequestsRoute from "@/app/help-requests/page";
 import TaxiRoute from "@/app/taxi/page";
-import RootLayout, { metadata } from "@/app/layout";
+import RootLayout, { generateMetadata } from "@/app/layout";
 import LeaderboardRoute from "@/app/leaderboard/page";
 import StationMapRoute from "@/app/map/page";
 import Loading from "@/app/loading";
@@ -42,7 +42,7 @@ import { readPlanetSystemStatuses } from "@/lib/planets/planet-system-status-sto
 import * as visitsStore from "@/lib/planets/planet-visits-store";
 import { readAlmanacCache } from "@/lib/almanac/almanac-store";
 import { signInAs } from "../helpers/auth";
-import { makeMember, seedMembers, writeDataFile } from "../helpers/members";
+import { defaultAlliance, makeMember, seedMembers, writeDataFile } from "../helpers/members";
 import { makeMission } from "./helpers";
 
 vi.mock("@/auth", async () => (await import("../helpers/auth")).authMock);
@@ -333,8 +333,8 @@ describe("home route", () => {
 });
 
 describe("layout and loading", () => {
-  it("wraps pages in the providers with Italian as the server language", () => {
-    expect(metadata.title).toBe("NMS Alliance Manager");
+  it("wraps pages in the providers with Italian as the server language", async () => {
+    expect((await generateMetadata()).title).toBe("NMS Alliance Manager");
     const html = renderToStaticMarkup(
       <RootLayout>
         <p>Content</p>
@@ -342,6 +342,27 @@ describe("layout and loading", () => {
     );
     expect(html).toContain('<html lang="it">');
     expect(html).toContain("<p>Content</p>");
+  });
+
+  it("uses configured alliance favicon and Apple icon metadata", async () => {
+    writeDataFile("access.json", {
+      members: [],
+      alliance: {
+        ...defaultAlliance,
+        faviconUrl: "/api/alliance/image?path=alliance-manager/branding/favicon.png",
+        appleIconUrl: "/api/alliance/image?path=alliance-manager/branding/apple.png",
+      },
+    });
+
+    expect(await generateMetadata()).toMatchObject({
+      icons: {
+        icon: [
+          { url: "/api/alliance/app-icon?size=32", sizes: "32x32", type: "image/png" },
+          { url: "/api/alliance/app-icon?size=192", sizes: "192x192", type: "image/png" },
+        ],
+        apple: "/api/alliance/app-icon?size=180",
+      },
+    });
   });
 
   it("shows a spinner while loading", () => {

@@ -84,6 +84,24 @@ describe("lookupAlmanacPlanet", () => {
     await expect(lookupAlmanacPlanet("0123456789AB", 0)).resolves.toEqual({ portal: "0123456789ab" });
   });
 
+  it("accepts planet-one responses for zero-leading portals", async () => {
+    const planet = { portal: "1123456789ab", pictures: { disc: "/planets/one.png" } };
+    stubAlmanac({ "0123456789AB": () => jsonResponse(planet) });
+
+    await expect(lookupAlmanacPlanet("0123456789AB", 0)).resolves.toEqual(planet);
+    expect(readCache()["0123456789AB"]["0"]).toEqual(planet);
+  });
+
+  it("reuses cached planet-one data for a zero-leading portal without external requests", async () => {
+    const planet = { portal: "1123456789AB", pictures: { disc: "/planets/one.png" } };
+    writeDataFile("almanac.json", { "1123456789AB": { 0: planet } });
+    const fetchMock = stubAlmanac();
+
+    await expect(lookupAlmanacPlanet("0123456789AB", 0)).resolves.toEqual(planet);
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(readCache()["0123456789AB"]["0"]).toEqual(planet);
+  });
+
   it("returns null on 404 without caching", async () => {
     stubAlmanac({ "0123456789AB": () => new Response("not found", { status: 404 }) });
     await expect(lookupAlmanacPlanet("0123456789AB", 0)).resolves.toBeNull();
@@ -143,7 +161,7 @@ describe("lookupAlmanacPlanet", () => {
     ["a string", "planet"],
     ["an object without portal", { name: "x" }],
     ["a non-string portal", { portal: 123 }],
-    ["another portal", { portal: "1123456789AB" }],
+    ["another system", { portal: "1124456789AB" }],
   ])("rejects %s as planet data", async (_label, body) => {
     stubAlmanac({ "0123456789AB": () => jsonResponse(body) });
     await expect(lookupAlmanacPlanet("0123456789AB", 0)).rejects.toThrow("planet.almanac_lookup_failed");

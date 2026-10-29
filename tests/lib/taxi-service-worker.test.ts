@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import { runInNewContext } from "node:vm";
 import { describe, expect, it, vi } from "vitest";
 import manifest from "@/app/manifest";
+import { defaultAlliance, seedMembers } from "../helpers/members";
 
 const source = readFileSync(fileURLToPath(new URL("../../public/taxi-push-sw.js", import.meta.url)), "utf8");
 function worker() {
@@ -28,9 +29,22 @@ function worker() {
   return { showNotification, clients, dispatch };
 }
 describe("Taxi service worker", () => {
-  it("provides an installable manifest with raster and vector icons", () => {
-    expect(manifest()).toMatchObject({ display: "standalone", start_url: "/taxi" });
-    expect(manifest().icons).toHaveLength(2);
+  it("provides an installable manifest with raster and vector icons", async () => {
+    const result = await manifest();
+    expect(result).toMatchObject({ display: "standalone", start_url: "/taxi" });
+    expect(result.icons).toHaveLength(2);
+  });
+  it("uses the alliance app icons when configured", async () => {
+    seedMembers([], {
+      ...defaultAlliance,
+      appIcon192Url: "/api/alliance/image?path=alliance-manager%2Fbranding%2Fapp-192.png",
+      appIcon512Url: "/api/alliance/image?path=alliance-manager%2Fbranding%2Fapp-512.png",
+    });
+    const result = await manifest();
+    expect(result.icons).toEqual([
+      { src: "/api/alliance/app-icon?size=192", sizes: "192x192", type: "image/png" },
+      { src: "/api/alliance/app-icon?size=512", sizes: "512x512", type: "image/png" },
+    ]);
   });
   it("shows push summaries and accepts only internal taxi navigation", async () => {
     const sw = worker();
@@ -42,10 +56,7 @@ describe("Taxi service worker", () => {
       expect.objectContaining({ body: "Ride", data: { path: "/taxi/id" } }),
     );
     await sw.dispatch("push", { data: { json: () => ({ path: "https://evil.example" }) } });
-    expect(sw.showNotification).toHaveBeenLastCalledWith(
-      "Taxi",
-      expect.objectContaining({ data: { path: "/taxi" } }),
-    );
+    expect(sw.showNotification).toHaveBeenLastCalledWith("Taxi", expect.objectContaining({ data: { path: "/taxi" } }));
   });
   it("opens a safe detail page when no app window is available", async () => {
     const sw = worker();

@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
 import { getCurrentMember, hasRole } from "@/lib/auth/authorization";
 import { readAccessData, type AllianceMember } from "@/lib/members/access-store";
-import { readAlmanacResponse, readAlmanacResponses, writeAlmanacResponse } from "@/lib/almanac/almanac-store";
+import { lookupAlmanacPlanet, lookupAlmanacPlanets, type AlmanacLookupResult } from "@/lib/almanac/almanac-lookup";
+import {
+  readAlmanacResponse,
+  readAlmanacResponses,
+  writeAlmanacResponse,
+  writeAlmanacResponses,
+} from "@/lib/almanac/almanac-store";
 import { coveredSpecialties, decodePortalAddress, isDifferentPlanetInSameSystem } from "@/lib/missions/missions";
 import { availableMissionSpecialties } from "@/lib/missions/station-mission-availability";
 import { isEmailAddress } from "@/lib/members/member-types";
@@ -83,7 +89,7 @@ export async function POST(request: Request) {
     }
     await addStationPortal(ownerMember.publicId, portal, galaxy, name, member.publicId, note);
     await cacheStationPlanet(portal, galaxy);
-    return NextResponse.json({ stations: await readStations(member) }, { status: 201 });
+    return NextResponse.json({ stations: await readStations(member, false) }, { status: 201 });
   } catch (error) {
     console.error("Unable to save station portal", error);
     return NextResponse.json({ error: "stations.error_unable_to_save_station" }, { status: 503 });
@@ -132,7 +138,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: "stations.error_station_not_found_in_owner_archive" }, { status: 404 });
     }
     await removeStationPortal(ownerMember.publicId, portal, galaxy);
-    return NextResponse.json({ stations: await readStations(member) });
+    return NextResponse.json({ stations: await readStations(member, false) });
   } catch (error) {
     console.error("Unable to remove station portal", error);
     return NextResponse.json({ error: "stations.error_unable_to_remove_station" }, { status: 503 });
@@ -277,14 +283,14 @@ export async function PATCH(request: Request) {
       );
     }
     await cacheStationPlanet(portal, galaxy);
-    return NextResponse.json({ stations: await readStations(member) });
+    return NextResponse.json({ stations: await readStations(member, false) });
   } catch (error) {
     console.error("Unable to update station portal", error);
     return NextResponse.json({ error: "stations.error_unable_to_update_station" }, { status: 503 });
   }
 }
 
-async function readStations(member: AllianceMember) {
+async function readStations(member: AllianceMember, loadMissingZeroPlanets = true) {
   const canViewAllStations =
     hasRole(member, "moderator") ||
     member.specialty === "explorer" ||
@@ -293,11 +299,45 @@ async function readStations(member: AllianceMember) {
   const stations = canViewAllStations
     ? await readAllStationPortals()
     : (await readStationPortals(member.publicId)).map((station) => ({ ...station, ownerId: member.publicId }));
-  const [almanacByPortal, missions, accessData] = await Promise.all([
-    readAlmanacResponses(stations.map((station) => station.portal)),
-    readMissions(),
-    readAccessData(),
-  ]);
+  const [missions, accessData] = await Promise.all([readMissions(), readAccessData()]);
+  const almanacByPortal = await readAlmanacResponses(stations.map((station) => station.portal));
+  if (loadMissingZeroPlanets) {
+    const missing = stations.filter((station) => {
+      const cached = almanacByPortal[station.portal]?.find((entry) => entry.galaxy === station.galaxy)?.response;
+      return station.portal.startsWith("0") && (!cached || !hasStationPlanetData(cached));
+    });
+    if (missing.length > 0) {
+      const fallbacks = await lookupAlmanacPlanets(
+        missing.map(({ portal, galaxy }) => ({ portal: `1${portal.slice(1)}`, galaxy })),
+      );
+      const unresolved = missing.filter(({ portal, galaxy }) => {
+        const fallback = fallbacks.get(`1${portal.slice(1)}:${galaxy}`)?.planet;
+        return (
+          (!fallback || !hasStationPlanetData(fallback)) &&
+          !almanacByPortal[portal]?.some((entry) => entry.galaxy === galaxy)
+        );
+      });
+      const originals =
+        unresolved.length > 0 ? await lookupAlmanacPlanets(unresolved) : new Map<string, AlmanacLookupResult>();
+      const aliases: { portalCode: string; galaxy: number; response: Record<string, unknown> }[] = [];
+      for (const { portal, galaxy } of missing) {
+        const fallback = fallbacks.get(`1${portal.slice(1)}:${galaxy}`)?.planet;
+        const planet =
+          fallback && hasStationPlanetData(fallback) ? fallback : originals.get(`${portal}:${galaxy}`)?.planet;
+        if (!planet) continue;
+        almanacByPortal[portal] = [
+          ...(almanacByPortal[portal] ?? []).filter((entry) => entry.galaxy !== galaxy),
+          { galaxy, response: planet },
+        ];
+        aliases.push({ portalCode: portal, galaxy, response: planet });
+      }
+      try {
+        await writeAlmanacResponses(aliases);
+      } catch (error) {
+        console.error("Unable to cache station Almanac fallbacks", error);
+      }
+    }
+  }
   return stations.map((station) => {
     const owner = accessData.members.find(
       (candidate) => candidate.publicId === station.ownerId && candidate.membershipStatus === "approved",
@@ -349,26 +389,32 @@ async function readStations(member: AllianceMember) {
 
 async function cacheStationPlanet(portal: string, galaxy: number) {
   try {
-    if (await readAlmanacResponse(portal, galaxy)) return;
-
-    const response = await fetch(`https://nmsalmanac.com/api/planets/${portal}?galaxy=${galaxy + 1}`, {
-      headers: { Accept: "application/json" },
-      signal: AbortSignal.timeout(6000),
-      cache: "no-store",
-    });
-    if (!response.ok) return;
-
-    const result: unknown = await response.json();
-    if (
-      !result ||
-      typeof result !== "object" ||
-      !("portal" in result) ||
-      typeof result.portal !== "string" ||
-      result.portal.toUpperCase() !== portal
-    )
-      return;
-    await writeAlmanacResponse(portal, galaxy, result);
+    const cached = await readAlmanacResponse(portal, galaxy);
+    if (cached && (!portal.startsWith("0") || hasStationPlanetData(cached))) return;
+    if (portal.startsWith("0")) {
+      try {
+        const planetOnePortal = `1${portal.slice(1)}`;
+        const fallback = await lookupAlmanacPlanet(planetOnePortal, galaxy);
+        if (fallback && hasStationPlanetData(fallback)) {
+          await writeAlmanacResponse(portal, galaxy, fallback);
+          return;
+        }
+      } catch (error) {
+        console.error("Unable to load planet-one Almanac fallback", { portal, galaxy }, error);
+      }
+    }
+    if (cached) return;
+    const result = await lookupAlmanacPlanet(portal, galaxy);
+    if (result) await writeAlmanacResponse(portal, galaxy, result);
   } catch (error) {
     console.error("Unable to cache station planet from NMS Almanac", error);
   }
+}
+
+function hasStationPlanetData(planet: Record<string, unknown>) {
+  const pictures = planet.pictures;
+  const disc = pictures && typeof pictures === "object" ? (pictures as Record<string, unknown>).disc : null;
+  const lines = planet.lines;
+  const band = lines && typeof lines === "object" ? (lines as Record<string, unknown>).band : null;
+  return typeof disc === "string" && Boolean(band && typeof band === "object");
 }

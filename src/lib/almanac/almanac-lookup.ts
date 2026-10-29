@@ -31,7 +31,8 @@ async function fetchAlmanacPlanet(address: string, galaxy: number): Promise<Reco
     Array.isArray(planet) ||
     !("portal" in planet) ||
     typeof planet.portal !== "string" ||
-    planet.portal.toUpperCase() !== address
+    (planet.portal.toUpperCase() !== address &&
+      !(address.startsWith("0") && planet.portal.toUpperCase() === `1${address.slice(1)}`))
   ) {
     console.error("NMS Almanac returned invalid planet data", { address, galaxy });
     throw new Error("planet.almanac_lookup_failed");
@@ -43,6 +44,13 @@ export async function lookupAlmanacPlanet(portal: string, galaxy: number): Promi
   const address = portal.toUpperCase();
   const cachedPlanet = await readAlmanacResponse(address, galaxy);
   if (cachedPlanet) return cachedPlanet;
+  if (address.startsWith("0")) {
+    const cachedPlanetOne = await readAlmanacResponse(`1${address.slice(1)}`, galaxy);
+    if (cachedPlanetOne) {
+      await writeAlmanacResponse(address, galaxy, cachedPlanetOne);
+      return cachedPlanetOne;
+    }
+  }
 
   const result = await fetchAlmanacPlanet(address, galaxy);
   if (result) await writeAlmanacResponse(address, galaxy, result);

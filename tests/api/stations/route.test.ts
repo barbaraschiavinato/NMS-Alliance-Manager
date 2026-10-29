@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { signInAs } from "../../helpers/auth";
 import { jsonRequest } from "../../helpers/http";
 import { makeMember, seedMembers, writeDataFile } from "../../helpers/members";
+import * as almanacStore from "@/lib/almanac/almanac-store";
+import { resetAlmanacRateLimit } from "@/lib/almanac/almanac-rate-limit";
 import {
   castMembers,
   makeCast,
@@ -40,6 +42,7 @@ function storedStations() {
 }
 
 beforeEach(() => {
+  resetAlmanacRateLimit();
   resetData();
   cast = makeCast();
   seedMembers(castMembers(cast));
@@ -115,6 +118,207 @@ describe("authorization shared by every method", () => {
 });
 
 describe("GET /api/stations", () => {
+  it("reads a fully cached station list once without per-station reads or external requests", async () => {
+    const stations = Array.from({ length: 20 }, (_, index) => ({
+      portal: P0,
+      galaxy: index,
+      ownerId: cast.user.publicId,
+    }));
+    writeDataFile("stations-v2.json", stations);
+    writeDataFile("almanac.json", {
+      [P0]: Object.fromEntries(
+        stations.map(({ galaxy }) => [
+          galaxy,
+          { portal: P1, pictures: { disc: "/planets/one.jpg" }, lines: { band: { star: { word: "Yellow" } } } },
+        ]),
+      ),
+    });
+    const readMany = vi.spyOn(almanacStore, "readAlmanacResponses");
+    const readOne = vi.spyOn(almanacStore, "readAlmanacResponse");
+    signInAs(cast.user);
+
+    const response = await getStations();
+
+    expect(response.status).toBe(200);
+    expect((await response.json()).stations).toHaveLength(20);
+    expect(readMany).toHaveBeenCalledTimes(1);
+    expect(readOne).not.toHaveBeenCalled();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("limits missing-planet requests to six at a time without per-station cache reads", async () => {
+    writeDataFile(
+      "stations-v2.json",
+      Array.from({ length: 8 }, (_, galaxy) => ({ portal: P0, galaxy, ownerId: cast.user.publicId })),
+    );
+    let active = 0;
+    let maximum = 0;
+    fetchMock.mockImplementation(async () => {
+      active += 1;
+      maximum = Math.max(maximum, active);
+      await new Promise((resolve) => setTimeout(resolve, 1));
+      active -= 1;
+      return Response.json({ portal: P1, pictures: { disc: "/planets/one.jpg" }, lines: { band: {} } });
+    });
+    const readOne = vi.spyOn(almanacStore, "readAlmanacResponse");
+    signInAs(cast.user);
+
+    const response = await getStations();
+
+    expect(response.status).toBe(200);
+    expect((await response.json()).stations.every((station: StationView) => station.planet !== null)).toBe(true);
+    expect(maximum).toBe(6);
+    expect(fetchMock).toHaveBeenCalledTimes(8);
+    expect(readOne).not.toHaveBeenCalled();
+  });
+
+  it("uses planet 1 Almanac data as a fallback for portal codes starting with 0", async () => {
+    fetchMock.mockImplementation(async (input: string | URL | Request) => {
+      const requestUrl = new URL(String(input));
+      const address = requestUrl.pathname.split("/").pop();
+      if (address === P0) return new Response("", { status: 404 });
+      return Response.json({
+        portal: address,
+        pictures: { disc: "/planets/planet-one.jpg" },
+        lines: { headline: { word: "Planet One" }, band: { star: { word: "Yellow" } } },
+      });
+    });
+    signInAs(cast.user);
+
+    const response = await getStations();
+    expect(response.status).toBe(200);
+    const { stations } = (await response.json()) as { stations: StationView[] };
+    expect(stations[0].planet).toMatchObject({
+      portal: P1,
+      pictures: { disc: "/planets/planet-one.jpg" },
+      lines: { headline: { word: "Planet One" }, band: { star: { word: "Yellow" } } },
+    });
+    expect(fetchMock.mock.calls.map(([url]) => String(url))).toEqual([
+      `https://nmsalmanac.com/api/planets/${P1}?galaxy=1`,
+    ]);
+    expect(readDataFile<Record<string, Record<string, unknown>>>("almanac.json")[P0]["0"]).toMatchObject({
+      portal: P1,
+    });
+  });
+
+  it("uses an already-cached planet-one record for an existing zero-code station", async () => {
+    writeDataFile("almanac.json", {
+      [P1]: {
+        0: {
+          kind: "planet",
+          portal: P1,
+          galaxy: 1,
+          pictures: { disc: "/planets/planet-one.jpg" },
+          lines: { headline: { word: "Planet One" }, band: { star: { word: "Yellow" } } },
+        },
+      },
+    });
+    signInAs(cast.user);
+
+    const response = await getStations();
+    expect(response.status).toBe(200);
+    const { stations } = (await response.json()) as { stations: StationView[] };
+    expect(stations[0].planet).toMatchObject({
+      portal: P1,
+      pictures: { disc: "/planets/planet-one.jpg" },
+      lines: { headline: { word: "Planet One" }, band: { star: { word: "Yellow" } } },
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(readDataFile<Record<string, Record<string, unknown>>>("almanac.json")[P0]["0"]).toMatchObject({
+      portal: P1,
+      pictures: { disc: "/planets/planet-one.jpg" },
+    });
+  });
+
+  it("preserves other galaxies when adding fallback data and serves it even if alias persistence fails", async () => {
+    const planet = { portal: P1, pictures: { disc: "/planets/one.jpg" }, lines: { band: {} } };
+    writeDataFile("almanac.json", { [P0]: { 0: { portal: P0 }, 1: planet }, [P1]: { 0: planet } });
+    const writeResponses = almanacStore.writeAlmanacResponses;
+    vi.spyOn(almanacStore, "writeAlmanacResponses").mockImplementation(async (entries) => {
+      if (entries.some((entry) => entry.portalCode === P0)) throw new Error("storage unavailable");
+      await writeResponses(entries);
+    });
+    const logError = vi.spyOn(console, "error").mockImplementation(() => {});
+    signInAs(cast.user);
+
+    const response = await getStations();
+
+    expect(response.status).toBe(200);
+    expect((await response.json()).stations[0].planet).toEqual(planet);
+    expect(readDataFile<Record<string, Record<string, unknown>>>("almanac.json")[P0]["1"]).toEqual(planet);
+    expect(logError).toHaveBeenCalledWith("Unable to cache station Almanac fallbacks", expect.any(Error));
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("loads the cached planet-one record for station 00A90348AAB8", async () => {
+    const stationPortal = "00A90348AAB8";
+    const planetOnePortal = "10A90348AAB8";
+    writeDataFile("stations-v2.json", [
+      { portal: stationPortal, galaxy: 0, ownerId: cast.user.publicId, name: "Mosangf-Tha X System" },
+    ]);
+    writeDataFile("almanac.json", {
+      [planetOnePortal]: {
+        0: {
+          kind: "planet",
+          portal: planetOnePortal,
+          galaxy: 1,
+          pictures: { disc: "/planets/planet-one.jpg" },
+          lines: { headline: { word: "Hedna XVII" }, band: { star: { word: "Yellow" } } },
+        },
+      },
+    });
+    signInAs(cast.user);
+
+    const response = await getStations();
+    expect(response.status).toBe(200);
+    const { stations } = (await response.json()) as { stations: StationView[] };
+    expect(stations).toHaveLength(1);
+    expect(stations[0]).toMatchObject({
+      portal: stationPortal,
+      planet: {
+        portal: planetOnePortal,
+        pictures: { disc: "/planets/planet-one.jpg" },
+        lines: { headline: { word: "Hedna XVII" }, band: { star: { word: "Yellow" } } },
+      },
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(readDataFile<Record<string, Record<string, unknown>>>("almanac.json")[stationPortal]["0"]).toMatchObject({
+      portal: planetOnePortal,
+    });
+  });
+
+  it("replaces incomplete cached Almanac data for existing zero-code stations", async () => {
+    writeDataFile("almanac.json", {
+      [P0]: { 0: { portal: P0, lines: { headline: { word: "Old cached entry" } } } },
+    });
+    fetchMock.mockImplementation(async (input: string | URL | Request) => {
+      const requestUrl = new URL(String(input));
+      const address = requestUrl.pathname.split("/").pop();
+      return Response.json({
+        portal: address,
+        pictures: { disc: "/planets/planet-one.jpg" },
+        lines: { headline: { word: "Planet One" }, band: { star: { word: "Yellow" } } },
+      });
+    });
+    signInAs(cast.user);
+
+    const response = await getStations();
+    expect(response.status).toBe(200);
+    const { stations } = (await response.json()) as { stations: StationView[] };
+    expect(stations[0].planet).toMatchObject({
+      portal: P1,
+      pictures: { disc: "/planets/planet-one.jpg" },
+      lines: { headline: { word: "Planet One" }, band: { star: { word: "Yellow" } } },
+    });
+    expect(fetchMock.mock.calls.map(([url]) => String(url))).toEqual([
+      `https://nmsalmanac.com/api/planets/${P1}?galaxy=1`,
+    ]);
+    expect(readDataFile<Record<string, Record<string, unknown>>>("almanac.json")[P0]["0"]).toMatchObject({
+      portal: P1,
+      pictures: { disc: "/planets/planet-one.jpg" },
+    });
+  });
+
   it("shows every station with owner, planet and mission details", async () => {
     const owner = makeMember({ image: "https://img.example/o.png", specialty: "builder" });
     seedMembers([...castMembers(cast), owner]);
@@ -301,7 +505,11 @@ describe("POST /api/stations", () => {
   });
 
   it("saves a member's own station and caches the almanac planet", async () => {
-    fetchMock.mockResolvedValue(Response.json({ portal: Q0.toLowerCase(), lines: {} }));
+    fetchMock.mockImplementation(async (input: string | URL | Request) => {
+      const address = new URL(String(input)).pathname.split("/").pop();
+      if (address === `1${Q0.slice(1)}`) return new Response("", { status: 404 });
+      return Response.json({ portal: Q0.toLowerCase(), lines: {} });
+    });
     signInAs(cast.user);
     const response = await post({ portal: Q0.toLowerCase(), galaxy: 7, name: " Outpost ", note: " Water world " });
     expect(response.status).toBe(201);
@@ -324,6 +532,35 @@ describe("POST /api/stations", () => {
     });
     const { stations } = (await response.json()) as { stations: StationView[] };
     expect(stations.map((station) => station.portal)).toContain(Q0);
+  });
+
+  it("caches planet-one fallback data when creating a zero-leading station", async () => {
+    const planet = { portal: `1${Q0.slice(1)}`, pictures: { disc: "/planets/one.jpg" }, lines: { band: {} } };
+    fetchMock.mockResolvedValue(Response.json(planet));
+    signInAs(cast.user);
+
+    const response = await post({ portal: Q0, galaxy: 0 });
+
+    expect(response.status).toBe(201);
+    expect((await response.json()).stations.find((station: StationView) => station.portal === Q0).planet).toEqual(
+      planet,
+    );
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(readDataFile<Record<string, Record<string, unknown>>>("almanac.json")[Q0]["0"]).toEqual(planet);
+  });
+
+  it("keeps an incomplete cached station record when planet one is unavailable", async () => {
+    const planet = { portal: Q0, lines: { headline: { word: "Known planet" } } };
+    writeDataFile("almanac.json", { [Q0]: { 0: planet } });
+    signInAs(cast.user);
+
+    const response = await post({ portal: Q0, galaxy: 0 });
+
+    expect(response.status).toBe(201);
+    expect(readDataFile<Record<string, Record<string, unknown>>>("almanac.json")[Q0]["0"]).toEqual(planet);
+    expect(fetchMock.mock.calls.map(([url]) => String(url))).toEqual([
+      `https://nmsalmanac.com/api/planets/1${Q0.slice(1)}?galaxy=1`,
+    ]);
   });
 
   it("lets moderators create stations for another member", async () => {
@@ -350,7 +587,9 @@ describe("POST /api/stations", () => {
 
   it("ignores almanac data that is cached, mismatched or unreachable", async () => {
     const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
-    writeDataFile("almanac.json", { [Q0]: { 0: { portal: Q0 } } });
+    writeDataFile("almanac.json", {
+      [Q0]: { 0: { portal: Q0, pictures: { disc: "/planets/cached.jpg" }, lines: { band: {} } } },
+    });
     signInAs(cast.moderator);
     expect((await post({ portal: Q0, galaxy: 0 })).status).toBe(201);
     expect(fetchMock).not.toHaveBeenCalled();
@@ -491,7 +730,10 @@ describe("PATCH /api/stations", () => {
         createdAt: "2026-01-01T00:00:00.000Z",
       },
     ]);
-    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls.map(([url]) => String(url))).toEqual([
+      `https://nmsalmanac.com/api/planets/${P1}?galaxy=1`,
+      `https://nmsalmanac.com/api/planets/${P0}?galaxy=1`,
+    ]);
   });
 
   it("lets the owner move the station to a free address", async () => {
