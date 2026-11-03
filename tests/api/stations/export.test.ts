@@ -106,6 +106,13 @@ describe("GET /api/stations/export", () => {
         "Numero missioni",
         "Tipo missione",
         "Stato missioni",
+        "Stazione riscattata",
+        "Mappato",
+        "Pianeti classificati",
+        "Dati caricati",
+        "Edifici costruiti",
+        "Basi caricate",
+        "Sistema rinominato",
       ],
     ]);
   });
@@ -155,6 +162,9 @@ describe("GET /api/stations/export", () => {
       storedMission({ id: "M-2", systemAddress: P0, galaxy: 0, targetSpecialty: "builder", status: "completed" }),
       storedMission({ id: "M-3", systemAddress: P0, galaxy: 0, targetSpecialty: "all", status: "completed" }),
     ]);
+    writeDataFile("planet-system-status.json", {
+      [`0:${P0}`]: ["station_claimed", "mapped", "buildings_built", "renamed"],
+    });
     signInAs(cast.admin);
     const response = await exportStations();
     expect(response.status).toBe(200);
@@ -180,6 +190,13 @@ describe("GET /api/stations/export", () => {
       "3",
       "Costruttore, Tutte",
       "In attesa, Completata",
+      "Sì",
+      "Sì",
+      "No",
+      "No",
+      "Sì",
+      "No",
+      "Sì",
     ]);
     expect(rows[2]).toEqual([
       "",
@@ -201,6 +218,13 @@ describe("GET /api/stations/export", () => {
       "0",
       "",
       "",
+      "No",
+      "No",
+      "No",
+      "No",
+      "No",
+      "No",
+      "No",
     ]);
     expect(rows[3].slice(0, 4)).toEqual(["", "0125456789AB", expect.any(String), ""]);
     expect(rows[3].slice(10, 13)).toEqual(["Ex membro", "", "Ex membro"]);
