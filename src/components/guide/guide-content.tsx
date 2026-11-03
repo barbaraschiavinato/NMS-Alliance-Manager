@@ -235,7 +235,7 @@ const specialties = [
     name: "Esploratore",
     icon: Search,
     color: "#4d9bff",
-    tasks: "Stazione aggiunta, Mappato, Pianeti classificati, Dati caricati",
+    tasks: "Stazione aggiunta, Sistema scansionato, Sistema esplorato, Dati caricati",
   },
   { name: "Costruttore", icon: Hammer, color: "#ffb45d", tasks: "Stazione aggiunta, Edifici costruiti, Basi caricate" },
 ];

@@ -36,13 +36,21 @@ describe("MissionSystemProgress", () => {
     expect(screen.getByRole("group", { name: "System progress: 2 of 7 complete" })).toBeInTheDocument();
     expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Station claimed")).toBeInTheDocument();
-    expect(screen.getByLabelText("Mapped")).toBeInTheDocument();
+    expect(screen.getByLabelText("System scanned")).toBeInTheDocument();
   });
 
   it("summarises in Italian", () => {
     renderWithLocale(<MissionSystemProgress editable={false} onToggle={vi.fn()} statuses={[]} />, { locale: "it" });
     expect(screen.getByRole("group", { name: "Avanzamento sistema: 0 di 7 completati" })).toBeInTheDocument();
     expect(screen.getByLabelText("Stazione riscattata")).toBeInTheDocument();
+  });
+
+  it("uses the renamed Italian task label on mission cards", () => {
+    renderWithLocale(<MissionSystemProgress editable={false} onToggle={vi.fn()} statuses={["mapped"]} />, {
+      locale: "it",
+    });
+    expect(screen.getByLabelText("Sistema scansionato")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Mappato")).not.toBeInTheDocument();
   });
 
   it("reports a data error and labels every step with it", () => {
@@ -58,11 +66,11 @@ describe("MissionSystemProgress", () => {
     const boxes = screen.getAllByRole("checkbox");
     expect(boxes).toHaveLength(7);
     expect(screen.getByRole("checkbox", { name: "System renamed" })).toBeChecked();
-    expect(screen.getByRole("checkbox", { name: "Mapped" })).not.toBeChecked();
+    expect(screen.getByRole("checkbox", { name: "System scanned" })).not.toBeChecked();
     expect(screen.getByRole("checkbox", { name: "Station claimed" }).closest("label")).toHaveClass(
       "mission-system-progress-item-pulse",
     );
-    expect(screen.getByRole("checkbox", { name: "Mapped" }).closest("label")).not.toHaveClass(
+    expect(screen.getByRole("checkbox", { name: "System scanned" }).closest("label")).not.toHaveClass(
       "mission-system-progress-item-pulse",
     );
   });
@@ -74,21 +82,21 @@ describe("MissionSystemProgress", () => {
     );
     const boxes = screen.getAllByRole("checkbox");
     expect(boxes.map((box) => box.getAttribute("aria-label"))).toEqual([
-      "Mapped",
-      "Planets classified",
+      "System scanned",
+      "System explored",
       "Data uploaded",
     ]);
-    expect(screen.getByRole("checkbox", { name: "Mapped" }).closest("label")).not.toHaveClass(
+    expect(screen.getByRole("checkbox", { name: "System scanned" }).closest("label")).not.toHaveClass(
       "mission-system-progress-item-pulse",
     );
-    expect(screen.getByRole("checkbox", { name: "Planets classified" }).closest("label")).toHaveClass(
+    expect(screen.getByRole("checkbox", { name: "System explored" }).closest("label")).toHaveClass(
       "mission-system-progress-item-pulse",
     );
     expect(screen.queryByRole("checkbox", { name: "Station claimed" })).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole("checkbox", { name: "Planets classified" }));
+    await user.click(screen.getByRole("checkbox", { name: "System explored" }));
     expect(onToggle).toHaveBeenCalledWith("planets_classified", true);
-    await user.click(screen.getByRole("checkbox", { name: "Mapped" }));
+    await user.click(screen.getByRole("checkbox", { name: "System scanned" }));
     expect(onToggle).toHaveBeenCalledWith("mapped", false);
   });
 

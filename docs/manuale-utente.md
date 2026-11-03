@@ -66,7 +66,7 @@ Una missione riguarda un pianeta/sistema, identificato da un indirizzo portale (
 
 Ogni specializzazione ha le sue voci di avanzamento da spuntare:
 - **Ranger:** Stazione riscattata, Sistema rinominato.
-- **Esploratore:** Mappato, Pianeti classificati, Dati caricati.
+- **Esploratore:** Sistema scansionato, Sistema esplorato, Dati caricati.
 - **Costruttore:** Edifici costruiti, Basi caricate.
 
 Le voci spuntate fanno salire la percentuale fino a un massimo dell'80%. Il 100% si raggiunge con "Completa missione", attivo solo quando le tue voci sono tutte spuntate.

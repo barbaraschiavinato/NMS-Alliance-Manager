@@ -55,7 +55,7 @@ export function MissionSystemProgress({
                 const isChecked = statuses.includes(status);
                 const shouldPulse =
                   itemEditable && pulseRoles?.includes(statusRoles[status]) && !disabled && !isChecked;
-                const tooltip = t(hasDataError ? "system.data_error" : status);
+                const tooltip = t(`system.${hasDataError ? "data_error" : status}`);
                 return (
                   <label
                     aria-label={tooltip}

@@ -549,7 +549,7 @@ describe("MissionCard progress", () => {
     const target = assignedToMe();
     const { user, props } = renderMissionCard({ mission: target });
     expect(screen.getAllByRole("checkbox")).toHaveLength(3);
-    await user.click(screen.getByRole("checkbox", { name: "Mapped" }));
+    await user.click(screen.getByRole("checkbox", { name: "System scanned" }));
     expect(props.onToggleSystemStatus).toHaveBeenCalledWith(target, "mapped", true);
   });
 
@@ -703,7 +703,7 @@ describe("MissionCard (simple) system tasks", () => {
       currentMember: makeMember({ publicId: "me", specialty: "explorer", role: "user", simpleView: true }),
       mission: target,
     });
-    await user.click(screen.getByRole("checkbox", { name: "Mapped" }));
+    await user.click(screen.getByRole("checkbox", { name: "System scanned" }));
     expect(props.onToggleSystemStatus).toHaveBeenCalledWith(target, "mapped", true);
   });
 });
