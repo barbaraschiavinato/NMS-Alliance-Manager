@@ -8,10 +8,7 @@ import type { Mission, MissionSpecialty } from "@/lib/missions/missions";
 import { isEmailAddress } from "@/lib/members/member-types";
 import { readMissions } from "@/lib/missions/store";
 import { readAllStationPortals } from "@/lib/stations/stations-store";
-import {
-  planetSystemStatusKey,
-  type MissionSystemStatus,
-} from "@/lib/planets/planet-system-status";
+import { planetSystemStatusKey, type MissionSystemStatus } from "@/lib/planets/planet-system-status";
 import { readPlanetSystemStatuses } from "@/lib/planets/planet-system-status-store";
 
 export const runtime = "nodejs";
@@ -42,8 +39,8 @@ const stationTaskStatuses = [
 ] as const satisfies readonly MissionSystemStatus[];
 const stationTaskLabels = {
   station_claimed: "Stazione riscattata",
-  mapped: "Mappato",
-  planets_classified: "Pianeti classificati",
+  mapped: "Sistema scansionato",
+  planets_classified: "Sistema esplorato",
   data_uploaded: "Dati caricati",
   buildings_built: "Edifici costruiti",
   bases_uploaded: "Basi caricate",

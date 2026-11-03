@@ -40,6 +40,8 @@ const legacyAliases = new Map<string, string>([
   ...Object.entries(localeEntries.en).map(([id, english]) => [english, id] as const),
   ...Object.entries(localeEntries.it).map(([id, italian]) => [italian, id] as const),
   ...Object.entries(italianAliases),
+  ["Mappato", "system.mapped"],
+  ["Mapped", "system.mapped"],
   ["station_claimed", "system.station_claimed"],
   ["mapped", "system.mapped"],
   ["planets_classified", "system.planets_classified"],

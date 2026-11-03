@@ -79,6 +79,11 @@ describe("translate", () => {
     }
   });
 
+  it("translates legacy labels for the mapped task using the current wording", () => {
+    expect(translate("it", "Mappato")).toBe("Sistema scansionato");
+    expect(translate("en", "Mapped")).toBe("System scanned");
+  });
+
   it("falls back to the message itself", () => {
     expect(translate("it", "Something never translated")).toBe("Something never translated");
     expect(translate("en", "missing.key")).toBe("missing.key");

@@ -135,8 +135,8 @@ describe("mission examples", () => {
     [
       "explorer",
       ExplorerMissionProgressExamples,
-      "Mapped",
-      ["Planets classified", "Data uploaded"],
+      "System scanned",
+      ["System explored", "Data uploaded"],
       ["Station claimed", "System renamed"],
     ],
     [
@@ -204,7 +204,7 @@ describe("mission examples", () => {
 
 describe("station examples", () => {
   it.each([
-    ["explorer", ExplorerOwnStationExample, ["Mapped", "Planets classified", "Data uploaded"], "Station claimed"],
+    ["explorer", ExplorerOwnStationExample, ["System scanned", "System explored", "Data uploaded"], "Station claimed"],
     ["builder", BuilderOwnStationExample, ["Buildings built", "Bases uploaded"], "Station claimed"],
   ] as const)("shows only %s tasks on its own-station example", (_specialty, Example, taskLabels, rangerTask) => {
     renderWithLocale(<Example sample={guideStationInit} />);
@@ -221,7 +221,7 @@ describe("station examples", () => {
     renderWithLocale(<RangerOwnStationExample sample={guideStationInit} />);
     expect(screen.getByRole("checkbox", { name: "Station claimed" })).toBeInTheDocument();
     expect(screen.getByRole("checkbox", { name: "System renamed" })).toBeInTheDocument();
-    expect(screen.queryByRole("checkbox", { name: "Mapped" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("checkbox", { name: "System scanned" })).not.toBeInTheDocument();
   });
 
   it("renders inert station cards", () => {
