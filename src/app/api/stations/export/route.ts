@@ -8,6 +8,11 @@ import type { Mission, MissionSpecialty } from "@/lib/missions/missions";
 import { isEmailAddress } from "@/lib/members/member-types";
 import { readMissions } from "@/lib/missions/store";
 import { readAllStationPortals } from "@/lib/stations/stations-store";
+import {
+  planetSystemStatusKey,
+  type MissionSystemStatus,
+} from "@/lib/planets/planet-system-status";
+import { readPlanetSystemStatuses } from "@/lib/planets/planet-system-status-store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -26,6 +31,24 @@ const missionStatusLabels = {
   in_progress: "In corso",
   completed: "Completata",
 } satisfies Record<Mission["status"], string>;
+const stationTaskStatuses = [
+  "station_claimed",
+  "mapped",
+  "planets_classified",
+  "data_uploaded",
+  "buildings_built",
+  "bases_uploaded",
+  "renamed",
+] as const satisfies readonly MissionSystemStatus[];
+const stationTaskLabels = {
+  station_claimed: "Stazione riscattata",
+  mapped: "Mappato",
+  planets_classified: "Pianeti classificati",
+  data_uploaded: "Dati caricati",
+  buildings_built: "Edifici costruiti",
+  bases_uploaded: "Basi caricate",
+  renamed: "Sistema rinominato",
+} satisfies Record<(typeof stationTaskStatuses)[number], string>;
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   return value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : null;
@@ -92,7 +115,9 @@ function buildWorkbook(headers: string[], rows: string[][]) {
       return `<row r="${rowIndex + 1}">${cells}</row>`;
     })
     .join("");
-  const widths = [28, 18, 24, 28, 24, 32, 18, 18, 24, 18, 24, 24, 24, 60, 24, 18, 16, 34, 24]
+  const widths = [
+    28, 18, 24, 28, 24, 32, 18, 18, 24, 18, 24, 24, 24, 60, 24, 18, 16, 34, 24, 24, 18, 24, 18, 18, 18, 24,
+  ]
     .map((width, index) => `<col min="${index + 1}" max="${index + 1}" width="${width}" customWidth="1"/>`)
     .join("");
   const xml = (content: string) => new TextEncoder().encode(content);
@@ -130,10 +155,11 @@ export async function GET() {
 
   try {
     const stations = await readAllStationPortals();
-    const [accessData, almanacByPortal, missions] = await Promise.all([
+    const [accessData, almanacByPortal, missions, systemStatusesByKey] = await Promise.all([
       readAccessData(),
       readAlmanacResponses(stations.map((station) => station.portal)),
       readMissions(),
+      readPlanetSystemStatuses(),
     ]);
     const missionsByStation = new Map<string, Mission[]>();
     for (const mission of missions) {
@@ -162,6 +188,7 @@ export async function GET() {
       "Numero missioni",
       "Tipo missione",
       "Stato missioni",
+      ...stationTaskStatuses.map((status) => stationTaskLabels[status]),
     ];
     const rows = stations.map((station) => {
       const owner = accessData.members.find((candidate) => candidate.publicId === station.ownerId);
@@ -170,6 +197,7 @@ export async function GET() {
       );
       const planet = almanacByPortal[station.portal]?.find((entry) => entry.galaxy === station.galaxy)?.response;
       const stationMissions = missionsByStation.get(`${station.portal}:${station.galaxy}`) ?? [];
+      const systemStatuses = systemStatusesByKey[planetSystemStatusKey(station.portal, station.galaxy)] ?? [];
       return [
         station.name ?? "",
         station.portal,
@@ -196,6 +224,7 @@ export async function GET() {
           stationMissions.map((mission) => mission.status),
           missionStatusLabels,
         ),
+        ...stationTaskStatuses.map((status) => (systemStatuses.includes(status) ? "Sì" : "No")),
       ];
     });
     const file = buildWorkbook(headers, rows);
