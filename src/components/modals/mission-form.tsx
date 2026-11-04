@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState, type SubmitEvent } from "react";
+import { useEffect, useId, useRef, useState, type SubmitEvent } from "react";
 import { generateSystemName } from "@/lib/planets/system-name";
-import { ArrowUpRight, CircleAlert, Orbit, Trash2, X } from "lucide-react";
+import { ArrowUpRight, CircleAlert, Compass, Orbit, Search, Trash2, X } from "lucide-react";
 import {
   decodePortalAddress,
   missionPriorities,
@@ -21,12 +21,17 @@ import { missionSpecialties, specialtyAlreadyCovered, type MissionSpecialty } fr
 import { galaxyNames, galaxyLabel } from "@/lib/planets/galaxies";
 import {
   isMissionSystemStatus,
+  parseSystemStatusAuthors,
+  systemStatusCoveredBy,
+  systemStatusLockedBy,
+  type SystemStatusAuthors,
   missionSystemStatuses,
   missionSystemStatusRoles,
   planetSystemStatusKey,
   systemProgressFloor,
   type MissionSystemStatus,
 } from "@/lib/planets/planet-system-status";
+import { systemTaskTooltip } from "@/lib/planets/system-task-tooltip";
 import { useLocale } from "@/components/providers/locale-provider";
 
 const specialtyNames: Record<MemberSpecialty, string> = {
@@ -77,6 +82,9 @@ export function MissionForm({
   hideSystemStatus = false,
   minimal = false,
   simplifiedStatusRole = "ranger",
+  currentMemberId,
+  lockAuthoredStatuses = false,
+  allianceName,
   onSystemStatusesSaved,
 }: Readonly<{
   mission: Mission | null;
@@ -94,9 +102,18 @@ export function MissionForm({
   hideSystemStatus?: boolean;
   minimal?: boolean;
   simplifiedStatusRole?: string;
-  onSystemStatusesSaved?: (portal: string, galaxy: number, statuses: MissionSystemStatus[]) => void;
+  currentMemberId?: string;
+  lockAuthoredStatuses?: boolean;
+  allianceName?: string;
+  onSystemStatusesSaved?: (
+    portal: string,
+    galaxy: number,
+    statuses: MissionSystemStatus[],
+    authors: SystemStatusAuthors,
+  ) => void;
 }>) {
-  const { t } = useLocale();
+  const { locale, t } = useLocale();
+  const tooltipId = useId();
   const [form, setForm] = useState<MissionInput>(() =>
     mission
       ? { ...mission, systemAddress: mission.systemAddress ?? "", galaxy: mission.galaxy ?? 0 }
@@ -107,6 +124,7 @@ export function MissionForm({
   const [generatingNames, setGeneratingNames] = useState(0);
   const [error, setError] = useState("");
   const [systemStatuses, setSystemStatuses] = useState<MissionSystemStatus[]>([]);
+  const [systemStatusAuthors, setSystemStatusAuthors] = useState<SystemStatusAuthors>({});
   const [loadedStatusKey, setLoadedStatusKey] = useState("");
   const [systemStatusesSaving, setSystemStatusesSaving] = useState(false);
   const [systemStatusesError, setSystemStatusesError] = useState("");
@@ -165,6 +183,11 @@ export function MissionForm({
           throw new Error("Invalid planet status response.");
         }
         setSystemStatuses(statuses);
+        setSystemStatusAuthors(
+          parseSystemStatusAuthors(
+            body && typeof body === "object" && "systemStatusAuthors" in body ? body.systemStatusAuthors : null,
+          ),
+        );
         if (editingMission)
           setForm((current) =>
             current.progress === 0
@@ -206,9 +229,13 @@ export function MissionForm({
       if (!Array.isArray(statuses) || !statuses.every(isMissionSystemStatus)) {
         throw new Error("Invalid planet status response.");
       }
+      const authors = parseSystemStatusAuthors(
+        body && typeof body === "object" && "systemStatusAuthors" in body ? body.systemStatusAuthors : null,
+      );
       setSystemStatuses(statuses);
+      setSystemStatusAuthors(authors);
       setSystemStatusesError("");
-      onSystemStatusesSaved?.(form.systemAddress, form.galaxy, statuses);
+      onSystemStatusesSaved?.(form.systemAddress, form.galaxy, statuses, authors);
     } catch (error_: unknown) {
       setSystemStatusesError(error_ instanceof Error ? error_.message : "Unable to save planet status.");
     } finally {
@@ -506,20 +533,57 @@ export function MissionForm({
                   <div className="system-status-options">
                     {missionSystemStatuses
                       .filter((status) => !simplified || missionSystemStatusRoles[status] === simplifiedStatusRole)
-                      .map((status) => (
-                        <label
-                          className={`system-status-option system-status-option-${status === "data_error" ? "error" : missionSystemStatusRoles[status]}`}
-                          key={status}
-                        >
-                          <input
-                            checked={loadedStatusKey === currentPlanetKey && systemStatuses.includes(status)}
-                            disabled={systemStatusesSaving || !addressComplete}
-                            onChange={(event) => void updateSystemStatus(status, event.target.checked)}
-                            type="checkbox"
-                          />
-                          <span>{t(status)}</span>
-                        </label>
-                      ))}
+                      .map((status) => {
+                        const loaded = loadedStatusKey === currentPlanetKey;
+                        const crossCoveredBy = loaded ? systemStatusCoveredBy(status, systemStatuses) : null;
+                        const lockedBy =
+                          loaded && !crossCoveredBy && lockAuthoredStatuses
+                            ? systemStatusLockedBy(status, systemStatuses, systemStatusAuthors, currentMemberId)
+                            : null;
+                        const coveredBy = crossCoveredBy ?? lockedBy;
+                        const covered = coveredBy !== null;
+                        const CoveredIcon =
+                          coveredBy === "discoverer" ? Orbit : coveredBy === "ranger" ? Compass : Search;
+                        const label = t(status);
+                        const description = covered ? null : systemTaskTooltip(status, locale, allianceName);
+                        const accessibleLabel = covered
+                          ? t(`system.${lockedBy === "ranger" ? "done_by_assigned_ranger" : `done_by_${coveredBy}`}`, {
+                              task: label,
+                            })
+                          : label;
+                        const tooltip = description ?? (covered ? accessibleLabel : undefined);
+                        const descriptionId = description ? `${tooltipId}-${status}` : undefined;
+                        const tooltipRole =
+                          status === "data_error" ? "error" : (coveredBy ?? missionSystemStatusRoles[status]);
+                        return (
+                          <label
+                            className={`system-status-option system-status-option-${status === "data_error" ? "error" : missionSystemStatusRoles[status]} system-task-tooltip-${tooltipRole}${covered ? " system-status-option-covered" : ""}`}
+                            data-tooltip={tooltip}
+                            key={status}
+                            tabIndex={covered ? 0 : undefined}
+                          >
+                            <input
+                              aria-describedby={descriptionId}
+                              aria-label={accessibleLabel}
+                              checked={covered || (loaded && systemStatuses.includes(status))}
+                              disabled={covered || systemStatusesSaving || !addressComplete}
+                              onChange={(event) => void updateSystemStatus(status, event.target.checked)}
+                              type="checkbox"
+                            />
+                            {covered && (
+                              <span aria-hidden="true" className={`system-status-option-${coveredBy}-box`}>
+                                <CoveredIcon strokeWidth={3} />
+                              </span>
+                            )}
+                            <span>{label}</span>
+                            {description && (
+                              <span className="sr-only" id={descriptionId}>
+                                {description}
+                              </span>
+                            )}
+                          </label>
+                        );
+                      })}
                   </div>
                 )}
               </fieldset>

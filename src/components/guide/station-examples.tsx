@@ -9,6 +9,7 @@ type Sample = Readonly<{
   galaxy: number;
   response: Record<string, unknown>;
 }>;
+type GuideExampleProps = Readonly<{ sample: Sample; allianceName?: string }>;
 
 const rangerId = "guide-ranger";
 const otherId = "guide-other";
@@ -144,41 +145,75 @@ const rangerScenarios: Scenario[] = [
 const renderedAt = Date.parse("2030-01-01T00:00:00.000Z");
 const noop = () => undefined;
 
-export function RangerStationExamples({ sample }: Readonly<{ sample: Sample }>) {
-  return <StationExamples member={ranger} sample={sample} scenarios={rangerScenarios} />;
+export function RangerStationExamples({ sample, allianceName }: GuideExampleProps) {
+  return <StationExamples allianceName={allianceName} member={ranger} sample={sample} scenarios={rangerScenarios} />;
 }
 
-export function RangerOwnStationExample({ sample }: Readonly<{ sample: Sample }>) {
-  return <StationExamples member={ranger} sample={sample} scenarios={[rangerScenarios[0]]} showCaption={false} />;
-}
-
-export function ExplorerOwnStationExample({ sample }: Readonly<{ sample: Sample }>) {
+export function RangerOwnStationExample({ sample, allianceName }: GuideExampleProps) {
   return (
-    <StationExamples canSeeAll member={explorer} sample={sample} scenarios={[rangerScenarios[0]]} showCaption={false} />
+    <StationExamples
+      allianceName={allianceName}
+      member={ranger}
+      sample={sample}
+      scenarios={[rangerScenarios[0]]}
+      showCaption={false}
+    />
   );
 }
 
-export function BuilderOwnStationExample({ sample }: Readonly<{ sample: Sample }>) {
+export function ExplorerOwnStationExample({ sample, allianceName }: GuideExampleProps) {
   return (
-    <StationExamples canSeeAll member={builder} sample={sample} scenarios={[rangerScenarios[0]]} showCaption={false} />
+    <StationExamples
+      allianceName={allianceName}
+      canSeeAll
+      member={explorer}
+      sample={sample}
+      scenarios={[rangerScenarios[0]]}
+      showCaption={false}
+    />
   );
 }
 
-export function ExplorerBuilderStationExamples({ sample }: Readonly<{ sample: Sample }>) {
-  return <StationExamples member={explorer} sample={sample} scenarios={explorerScenarios} />;
+export function BuilderOwnStationExample({ sample, allianceName }: GuideExampleProps) {
+  return (
+    <StationExamples
+      allianceName={allianceName}
+      canSeeAll
+      member={builder}
+      sample={sample}
+      scenarios={[rangerScenarios[0]]}
+      showCaption={false}
+    />
+  );
 }
 
-export function ExplorerAvailableStationExample({ sample }: Readonly<{ sample: Sample }>) {
-  return <StationExamples member={explorer} sample={sample} scenarios={[explorerScenarios[2]]} showCaption={false} />;
+export function ExplorerBuilderStationExamples({ sample, allianceName }: GuideExampleProps) {
+  return (
+    <StationExamples allianceName={allianceName} member={explorer} sample={sample} scenarios={explorerScenarios} />
+  );
+}
+
+export function ExplorerAvailableStationExample({ sample, allianceName }: GuideExampleProps) {
+  return (
+    <StationExamples
+      allianceName={allianceName}
+      member={explorer}
+      sample={sample}
+      scenarios={[explorerScenarios[2]]}
+      showCaption={false}
+    />
+  );
 }
 
 function StationExamples({
+  allianceName,
   member,
   sample,
   scenarios,
   showCaption = true,
   canSeeAll = false,
 }: Readonly<{
+  allianceName?: string;
   member: AllianceMember;
   sample: Sample;
   scenarios: Scenario[];
@@ -212,6 +247,7 @@ function StationExamples({
             {showCaption && <figcaption>{scenario.title}</figcaption>}
             <ul className="station-list station-list-cards">
               <StationCardSimple
+                allianceName={allianceName}
                 canCreateMissions={false}
                 canSeeAll={canSeeAll}
                 member={member}

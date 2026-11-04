@@ -7,7 +7,11 @@ import type { Mission, MissionSpecialty } from "@/lib/missions/missions";
 import { isEmailAddress } from "@/lib/members/member-types";
 import { readMissions } from "@/lib/missions/store";
 import { readAllStationPortals } from "@/lib/stations/stations-store";
-import { planetSystemStatusKey, type MissionSystemStatus } from "@/lib/planets/planet-system-status";
+import {
+  systemStatusCoveredBy,
+  planetSystemStatusKey,
+  type MissionSystemStatus,
+} from "@/lib/planets/planet-system-status";
 import { readPlanetSystemStatuses } from "@/lib/planets/planet-system-status-store";
 import { buildWorkbook, workbookContentType } from "@/lib/utils/xlsx-workbook";
 
@@ -29,21 +33,25 @@ const missionStatusLabels = {
 } satisfies Record<Mission["status"], string>;
 const stationTaskStatuses = [
   "station_claimed",
+  "system_scanned",
   "mapped",
   "planets_classified",
   "data_uploaded",
   "buildings_built",
   "bases_uploaded",
   "renamed",
+  "system_data_uploaded",
 ] as const satisfies readonly MissionSystemStatus[];
 const stationTaskLabels = {
   station_claimed: "Stazione riscattata",
+  system_scanned: "Sistema scansionato (Ranger)",
   mapped: "Sistema scansionato",
   planets_classified: "Sistema esplorato",
   data_uploaded: "Dati caricati",
   buildings_built: "Edifici costruiti",
   bases_uploaded: "Basi caricate",
   renamed: "Sistema rinominato",
+  system_data_uploaded: "Dati sistema caricati",
 } satisfies Record<(typeof stationTaskStatuses)[number], string>;
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -150,7 +158,9 @@ export async function GET() {
           stationMissions.map((mission) => mission.status),
           missionStatusLabels,
         ),
-        ...stationTaskStatuses.map((status) => (systemStatuses.includes(status) ? "Sì" : "No")),
+        ...stationTaskStatuses.map((status) =>
+          systemStatuses.includes(status) || systemStatusCoveredBy(status, systemStatuses) !== null ? "Sì" : "No",
+        ),
       ];
     });
     const file = buildWorkbook({

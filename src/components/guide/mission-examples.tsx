@@ -10,6 +10,7 @@ type Sample = Readonly<{
   galaxy: number;
   response: Record<string, unknown>;
 }>;
+type GuideExampleProps = Readonly<{ sample: Sample; allianceName?: string }>;
 
 const explorer: AllianceMember = {
   publicId: "guide-explorer",
@@ -121,14 +122,14 @@ const rangerScenarios: Scenario[] = [
     status: "in_progress",
     assigned: true,
     progress: 80,
-    statuses: ["station_claimed", "renamed"],
+    statuses: ["station_claimed", "system_scanned", "renamed", "system_data_uploaded"],
   },
   {
     title: "Missione completata: puoi riaprirla",
     status: "completed",
     assigned: true,
     progress: 100,
-    statuses: ["station_claimed", "renamed"],
+    statuses: ["station_claimed", "system_scanned", "renamed", "system_data_uploaded"],
   },
 ];
 
@@ -175,19 +176,43 @@ const builderScenarios: Scenario[] = [
 const noop = () => undefined;
 const asyncNoop = () => Promise.resolve();
 
-export function ExplorerMissionExamples({ sample }: Readonly<{ sample: Sample }>) {
-  return <MissionExamples member={explorer} request="builder" sample={sample} scenarios={explorerScenarios} />;
+export function ExplorerMissionExamples({ sample, allianceName }: GuideExampleProps) {
+  return (
+    <MissionExamples
+      allianceName={allianceName}
+      member={explorer}
+      request="builder"
+      sample={sample}
+      scenarios={explorerScenarios}
+    />
+  );
 }
 
-export function ExplorerAvailableMissionExample({ sample }: Readonly<{ sample: Sample }>) {
-  return <MissionExamples member={explorer} sample={sample} scenarios={[explorerScenarios[0]]} showCaptions={false} />;
+export function ExplorerAvailableMissionExample({ sample, allianceName }: GuideExampleProps) {
+  return (
+    <MissionExamples
+      allianceName={allianceName}
+      member={explorer}
+      sample={sample}
+      scenarios={[explorerScenarios[0]]}
+      showCaptions={false}
+    />
+  );
 }
 
-export function BuilderAvailableMissionExample({ sample }: Readonly<{ sample: Sample }>) {
-  return <MissionExamples member={builder} sample={sample} scenarios={[builderScenarios[0]]} showCaptions={false} />;
+export function BuilderAvailableMissionExample({ sample, allianceName }: GuideExampleProps) {
+  return (
+    <MissionExamples
+      allianceName={allianceName}
+      member={builder}
+      sample={sample}
+      scenarios={[builderScenarios[0]]}
+      showCaptions={false}
+    />
+  );
 }
 
-export function ExplorerMissionProgressExamples({ sample }: Readonly<{ sample: Sample }>) {
+export function ExplorerMissionProgressExamples({ sample, allianceName }: GuideExampleProps) {
   const captions = [
     "Clicca su Inizia la missione",
     "Spunta i task",
@@ -196,10 +221,18 @@ export function ExplorerMissionProgressExamples({ sample }: Readonly<{ sample: S
   ];
   const scenarios = explorerScenarios.slice(1).map((scenario, index) => ({ ...scenario, title: captions[index] }));
 
-  return <MissionExamples member={explorer} request="builder" sample={sample} scenarios={scenarios} />;
+  return (
+    <MissionExamples
+      allianceName={allianceName}
+      member={explorer}
+      request="builder"
+      sample={sample}
+      scenarios={scenarios}
+    />
+  );
 }
 
-export function BuilderMissionProgressExamples({ sample }: Readonly<{ sample: Sample }>) {
+export function BuilderMissionProgressExamples({ sample, allianceName }: GuideExampleProps) {
   const captions = [
     "Clicca su Inizia la missione",
     "Spunta i task",
@@ -208,24 +241,42 @@ export function BuilderMissionProgressExamples({ sample }: Readonly<{ sample: Sa
   ];
   const scenarios = builderScenarios.slice(1).map((scenario, index) => ({ ...scenario, title: captions[index] }));
 
-  return <MissionExamples member={builder} request="explorer" sample={sample} scenarios={scenarios} />;
+  return (
+    <MissionExamples
+      allianceName={allianceName}
+      member={builder}
+      request="explorer"
+      sample={sample}
+      scenarios={scenarios}
+    />
+  );
 }
 
-export function BuilderMissionExamples({ sample }: Readonly<{ sample: Sample }>) {
-  return <MissionExamples member={builder} request="explorer" sample={sample} scenarios={builderScenarios} />;
+export function BuilderMissionExamples({ sample, allianceName }: GuideExampleProps) {
+  return (
+    <MissionExamples
+      allianceName={allianceName}
+      member={builder}
+      request="explorer"
+      sample={sample}
+      scenarios={builderScenarios}
+    />
+  );
 }
 
-export function RangerMissionExamples({ sample }: Readonly<{ sample: Sample }>) {
-  return <MissionExamples member={ranger} sample={sample} scenarios={rangerScenarios} />;
+export function RangerMissionExamples({ sample, allianceName }: GuideExampleProps) {
+  return <MissionExamples allianceName={allianceName} member={ranger} sample={sample} scenarios={rangerScenarios} />;
 }
 
 function MissionExamples({
+  allianceName,
   member,
   request,
   sample,
   scenarios,
   showCaptions = true,
 }: Readonly<{
+  allianceName?: string;
   member: AllianceMember;
   request?: "builder" | "explorer";
   sample: Sample;
@@ -263,6 +314,7 @@ function MissionExamples({
             {showCaptions && <figcaption>{scenario.title}</figcaption>}
             <div className="mission-card-grid">
               <MissionCardSimple
+                allianceName={allianceName}
                 canManage={false}
                 currentMember={member}
                 getDiscovererImage={() => undefined}

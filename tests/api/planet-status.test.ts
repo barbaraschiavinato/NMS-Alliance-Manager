@@ -69,11 +69,17 @@ describe("GET /api/planet-status", () => {
   describe("listing", () => {
     it("shows users statuses for visible missions and their own stations", async () => {
       signInAs(ranger);
-      expect(await (await get()).json()).toEqual({ planets: { [`0:${THIRD_PORTAL}`]: ["station_claimed"] } });
+      expect(await (await get()).json()).toEqual({
+        planets: { [`0:${THIRD_PORTAL}`]: ["station_claimed"] },
+        authors: {},
+      });
       signInAs(explorer);
-      expect(await (await get()).json()).toEqual({ planets: { [`0:${PORTAL}`]: ["mapped"] } });
+      expect(await (await get()).json()).toEqual({ planets: { [`0:${PORTAL}`]: ["mapped"] }, authors: {} });
       signInAs(builder);
-      expect(await (await get()).json()).toEqual({ planets: { [`0:${OTHER_PORTAL}`]: ["buildings_built"] } });
+      expect(await (await get()).json()).toEqual({
+        planets: { [`0:${OTHER_PORTAL}`]: ["buildings_built"] },
+        authors: {},
+      });
     });
 
     it.each([
@@ -87,7 +93,7 @@ describe("GET /api/planet-status", () => {
 
     it("treats a simple-view admin as a user", async () => {
       signInAs(simpleAdmin);
-      expect(await (await get()).json()).toEqual({ planets: {} });
+      expect(await (await get()).json()).toEqual({ planets: {}, authors: {} });
     });
   });
 
@@ -109,13 +115,14 @@ describe("GET /api/planet-status", () => {
       signInAs(explorer);
       const res = await get(`?portal=${PORTAL.toLowerCase()}&galaxy=0`);
       expect(res.status).toBe(200);
-      expect(await res.json()).toEqual({ systemStatuses: ["mapped"] });
+      expect(await res.json()).toEqual({ systemStatuses: ["mapped"], systemStatusAuthors: {} });
     });
 
     it("lets explorers and builders see any planet with a station", async () => {
       signInAs(builder);
       expect(await (await get(`?portal=${THIRD_PORTAL}&galaxy=0`)).json()).toEqual({
         systemStatuses: ["station_claimed"],
+        systemStatusAuthors: {},
       });
     });
 
@@ -144,12 +151,18 @@ describe("GET /api/planet-status", () => {
       ["admin", admin],
     ])("lets a %s see any planet", async (_label, member) => {
       signInAs(member);
-      expect(await (await get(`?portal=${UNSEEN_PORTAL}&galaxy=0`)).json()).toEqual({ systemStatuses: ["renamed"] });
+      expect(await (await get(`?portal=${UNSEEN_PORTAL}&galaxy=0`)).json()).toEqual({
+        systemStatuses: ["renamed"],
+        systemStatusAuthors: {},
+      });
     });
 
     it("returns an empty list for a planet without statuses", async () => {
       signInAs(moderator);
-      expect(await (await get(`?portal=${PORTAL}&galaxy=9`)).json()).toEqual({ systemStatuses: [] });
+      expect(await (await get(`?portal=${PORTAL}&galaxy=9`)).json()).toEqual({
+        systemStatuses: [],
+        systemStatusAuthors: {},
+      });
     });
   });
 
@@ -206,6 +219,7 @@ describe("PATCH /api/planet-status", () => {
       portal: UNSEEN_PORTAL,
       galaxy: 0,
       systemStatuses: ["mapped", "buildings_built", "station_claimed"],
+      systemStatusAuthors: {},
     });
     expect(readStatuses()[`0:${UNSEEN_PORTAL}`]).toEqual(["mapped", "buildings_built", "station_claimed"]);
   });
@@ -272,5 +286,97 @@ describe("PATCH /api/planet-status", () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
     signInAs(moderator);
     expect((await patch({ portal: PORTAL, galaxy: 0, systemStatuses: [] })).status).toBe(503);
+  });
+});
+
+describe("Ranger task authors", () => {
+  function readAuthors() {
+    return JSON.parse(readFileSync(path.join(process.cwd(), "data", "planet-system-status-authors.json"), "utf8"));
+  }
+
+  beforeEach(() => {
+    seedMissions([
+      storedMission({ systemAddress: THIRD_PORTAL, targetSpecialty: "ranger", assignedMemberId: otherRanger.publicId }),
+    ]);
+  });
+
+  it("records the discoverer as the author and blocks the assigned Ranger", async () => {
+    signInAs(ranger);
+    const res = await patch({ portal: THIRD_PORTAL, galaxy: 0, systemStatuses: ["station_claimed", "system_scanned"] });
+    expect(res.status).toBe(200);
+    expect((await res.json()).systemStatusAuthors).toEqual({
+      system_scanned: { memberId: ranger.publicId, as: "discoverer" },
+    });
+
+    signInAs(otherRanger);
+    expect((await patch({ portal: THIRD_PORTAL, galaxy: 0, systemStatuses: ["station_claimed"] })).status).toBe(403);
+    expect(readStatuses()[`0:${THIRD_PORTAL}`]).toEqual(["station_claimed", "system_scanned"]);
+    expect(
+      (
+        await patch({
+          portal: THIRD_PORTAL,
+          galaxy: 0,
+          systemStatuses: ["station_claimed", "system_scanned", "renamed"],
+        })
+      ).status,
+    ).toBe(200);
+    expect(readAuthors()[`0:${THIRD_PORTAL}`]).toEqual({
+      system_scanned: { memberId: ranger.publicId, as: "discoverer" },
+      renamed: { memberId: otherRanger.publicId, as: "ranger" },
+    });
+  });
+
+  it("records the assigned Ranger as the author and blocks the discoverer", async () => {
+    signInAs(otherRanger);
+    expect(
+      (await patch({ portal: THIRD_PORTAL, galaxy: 0, systemStatuses: ["station_claimed", "renamed"] })).status,
+    ).toBe(200);
+    signInAs(ranger);
+    const res = await patch({ portal: THIRD_PORTAL, galaxy: 0, systemStatuses: ["station_claimed"] });
+    expect(res.status).toBe(403);
+    expect((await res.json()).error).toBe("Questo task è già stato preso in carico da un altro membro.");
+  });
+
+  it("lets the author remove their task and forgets the author", async () => {
+    signInAs(ranger);
+    await patch({ portal: THIRD_PORTAL, galaxy: 0, systemStatuses: ["station_claimed", "system_scanned"] });
+    const res = await patch({ portal: THIRD_PORTAL, galaxy: 0, systemStatuses: ["station_claimed"] });
+    expect(res.status).toBe(200);
+    expect((await res.json()).systemStatusAuthors).toEqual({});
+    expect(readAuthors()).toEqual({});
+  });
+
+  it("never records an author for legacy checks, which anyone allowed can still change", async () => {
+    signInAs(otherRanger);
+    const res = await patch({ portal: THIRD_PORTAL, galaxy: 0, systemStatuses: [] });
+    expect(res.status).toBe(200);
+    expect((await res.json()).systemStatusAuthors).toEqual({});
+  });
+
+  it("lets a moderator change an authored task without becoming its author", async () => {
+    signInAs(ranger);
+    await patch({ portal: THIRD_PORTAL, galaxy: 0, systemStatuses: ["station_claimed", "system_scanned"] });
+    signInAs(moderator);
+    const res = await patch({ portal: THIRD_PORTAL, galaxy: 0, systemStatuses: ["station_claimed", "renamed"] });
+    expect(res.status).toBe(200);
+    expect((await res.json()).systemStatusAuthors).toEqual({});
+  });
+
+  it("treats a simple-view admin as a regular member", async () => {
+    seedStations([{ portal: THIRD_PORTAL, galaxy: 0, ownerId: simpleAdmin.publicId }]);
+    signInAs(otherRanger);
+    await patch({ portal: THIRD_PORTAL, galaxy: 0, systemStatuses: ["station_claimed", "renamed"] });
+    signInAs(simpleAdmin);
+    expect((await patch({ portal: THIRD_PORTAL, galaxy: 0, systemStatuses: ["station_claimed"] })).status).toBe(403);
+  });
+
+  it("returns the authors of visible systems", async () => {
+    signInAs(ranger);
+    await patch({ portal: THIRD_PORTAL, galaxy: 0, systemStatuses: ["station_claimed", "system_scanned"] });
+    const author = { system_scanned: { memberId: ranger.publicId, as: "discoverer" } };
+    expect((await (await get()).json()).authors).toEqual({ [`0:${THIRD_PORTAL}`]: author });
+    expect((await (await get(`?portal=${THIRD_PORTAL}&galaxy=0`)).json()).systemStatusAuthors).toEqual(author);
+    signInAs(builder);
+    expect((await (await get()).json()).authors).toEqual({});
   });
 });

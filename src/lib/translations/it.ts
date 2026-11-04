@@ -936,6 +936,12 @@ export const translations: TranslationCatalog = {
     "system.no_system": "Nessun sistema",
     "system.system_status": "Stato sistema",
     "system.station_claimed": "Stazione riscattata",
+    "system.system_scanned": "Sistema scansionato",
+    "system.system_data_uploaded": "Dati sistema caricati",
+    "system.done_by_explorer": "{task}: preso in carico dall'Esploratore",
+    "system.done_by_ranger": "{task}: preso in carico dal Ranger/scopritore",
+    "system.done_by_discoverer": "{task}: preso in carico dallo scopritore",
+    "system.done_by_assigned_ranger": "{task}: preso in carico dal Ranger",
     "system.mapped": "Sistema scansionato",
     "system.planets_classified": "Sistema esplorato",
     "system.buildings_built": "Edifici costruiti",
@@ -943,6 +949,22 @@ export const translations: TranslationCatalog = {
     "system.renamed": "Sistema rinominato",
     "system.data_uploaded": "Dati caricati",
     "system.data_error": "Errore dati",
+    "system.station_claimed_tooltip":
+      "La stazione spaziale è stata acquistata completando gli obiettivi di sistema, riscattando il nucleo centrale, aggiungendola all'alleanza {alliance} e rinominandola con il prefisso «[{alliance}]» prima del nome.",
+    "system.station_claimed_generic_tooltip":
+      "La stazione spaziale è stata acquistata completando gli obiettivi di sistema, riscattando il nucleo centrale, aggiungendola all'alleanza e rinominandola con il prefisso dell'alleanza tra parentesi quadre prima del nome.",
+    "system.scanned_tooltip":
+      "Il sistema è stato scansionato dallo spazio con la sala scanner dell'ammiraglia (o mercantile), della corvetta o dell'astronave.",
+    "system.renamed_tooltip": "Il sistema è stato rinominato con il prefisso «[{alliance}]» prima del nome.",
+    "system.renamed_generic_tooltip":
+      "Il sistema è stato rinominato con il prefisso dell'alleanza tra parentesi quadre prima del nome.",
+    "system.explored_tooltip":
+      "Tutti i pianeti del sistema sono stati visitati, la fauna scansionata completamente, così come la flora e i minerali che si incontrano più comunemente.",
+    "system.uploaded_tooltip":
+      "I dati raccolti da questo sistema con le scansioni sono stati caricati dal pannello Scoperte.",
+    "system.buildings_tooltip":
+      "Gli edifici sono stati costruiti e posizionati in punti visibili, come portali o punti di interesse.",
+    "system.bases_tooltip": "Le basi sono state caricate sui server galattici tramite il computer di base.",
     "system.system_verified": "Sistema verificato",
     "system.checking": "Verifica in corso…",
     "system.enter_the_system": "Indica il sistema",
@@ -1041,6 +1063,7 @@ export const translations: TranslationCatalog = {
     "errors.moderator_permission_required": "Permesso moderator richiesto.",
     "errors.member_profile_not_found": "Profilo membro non trovato.",
     "errors.invalid_planet": "Pianeta non valido.",
+    "errors.system_task_taken_by_another_member": "Questo task è già stato preso in carico da un altro membro.",
     "errors.invalid_settings": "Impostazioni non valide.",
     "errors.invalid_membership_status": "Stato approvazione non valido.",
     "errors.member_not_found_or_cannot_be_removed_with_your_role":
@@ -1092,6 +1115,8 @@ export const aliases: Readonly<Record<string, string>> = {
   "Indirizzo portale o galassia non validi.": "errors.invalid_portal_address_or_galaxy",
   "Impossibile salvare lo stato del pianeta.": "errors.unable_to_save_planet_status",
   station_claimed: "system.station_claimed",
+  system_scanned: "system.system_scanned",
+  system_data_uploaded: "system.system_data_uploaded",
   mapped: "system.mapped",
   planets_classified: "system.planets_classified",
   bases_uploaded: "system.bases_uploaded",

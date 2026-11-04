@@ -10,6 +10,7 @@ import { missionSpecialties, type MissionSpecialty } from "@/lib/missions/missio
 import {
   isMissionSystemStatus,
   type MissionSystemStatus,
+  type PlanetSystemStatusAuthors,
   type PlanetSystemStatuses,
 } from "@/lib/planets/planet-system-status";
 export { canCreateMissionFromStation } from "@/lib/missions/station-mission-availability";
@@ -221,6 +222,7 @@ export function CachedPlanetInfo({ planet, onOpen }: Readonly<{ planet: CachedPl
 }
 
 export type StationCardProps = Readonly<{
+  allianceName?: string;
   isAllianceHub?: boolean;
   station: StationEntry;
   member: AllianceMember;
@@ -231,6 +233,7 @@ export type StationCardProps = Readonly<{
   showMapLink?: boolean;
   renderedAt: number;
   planetStatuses: PlanetSystemStatuses;
+  planetStatusAuthors?: PlanetSystemStatusAuthors;
   planetStatusesLoaded: boolean;
   savingStatusKeys: string[];
   onToggleStatus: (station: StationEntry, status: MissionSystemStatus, checked: boolean) => void;

@@ -26,12 +26,14 @@ import {
 import type { StationCardProps } from "@/components/cards/station-card/parts";
 
 export function StationCardExtended({
+  allianceName,
   station,
   member,
   canSeeAll,
   canCreateMissions,
   renderedAt,
   planetStatuses,
+  planetStatusAuthors,
   planetStatusesLoaded,
   savingStatusKeys,
   onToggleStatus,
@@ -160,6 +162,9 @@ export function StationCardExtended({
         {(canSeeAll || station.ownerId === member.publicId) && planetStatusesLoaded && (
           <div className="station-system-status">
             <MissionSystemProgress
+              allianceName={allianceName}
+              authors={planetStatusAuthors?.[statusKey]}
+              currentMemberId={member.publicId}
               disabled={savingStatusKeys.includes(statusKey)}
               editable
               editableRoles={canSeeAll ? editableSystemStatusRoles(member) : ["ranger"]}

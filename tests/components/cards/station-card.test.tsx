@@ -119,6 +119,16 @@ describe.each([
     makeMember({ publicId: "viewer", specialty: "explorer", role: "user", simpleView, ...overrides });
   const moderator = () => viewer({ role: "moderator" });
 
+  it("passes the alliance name to the station task tooltip", () => {
+    renderStation({ allianceName: "Artemis", member: viewer({ publicId: "owner", specialty: "ranger" }) });
+    const claimed = screen.getByRole("checkbox", { name: "Station claimed" });
+    expect(claimed.closest("label")).toHaveClass("system-task-tooltip-ranger");
+    expect(claimed.closest("label")).toHaveAttribute(
+      "data-tooltip",
+      'The space station has been purchased by completing the system objectives and claiming the central core, added to the Artemis alliance, and renamed with the prefix "[Artemis]" before its name.',
+    );
+  });
+
   it.each([false, true])("shows the hub ribbon instead of New, existing missions %s", (hasMissions) => {
     renderStation({
       member: viewer(),
@@ -270,7 +280,9 @@ describe.each([
     });
     expect(screen.getAllByRole("checkbox").map((box) => box.getAttribute("aria-label"))).toEqual([
       "Station claimed",
+      "System scanned",
       "System renamed",
+      "System data uploaded",
     ]);
     expect(screen.getByRole("checkbox", { name: "Station claimed" })).toBeChecked();
     await user.click(screen.getByRole("checkbox", { name: "System renamed" }));
@@ -310,7 +322,7 @@ describe.each([
       member: moderator(),
       station: target,
     });
-    expect(screen.getAllByRole("checkbox")).toHaveLength(simpleView ? 3 : 7);
+    expect(screen.getAllByRole("checkbox")).toHaveLength(simpleView ? 3 : 9);
     await user.click(screen.getByRole("button", { name: `Create mission from ${portal}` }));
     expect(props.onCreateMission).toHaveBeenCalledWith(target);
     expect(screen.getByRole("button", { name: `Edit station ${portal}` })).toBeInTheDocument();

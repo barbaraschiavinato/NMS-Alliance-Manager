@@ -238,7 +238,7 @@ const specialties = [
     name: "Ranger",
     icon: Compass,
     color: "#5fd68a",
-    tasks: "Stazione aggiunta, Stazione riscattata, Sistema rinominato",
+    tasks: "Stazione aggiunta, Stazione riscattata, Sistema scansionato, Sistema rinominato, Dati sistema caricati",
   },
   {
     name: "Esploratore",
@@ -544,7 +544,7 @@ export async function GuideContent({
             </p>
             <AddStationButtonExample />
             <p>Dopo l&apos;invio, comparirà la scheda della tua stazione, come nell&apos;esempio qui sotto.</p>
-            <RangerOwnStationExample sample={sample} />
+            <RangerOwnStationExample allianceName={guideAlliance.name} sample={sample} />
             <p>
               Spunta i task che hai già completato e, se vuoi, crea missioni per Esploratori o Costruttori in quel
               sistema cliccando su{" "}
@@ -570,7 +570,7 @@ export async function GuideContent({
                   Missioni
                 </span>{" "}
                 e prendi in carico una missione disponibile.
-                <ExplorerAvailableMissionExample sample={sample} />
+                <ExplorerAvailableMissionExample allianceName={guideAlliance.name} sample={sample} />
               </li>
               <li>
                 Secondo metodo: vai in{" "}
@@ -587,7 +587,7 @@ export async function GuideContent({
                 >
                   <CirclePlus aria-hidden="true" size={16} />
                 </span>
-                <ExplorerAvailableStationExample sample={sample} />
+                <ExplorerAvailableStationExample allianceName={guideAlliance.name} sample={sample} />
               </li>
               <li>
                 <p className="guide-station-instructions">
@@ -600,7 +600,7 @@ export async function GuideContent({
                 </p>
                 <AddStationButtonExample />
                 <p>Dopo l&apos;invio, comparirà la scheda della tua stazione, come nell&apos;esempio qui sotto.</p>
-                <ExplorerOwnStationExample sample={sample} />
+                <ExplorerOwnStationExample allianceName={guideAlliance.name} sample={sample} />
                 <p>
                   Spunta i task che hai già completato e creati una missione cliccando su{" "}
                   <span
@@ -654,7 +654,7 @@ export async function GuideContent({
                 Missioni
               </span>
             </p>
-            <ExplorerMissionProgressExamples sample={sample} />
+            <ExplorerMissionProgressExamples allianceName={guideAlliance.name} sample={sample} />
             <h2 id="guida-rapida-costruttore" style={{ color: "#ffb45d" }}>
               <Hammer aria-hidden="true" size={20} />
               Costruttore
@@ -668,7 +668,7 @@ export async function GuideContent({
                   Missioni
                 </span>{" "}
                 e prendi in carico una missione disponibile.
-                <BuilderAvailableMissionExample sample={sample} />
+                <BuilderAvailableMissionExample allianceName={guideAlliance.name} sample={sample} />
               </li>
               <li>
                 Secondo metodo: vai in{" "}
@@ -685,7 +685,7 @@ export async function GuideContent({
                 >
                   <CirclePlus aria-hidden="true" size={16} />
                 </span>
-                <ExplorerAvailableStationExample sample={sample} />
+                <ExplorerAvailableStationExample allianceName={guideAlliance.name} sample={sample} />
               </li>
               <li>
                 <p className="guide-station-instructions">
@@ -698,7 +698,7 @@ export async function GuideContent({
                 </p>
                 <AddStationButtonExample />
                 <p>Dopo l&apos;invio, comparirà la scheda della tua stazione, come nell&apos;esempio qui sotto.</p>
-                <BuilderOwnStationExample sample={sample} />
+                <BuilderOwnStationExample allianceName={guideAlliance.name} sample={sample} />
                 <p>
                   Spunta i task che hai già completato e creati una missione cliccando su{" "}
                   <span
@@ -749,7 +749,7 @@ export async function GuideContent({
                 Missioni
               </span>
             </p>
-            <BuilderMissionProgressExamples sample={sample} />
+            <BuilderMissionProgressExamples allianceName={guideAlliance.name} sample={sample} />
           </section>
 
           <section id="nozioni-di-base">
@@ -928,7 +928,29 @@ export async function GuideContent({
                 il quale trovi il codice del portale, apre il dettaglio della stazione, con le missioni associate e i
                 pianeti del sistema.
               </li>
-              <li>La scheda stazione ha due voci da spuntare: Stazione riscattata e Sistema rinominato.</li>
+              <li>
+                La scheda stazione ha quattro voci da spuntare: Stazione riscattata, Sistema scansionato, Sistema
+                rinominato e Dati sistema caricati. Se l&apos;Esploratore ha già scansionato il sistema, Sistema
+                scansionato e Dati sistema caricati appaiono spuntate con il simbolo dell&apos;Esploratore, non si
+                possono modificare e non contano nell&apos;avanzamento. Viceversa, se il Ranger o lo scopritore ha già
+                scansionato il sistema, Sistema scansionato dell&apos;Esploratore appare spuntato e non modificabile con
+                la bussola del Ranger, ed è escluso dall&apos;avanzamento dell&apos;Esploratore. Dati caricati rimane
+                invariato.
+              </li>
+              <li>
+                Passa il puntatore su una voce, oppure selezionala con la tastiera, per aprire il tooltip. Nei
+                riepiloghi compatti di sola lettura mostra il nome del task e nasconde i quadratini già coperti da
+                un&apos;altra specializzazione. Quando il nome è già visibile accanto alla casella modificabile, ne
+                descrive il significato. Le descrizioni di Stazione riscattata e Sistema rinominato mostrano il nome
+                dell&apos;alleanza configurato; i task presi in carico restano visibili e indicano chi li ha svolti.
+              </li>
+              <li>
+                Le voci Ranger sono condivise tra lo scopritore della stazione e il Ranger con una missione assegnata
+                sul sistema: chi spunta per primo una voce ne prende il merito in classifica. L&apos;altro la vede
+                spuntata e non modificabile, con l&apos;icona della stazione (scopritore) o la bussola (Ranger); solo
+                chi l&apos;ha spuntata può toglierla. Moderatori e amministratori, fuori dalla vista semplice, possono
+                sempre modificarla.
+              </li>
               <li>
                 Le missioni collegate alla stazione ne determinano lo stato: In attesa, In missione o Missione
                 completata.
@@ -1013,7 +1035,7 @@ export async function GuideContent({
               I pulsanti che un Ranger può trovare sulla card di una stazione, in base a chi la possiede e alle missioni
               collegate.
             </p>
-            {sample && <RangerStationExamples sample={sample} />}
+            {sample && <RangerStationExamples allianceName={guideAlliance.name} sample={sample} />}
             <h4 id="stazioni-lista-esploratori-costruttori">
               <span style={{ color: "#4d9bff" }}>Esploratori</span> e{" "}
               <span style={{ color: "#ffb45d" }}>Costruttori</span>
@@ -1036,7 +1058,7 @@ export async function GuideContent({
             </ul>
             <h5>Esempi di card</h5>
             <p>I pulsanti che un Esploratore o un Costruttore può trovare sulla card di una stazione.</p>
-            {sample && <ExplorerBuilderStationExamples sample={sample} />}
+            {sample && <ExplorerBuilderStationExamples allianceName={guideAlliance.name} sample={sample} />}
           </section>
 
           <section id="missioni">
@@ -1102,13 +1124,13 @@ export async function GuideContent({
             </h4>
             <h5>Esempi di card</h5>
             <p>Le schede missione che un Esploratore può trovare, dalla presa in carico alla chiusura.</p>
-            <ExplorerMissionExamples sample={sample} />
+            <ExplorerMissionExamples allianceName={guideAlliance.name} sample={sample} />
             <h4 id="missioni-lista-costruttori" style={{ color: "#ffb45d" }}>
               Costruttori
             </h4>
             <h5>Esempi di card</h5>
             <p>Le schede missione che un Costruttore può trovare, dalla presa in carico alla chiusura.</p>
-            <BuilderMissionExamples sample={sample} />
+            <BuilderMissionExamples allianceName={guideAlliance.name} sample={sample} />
             <h4 id="missioni-lista-ranger" style={{ color: "#5fd68a" }}>
               Ranger
             </h4>
@@ -1118,7 +1140,7 @@ export async function GuideContent({
             </p>
             <h5>Esempi di card</h5>
             <p>Le schede missione che un Ranger può trovare, dalla presa in carico alla chiusura.</p>
-            <RangerMissionExamples sample={sample} />
+            <RangerMissionExamples allianceName={guideAlliance.name} sample={sample} />
           </section>
 
           <section id="pianeti">
