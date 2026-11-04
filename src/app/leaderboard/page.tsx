@@ -8,8 +8,12 @@ import { readAccessData } from "@/lib/members/access-store";
 import { readMissions } from "@/lib/missions/store";
 import { readFarms } from "@/lib/farms/farms-store";
 import { coveredSpecialties } from "@/lib/missions/missions";
-import { missionSystemStatuses, missionSystemStatusRoles } from "@/lib/planets/planet-system-status";
-import { readPlanetSystemStatuses } from "@/lib/planets/planet-system-status-store";
+import {
+  applicableSystemStatuses,
+  missionSystemStatuses,
+  missionSystemStatusRoles,
+} from "@/lib/planets/planet-system-status";
+import { readPlanetSystemStatusAuthors, readPlanetSystemStatuses } from "@/lib/planets/planet-system-status-store";
 import { readPlanetVisitCounts } from "@/lib/planets/planet-visits-store";
 import { readAlmanacCache } from "@/lib/almanac/almanac-store";
 import { getSystemPlanetAddresses } from "@/lib/planets/planet-addresses";
@@ -54,8 +58,10 @@ export default async function LeaderboardRoute() {
     if (mission.status !== "completed" || !mission.assignedMemberId) continue;
     missionsByMember.set(mission.assignedMemberId, (missionsByMember.get(mission.assignedMemberId) ?? 0) + 1);
   }
-  // Lo stato dei task non registra chi lo ha spuntato: il merito va all'assegnatario della missione del ruolo su quel pianeta.
-  const planetStatuses = await readPlanetSystemStatuses();
+  const [planetStatuses, planetStatusAuthors] = await Promise.all([
+    readPlanetSystemStatuses(),
+    readPlanetSystemStatusAuthors(),
+  ]);
   const tasksByMember = new Map<string, Map<string, number>>();
   const creditedTasks = new Set<string>();
   const addTask = (task: string, memberId: string) => {
@@ -63,13 +69,26 @@ export default async function LeaderboardRoute() {
     counts.set(memberId, (counts.get(memberId) ?? 0) + 1);
     tasksByMember.set(task, counts);
   };
+  // Ranger tasks checked by the discoverer or the assigned Ranger credit whoever checked them first.
+  for (const [key, authors] of Object.entries(planetStatusAuthors)) {
+    const statuses = planetStatuses[key] ?? [];
+    const applicable = applicableSystemStatuses(statuses);
+    for (const task of statuses) {
+      const author = authors[task];
+      if (!author || !applicable.includes(task)) continue;
+      addTask(task, author.memberId);
+      creditedTasks.add(`${key}:${task}`);
+    }
+  }
+  // Other tasks have no recorded author: credit goes to the assignee of the mission covering the role on that system.
   for (const mission of missions) {
     const assigneeId = mission.assignedMemberId;
     const assignee = accessData.members.find((candidate) => candidate.publicId === assigneeId);
     if (!assigneeId || !assignee) continue;
     const statuses = planetStatuses[`${mission.galaxy}:${mission.systemAddress.toUpperCase()}`] ?? [];
+    const applicable = applicableSystemStatuses(statuses);
     for (const task of statuses) {
-      if (task === "data_error") continue;
+      if (task === "data_error" || !applicable.includes(task)) continue;
       if (!coveredSpecialties(mission.targetSpecialty).includes(missionSystemStatusRoles[task])) continue;
       const creditKey = `${mission.galaxy}:${mission.systemAddress.toUpperCase()}:${task}`;
       if (!creditedTasks.has(creditKey)) addTask(task, assigneeId);
@@ -78,8 +97,14 @@ export default async function LeaderboardRoute() {
   }
   // Senza una missione che copra il task, il merito va allo scopritore della stazione.
   for (const station of allStations) {
-    for (const task of planetStatuses[`${station.galaxy}:${station.portal.toUpperCase()}`] ?? []) {
-      if (task === "data_error" || creditedTasks.has(`${station.galaxy}:${station.portal.toUpperCase()}:${task}`))
+    const statuses = planetStatuses[`${station.galaxy}:${station.portal.toUpperCase()}`] ?? [];
+    const applicable = applicableSystemStatuses(statuses);
+    for (const task of statuses) {
+      if (
+        task === "data_error" ||
+        !applicable.includes(task) ||
+        creditedTasks.has(`${station.galaxy}:${station.portal.toUpperCase()}:${task}`)
+      )
         continue;
       addTask(task, station.ownerId);
     }

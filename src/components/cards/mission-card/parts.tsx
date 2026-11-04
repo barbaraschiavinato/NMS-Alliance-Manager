@@ -17,7 +17,11 @@ import Link from "next/link";
 import { DetailLink } from "@/components/shared/detail-page";
 import type { Mission, MissionSpecialty } from "@/lib/missions/missions";
 import type { AllianceMember } from "@/lib/members/access-store";
-import { type MissionSystemStatus, type PlanetSystemStatuses } from "@/lib/planets/planet-system-status";
+import {
+  type MissionSystemStatus,
+  type PlanetSystemStatusAuthors,
+  type PlanetSystemStatuses,
+} from "@/lib/planets/planet-system-status";
 import { useEffect, useRef, useState } from "react";
 import { type MemberMessageContext } from "@/components/modals/member-card-dialog";
 import { useLocale } from "@/components/providers/locale-provider";
@@ -649,11 +653,13 @@ export function NewMissionRibbon({ mission }: Readonly<{ mission: Mission }>) {
 }
 
 export type MissionCardProps = Readonly<{
+  allianceName?: string;
   hideDetailLink?: boolean;
   detailOrigin?: DetailOrigin;
   assigneeActionsOnly?: boolean;
   mission: Mission;
   systemStatuses: PlanetSystemStatuses;
+  systemStatusAuthors?: PlanetSystemStatusAuthors;
   currentMember: AllianceMember;
   canManage: boolean;
   stationOwners: StationOwnerOption[];

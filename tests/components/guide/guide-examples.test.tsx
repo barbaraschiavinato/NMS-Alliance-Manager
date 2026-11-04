@@ -222,7 +222,8 @@ describe("station examples", () => {
     renderWithLocale(<RangerOwnStationExample sample={guideStationInit} />);
     expect(screen.getByRole("checkbox", { name: "Station claimed" })).toBeInTheDocument();
     expect(screen.getByRole("checkbox", { name: "System renamed" })).toBeInTheDocument();
-    expect(screen.queryByRole("checkbox", { name: "System scanned" })).not.toBeInTheDocument();
+    expect(screen.getByRole("checkbox", { name: "System data uploaded" })).toBeInTheDocument();
+    expect(screen.queryByRole("checkbox", { name: "System explored" })).not.toBeInTheDocument();
   });
 
   it("renders inert station cards", () => {

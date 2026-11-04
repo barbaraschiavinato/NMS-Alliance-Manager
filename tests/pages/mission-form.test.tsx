@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { MissionForm } from "@/components/modals/mission-form";
 import { makeMember } from "../helpers/members";
 import type { Mission } from "@/lib/missions/missions";
+import type { Locale } from "@/lib/translations";
 import { json, makeMission, mockFetch, renderPage, t } from "./helpers";
 
 vi.mock("next/image", async () => (await import("./helpers")).nextImageModule);
@@ -16,13 +17,15 @@ vi.mock("@/lib/nms-core/system.js", async () => {
 
 type FormProps = Parameters<typeof MissionForm>[0];
 
-function renderForm(props: Partial<FormProps> = {}) {
+function renderForm(props: Partial<FormProps> = {}, locale: Locale = "en") {
   const handlers = {
     onClose: vi.fn(),
     onSave: vi.fn(async () => undefined),
     onDelete: vi.fn(async () => undefined),
   };
-  const view = renderPage(<MissionForm members={[]} mission={null} stationOwners={[]} {...handlers} {...props} />);
+  const view = renderPage(<MissionForm members={[]} mission={null} stationOwners={[]} {...handlers} {...props} />, {
+    locale,
+  });
   return { ...view, ...handlers, dialog: screen.getByRole("dialog") };
 }
 
@@ -126,7 +129,7 @@ describe("MissionForm", () => {
     const { user, dialog } = renderForm({ mission, onSystemStatusesSaved });
 
     expect(within(dialog).getByRole("heading", { name: t("missions.edit_mission") })).toBeInTheDocument();
-    const mapped = await within(dialog).findByRole("checkbox", { name: t("mapped") });
+    const mapped = (await within(dialog).findAllByRole("checkbox", { name: t("mapped") })).at(-1)!;
     await waitFor(() => expect(mapped).toBeChecked());
     // La missione senza avanzamento parte dal minimo calcolato dalle voci spuntate.
     expect(within(dialog).getByText("27%")).toBeInTheDocument();
@@ -136,7 +139,7 @@ describe("MissionForm", () => {
     await user.click(classified);
 
     await waitFor(() =>
-      expect(onSystemStatusesSaved).toHaveBeenCalledWith("1234567890AB", 0, ["mapped", "planets_classified"]),
+      expect(onSystemStatusesSaved).toHaveBeenCalledWith("1234567890AB", 0, ["mapped", "planets_classified"], {}),
     );
     expect(requests("PATCH", "/api/planet-status")[0].body).toEqual({
       portal: "1234567890AB",
@@ -144,6 +147,61 @@ describe("MissionForm", () => {
       systemStatuses: ["mapped", "planets_classified"],
     });
     expect(classified).toBeChecked();
+  });
+
+  it("shows translated task descriptions and specialty-colored tooltips in the form", async () => {
+    mockFetch({
+      "/api/missions/verify-system": { found: true },
+      "GET /api/planet-status": { systemStatuses: ["renamed"] },
+    });
+    const { dialog } = renderForm({ allianceName: "Artemis", mission: makeMission() });
+
+    const station = await within(dialog).findByRole("checkbox", { name: "Station claimed" });
+    expect(station.closest("label")).toHaveClass("system-task-tooltip-ranger");
+    expect(station.closest("label")).toHaveAttribute(
+      "data-tooltip",
+      expect.stringContaining('with the prefix "[Artemis]"'),
+    );
+    const descriptionId = station.getAttribute("aria-describedby");
+    expect(descriptionId).toBeTruthy();
+    expect(document.getElementById(descriptionId!)).toHaveTextContent("completing the system objectives");
+    station.focus();
+    expect(station).toHaveFocus();
+
+    const [rangerScan, explorerScan] = within(dialog).getAllByRole("checkbox", { name: "System scanned" });
+    expect(rangerScan.closest("label")).toHaveClass("system-task-tooltip-ranger");
+    expect(explorerScan.closest("label")).toHaveClass("system-task-tooltip-explorer");
+    expect(rangerScan.closest("label")?.getAttribute("data-tooltip")).toBe(
+      explorerScan.closest("label")?.getAttribute("data-tooltip"),
+    );
+    expect(within(dialog).getByRole("checkbox", { name: "Buildings built" }).closest("label")).toHaveClass(
+      "system-task-tooltip-builder",
+    );
+    const renamed = within(dialog).getByRole("checkbox", { name: "System renamed" });
+    expect(renamed).toBeChecked();
+    expect(renamed.closest("label")).toHaveAttribute(
+      "data-tooltip",
+      'The system has been renamed with the prefix "[Artemis]" before its name.',
+    );
+    expect(within(dialog).getByRole("checkbox", { name: "Data error" }).closest("label")).not.toHaveAttribute(
+      "data-tooltip",
+    );
+  });
+
+  it("shows only the Italian description in the labeled form tooltip", async () => {
+    mockFetch({
+      "/api/missions/verify-system": { found: true },
+      "GET /api/planet-status": { systemStatuses: [] },
+    });
+    const { dialog } = renderForm({ allianceName: "ITAlliance", mission: makeMission() }, "it");
+    const renamed = await within(dialog).findByRole("checkbox", { name: "Sistema rinominato" });
+    expect(renamed.closest("label")).toHaveAttribute(
+      "data-tooltip",
+      "Il sistema è stato rinominato con il prefisso «[ITAlliance]» prima del nome.",
+    );
+    expect(renamed).toHaveAccessibleDescription(
+      "Il sistema è stato rinominato con il prefisso «[ITAlliance]» prima del nome.",
+    );
   });
 
   it("shows planet task load and save errors", async () => {
@@ -165,7 +223,7 @@ describe("MissionForm", () => {
     });
     const { user, dialog } = renderForm({ mission: makeMission() });
 
-    const mapped = await within(dialog).findByRole("checkbox", { name: t("mapped") });
+    const mapped = (await within(dialog).findAllByRole("checkbox", { name: t("mapped") })).at(-1)!;
     await waitFor(() => expect(mapped).toBeEnabled(), { timeout: 2000 });
     await user.click(mapped);
 
@@ -173,12 +231,84 @@ describe("MissionForm", () => {
     expect(mapped).not.toBeChecked();
   });
 
+  it("ticks and locks the Ranger scan and data-upload tasks once the Explorer has scanned", async () => {
+    mockFetch({
+      "/api/missions/verify-system": { found: true },
+      "GET /api/planet-status": { systemStatuses: ["mapped"] },
+    });
+    const { dialog } = renderForm({ mission: makeMission(), simplified: true, simplifiedStatusRole: "ranger" });
+
+    for (const task of ["System scanned", "System data uploaded"]) {
+      const box = await within(dialog).findByRole("checkbox", { name: `${task}: taken over by the Explorer` });
+      expect(box).toBeChecked();
+      expect(box).toBeDisabled();
+      expect(box.closest("label")).toHaveAttribute("data-tooltip", `${task}: taken over by the Explorer`);
+      expect(box.closest("label")).toHaveClass("system-task-tooltip-explorer");
+      expect(box.closest("label")).not.toHaveAttribute("title");
+      expect(box.closest("label")?.querySelector(".system-status-option-explorer-box svg")).not.toBeNull();
+    }
+    expect(within(dialog).getByRole("checkbox", { name: t("station_claimed") })).not.toBeDisabled();
+  });
+
   it("shows only the role tasks in the simplified form", async () => {
     mockFetch({ "/api/missions/verify-system": { found: true }, "GET /api/planet-status": { systemStatuses: [] } });
     const { dialog } = renderForm({ mission: makeMission(), simplified: true, simplifiedStatusRole: "ranger" });
 
     expect(await within(dialog).findByRole("checkbox", { name: t("station_claimed") })).toBeInTheDocument();
-    expect(within(dialog).queryByRole("checkbox", { name: t("mapped") })).not.toBeInTheDocument();
+    expect(within(dialog).getAllByRole("checkbox", { name: t("mapped") })).toHaveLength(1);
+    expect(within(dialog).getByRole("checkbox", { name: t("system_data_uploaded") })).toBeInTheDocument();
+    expect(within(dialog).queryByRole("checkbox", { name: t("planets_classified") })).not.toBeInTheDocument();
+  });
+
+  it("shows the Explorer scan as covered by the Ranger without changing data upload", async () => {
+    mockFetch({
+      "/api/missions/verify-system": { found: true },
+      "GET /api/planet-status": { systemStatuses: ["system_scanned"] },
+    });
+    const { dialog } = renderForm({ mission: makeMission(), simplified: true, simplifiedStatusRole: "explorer" });
+    const tooltip = "System scanned: taken over by the Ranger/discoverer";
+    const scan = await within(dialog).findByRole("checkbox", { name: tooltip });
+    expect(scan).toBeChecked();
+    expect(scan).toBeDisabled();
+    expect(scan.closest("label")).toHaveAttribute("data-tooltip", tooltip);
+    expect(scan.closest("label")).toHaveClass("system-task-tooltip-ranger");
+    expect(scan.closest("label")?.querySelector(".system-status-option-ranger-box .lucide-compass")).not.toBeNull();
+    expect(within(dialog).getByRole("checkbox", { name: t("data_uploaded") })).toBeEnabled();
+    expect(within(dialog).getByRole("checkbox", { name: t("data_uploaded") })).not.toBeChecked();
+  });
+
+  it("locks a Ranger task checked by the other party unless authored tasks are unlocked", async () => {
+    mockFetch({
+      "/api/missions/verify-system": { found: true },
+      "GET /api/planet-status": {
+        systemStatuses: ["renamed", "station_claimed"],
+        systemStatusAuthors: {
+          renamed: { memberId: "discoverer", as: "discoverer" },
+          station_claimed: { memberId: "ranger", as: "ranger" },
+        },
+      },
+    });
+    const props = {
+      mission: makeMission(),
+      simplified: true,
+      simplifiedStatusRole: "ranger",
+      currentMemberId: "ranger",
+    };
+    const { dialog, unmount } = renderForm({ ...props, lockAuthoredStatuses: true });
+    const tooltip = "System renamed: taken over by the discoverer";
+    const renamed = await within(dialog).findByRole("checkbox", { name: tooltip });
+    expect(renamed).toBeChecked();
+    expect(renamed).toBeDisabled();
+    expect(renamed.closest("label")).toHaveAttribute("data-tooltip", tooltip);
+    expect(renamed.closest("label")).toHaveClass("system-task-tooltip-discoverer");
+    expect(
+      renamed.closest("label")?.querySelector(".system-status-option-discoverer-box .lucide-orbit"),
+    ).not.toBeNull();
+    expect(within(dialog).getByRole("checkbox", { name: t("station_claimed") })).toBeEnabled();
+    unmount();
+
+    const view = renderForm(props);
+    expect(await within(view.dialog).findByRole("checkbox", { name: t("renamed") })).toBeEnabled();
   });
 
   it("assigns a member, picks the station discoverer and disables covered specialties", async () => {

@@ -168,6 +168,55 @@ describe("migrateLegacyPlanetSystemStatuses", () => {
   });
 });
 
+describe("Ranger task authors", () => {
+  const authorsFile = "planet-system-status-authors.json";
+
+  it("returns no authors when the document does not exist", async () => {
+    const { readPlanetSystemStatusAuthors, readPlanetSystemStatusAuthor } = await load();
+    expect(await readPlanetSystemStatusAuthors()).toEqual({});
+    expect(await readPlanetSystemStatusAuthor("0123456789ab", 1)).toEqual({});
+  });
+
+  it("stores authors under the canonical key and drops a key without authors", async () => {
+    const { readPlanetSystemStatusAuthor, writePlanetSystemStatusAuthor } = await load();
+    const author = { system_scanned: { memberId: "m1", as: "discoverer" as const } };
+    expect(await writePlanetSystemStatusAuthor("0123456789ab", 1, author)).toEqual(author);
+    expect(readDataFile(authorsFile)).toEqual({ "1:0123456789AB": author });
+    expect(await readPlanetSystemStatusAuthor("0123456789AB", 1)).toEqual(author);
+    expect(await writePlanetSystemStatusAuthor("0123456789AB", 1, {})).toEqual({});
+    expect(readDataFile(authorsFile)).toEqual({});
+  });
+
+  it("ignores malformed authors and non-Ranger tasks", async () => {
+    writeDataFile(authorsFile, {
+      "0:0123456789AB": {
+        renamed: { memberId: "m1", as: "ranger" },
+        mapped: { memberId: "m2", as: "ranger" },
+        system_scanned: { memberId: "", as: "discoverer" },
+        station_claimed: { memberId: "m3", as: "explorer" },
+        flying: { memberId: "m4", as: "ranger" },
+      },
+      "0:0456789ABCDE": "invalid",
+    });
+    const { readPlanetSystemStatusAuthors } = await load();
+    expect(await readPlanetSystemStatusAuthors()).toEqual({
+      "0:0123456789AB": { renamed: { memberId: "m1", as: "ranger" } },
+    });
+  });
+
+  it("reads and writes authors through Blob", async () => {
+    useBlobBackend();
+    const { readPlanetSystemStatusAuthors, writePlanetSystemStatusAuthor } = await load();
+    await writePlanetSystemStatusAuthor("0123456789AB", 0, { renamed: { memberId: "m1", as: "ranger" } });
+    expect(readBlobJson("alliance-manager/planet-system-status-authors.json")).toEqual({
+      "0:0123456789AB": { renamed: { memberId: "m1", as: "ranger" } },
+    });
+    expect(await readPlanetSystemStatusAuthors()).toEqual({
+      "0:0123456789AB": { renamed: { memberId: "m1", as: "ranger" } },
+    });
+  });
+});
+
 describe("Blob backend", () => {
   beforeEach(() => {
     useBlobBackend();

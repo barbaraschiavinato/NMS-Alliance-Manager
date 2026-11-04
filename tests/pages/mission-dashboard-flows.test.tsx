@@ -344,7 +344,7 @@ describe("MissionDashboard planet tasks", () => {
     );
     const { user } = renderDashboard();
 
-    await user.click(await screen.findByRole("checkbox", { name: t("mapped") }));
+    await user.click((await screen.findAllByRole("checkbox", { name: t("mapped") })).at(-1)!);
 
     await waitFor(() => expect(screen.getByRole("checkbox", { name: t("mapped") })).toBeChecked());
     expect(requests("PATCH", "/api/planet-status")).toHaveLength(1);
@@ -358,7 +358,7 @@ describe("MissionDashboard planet tasks", () => {
     );
     const { user } = renderDashboard(moderator);
 
-    await user.click(await screen.findByRole("checkbox", { name: t("mapped") }));
+    await user.click((await screen.findAllByRole("checkbox", { name: t("mapped") })).at(-1)!);
 
     await waitFor(() => expect(screen.getByRole("checkbox", { name: t("mapped") })).toBeChecked());
     expect(requests("PATCH", "/api/missions/m-active")).toHaveLength(0);
@@ -521,7 +521,7 @@ describe("MissionDashboard moderator tools", () => {
 
     await user.click(await screen.findByRole("button", { name: `${t("common.edit")} Edited` }));
     const dialog = screen.getByRole("dialog", { name: t("missions.edit_mission") });
-    const mapped = await within(dialog).findByRole("checkbox", { name: t("mapped") });
+    const mapped = (await within(dialog).findAllByRole("checkbox", { name: t("mapped") })).at(-1)!;
     await waitFor(() => expect(mapped).toBeEnabled());
     await user.click(mapped);
     await waitFor(() => expect(within(dialog).getByRole("checkbox", { name: t("mapped") })).toBeChecked());
@@ -558,6 +558,42 @@ describe("MissionDashboard moderator tools", () => {
 
     await user.click(within(dialog).getByRole("button", { name: t("common.close") }));
     expect(screen.queryByRole("dialog", { name: t("admin.alliance") })).not.toBeInTheDocument();
+  });
+
+  it("uses the current alliance name in mission cards and the mission form", async () => {
+    const admin = makeMember({ publicId: "admin-1", nmsName: "Chief", role: "admin", simpleView: false });
+    const mission = makeMission({
+      id: "m-named",
+      title: "Named mission",
+      targetSpecialty: "ranger",
+      assignedMemberId: admin.publicId,
+      status: "in_progress",
+    });
+    mockFetch(
+      dashboardRoutes([mission], {
+        "/api/missions/verify-system": { found: true },
+        "GET /api/planet-status": ({ url }: FetchCall) =>
+          url.searchParams.has("portal") ? { systemStatuses: [] } : { planets: {} },
+        "GET /api/alliance": defaultAlliance,
+        "PATCH /api/alliance": { ...defaultAlliance, name: "Renamed Alliance" },
+      }),
+    );
+    const { user } = renderDashboard(admin);
+    const claimed = await screen.findByRole("checkbox", { name: "Station claimed" });
+    expect(claimed.closest("label")).toHaveAttribute("data-tooltip", expect.stringContaining("[Test Alliance]"));
+
+    await user.click(screen.getByRole("button", { name: t("admin.alliance_settings") }));
+    const settings = screen.getByRole("dialog", { name: t("admin.alliance") });
+    await waitFor(() => expect(within(settings).getByRole("button", { name: t("admin.save_settings") })).toBeEnabled());
+    await user.click(within(settings).getByRole("button", { name: t("admin.save_settings") }));
+    await within(settings).findByText(t("admin.alliance_settings_saved"));
+    await user.click(within(settings).getByRole("button", { name: t("common.close") }));
+    expect(claimed.closest("label")).toHaveAttribute("data-tooltip", expect.stringContaining("[Renamed Alliance]"));
+
+    await user.click(screen.getByRole("button", { name: `${t("common.edit")} Named mission` }));
+    const form = screen.getByRole("dialog", { name: t("missions.edit_mission") });
+    const formClaimed = await within(form).findByRole("checkbox", { name: "Station claimed" });
+    expect(formClaimed.closest("label")).toHaveAttribute("data-tooltip", expect.stringContaining("[Renamed Alliance]"));
   });
 });
 

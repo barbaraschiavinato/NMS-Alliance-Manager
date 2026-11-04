@@ -31,10 +31,12 @@ import {
 import type { MissionCardProps } from "@/components/cards/mission-card/parts";
 
 export function MissionCardSimple({
+  allianceName,
   onReopen,
   onStart,
   mission,
   systemStatuses,
+  systemStatusAuthors,
   currentMember,
   canManage,
   stationOwners,
@@ -63,7 +65,8 @@ export function MissionCardSimple({
   const planet = useMissionAlmanacPlanet(mission, systemPlanet);
   const band = asRecord(asRecord(planet?.lines)?.band);
   const systemFacts = almanacSystemFacts(band);
-  const statuses = systemStatuses[planetSystemStatusKey(mission.systemAddress, mission.galaxy)] ?? [];
+  const statusKey = planetSystemStatusKey(mission.systemAddress, mission.galaxy);
+  const statuses = systemStatuses[statusKey] ?? [];
   const locked = mission.status === "completed" && (currentMember.simpleView === true || !canManage);
   const canUpdateSystemStatus =
     mission.assignedMemberId === currentMember.publicId && !locked && mission.status !== "pending";
@@ -148,6 +151,9 @@ export function MissionCardSimple({
       </div>
       <div className="mission-card-actions">
         <MissionSystemProgress
+          allianceName={allianceName}
+          authors={systemStatusAuthors?.[statusKey]}
+          currentMemberId={currentMember.publicId}
           editable={canUpdateSystemStatus}
           editableRoles={editableSystemStatusRoles(currentMember)}
           onToggle={(status, checked) => onToggleSystemStatus(mission, status, checked)}

@@ -4,7 +4,11 @@ import { MissionCard } from "@/components/cards/mission-card";
 import { isMissionAssignee, type PlanetNotes } from "@/components/cards/mission-card/parts";
 import type { Mission, MissionSpecialty, MissionStatus } from "@/lib/missions/missions";
 import type { AllianceMember } from "@/lib/members/access-store";
-import { type MissionSystemStatus, type PlanetSystemStatuses } from "@/lib/planets/planet-system-status";
+import {
+  type MissionSystemStatus,
+  type PlanetSystemStatusAuthors,
+  type PlanetSystemStatuses,
+} from "@/lib/planets/planet-system-status";
 import { useEffect, useState } from "react";
 import { MemberCardDialog, type MemberMessageContext } from "@/components/modals/member-card-dialog";
 import { LoadingSpinner } from "@/components/shared/loading-spinner";
@@ -26,6 +30,7 @@ const missionFilterLabels: Record<MissionFilter, string> = {
 };
 
 export function MissionList({
+  allianceName,
   missions,
   counts,
   filter,
@@ -52,6 +57,7 @@ export function MissionList({
   stationOwnersLoaded,
   members,
   planetStatuses,
+  planetStatusAuthors,
   loading = false,
   compact = false,
   assigneeActionsOnly = false,
@@ -59,6 +65,7 @@ export function MissionList({
   detailMissionId,
   detailOrigin,
 }: Readonly<{
+  allianceName?: string;
   missions: Mission[];
   counts: MissionCounts;
   filter: MissionFilter;
@@ -85,6 +92,7 @@ export function MissionList({
   stationOwnersLoaded: boolean;
   members: AllianceMember[];
   planetStatuses: PlanetSystemStatuses;
+  planetStatusAuthors?: PlanetSystemStatusAuthors;
   loading?: boolean;
   compact?: boolean;
   assigneeActionsOnly?: boolean;
@@ -194,6 +202,7 @@ export function MissionList({
       <div className={`mission-card-grid${fullWidth ? " mission-card-grid-full-width" : ""}`}>
         {(compact ? missions : pagination.items).map((mission) => (
           <MissionCard
+            allianceName={allianceName}
             hideDetailLink={mission.id === detailMissionId}
             detailOrigin={detailOrigin}
             assigneeActionsOnly={assigneeActionsOnly}
@@ -220,6 +229,7 @@ export function MissionList({
             onViewNotes={setMissionNoteView}
             onViewPlanetNotes={setPlanetNoteView}
             systemStatuses={planetStatuses}
+            systemStatusAuthors={planetStatusAuthors}
           />
         ))}
         {loading && (

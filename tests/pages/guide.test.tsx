@@ -51,6 +51,19 @@ describe("guide page", () => {
     expect(screen.getAllByRole("article").length).toBeGreaterThan(5);
   });
 
+  it("uses the configured alliance name in station and mission task examples", async () => {
+    mockFetch({});
+    const { container } = renderPage(
+      await GuideContent({ alliance: { ...defaultAlliance, name: "Artemis" }, standalone: false }),
+    );
+    for (const selector of [".station-system-status", ".mission-card"]) {
+      const tooltips = [...container.querySelectorAll(`${selector} .mission-system-progress-item[data-tooltip]`)].map(
+        (element) => element.getAttribute("data-tooltip"),
+      );
+      expect(tooltips.some((tooltip) => tooltip?.includes("prefisso «[Artemis]»"))).toBe(true);
+    }
+  });
+
   it("explains cultivable plants, extractor materials, and product search", async () => {
     mockFetch({});
     const { container } = renderPage(await GuideContent({ alliance: defaultAlliance, standalone: false }));

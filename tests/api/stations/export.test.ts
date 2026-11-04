@@ -94,14 +94,27 @@ describe("GET /api/stations/export", () => {
         "Tipo missione",
         "Stato missioni",
         "Stazione riscattata",
+        "Sistema scansionato (Ranger)",
         "Sistema scansionato",
         "Sistema esplorato",
         "Dati caricati",
         "Edifici costruiti",
         "Basi caricate",
         "Sistema rinominato",
+        "Dati sistema caricati",
       ],
     ]);
+  });
+
+  it("exports the Explorer scan as covered by the Ranger without marking data upload", async () => {
+    writeDataFile("stations-v2.json", [{ portal: P0, galaxy: 0, ownerId: cast.user.publicId }]);
+    writeDataFile("planet-system-status.json", { [`0:${P0}`]: ["system_scanned"] });
+    signInAs(cast.admin);
+    const { rows } = await readWorkbook(await exportStations());
+    const [headers, station] = rows;
+    expect(station[headers.indexOf("Sistema scansionato (Ranger)")]).toBe("Sì");
+    expect(station[headers.indexOf("Sistema scansionato")]).toBe("Sì");
+    expect(station[headers.indexOf("Dati caricati")]).toBe("No");
   });
 
   it("exports one row per station with planet, people and mission details", async () => {
@@ -138,6 +151,7 @@ describe("GET /api/stations/export", () => {
       },
       [Q0]: { 1: { lines: { band: { type: { word: "Barren" }, weather: "bad" } } } },
     });
+
     writeDataFile("missions.json", [
       storedMission({
         id: "M-1",
@@ -179,10 +193,12 @@ describe("GET /api/stations/export", () => {
       "In attesa, Completata",
       "Sì",
       "Sì",
+      "Sì",
       "No",
       "No",
       "Sì",
       "No",
+      "Sì",
       "Sì",
     ]);
     expect(rows[2]).toEqual([
@@ -205,6 +221,8 @@ describe("GET /api/stations/export", () => {
       "0",
       "",
       "",
+      "No",
+      "No",
       "No",
       "No",
       "No",

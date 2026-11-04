@@ -185,6 +185,42 @@ describe.each([
 ])("MissionCard (%s) content", (_variant, simpleView) => {
   const viewer = () => makeMember({ publicId: "me", nmsName: "Me", specialty: "explorer", role: "user", simpleView });
 
+  it("passes the alliance name to the mission task tooltip", () => {
+    renderMissionCard({
+      allianceName: "Artemis",
+      currentMember: makeMember({ publicId: "me", specialty: "ranger", role: "user", simpleView }),
+      mission: assignedToMe({ targetSpecialty: "ranger" }),
+    });
+    const station = screen.getByRole("checkbox", { name: "Station claimed" });
+    expect(station.closest("label")).toHaveClass("system-task-tooltip-ranger");
+    expect(station.closest("label")).toHaveAttribute(
+      "data-tooltip",
+      'The space station has been purchased by completing the system objectives and claiming the central core, added to the Artemis alliance, and renamed with the prefix "[Artemis]" before its name.',
+    );
+  });
+
+  it("shows only the task title in the compact read-only progress", () => {
+    renderMissionCard({ allianceName: "Artemis", currentMember: viewer(), mission: mission() });
+    const claimed = screen.getByLabelText("Station claimed");
+    expect(claimed).not.toHaveClass("mission-system-progress-item-labeled");
+    expect(claimed).toHaveAttribute("data-tooltip", "Station claimed");
+    expect(claimed).not.toHaveAttribute("aria-describedby");
+  });
+
+  it.each([
+    ["mapped", "System data uploaded: taken over by the Explorer", 7],
+    ["system_scanned", "System scanned: taken over by the Ranger/discoverer", 8],
+  ] as const)("hides tasks covered by %s in the compact read-only progress", (status, hiddenLabel, total) => {
+    renderMissionCard({
+      currentMember: viewer(),
+      mission: mission(),
+      systemStatuses: { "0:0123456789AB": [status] },
+    });
+    const progress = screen.getByRole("group", { name: `System progress: 1 of ${total} complete` });
+    expect(progress.querySelectorAll(".mission-system-progress-item")).toHaveLength(total);
+    expect(screen.queryByLabelText(hiddenLabel)).not.toBeInTheDocument();
+  });
+
   it("shows title, description, specialty and priority, and links the title to the mission", () => {
     const target = mission({
       title: "Deep Survey",

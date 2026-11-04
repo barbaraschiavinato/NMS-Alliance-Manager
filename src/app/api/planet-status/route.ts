@@ -6,11 +6,15 @@ import {
   missionSystemStatusRoles,
   missionSystemStatuses,
   type MissionSystemStatus,
+  type SystemStatusAuthors,
 } from "@/lib/planets/planet-system-status";
 import {
   readPlanetSystemStatus,
+  readPlanetSystemStatusAuthor,
+  readPlanetSystemStatusAuthors,
   readPlanetSystemStatuses,
   writePlanetSystemStatus,
+  writePlanetSystemStatusAuthor,
 } from "@/lib/planets/planet-system-status-store";
 import { readMissions } from "@/lib/missions/store";
 import { readAllStationPortals, readStationPortals } from "@/lib/stations/stations-store";
@@ -28,7 +32,11 @@ export async function GET(request: Request) {
     const portal = url.searchParams.get("portal");
     const galaxyValue = url.searchParams.get("galaxy");
     if (portal === null && galaxyValue === null) {
-      const [missions, statuses] = await Promise.all([readMissions(), readPlanetSystemStatuses()]);
+      const [missions, statuses, authors] = await Promise.all([
+        readMissions(),
+        readPlanetSystemStatuses(),
+        readPlanetSystemStatusAuthors(),
+      ]);
       const visibleKeys = new Set(
         missions
           .filter((mission) => canViewMission(mission, member))
@@ -37,10 +45,10 @@ export async function GET(request: Request) {
       for (const station of await readStationPortals(member.publicId)) {
         visibleKeys.add(`${station.galaxy}:${station.portal.toUpperCase()}`);
       }
+      const isVisible = (key: string) => hasRole(member, "moderator") || visibleKeys.has(key);
       return NextResponse.json({
-        planets: Object.fromEntries(
-          Object.entries(statuses).filter(([key]) => hasRole(member, "moderator") || visibleKeys.has(key)),
-        ),
+        planets: Object.fromEntries(Object.entries(statuses).filter(([key]) => isVisible(key))),
+        authors: Object.fromEntries(Object.entries(authors).filter(([key]) => isVisible(key))),
       });
     }
     const galaxy = galaxyValue === null ? NaN : Number(galaxyValue);
@@ -74,7 +82,11 @@ export async function GET(request: Request) {
     ) {
       return NextResponse.json({ error: "Non puoi visualizzare lo stato di questo pianeta." }, { status: 403 });
     }
-    return NextResponse.json({ systemStatuses: await readPlanetSystemStatus(portal, galaxy) });
+    const [systemStatuses, systemStatusAuthors] = await Promise.all([
+      readPlanetSystemStatus(portal, galaxy),
+      readPlanetSystemStatusAuthor(portal, galaxy),
+    ]);
+    return NextResponse.json({ systemStatuses, systemStatusAuthors });
   } catch (error) {
     console.error("Unable to read planet system status", error);
     return NextResponse.json({ error: "Impossibile leggere lo stato del pianeta." }, { status: 503 });
@@ -110,12 +122,13 @@ export async function PATCH(request: Request) {
         );
       }
     }
+    const [current, currentAuthors] = await Promise.all([
+      readPlanetSystemStatus(input.portal, input.galaxy),
+      readPlanetSystemStatusAuthor(input.portal, input.galaxy),
+    ]);
+    const added = input.systemStatuses.filter((status) => !current.includes(status));
+    const changed = [...added, ...current.filter((status) => !input.systemStatuses.includes(status))];
     if (!hasRole(member, "moderator")) {
-      const current = await readPlanetSystemStatus(input.portal, input.galaxy);
-      const changed = [
-        ...input.systemStatuses.filter((status) => !current.includes(status)),
-        ...current.filter((status) => !input.systemStatuses.includes(status)),
-      ];
       if (
         changed.some(
           (status) =>
@@ -125,9 +138,43 @@ export async function PATCH(request: Request) {
       ) {
         return NextResponse.json({ error: "Puoi aggiornare solo gli stati del tuo gruppo." }, { status: 403 });
       }
+      // The discoverer and the assigned Ranger share the Ranger tasks: whoever checks one first owns it.
+      if (
+        changed.some((status) => {
+          const author = currentAuthors[status];
+          return author && current.includes(status) && author.memberId !== member.publicId;
+        })
+      ) {
+        return NextResponse.json(
+          { error: "Questo task è già stato preso in carico da un altro membro." },
+          { status: 403 },
+        );
+      }
     }
     const systemStatuses = await writePlanetSystemStatus(input.portal, input.galaxy, input.systemStatuses);
-    return NextResponse.json({ portal: input.portal.toUpperCase(), galaxy: input.galaxy, systemStatuses });
+    const nextAuthors: SystemStatusAuthors = {};
+    for (const status of systemStatuses) {
+      const author = currentAuthors[status];
+      if (author && !added.includes(status)) nextAuthors[status] = author;
+    }
+    // Moderators and admins with full permissions never become authors: credit follows the default rule.
+    if (!hasRole(member, "moderator")) {
+      for (const status of added) {
+        if (missionSystemStatusRoles[status] !== "ranger") continue;
+        nextAuthors[status] = { memberId: member.publicId, as: ownsStationForRanger ? "discoverer" : "ranger" };
+      }
+    }
+    const authorsChanged =
+      JSON.stringify(Object.entries(nextAuthors).sort()) !== JSON.stringify(Object.entries(currentAuthors).sort());
+    const systemStatusAuthors = authorsChanged
+      ? await writePlanetSystemStatusAuthor(input.portal, input.galaxy, nextAuthors)
+      : currentAuthors;
+    return NextResponse.json({
+      portal: input.portal.toUpperCase(),
+      galaxy: input.galaxy,
+      systemStatuses,
+      systemStatusAuthors,
+    });
   } catch (error) {
     console.error("Unable to save planet system status", error);
     return NextResponse.json({ error: "Impossibile salvare lo stato del pianeta." }, { status: 503 });

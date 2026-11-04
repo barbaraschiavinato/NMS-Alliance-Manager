@@ -41,7 +41,7 @@ import type { AllianceMember } from "@/lib/members/member-types";
 import { readMissions, writeMissions } from "@/lib/missions/store";
 import { readAllStationPortals, readStationPortals, type OwnedStationPortal } from "@/lib/stations/stations-store";
 import { lookupAlmanacPlanets } from "@/lib/almanac/almanac-lookup";
-import { readPlanetSystemStatuses } from "@/lib/planets/planet-system-status-store";
+import { readPlanetSystemStatusAuthors, readPlanetSystemStatuses } from "@/lib/planets/planet-system-status-store";
 import * as visitsStore from "@/lib/planets/planet-visits-store";
 import * as farmsStore from "@/lib/farms/farms-store";
 import { readAlmanacCache, readAlmanacResponse } from "@/lib/almanac/almanac-store";
@@ -60,7 +60,10 @@ vi.mock("@/lib/stations/stations-store", () => ({
   readAllStationPortals: vi.fn(async () => []),
   readStationPortals: vi.fn(async () => []),
 }));
-vi.mock("@/lib/planets/planet-system-status-store", () => ({ readPlanetSystemStatuses: vi.fn(async () => ({})) }));
+vi.mock("@/lib/planets/planet-system-status-store", () => ({
+  readPlanetSystemStatuses: vi.fn(async () => ({})),
+  readPlanetSystemStatusAuthors: vi.fn(async () => ({})),
+}));
 vi.mock("@/lib/almanac/almanac-store", () => ({
   readAlmanacCache: vi.fn(async () => () => null),
   readAlmanacResponse: vi.fn(async () => null),
@@ -1517,5 +1520,33 @@ describe("leaderboard route", () => {
     ]);
     // L'indirizzo non valido non blocca il conteggio: restano i due pianeti in cache del sistema in Euclid.
     expect(board("alliance_stats").stats).toContainEqual({ label: "leaderboard.stat_planets", value: 2 });
+  });
+
+  it("credits Ranger tasks to whoever checked them first", async () => {
+    vi.mocked(readAllStationPortals).mockResolvedValue([
+      { ...stationList[0], portal: "1234567890AB", galaxy: 0, ownerId: id.builder },
+      { ...stationList[0], portal: "1234567890AC", galaxy: 0, ownerId: id.builder },
+    ]);
+    vi.mocked(readMissions).mockResolvedValue([
+      makeMission({ id: "m1", assignedMemberId: id.user, targetSpecialty: "ranger", systemAddress: "1234567890AB" }),
+    ]);
+    vi.mocked(readPlanetSystemStatuses).mockResolvedValue({
+      "0:1234567890AB": ["station_claimed", "renamed"],
+      "0:1234567890AC": ["mapped", "system_scanned"],
+    });
+    vi.mocked(readPlanetSystemStatusAuthors).mockResolvedValue({
+      "0:1234567890AB": { renamed: { memberId: id.builder, as: "discoverer" } },
+      // An author on a task covered by the Explorer earns nothing.
+      "0:1234567890AC": { system_scanned: { memberId: id.user, as: "ranger" } },
+    });
+    signIn(moderator);
+
+    const boards = props(await LeaderboardRoute()).boards as LeaderboardBoard[];
+    const section = (task: string) =>
+      boards.find((item) => item.id === "ranger_tasks")!.sections!.find((item) => item.id === task)!;
+    expect(section("renamed").entries.map((entry) => entry.publicId)).toEqual([id.builder]);
+    expect(section("station_claimed").entries.map((entry) => entry.publicId)).toEqual([id.user]);
+    expect(section("system_scanned").entries).toEqual([]);
+    vi.mocked(readPlanetSystemStatusAuthors).mockResolvedValue({});
   });
 });

@@ -6,13 +6,18 @@ import { getBlobAuthOptions } from "@/lib/storage/blob-config";
 import {
   isMissionSystemStatus,
   normalizeMissionSystemStatus,
+  parsePlanetSystemStatusAuthors,
   planetSystemStatusKey,
   type MissionSystemStatus,
+  type PlanetSystemStatusAuthors,
   type PlanetSystemStatuses,
+  type SystemStatusAuthors,
 } from "@/lib/planets/planet-system-status";
 
 const blobPath = "alliance-manager/planet-system-status.json";
 const localPath = localDataPath("planet-system-status.json");
+const authorsBlobPath = "alliance-manager/planet-system-status-authors.json";
+const authorsLocalPath = localDataPath("planet-system-status-authors.json");
 
 function normalizeStatuses(value: unknown): {
   data: PlanetSystemStatuses;
@@ -42,34 +47,26 @@ function normalizeStatuses(value: unknown): {
   return { data, hasLegacyValues, isValid };
 }
 
-async function readStatusData(): Promise<PlanetSystemStatuses> {
+async function readDocument(documentBlobPath: string, documentLocalPath: string): Promise<unknown> {
   const blobAuthOptions = getBlobAuthOptions();
-  let value: unknown;
   if (blobAuthOptions) {
-    const blob = await get(blobPath, { access: "private", useCache: false, ...blobAuthOptions });
+    const blob = await get(documentBlobPath, { access: "private", useCache: false, ...blobAuthOptions });
     if (!blob || blob.statusCode === 304) return {};
-    value = JSON.parse(await new Response(blob.stream).text());
-  } else {
-    try {
-      value = JSON.parse(await readFile(localPath, "utf8"));
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code === "ENOENT") return {};
-      throw error;
-    }
+    return JSON.parse(await new Response(blob.stream).text());
   }
-
-  const normalized = normalizeStatuses(value);
-  if (normalized.hasLegacyValues && normalized.isValid) {
-    await writeStatusData(normalized.data);
+  try {
+    return JSON.parse(await readFile(documentLocalPath, "utf8"));
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return {};
+    throw error;
   }
-  return normalized.data;
 }
 
-async function writeStatusData(data: PlanetSystemStatuses): Promise<void> {
+async function writeDocument(documentBlobPath: string, documentLocalPath: string, data: unknown): Promise<void> {
   const json = `${JSON.stringify(data, null, 2)}\n`;
   const blobAuthOptions = getBlobAuthOptions();
   if (blobAuthOptions) {
-    await put(blobPath, json, {
+    await put(documentBlobPath, json, {
       access: "private",
       ...blobAuthOptions,
       addRandomSuffix: false,
@@ -79,8 +76,43 @@ async function writeStatusData(data: PlanetSystemStatuses): Promise<void> {
     return;
   }
 
-  await mkdir(path.dirname(localPath), { recursive: true });
-  await writeFile(localPath, json, "utf8");
+  await mkdir(path.dirname(documentLocalPath), { recursive: true });
+  await writeFile(documentLocalPath, json, "utf8");
+}
+
+async function readStatusData(): Promise<PlanetSystemStatuses> {
+  const value = await readDocument(blobPath, localPath);
+  const normalized = normalizeStatuses(value);
+  if (normalized.hasLegacyValues && normalized.isValid) {
+    await writeStatusData(normalized.data);
+  }
+  return normalized.data;
+}
+
+async function writeStatusData(data: PlanetSystemStatuses): Promise<void> {
+  await writeDocument(blobPath, localPath, data);
+}
+
+export async function readPlanetSystemStatusAuthors(): Promise<PlanetSystemStatusAuthors> {
+  return parsePlanetSystemStatusAuthors(await readDocument(authorsBlobPath, authorsLocalPath));
+}
+
+export async function readPlanetSystemStatusAuthor(portal: string, galaxy: number): Promise<SystemStatusAuthors> {
+  const data = await readPlanetSystemStatusAuthors();
+  return data[planetSystemStatusKey(portal, galaxy)] ?? {};
+}
+
+export async function writePlanetSystemStatusAuthor(
+  portal: string,
+  galaxy: number,
+  authors: SystemStatusAuthors,
+): Promise<SystemStatusAuthors> {
+  const data = await readPlanetSystemStatusAuthors();
+  const key = planetSystemStatusKey(portal, galaxy);
+  if (Object.keys(authors).length > 0) data[key] = authors;
+  else delete data[key];
+  await writeDocument(authorsBlobPath, authorsLocalPath, data);
+  return data[key] ?? {};
 }
 
 export async function readPlanetSystemStatuses(): Promise<PlanetSystemStatuses> {

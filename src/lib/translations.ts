@@ -43,6 +43,8 @@ const legacyAliases = new Map<string, string>([
   ["Mappato", "system.mapped"],
   ["Mapped", "system.mapped"],
   ["station_claimed", "system.station_claimed"],
+  ["system_scanned", "system.system_scanned"],
+  ["system_data_uploaded", "system.system_data_uploaded"],
   ["mapped", "system.mapped"],
   ["planets_classified", "system.planets_classified"],
   ["bases_uploaded", "system.bases_uploaded"],

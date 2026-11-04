@@ -21,6 +21,10 @@ import {
   isMissionSystemStatus,
   planetSystemStatusKey,
   type MissionSystemStatus,
+  editableSystemStatusRoles,
+  parsePlanetSystemStatusAuthors,
+  parseSystemStatusAuthors,
+  type PlanetSystemStatusAuthors,
   type PlanetSystemStatuses,
 } from "@/lib/planets/planet-system-status";
 import { useLocale } from "@/components/providers/locale-provider";
@@ -102,6 +106,7 @@ export function StationsPage({
   const [allianceSettings, setAllianceSettings] = useState(alliance);
   const [stations, setStations] = useState<StationEntry[]>([]);
   const [planetStatuses, setPlanetStatuses] = useState<PlanetSystemStatuses>({});
+  const [planetStatusAuthors, setPlanetStatusAuthors] = useState<PlanetSystemStatusAuthors>({});
   const [planetStatusesLoaded, setPlanetStatusesLoaded] = useState(false);
   const [savingStatusKeys, setSavingStatusKeys] = useState<string[]>([]);
   const [stationFilter, setStationFilter] = useState<StationFilter>("all");
@@ -324,6 +329,7 @@ export function StationsPage({
           throw new Error(message);
         }
         setPlanetStatuses(parsePlanetSystemStatuses(record.planets));
+        setPlanetStatusAuthors(parsePlanetSystemStatusAuthors(record.authors));
         setPlanetStatusesLoaded(true);
       })
       .catch((error_: unknown) => {
@@ -367,6 +373,10 @@ export function StationsPage({
       setPlanetStatuses((current) => ({
         ...current,
         [key]: [...new Set(savedStatuses)],
+      }));
+      setPlanetStatusAuthors((current) => ({
+        ...current,
+        [key]: parseSystemStatusAuthors(record.systemStatusAuthors),
       }));
       if (detail) setDetailRevision((current) => current + 1);
     } catch (error_: unknown) {
@@ -584,6 +594,7 @@ export function StationsPage({
         <p className="messages-empty">{t("details.station_unavailable")}</p>
       ) : (
         <StationList
+          allianceName={allianceSettings.name}
           allianceHub={{ portal: allianceSettings.portalCode, galaxy: allianceSettings.galaxy }}
           compact={Boolean(detail)}
           showDetailLink={!detail || Boolean(detail.missionId) || embedded}
@@ -618,6 +629,7 @@ export function StationsPage({
           onViewNote={(station) => setStationNoteView({ portal: station.portal, note: station.note ?? "" })}
           ownStationCount={ownDiscoveredStations.length}
           planetStatuses={planetStatuses}
+          planetStatusAuthors={planetStatusAuthors}
           planetStatusesLoaded={planetStatusesLoaded}
           renderedAt={renderedAt}
           savingStatusKeys={savingStatusKeys}
@@ -654,6 +666,7 @@ export function StationsPage({
               const body = asRecord(await response.json());
               if (!response.ok || !body) throw new Error(t("errors.request_failed"));
               setPlanetStatuses(parsePlanetSystemStatuses(body.planets));
+              setPlanetStatusAuthors(parsePlanetSystemStatusAuthors(body.authors));
             })
             .catch((error_: unknown) =>
               setError(error_ instanceof Error ? error_.message : t("errors.request_failed")),
@@ -958,6 +971,7 @@ export function StationsPage({
       )}
       {missionStation && (
         <MissionForm
+          allianceName={allianceSettings.name}
           availableSpecialties={missionStationRow ? missionSpecialtiesFor(missionStationRow) : undefined}
           hideAddress
           hideSpecialty={canCreateOwnSpecialtyMission}
@@ -981,6 +995,8 @@ export function StationsPage({
                 }
               : {}),
           }}
+          currentMemberId={pageMember.publicId}
+          lockAuthoredStatuses={editableSystemStatusRoles(pageMember) !== null}
           members={members}
           mission={null}
           onClose={() => setMissionStation(null)}

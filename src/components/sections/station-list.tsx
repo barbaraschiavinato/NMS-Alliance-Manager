@@ -8,13 +8,18 @@ import { FileSpreadsheet, Search } from "lucide-react";
 import { LoadingSpinner } from "@/components/shared/loading-spinner";
 import { type MemberMessageContext } from "@/components/modals/member-card-dialog";
 import type { AllianceMember } from "@/lib/members/access-store";
-import { type MissionSystemStatus, type PlanetSystemStatuses } from "@/lib/planets/planet-system-status";
+import {
+  type MissionSystemStatus,
+  type PlanetSystemStatusAuthors,
+  type PlanetSystemStatuses,
+} from "@/lib/planets/planet-system-status";
 import { useLocale } from "@/components/providers/locale-provider";
 import { Pagination, usePagination } from "@/components/shared/pagination";
 import { listPageSize } from "@/lib/navigation/pagination";
 import { isSameSystem } from "@/lib/navigation/detail-links";
 
 export function StationList({
+  allianceName,
   stations,
   visibleStations,
   loading,
@@ -35,6 +40,7 @@ export function StationList({
   exportingStations,
   onExport,
   planetStatuses,
+  planetStatusAuthors,
   planetStatusesLoaded,
   savingStatusKeys,
   onToggleStatus,
@@ -48,6 +54,7 @@ export function StationList({
   showDetailLink = !compact,
   allianceHub,
 }: Readonly<{
+  allianceName?: string;
   stations: StationEntry[];
   visibleStations: StationEntry[];
   loading: boolean;
@@ -68,6 +75,7 @@ export function StationList({
   exportingStations: boolean;
   onExport: () => void;
   planetStatuses: PlanetSystemStatuses;
+  planetStatusAuthors?: PlanetSystemStatusAuthors;
   planetStatusesLoaded: boolean;
   savingStatusKeys: string[];
   onToggleStatus: (station: StationEntry, status: MissionSystemStatus, checked: boolean) => void;
@@ -186,6 +194,7 @@ export function StationList({
         <ul className="station-list station-list-cards">
           {pagination.items.map((station) => (
             <StationCard
+              allianceName={allianceName}
               isAllianceHub={Boolean(
                 allianceHub && /^[0-9A-F]{12}$/i.test(allianceHub.portal) && isSameSystem(station, allianceHub),
               )}
@@ -203,6 +212,7 @@ export function StationList({
               onToggleStatus={onToggleStatus}
               onViewNote={onViewNote}
               planetStatuses={planetStatuses}
+              planetStatusAuthors={planetStatusAuthors}
               planetStatusesLoaded={planetStatusesLoaded}
               renderedAt={renderedAt}
               savingStatusKeys={savingStatusKeys}

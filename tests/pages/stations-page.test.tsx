@@ -598,7 +598,7 @@ describe("StationsPage as a member", () => {
     const { user } = renderStations(ranger, detailMode ? detailProps() : {});
 
     const claimed = await screen.findByRole("checkbox", { name: t("station_claimed") });
-    expect(screen.queryByRole("checkbox", { name: t("mapped") })).not.toBeInTheDocument();
+    expect(screen.queryByRole("checkbox", { name: t("planets_classified") })).not.toBeInTheDocument();
     await user.click(claimed);
     await waitFor(() => expect(claimed).toBeChecked());
     expect(requests("PATCH", "/api/planet-status")[0].body).toEqual({
@@ -961,6 +961,44 @@ describe("StationsPage filters and panels", () => {
 
     await user.click(within(settings).getByRole("button", { name: t("common.close") }));
     expect(screen.queryByRole("dialog", { name: t("admin.alliance") })).not.toBeInTheDocument();
+  });
+
+  it("updates station and embedded mission tooltips when the alliance name changes", async () => {
+    const admin = makeMember({ publicId: "admin-1", nmsName: "Boss", role: "admin", simpleView: false });
+    const mission = makeMission({
+      id: "m-named",
+      title: "Named mission",
+      targetSpecialty: "ranger",
+      assignedMemberId: admin.publicId,
+      status: "in_progress",
+    });
+    mockFetch(
+      stationRoutes([station({ ownerId: admin.publicId })], {
+        ...emptyMissionRoutes(),
+        "GET /api/missions": [mission],
+        "GET /api/alliance": defaultAlliance,
+        "PATCH /api/alliance": { ...defaultAlliance, name: "Renamed Alliance" },
+      }),
+    );
+    const { container, user } = renderStations(admin, detailProps(admin.publicId));
+    await screen.findByText("Named mission");
+    const stationProgress = container.querySelector<HTMLElement>(".station-system-status")!;
+    const missionCard = screen.getByRole("link", { name: "Named mission" }).closest("article")!;
+    const stationTask = within(stationProgress).getByRole("checkbox", { name: "Station claimed" });
+    const missionTask = within(missionCard).getByRole("checkbox", { name: "Station claimed" });
+    expect(stationTask.closest("label")).toHaveAttribute("data-tooltip", expect.stringContaining("[Test Alliance]"));
+    expect(missionTask.closest("label")).toHaveAttribute("data-tooltip", expect.stringContaining("[Test Alliance]"));
+
+    await user.click(screen.getByRole("button", { name: t("admin.alliance_settings") }));
+    const settings = screen.getByRole("dialog", { name: t("admin.alliance") });
+    await waitFor(() =>
+      expect(within(settings).getByRole("textbox", { name: t("admin.alliance_name") })).toHaveValue("Test Alliance"),
+    );
+    await user.click(within(settings).getByRole("button", { name: t("admin.save_settings") }));
+    await within(settings).findByText(t("admin.alliance_settings_saved"));
+    await user.click(within(settings).getByRole("button", { name: t("common.close") }));
+    expect(stationTask.closest("label")).toHaveAttribute("data-tooltip", expect.stringContaining("[Renamed Alliance]"));
+    expect(missionTask.closest("label")).toHaveAttribute("data-tooltip", expect.stringContaining("[Renamed Alliance]"));
   });
 
   it("opens and closes the owner's profile card", async () => {

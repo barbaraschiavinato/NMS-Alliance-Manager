@@ -157,8 +157,20 @@
 .badge--member-status-blocked { color: #ef8067; border-color: #70413b; background: #2b1e1d; }
 .system-status-fieldset { grid-column: 1 / -1; min-width: 0; margin: 0; padding: 0; border: 0; }
 .system-status-fieldset legend { margin-bottom: 7px; color: var(--muted); font-size: 10px; }
+.system-task-tooltip-ranger { --system-task-tooltip-color: #5fd68a; }
+.system-task-tooltip-explorer { --system-task-tooltip-color: #4d9bff; }
+.system-task-tooltip-builder { --system-task-tooltip-color: #ffb45d; }
+.system-task-tooltip-discoverer { --system-task-tooltip-color: #6cb4ff; }
+.system-task-tooltip-error { --system-task-tooltip-color: #ef8067; }
 .system-status-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
 .system-status-option { min-height: 35px; display: flex; align-items: center; gap: 8px; padding: 0 9px; color: var(--ink); border: 1px solid #354044; background: #1a2124; cursor: pointer; font-size: 9px; transition: border-color .15s, background-color .15s; }
+.system-status-option[data-tooltip] { position: relative; }
+.system-status-option[data-tooltip]:is(:hover, :focus-visible, :focus-within) { z-index: 30; }
+.system-status-option[data-tooltip]::after { position: absolute; z-index: 30; bottom: calc(100% + 8px); left: 0; width: max-content; max-width: min(280px, calc(100vw - 70px)); padding: 8px 11px; color: #f0f5f2; border: 1px solid var(--system-task-tooltip-color); border-radius: 6px; background: linear-gradient(145deg, #1d2c3a, #101719 78%); box-shadow: 0 8px 24px #000b, 0 0 12px #fff1; content: attr(data-tooltip); font-size: 11px; font-weight: 600; line-height: 1.4; text-align: left; white-space: pre-line; overflow-wrap: anywhere; opacity: 0; visibility: hidden; pointer-events: none; transform: translateY(5px); transition: opacity .16s ease, transform .16s ease, visibility .16s; }
+.system-status-option:nth-child(even)[data-tooltip]::after { right: 0; left: auto; }
+.system-status-option[data-tooltip]::before { position: absolute; z-index: 31; bottom: calc(100% + 3px); left: 50%; width: 7px; height: 7px; border-right: 1px solid var(--system-task-tooltip-color); border-bottom: 1px solid var(--system-task-tooltip-color); background: #101719; content: ""; opacity: 0; visibility: hidden; transform: translate(-50%, 5px) rotate(45deg); transition: opacity .16s ease, transform .16s ease, visibility .16s; }
+.system-status-option[data-tooltip]:is(:hover, :focus-visible, :focus-within)::after { opacity: 1; visibility: visible; transform: translateY(0); }
+.system-status-option[data-tooltip]:is(:hover, :focus-visible, :focus-within)::before { opacity: 1; visibility: visible; transform: translate(-50%, 0) rotate(45deg); }
 .system-status-option:has(input:checked) { border-color: #315b55; background: #192a29; }
 .system-status-option input { width: 14px; height: 14px; flex: 0 0 14px; margin: 0; accent-color: #72d1c4; }
 .system-status-option:focus-within { outline: 1px solid #72d1c4; outline-offset: 1px; }
@@ -167,6 +179,12 @@
 .system-status-option-ranger input { accent-color: #5fd68a; }
 .system-status-option-explorer { border-color: #2b538c; }
 .system-status-option-explorer:has(input:checked) { border-color: #4d9bff; background: #16233a; }
+.system-status-option-covered { position: relative; cursor: not-allowed; }
+.system-status-option-covered input { position: absolute; opacity: 0; pointer-events: none; }
+.system-status-option-explorer-box, .system-status-option-ranger-box, .system-status-option-discoverer-box { width: 14px; height: 14px; flex: 0 0 14px; display: grid; place-items: center; padding: 2px; border-radius: 2px; background: #4d9bff; color: #0d1a2b; }
+.system-status-option-ranger-box { background: #5fd68a; }
+.system-status-option-discoverer-box { background: #6cb4ff; }
+.system-status-option-explorer-box svg, .system-status-option-ranger-box svg, .system-status-option-discoverer-box svg { width: 100%; height: 100%; }
 .system-status-option-explorer input { accent-color: #4d9bff; }
 .system-status-option-error { border-color: #7a3a2f; }
 .system-status-option-error:has(input:checked) { border-color: #ef8067; background: #2d1a17; }

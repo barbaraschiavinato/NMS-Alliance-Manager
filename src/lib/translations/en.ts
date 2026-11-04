@@ -922,6 +922,12 @@ export const translations: TranslationCatalog = {
     "system.no_system": "No system",
     "system.system_status": "System status",
     "system.station_claimed": "Station claimed",
+    "system.system_scanned": "System scanned",
+    "system.system_data_uploaded": "System data uploaded",
+    "system.done_by_explorer": "{task}: taken over by the Explorer",
+    "system.done_by_ranger": "{task}: taken over by the Ranger/discoverer",
+    "system.done_by_discoverer": "{task}: taken over by the discoverer",
+    "system.done_by_assigned_ranger": "{task}: taken over by the Ranger",
     "system.mapped": "System scanned",
     "system.planets_classified": "System explored",
     "system.buildings_built": "Buildings built",
@@ -929,6 +935,21 @@ export const translations: TranslationCatalog = {
     "system.renamed": "System renamed",
     "system.data_uploaded": "Data uploaded",
     "system.data_error": "Data error",
+    "system.station_claimed_tooltip":
+      'The space station has been purchased by completing the system objectives and claiming the central core, added to the {alliance} alliance, and renamed with the prefix "[{alliance}]" before its name.',
+    "system.station_claimed_generic_tooltip":
+      "The space station has been purchased by completing the system objectives and claiming the central core, added to the alliance, and renamed with the alliance prefix in square brackets before its name.",
+    "system.scanned_tooltip":
+      "The system has been scanned from space using the scanner room of a flagship (or freighter), corvette, or starship.",
+    "system.renamed_tooltip": 'The system has been renamed with the prefix "[{alliance}]" before its name.',
+    "system.renamed_generic_tooltip":
+      "The system has been renamed with the alliance prefix in square brackets before its name.",
+    "system.explored_tooltip":
+      "All planets in the system have been visited, all fauna scanned, and the most commonly encountered flora and minerals scanned.",
+    "system.uploaded_tooltip": "Data collected by scanning this system has been uploaded from the Discoveries panel.",
+    "system.buildings_tooltip":
+      "The buildings have been built and placed in visible spots, such as portals or points of interest.",
+    "system.bases_tooltip": "The bases have been uploaded to the galactic servers using the base computer.",
     "system.system_verified": "System verified",
     "system.checking": "Checking…",
     "system.enter_the_system": "Enter the system",
@@ -1027,6 +1048,7 @@ export const translations: TranslationCatalog = {
     "errors.moderator_permission_required": "Moderator permission required.",
     "errors.member_profile_not_found": "Member profile not found.",
     "errors.invalid_planet": "Invalid planet.",
+    "errors.system_task_taken_by_another_member": "This task has already been taken over by another member.",
     "errors.invalid_settings": "Invalid settings.",
     "errors.invalid_membership_status": "Invalid membership status.",
     "errors.member_not_found_or_cannot_be_removed_with_your_role":

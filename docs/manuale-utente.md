@@ -66,9 +66,17 @@ Senza profilo completo non puoi prendere missioni né ricevere assegnazioni. Un 
 Una missione riguarda un pianeta/sistema, identificato da un indirizzo portale (12 glifi esadecimali) o da un codice di 8 glifi, più la galassia (0-255). Stati: **In attesa → In corso → Completata**.
 
 Ogni specializzazione ha le sue voci di avanzamento da spuntare:
-- **Ranger:** Stazione riscattata, Sistema rinominato.
+- **Ranger:** Stazione riscattata, Sistema scansionato, Sistema rinominato, Dati sistema caricati.
 - **Esploratore:** Sistema scansionato, Sistema esplorato, Dati caricati.
 - **Costruttore:** Edifici costruiti, Basi caricate.
+
+Passa il puntatore su un task, oppure selezionalo con la tastiera, per aprire il tooltip. Nei riepiloghi compatti di sola lettura viene mostrato il nome del task e i quadratini dei task coperti da un'altra specializzazione sono nascosti. Quando il nome è già visibile accanto alla casella modificabile, il tooltip descrive cosa prevede; per la stazione riscattata e il sistema rinominato mostra anche il nome dell'alleanza configurato. Nelle caselle modificabili, i task presi in carico restano visibili e indicano chi li ha svolti.
+
+Se l'Esploratore ha già spuntato "Sistema scansionato", le voci Ranger "Sistema scansionato" e "Dati sistema caricati" compaiono spuntate, non modificabili e con il simbolo dell'Esploratore, e non contano nell'avanzamento del Ranger.
+
+Se invece il Ranger o lo scopritore ha già scansionato il sistema, "Sistema scansionato" dell'Esploratore appare spuntato e non modificabile, con la bussola del Ranger e il tooltip "Preso in carico dal Ranger/scopritore". Il task è escluso dall'avanzamento dell'Esploratore; "Dati caricati" rimane invariato.
+
+Le voci Ranger sono condivise tra lo scopritore della stazione e il Ranger con una missione assegnata sul sistema: chi spunta per primo una voce ne prende il merito in classifica. L'altro la vede spuntata e non modificabile, con l'icona della stazione (scopritore) o la bussola (Ranger) e il tooltip "Preso in carico dallo scopritore" o "Preso in carico dal Ranger". Solo chi l'ha spuntata può toglierla. Moderatori e amministratori, fuori dalla vista semplice, possono sempre modificarla.
 
 Le voci spuntate fanno salire la percentuale fino a un massimo dell'80%. Il 100% si raggiunge con "Completa missione", attivo solo quando le tue voci sono tutte spuntate.
 
@@ -85,7 +93,7 @@ Scopre i sistemi e registra le **stazioni**.
 - Vede tutte le stazioni dell'alleanza e può filtrare per "Tutte", "Mie stazioni", "In attesa", "In missione", "Le mie missioni" (solo se hai missioni assegnate su quella stazione) e "Missione completata", oltre a cercare per portale, proprietario, galassia o note.
 - Registra una nuova stazione con "Aggiungi stazione": indirizzo portale, galassia, nome (max 80 caratteri) e note (max 1000). Può registrare solo per sé.
 - Sulle **proprie** stazioni può:
-  - spuntare le voci Ranger (Stazione riscattata, Sistema rinominato);
+  - spuntare le voci Ranger (Stazione riscattata, Sistema scansionato, Sistema rinominato, Dati sistema caricati);
   - modificare nome e note;
   - eliminare la stazione, solo se non ha missioni collegate;
   - creare una missione per Esploratori/Costruttori (icona "+"), se non sono già coperti.

@@ -24,11 +24,15 @@ import { MemberProfilePanel } from "@/components/modals/member-profile-panel";
 import { PlanetCard } from "@/components/modals/planet-card";
 import { isValidNmsFriendCode } from "@/lib/members/member-types";
 import {
-  missionSystemStatuses,
+  applicableSystemStatuses,
   missionSystemStatusRoles,
   planetSystemStatusKey,
   systemProgressFloor,
   type MissionSystemStatus,
+  editableSystemStatusRoles,
+  parsePlanetSystemStatusAuthors,
+  parseSystemStatusAuthors,
+  type PlanetSystemStatusAuthors,
   type PlanetSystemStatuses,
 } from "@/lib/planets/planet-system-status";
 import { useLocale } from "@/components/providers/locale-provider";
@@ -85,6 +89,7 @@ export function MissionDashboard({
   const [loadingMissions, setLoadingMissions] = useState(true);
   const [coveredMap, setCoveredMap] = useState<Record<string, string[]>>({});
   const [planetStatuses, setPlanetStatuses] = useState<PlanetSystemStatuses>({});
+  const [planetStatusAuthors, setPlanetStatusAuthors] = useState<PlanetSystemStatusAuthors>({});
   const [filter, setFilter] = useState<MissionFilter>("all");
   const [search, setSearch] = useNavigationSearchState(initialSearch);
   const [dialogMission, setDialogMission] = useState<Mission | null>(null);
@@ -100,6 +105,7 @@ export function MissionDashboard({
   const [profileOpen, setProfileOpen] = useState(false);
   const searchInput = useRef<HTMLInputElement>(null);
   const canManage = member.role === "moderator" || member.role === "admin";
+  const tooltipAllianceName = systemScope ? initialAlliance.name : alliance.name;
   const [showAllMissions, setShowAllMissions] = useState(true);
   const profileComplete = Boolean(member.nmsName.trim() && isValidNmsFriendCode(member.nmsCode) && member.specialty);
 
@@ -145,6 +151,7 @@ export function MissionDashboard({
           throw new Error("Invalid planet status data.");
         }
         setPlanetStatuses(body.planets as PlanetSystemStatuses);
+        setPlanetStatusAuthors(parsePlanetSystemStatusAuthors("authors" in body ? body.authors : null));
       })
       .catch((error: unknown) => setNotice(error instanceof Error ? error.message : "Unable to read planet status."));
     if (canManage) {
@@ -376,6 +383,10 @@ export function MissionDashboard({
     const savedStatuses = body && typeof body === "object" && "systemStatuses" in body ? body.systemStatuses : null;
     if (!Array.isArray(savedStatuses)) throw new Error("Invalid planet status response.");
     setPlanetStatuses((current) => ({ ...current, [key]: savedStatuses }));
+    const savedAuthors = parseSystemStatusAuthors(
+      body && typeof body === "object" && "systemStatusAuthors" in body ? body.systemStatusAuthors : null,
+    );
+    setPlanetStatusAuthors((current) => ({ ...current, [key]: savedAuthors }));
     onChanged?.();
     if (!canManage && mission.assignedMemberId === member.publicId && mission.status === "in_progress") {
       const floor = systemProgressFloor(savedStatuses, member.specialty ?? "");
@@ -388,7 +399,7 @@ export function MissionDashboard({
     if (!canManage && (mission.assignedMemberId !== member.publicId || mission.status !== "completed")) return null;
     const statuses = planetStatuses[planetSystemStatusKey(mission.systemAddress, mission.galaxy)] ?? [];
     const done = (role: "explorer" | "builder") =>
-      missionSystemStatuses
+      applicableSystemStatuses(statuses)
         .filter((status) => status !== "data_error" && missionSystemStatusRoles[status] === role)
         .every((status) => statuses.includes(status));
     const explorersDone = done("explorer");
@@ -403,7 +414,7 @@ export function MissionDashboard({
       )
     )
       return null;
-    const targetDone = missionSystemStatuses
+    const targetDone = applicableSystemStatuses(statuses)
       .filter((status) => status !== "data_error" && missionSystemStatusRoles[status] === target)
       .every((status) => statuses.includes(status));
     if (targetDone) return null;
@@ -461,6 +472,7 @@ export function MissionDashboard({
   function renderMissionList(listMissions: Mission[], featured = false) {
     return (
       <MissionList
+        allianceName={tooltipAllianceName}
         compact={Boolean(systemScope)}
         fullWidth={featured}
         detailMissionId={featuredMissionId}
@@ -475,6 +487,7 @@ export function MissionDashboard({
         stationOwners={stationOwners}
         stationOwnersLoaded={stationOwnersLoaded}
         planetStatuses={planetStatuses}
+        planetStatusAuthors={planetStatusAuthors}
         requestedSpecialty={requestedSpecialty}
         onCreateRangerMission={createRangerMission}
         onClaim={(mission) =>
@@ -611,23 +624,27 @@ export function MissionDashboard({
       )}
       {dialogOpen && (
         <MissionForm
+          allianceName={tooltipAllianceName}
           existingMissions={missions}
           hideAddress={Boolean(dialogInitialValues)}
           minimal={Boolean(dialogInitialValues)}
           initialValues={dialogInitialValues}
           simplified={Boolean(dialogInitialValues) && member.simpleView === true}
           simplifiedStatusRole="ranger"
+          currentMemberId={member.publicId}
+          lockAuthoredStatuses={editableSystemStatusRoles(member) !== null}
           members={members}
           mission={dialogMission}
           onClose={() => setDialogOpen(false)}
           onDelete={deleteMission}
           onSave={saveMission}
-          onSystemStatusesSaved={(portal, galaxy, statuses) =>
+          onSystemStatusesSaved={(portal, galaxy, statuses, authors) => {
             setPlanetStatuses((current) => ({
               ...current,
               [planetSystemStatusKey(portal, galaxy)]: statuses,
-            }))
-          }
+            }));
+            setPlanetStatusAuthors((current) => ({ ...current, [planetSystemStatusKey(portal, galaxy)]: authors }));
+          }}
           stationOwners={stationOwners}
         />
       )}
