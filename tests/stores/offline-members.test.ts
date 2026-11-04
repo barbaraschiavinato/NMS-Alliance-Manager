@@ -59,7 +59,7 @@ describe("linkOfflineMember", () => {
     expect(dataFileExists("missions.json")).toBe(false);
   });
 
-  it("reassigns missions, stations and messages, then removes the offline profile", async () => {
+  it("reassigns missions, stations, farms and messages, then removes the offline profile", async () => {
     const offline = makeMember({ offline: true, nmsName: "Offline" });
     const target = makeMember({ nmsName: "Target" });
     const other = makeMember();
@@ -75,6 +75,19 @@ describe("linkOfflineMember", () => {
     writeDataFile("stations-v2.json", [
       { ownerId: offline.publicId, portal: portalA, galaxy: 0 },
       { ownerId: other.publicId, portal: portalB, galaxy: 0, createdByMemberId: offline.publicId },
+    ]);
+    const farm = {
+      id: "f1",
+      name: "Farm",
+      portal: portalA,
+      galaxy: 0,
+      planetName: "Planet",
+      resources: ["Copper"],
+      createdAt: now,
+    };
+    writeDataFile("farms.json", [
+      { ...farm, ownerId: offline.publicId, createdByMemberId: offline.publicId },
+      { ...farm, id: "f2", ownerId: other.publicId },
     ]);
     writeDataFile("private-messages.json", [
       { id: "p1", senderMemberId: offline.publicId, recipientMemberId: other.publicId, body: "a", createdAt: now },
@@ -98,6 +111,10 @@ describe("linkOfflineMember", () => {
     expect(readDataFile("private-messages.json")).toEqual([
       { id: "p1", senderMemberId: target.publicId, recipientMemberId: other.publicId, body: "a", createdAt: now },
       { id: "p2", senderMemberId: other.publicId, recipientMemberId: target.publicId, body: "b", createdAt: now },
+    ]);
+    expect(readDataFile("farms.json")).toEqual([
+      { ...farm, ownerId: target.publicId, createdByMemberId: target.publicId },
+      { ...farm, id: "f2", ownerId: other.publicId },
     ]);
     // Il target aveva già un profilo completo: resta invariato.
     expect(accessFile().members).toEqual([target, other]);

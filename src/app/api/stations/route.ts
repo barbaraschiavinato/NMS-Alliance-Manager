@@ -23,11 +23,15 @@ import { readMissions, writeMissions } from "@/lib/missions/store";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(request?: Request) {
   const member = await getCurrentMember();
   if (!member) return NextResponse.json({ error: "stations.error_access_required" }, { status: 401 });
   try {
-    return NextResponse.json({ stations: await readStations(member) }, { headers: { "Cache-Control": "no-store" } });
+    const cacheOnly = request ? new URL(request.url).searchParams.get("cacheOnly") === "1" : false;
+    return NextResponse.json(
+      { stations: await readStations(member, !cacheOnly, cacheOnly) },
+      { headers: { "Cache-Control": "no-store" } },
+    );
   } catch (error) {
     console.error("Unable to read station portals", error);
     return NextResponse.json({ error: "stations.error_unable_to_read_stations" }, { status: 503 });
@@ -88,8 +92,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "errors.another_planet_from_system_already_registered" }, { status: 409 });
     }
     await addStationPortal(ownerMember.publicId, portal, galaxy, name, member.publicId, note);
-    await cacheStationPlanet(portal, galaxy);
-    return NextResponse.json({ stations: await readStations(member, false) }, { status: 201 });
+    if (new URL(request.url).searchParams.get("cacheOnly") !== "1") await cacheStationPlanet(portal, galaxy);
+    return NextResponse.json(
+      { stations: await readStations(member, false, new URL(request.url).searchParams.get("cacheOnly") === "1") },
+      { status: 201 },
+    );
   } catch (error) {
     console.error("Unable to save station portal", error);
     return NextResponse.json({ error: "stations.error_unable_to_save_station" }, { status: 503 });
@@ -138,7 +145,9 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: "stations.error_station_not_found_in_owner_archive" }, { status: 404 });
     }
     await removeStationPortal(ownerMember.publicId, portal, galaxy);
-    return NextResponse.json({ stations: await readStations(member, false) });
+    return NextResponse.json({
+      stations: await readStations(member, false, new URL(request.url).searchParams.get("cacheOnly") === "1"),
+    });
   } catch (error) {
     console.error("Unable to remove station portal", error);
     return NextResponse.json({ error: "stations.error_unable_to_remove_station" }, { status: 503 });
@@ -282,15 +291,17 @@ export async function PATCH(request: Request) {
         ),
       );
     }
-    await cacheStationPlanet(portal, galaxy);
-    return NextResponse.json({ stations: await readStations(member, false) });
+    if (new URL(request.url).searchParams.get("cacheOnly") !== "1") await cacheStationPlanet(portal, galaxy);
+    return NextResponse.json({
+      stations: await readStations(member, false, new URL(request.url).searchParams.get("cacheOnly") === "1"),
+    });
   } catch (error) {
     console.error("Unable to update station portal", error);
     return NextResponse.json({ error: "stations.error_unable_to_update_station" }, { status: 503 });
   }
 }
 
-async function readStations(member: AllianceMember, loadMissingZeroPlanets = true) {
+async function readStations(member: AllianceMember, loadMissingZeroPlanets = true, cacheOnly = false) {
   const canViewAllStations =
     hasRole(member, "moderator") ||
     member.specialty === "explorer" ||
@@ -300,7 +311,10 @@ async function readStations(member: AllianceMember, loadMissingZeroPlanets = tru
     ? await readAllStationPortals()
     : (await readStationPortals(member.publicId)).map((station) => ({ ...station, ownerId: member.publicId }));
   const [missions, accessData] = await Promise.all([readMissions(), readAccessData()]);
-  const almanacByPortal = await readAlmanacResponses(stations.map((station) => station.portal));
+  const almanacByPortal = await readAlmanacResponses(
+    stations.map((station) => station.portal),
+    cacheOnly,
+  );
   if (loadMissingZeroPlanets) {
     const missing = stations.filter((station) => {
       const cached = almanacByPortal[station.portal]?.find((entry) => entry.galaxy === station.galaxy)?.response;

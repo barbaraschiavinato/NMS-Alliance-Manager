@@ -4,6 +4,7 @@ import { Hero } from "@/components/layout/hero";
 import { AddStationButtonExample } from "@/components/guide/add-station-button-example";
 import { MessageComposerExamples } from "@/components/guide/message-composer-examples";
 import { TaxiExamples } from "@/components/guide/taxi-examples";
+import { FarmExamples } from "@/components/guide/farm-examples";
 import { MessageTabsExample } from "@/components/guide/message-tabs-example";
 import { translate } from "@/lib/translations";
 import { readAccessData } from "@/lib/members/access-store";
@@ -16,6 +17,7 @@ import {
   Compass,
   Crosshair,
   Eclipse,
+  Factory,
   FileText,
   Hammer,
   Info,
@@ -139,6 +141,13 @@ const buttons: ReadonlyArray<{
     icon: GalaxyIcon,
     color: "#8b8dff",
     meaning: "Apre la mappa sulla galassia della stazione, con il suo marker giallo e pulsante.",
+  },
+  {
+    label: "Vai alla farm",
+    specialty: ["ranger", "explorer", "builder"],
+    icon: Factory,
+    color: "#8fd46a",
+    meaning: "Sulle card dei pianeti: apre il dettaglio della farm registrata su quel pianeta.",
   },
   {
     label: "Crea missione dalla stazione",
@@ -266,6 +275,13 @@ const sections = [
     color: "#8b8dff",
     tasks:
       "Vedi le stazioni dell'alleanza sulla mappa della loro galassia (hub in rosso, quelle con missioni per te in verde, le tue in arancione) e arrivi qui dalle schede stazione e dai sistemi di Pianeti",
+  },
+  {
+    name: "Farm",
+    icon: Factory,
+    color: "#8fd46a",
+    tasks:
+      "Registri i pianeti dove coltivi o raccogli risorse, filtri le farm dell'alleanza per piante e materiali e trovi la stazione del sistema",
   },
   {
     name: "Classifica",
@@ -454,6 +470,12 @@ export async function GuideContent({
             <a className="guide-index-map" href="#mappa">
               <GalaxyIcon aria-hidden="true" size={15} />
               Mappa
+            </a>
+          </li>
+          <li>
+            <a className="guide-index-farms" href="#farm">
+              <Factory aria-hidden="true" size={15} />
+              Farm
             </a>
           </li>
           <li>
@@ -1132,6 +1154,10 @@ export async function GuideContent({
                 apre la scheda del pianeta con la richiesta d&apos;aiuto già pronta.
               </li>
               <li>
+                Se sul pianeta è registrata una farm, in basso a destra compare il pulsante verde con la fabbrica (prima
+                della sirena, se c&apos;è): apre il dettaglio della farm, o della più recente se sono più di una.
+              </li>
+              <li>
                 Le informazioni sono raggruppate per sistema/stazione, così puoi vedere subito tutti i pianeti legati a
                 una stessa stazione e scorrere le loro caratteristiche.
               </li>
@@ -1241,6 +1267,38 @@ export async function GuideContent({
             </ul>
           </section>
 
+          <section id="farm">
+            <h2 style={{ color: "#8fd46a" }}>
+              <Factory aria-hidden="true" size={20} />
+              Farm
+            </h2>
+            <p>
+              Le farm sono i pianeti dove gli alleati coltivano piante o raccolgono materiali. Tutti vedono tutte le
+              farm; «Le mie farm» mostra solo le tue.
+            </p>
+            <ul>
+              <li>
+                Con «Aggiungi farm» inserisci nome, galassia e glifi del portale: i nomi di sistema e pianeta si
+                compilano da soli e puoi cambiarli. Scegli almeno una pianta o un materiale; coordinate e note sono
+                facoltative.
+              </li>
+              <li>Le farm che aggiungi sono tue e solo tu puoi modificarle o eliminarle.</li>
+              <li>
+                Cerca per nome, sistema, pianeta o risorsa; «Filtri» restringe l&apos;elenco per piante e materiali.
+              </li>
+              <li>
+                Il nome della farm apre il suo dettaglio, con il pianeta e, se nel sistema c&apos;è una stazione, anche
+                la stazione, le missioni e le richieste d&apos;aiuto. Il pulsante blu con l&apos;orbita apre la
+                stazione.
+              </li>
+              <li>
+                Le card dei pianeti hanno il pulsante verde per aprire la farm; stazioni e missioni mostrano le farm del
+                loro sistema.
+              </li>
+            </ul>
+            <FarmExamples />
+          </section>
+
           <section id="classifica">
             <h2 style={{ color: "#e040c8" }}>
               <Trophy aria-hidden="true" size={20} />
@@ -1250,12 +1308,13 @@ export async function GuideContent({
             <ul>
               <li>
                 Il riquadro Alleanza mostra il totale di stazioni, missioni, missioni completate, task completati,
-                pianeti e membri approvati.
+                pianeti, membri approvati e farm.
               </li>
               <li>
-                Le classifiche individuali mostrano chi ha registrato più stazioni, completato più missioni e visitato
-                più pianeti (conta solo quanti, non quali), con un massimo di 10 membri per classifica. Ogni classifica
-                usa l&apos;icona e i colori della sua sezione: Stazioni, Missioni e Pianeti.
+                Le classifiche individuali mostrano chi ha registrato più stazioni, completato più missioni, visitato
+                più pianeti (conta solo quanti, non quali) e possiede più farm (quelle non assegnate non contano), con
+                un massimo di 10 membri per classifica. Ogni classifica usa l&apos;icona e i colori della sua sezione:
+                Stazioni, Missioni, Pianeti e Farm.
               </li>
               <li>
                 Le classifiche dei task sono divise per specializzazione: Ranger, Esploratore e Costruttore. Per ogni

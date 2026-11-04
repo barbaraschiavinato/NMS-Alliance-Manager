@@ -32,6 +32,8 @@ export const almanacValueTranslations: Readonly<Record<Locale, Readonly<Record<s
     "Rattle Spine": "Spina tintinnante",
     "Ancient Bones": "Ossa antiche",
     "Salvageable Scrap": "Rottami recuperabili",
+    Dioxite: "Diossite",
+    "Star Bramble": "Rovo stellare",
     "Vile Brood": "Nidiata vile",
     "De-Harmonised": "Disarmonizzate",
     Forsaken: "Abbandonate",

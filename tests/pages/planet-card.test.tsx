@@ -2,6 +2,7 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { PlanetCard } from "@/components/modals/planet-card";
+import { AlmanacCacheOnly } from "@/components/providers/almanac-cache-policy";
 import { json, mockFetch, renderPage, t } from "./helpers";
 
 vi.mock("next/image", async () => (await import("./helpers")).nextImageModule);
@@ -144,6 +145,21 @@ describe("PlanetCard", () => {
     const { container } = renderCard({ initialPlanetData });
     expect(container.querySelector(".planet-discovery-counts")).toBeNull();
     expect(container.querySelector(".planet-intro-code")).toHaveTextContent("1234567890AB");
+  });
+
+  it("reads the planets from the cache only inside a cache-only page", async () => {
+    const { fetchMock } = mockFetch({ "/api/missions/planet": { planet: lushPlanet } });
+    renderPage(
+      <AlmanacCacheOnly>
+        <PlanetCard galaxy={0} onClose={vi.fn()} portal="1234567890AB" title="Mission planet" />
+      </AlmanacCacheOnly>,
+    );
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    expect(
+      fetchMock.mock.calls.every(
+        ([url]) => new URL(String(url), "http://localhost").searchParams.get("cacheOnly") === "1",
+      ),
+    ).toBe(true);
   });
 
   it("loads every planet in the system and switches between them", async () => {

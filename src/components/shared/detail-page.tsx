@@ -6,6 +6,7 @@ import { type ComponentProps, type ReactNode, useSyncExternalStore } from "react
 import { usePathname } from "next/navigation";
 import { contextualDetailHref, detailReturnDestination, detailOrigins } from "@/lib/navigation/detail-links";
 import { useLocale } from "@/components/providers/locale-provider";
+import { useAlmanacCacheOnly } from "@/components/providers/almanac-cache-policy";
 
 function subscribeLocation(callback: () => void) {
   window.addEventListener("popstate", callback);
@@ -22,10 +23,11 @@ export function useDetailReturn(fallback: string) {
   return detailReturnDestination(location, fallback);
 }
 
-export function DetailLink({ href, ...props }: Omit<ComponentProps<typeof Link>, "href"> & { href: string }) {
+export function DetailLink({ href, prefetch, ...props }: Omit<ComponentProps<typeof Link>, "href"> & { href: string }) {
+  const cacheOnly = useAlmanacCacheOnly();
   usePathname();
   const location = useSyncExternalStore(subscribeLocation, readLocation, () => "");
-  return <Link {...props} href={contextualDetailHref(href, location)} />;
+  return <Link {...props} prefetch={cacheOnly ? false : prefetch} href={contextualDetailHref(href, location)} />;
 }
 
 export function DetailBackLink({ href, label }: Readonly<{ href: string; label: string }>) {
@@ -35,9 +37,11 @@ export function DetailBackLink({ href, label }: Readonly<{ href: string; label: 
     ? "details.back_to_mission_detail"
     : destination.startsWith("/stations/")
       ? "details.back_to_station_detail"
-      : Object.values(detailOrigins).find(
-          (origin) => destination.split("?")[0] === origin.href || destination.startsWith(`${origin.href}/`),
-        )?.label;
+      : destination.startsWith("/farms/")
+        ? "details.back_to_farm_detail"
+        : Object.values(detailOrigins).find(
+            (origin) => destination.split("?")[0] === origin.href || destination.startsWith(`${origin.href}/`),
+          )?.label;
   return (
     <Link className="detail-back-link" href={destination}>
       <ArrowLeft aria-hidden="true" size={18} />

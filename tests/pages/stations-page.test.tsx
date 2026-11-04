@@ -48,6 +48,7 @@ function stationRoutes(stations: unknown[], overrides: Record<string, unknown> =
     "GET /api/stations": { stations },
     "GET /api/planet-status": { planets: {} },
     "GET /api/help-requests": [],
+    "GET /api/farms": { farms: [] },
     "/api/members": [ranger, moderator, otherMember],
     ...overrides,
   };
@@ -236,6 +237,102 @@ describe("StationsPage as a member", () => {
     expect(container.querySelectorAll(".app-shell")).toHaveLength(1);
     expect(container.querySelectorAll("main")).toHaveLength(1);
   });
+  it("shows the system's farms read-only before the help requests", async () => {
+    const { requests } = mockFetch(
+      stationRoutes([station()], {
+        ...emptyMissionRoutes(),
+        "GET /api/farms": {
+          farms: [
+            {
+              id: "farm-1",
+              name: "Copper hill",
+              portal: "2234567890AB",
+              galaxy: 0,
+              planetName: "Ruba",
+              resources: ["Copper"],
+              ownerId: ranger.publicId,
+              ownerName: "Ranger One",
+              createdAt: "2026-01-01T00:00:00Z",
+              canManage: true,
+            },
+          ],
+        },
+        "GET /api/help-requests": [
+          {
+            id: "help",
+            senderMemberId: ranger.publicId,
+            senderName: "Ranger One",
+            body: "Need system support",
+            subject: "System help",
+            portal: "2234567890AB",
+            galaxy: 0,
+            createdAt: "2026-01-01T00:00:00Z",
+            replies: [],
+          },
+        ],
+      }),
+    );
+    const { container } = renderStations(ranger, detailProps());
+    await screen.findByRole("link", { name: "Copper hill" });
+    await screen.findByText("Need system support");
+    expect([...container.querySelectorAll(".detail-section > h2")].map((el) => el.textContent)).toEqual([
+      t("details.station"),
+      t("details.system_and_planets"),
+      t("details.linked_farms"),
+      t("help.help_requests"),
+    ]);
+    expect(screen.queryByRole("button", { name: t("farms.edit_farm_named", { farm: "Copper hill" }) })).toBeNull();
+    expect(requests("GET", "/api/farms")).toHaveLength(1);
+  });
+  it("embeds the station detail without the page chrome, farms or self navigation", async () => {
+    const { requests } = mockFetch(stationRoutes([station()], emptyMissionRoutes()));
+    const props = detailProps();
+    const featuredPlanet = {
+      id: "2234567890AB:0",
+      portal: "1234567890AB",
+      planetPortal: "2234567890AB",
+      planetNumber: 2,
+      galaxy: 0,
+      almanacName: "Fields",
+      almanacSearchIndex: "Fields",
+      almanacFacts: [],
+      systemFacts: [],
+      plants: [],
+      minerals: [],
+      valuables: [],
+      dissonant: false,
+      paradise: false,
+      blackMarket: false,
+    };
+    const { container } = renderStations(ranger, {
+      ...props,
+      embedded: true,
+      detail: { ...props.detail, system: { portal: "1234567890AB", galaxy: 0 }, featuredPlanet, origin: "farms" },
+    });
+    expect(await screen.findByRole("link", { name: /Home Base/ })).toHaveAttribute(
+      "href",
+      expect.stringMatching(/^\/stations\//),
+    );
+    expect(container.querySelector(".app-shell")).toBeNull();
+    expect(container.querySelector("main")).toBeNull();
+    expect(screen.queryByRole("navigation", { name: "Main navigation" })).toBeNull();
+    expect(screen.queryByRole("link", { name: t("details.back_to_stations") })).toBeNull();
+    expect(requests("GET", "/api/stations")[0].url.search).toBe("?cacheOnly=1");
+    expect(requests("GET", "/api/farms")).toHaveLength(0);
+    expect(screen.getAllByText("Fields").length).toBeGreaterThan(0);
+  });
+
+  it("reports embedded loading errors through a dismissible toast", async () => {
+    mockFetch(
+      stationRoutes([], { ...emptyMissionRoutes(), "GET /api/stations": json({ error: "Stations offline." }, 500) }),
+    );
+    const { user } = renderStations(ranger, { ...detailProps(), embedded: true });
+    const message = await screen.findByText("Stations offline.");
+    expect(message.closest(".form-error")).toBeNull();
+    await user.click(screen.getByRole("button", { name: t("common.close_notification") }));
+    expect(screen.queryByText("Stations offline.")).toBeNull();
+  });
+
   it.each([
     ["planets", "details.back_to_planets"],
     ["missions", "details.back_to_missions"],
@@ -408,7 +505,7 @@ describe("StationsPage as a member", () => {
     expect(await within(dialog).findByText("Archive full.")).toBeInTheDocument();
   });
 
-  it.each([false, true, "mission"] as const)(
+  it.each([false, true, "mission", "embedded"] as const)(
     "edits, views notes and removes an own station in detail mode %s",
     async (detailMode) => {
       const own = station({ note: "Bring fuel" });
@@ -425,9 +522,11 @@ describe("StationsPage as a member", () => {
         ranger,
         detailMode === "mission"
           ? { ...props, detail: { ...props.detail, missionId: "mission-1", origin: "missions" } }
-          : detailMode
-            ? props
-            : {},
+          : detailMode === "embedded"
+            ? { ...props, embedded: true }
+            : detailMode
+              ? props
+              : {},
       );
 
       await user.click(
@@ -475,7 +574,11 @@ describe("StationsPage as a member", () => {
       });
       expect(confirm).toHaveBeenCalledTimes(2);
       if (detailMode === true) expect(router.replace).toHaveBeenCalledWith("/stations");
-      if (detailMode === "mission") {
+      if (detailMode === "embedded") {
+        expect(requests("PATCH", "/api/stations")[0].url.search).toBe("?cacheOnly=1");
+        expect(requests("DELETE", "/api/stations")[0].url.search).toBe("?cacheOnly=1");
+      }
+      if (detailMode === "mission" || detailMode === "embedded") {
         expect(router.refresh).toHaveBeenCalledTimes(2);
         expect(router.replace).not.toHaveBeenCalled();
       }
@@ -910,6 +1013,27 @@ describe("StationsPage owners and missions", () => {
     expect(
       await screen.findByText(t("stations.station_added_to_owner_s_archive", { owner: t("common.not_specified") })),
     ).toBeInTheDocument();
+  });
+
+  it("opens a mission created from an embedded farm station with the farm origin", async () => {
+    const explorer = makeMember({ publicId: "explorer-1", specialty: "explorer", role: "user", simpleView: false });
+    mockFetch(
+      stationRoutes([{ ...planetlessName(), ownerId: "other-1", ownerName: "Other Pilot" }], {
+        ...emptyMissionRoutes(),
+        "/api/missions/verify-system": { found: true },
+        "POST /api/missions": [{ id: "a" }],
+      }),
+    );
+    const { user } = renderStations(explorer, { ...detailProps("other-1"), embedded: true });
+    await user.click(
+      await screen.findByRole("button", { name: t("stations.create_mission_from_portal", { portal: "1234567890AB" }) }),
+    );
+    const create = within(screen.getByRole("dialog", { name: t("missions.new_mission") })).getByRole("button", {
+      name: t("missions.create_mission"),
+    });
+    await waitFor(() => expect(create).toBeEnabled(), { timeout: 2000 });
+    await user.click(create);
+    await waitFor(() => expect(router.push).toHaveBeenCalledWith("/missions/a?from=farms"));
   });
 
   it("lets an explorer open a mission for their own specialty", async () => {

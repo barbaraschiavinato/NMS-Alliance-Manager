@@ -7,6 +7,7 @@ import {
   BookOpen,
   Crosshair,
   Eclipse,
+  Factory,
   Siren,
   Mail,
   Orbit,
@@ -73,6 +74,7 @@ export function Sidebar({
     | "missioni"
     | "pianeti"
     | "mappa"
+    | "farm"
     | "utenti"
     | "offline"
     | "stazioni"
@@ -89,6 +91,8 @@ export function Sidebar({
   const [unreadCount, setUnreadCount] = useState(0);
   const [helpCount, setHelpCount] = useState(0);
   const [taxiCount, setTaxiCount] = useState(0);
+  const [farmCount, setFarmCount] = useState<number | null>(null);
+  const isStaff = currentMember.role === "admin" || currentMember.role === "moderator";
   useEffect(() => {
     const controller = new AbortController();
     async function loadUnread() {
@@ -136,6 +140,26 @@ export function Sidebar({
       window.removeEventListener("taxi-requests-changed", loadTaxiCount);
     };
   }, []);
+  useEffect(() => {
+    if (!isStaff) return;
+    const controller = new AbortController();
+    async function loadFarmCount() {
+      try {
+        const response = await fetch("/api/farms?count=1", { cache: "no-store", signal: controller.signal });
+        const body: unknown = await response.json();
+        if (response.ok && body && typeof body === "object" && "count" in body && typeof body.count === "number")
+          setFarmCount(body.count);
+      } catch {
+        // The counter is informational only.
+      }
+    }
+    void loadFarmCount();
+    window.addEventListener("farms-changed", loadFarmCount);
+    return () => {
+      controller.abort();
+      window.removeEventListener("farms-changed", loadFarmCount);
+    };
+  }, [isStaff]);
   const displayName = currentMember.nmsName || currentMember.name;
   const displayRole = currentMember.displayRole ?? currentMember.role;
   let roleLabel = t("members.member_role_label");
@@ -143,7 +167,7 @@ export function Sidebar({
   else if (displayRole === "moderator") roleLabel = t("common.moderator");
   return (
     <aside className={currentMember.simpleView ? "sidebar sidebar-compact" : "sidebar"}>
-      <Link className="brand" href="/stations">
+      <Link className="brand" href="/stations" prefetch={activeSection === "farm" ? false : undefined}>
         <span
           className="brand-mark"
           style={settings.logoUrl ? { backgroundImage: `url("${settings.logoUrl}")` } : undefined}
@@ -158,6 +182,7 @@ export function Sidebar({
         <Link
           className={`nav-item ${activeSection === "stazioni" ? "active" : ""}`}
           href="/stations"
+          prefetch={activeSection === "farm" ? false : undefined}
           data-tooltip={t("stations.stations")}
           onClick={resetSearch}
         >
@@ -168,6 +193,7 @@ export function Sidebar({
         <Link
           className={`nav-item ${activeSection === "missioni" ? "active" : ""}`}
           href="/missions"
+          prefetch={activeSection === "farm" ? false : undefined}
           data-tooltip={t("missions.section_title")}
           onClick={resetSearch}
         >
@@ -178,6 +204,7 @@ export function Sidebar({
         <Link
           className={`nav-item ${activeSection === "pianeti" ? "active" : ""}`}
           href="/planets"
+          prefetch={activeSection === "farm" ? false : undefined}
           data-tooltip={t("navigation.planets")}
           onClick={resetSearch}
         >
@@ -195,6 +222,16 @@ export function Sidebar({
         >
           <GalaxyIcon size={17} />
           <span>{t("navigation.map")}</span>
+        </Link>
+        <Link
+          className={`nav-item ${activeSection === "farm" ? "active" : ""}`}
+          href="/farms"
+          data-tooltip={t("navigation.farms")}
+          onClick={resetSearch}
+        >
+          <Factory size={17} />
+          <span>{t("navigation.farms")}</span>
+          {isStaff && farmCount !== null && <span className="nav-count">{farmCount}</span>}
         </Link>
         {(currentMember.role === "admin" || currentMember.role === "moderator") && (
           <Link

@@ -1,7 +1,8 @@
 import { hasRole } from "@/lib/auth/authorization";
+import { readFarms } from "@/lib/farms/farms-store";
 import type { AllianceMember } from "@/lib/members/access-store";
 import { canViewMission, type Mission } from "@/lib/missions/missions";
-import { isSameSystem } from "@/lib/navigation/detail-links";
+import { isSameSystem, type SystemIdentity } from "@/lib/navigation/detail-links";
 import { availableMissionSpecialties, canCreateMissionFromStation } from "@/lib/missions/station-mission-availability";
 import { serializeMission } from "@/lib/missions/mission-view";
 import { getSystemPlanetAddresses } from "@/lib/planets/planet-addresses";
@@ -45,6 +46,44 @@ function almanacSearchValues(value: unknown, parentKey = ""): string[] {
   return [];
 }
 
+export function planetDestinationDetails(almanac: Record<string, unknown>) {
+  const lines = asRecord(almanac.lines);
+  const band = asRecord(lines?.band);
+  const headline = asRecord(lines?.headline);
+  const disc = asRecord(almanac.pictures)?.disc;
+  const planetType = almanacWord(band?.type);
+  const economyStars = almanacStarCount(band?.economy);
+  const wealth = almanacWealth(band?.economy);
+  const almanacName = typeof headline?.word === "string" ? headline.word : undefined;
+  return {
+    ...(typeof disc === "string" && disc.startsWith("/planets/")
+      ? { imageUrl: `https://nmsalmanac.com/api${disc}` }
+      : {}),
+    ...(almanacName ? { almanacName } : {}),
+    almanacSearchIndex: almanacSearchValues(almanac).join(" "),
+    almanacFacts: (
+      [
+        ["common.planet_type_label", planetType],
+        ["planet.size", almanacWord(band?.size)],
+        ["planet.weather", almanacWord(band?.weather)],
+        ["planet.water", almanacWord(band?.water)],
+        ["planet.sentinels", almanacWord(band?.sentinels)],
+      ] as const
+    ).flatMap(([label, value]) => (value ? [{ label, value }] : [])),
+    systemFacts: almanacSystemFacts(band),
+    discoveryCounts: almanacDiscoveryCounts(band),
+    ...(planetType ? { planetType } : {}),
+    ...(economyStars !== undefined ? { economyStars } : {}),
+    ...(wealth ? { wealth } : {}),
+    plants: almanacResourceNames(almanac.carries, ["plant", "consumable"]),
+    minerals: almanacResourceNames(almanac.carries, ["mineral"]),
+    valuables: almanacResourceNames(almanac.carries, ["tradeable"]),
+    dissonant: asRecord(band?.sentinels)?.ink === "exotic",
+    paradise: almanac.paradise === true,
+    blackMarket: asRecord(band?.economy)?.black_market === true,
+  };
+}
+
 // Completa le etichette sistema rimaste vuote perché Almanac non era raggiungibile al momento della creazione.
 async function fillEmptyMissionSystemLabels(results: Awaited<ReturnType<typeof lookupAlmanacPlanets>>) {
   const labelFor = (mission: { systemAddress: string; galaxy: number }) => {
@@ -70,6 +109,7 @@ export async function loadPlanetDestinations(
   members: AllianceMember[],
   missions: Mission[],
   stations: OwnedStationPortal[],
+  { featuredPlanet, cacheOnly = false }: Readonly<{ featuredPlanet?: SystemIdentity; cacheOnly?: boolean }> = {},
 ) {
   const canManage = hasRole(member, "moderator");
   const visibleMissions = missions
@@ -128,10 +168,28 @@ export async function loadPlanetDestinations(
   } catch (error) {
     console.error("Unable to read planet visits", error instanceof Error ? error.message : "Unknown error");
   }
+  // Farms are visible to every approved member; the newest one per planet is linked.
+  const farmByPlanet = new Map<string, { id: string; createdAt: string }>();
+  try {
+    for (const farm of await readFarms()) {
+      const key = `${farm.portal.toUpperCase()}:${farm.galaxy}`;
+      const current = farmByPlanet.get(key);
+      if (!current || farm.createdAt.localeCompare(current.createdAt) > 0)
+        farmByPlanet.set(key, { id: farm.id, createdAt: farm.createdAt });
+    }
+  } catch (error) {
+    console.error("Unable to read farms", error instanceof Error ? error.message : "Unknown error");
+  }
   const planetCandidates = (
     await Promise.all(
       [...systemsByAddress.values()].map(async (system) => {
         const planetaryAddresses = await getSystemPlanetAddresses(system.portal, system.galaxy);
+        if (featuredPlanet && isSameSystem(featuredPlanet, system)) {
+          const portal = featuredPlanet.portal.toUpperCase();
+          if (!planetaryAddresses.some((planet) => planet.portal === portal)) {
+            planetaryAddresses.push({ portal, number: planetaryAddresses.length + 1 });
+          }
+        }
         const feature = await systemFeature(system.portal, system.galaxy).catch(() => null);
         const associatedStation = stations.find(
           (station) =>
@@ -147,6 +205,9 @@ export async function loadPlanetDestinations(
           id: `${portal}:${system.galaxy}`,
           planetPortal: portal,
           planetNumber: number,
+          ...(farmByPlanet.has(`${portal}:${system.galaxy}`)
+            ? { farmId: farmByPlanet.get(`${portal}:${system.galaxy}`)?.id }
+            : {}),
           ...(associatedStation
             ? {
                 station: {
@@ -203,6 +264,7 @@ export async function loadPlanetDestinations(
   }[] = [];
   const almanacResults = await lookupAlmanacPlanets(
     planetCandidates.map((planet) => ({ portal: planet.planetPortal, galaxy: planet.galaxy })),
+    { cacheOnly },
   );
   await fillEmptyMissionSystemLabels(almanacResults);
   {
@@ -211,50 +273,8 @@ export async function loadPlanetDestinations(
         const lookup = almanacResults.get(`${planet.planetPortal.toUpperCase()}:${planet.galaxy}`);
         if (lookup?.failed) return { planet: null, failed: true };
         const almanac = lookup?.planet ?? null;
-        const lines = asRecord(almanac?.lines);
-        const band = asRecord(lines?.band);
-        const headline = asRecord(lines?.headline);
-        const pictures = asRecord(almanac?.pictures);
-        const disc = pictures?.disc;
-        const carries = almanac?.carries;
-        const almanacName = typeof headline?.word === "string" ? headline.word : undefined;
-        const planetType = almanacWord(band?.type);
-        const economyStars = almanacStarCount(band?.economy);
-        const wealth = almanacWealth(band?.economy);
-        const economy = asRecord(band?.economy);
-        const almanacFacts = (
-          [
-            ["common.planet_type_label", planetType],
-            ["planet.size", almanacWord(band?.size)],
-            ["planet.weather", almanacWord(band?.weather)],
-            ["planet.water", almanacWord(band?.water)],
-            ["planet.sentinels", almanacWord(band?.sentinels)],
-          ] as const
-        ).flatMap(([label, value]) => (value ? [{ label, value }] : []));
-        const systemFacts = almanacSystemFacts(band);
         return {
-          planet: almanac
-            ? {
-                ...planet,
-                ...(typeof disc === "string" && disc.startsWith("/planets/")
-                  ? { imageUrl: `https://nmsalmanac.com/api${disc}` }
-                  : {}),
-                ...(almanacName ? { almanacName } : {}),
-                almanacSearchIndex: almanacSearchValues(almanac).join(" "),
-                almanacFacts,
-                systemFacts,
-                discoveryCounts: almanacDiscoveryCounts(band),
-                ...(planetType ? { planetType } : {}),
-                ...(economyStars !== undefined ? { economyStars } : {}),
-                ...(wealth ? { wealth } : {}),
-                plants: almanacResourceNames(carries, ["plant", "consumable"]),
-                minerals: almanacResourceNames(carries, ["mineral"]),
-                valuables: almanacResourceNames(carries, ["tradeable"]),
-                dissonant: asRecord(band?.sentinels)?.ink === "exotic",
-                paradise: almanac?.paradise === true,
-                blackMarket: economy?.black_market === true,
-              }
-            : null,
+          planet: almanac ? { ...planet, ...planetDestinationDetails(almanac) } : null,
           failed: false,
         };
       } catch {

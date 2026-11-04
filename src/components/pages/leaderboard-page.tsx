@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Compass, Crosshair, Eclipse, Hammer, Orbit, Search } from "lucide-react";
+import { Compass, Crosshair, Eclipse, Factory, Hammer, Orbit, Search } from "lucide-react";
 
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
@@ -25,7 +25,7 @@ export type LeaderboardBoard = Readonly<{
   title: string;
   empty: string;
   role?: string;
-  accent?: "planets" | "stations" | "missions";
+  accent?: "planets" | "stations" | "missions" | "farms";
   entries: readonly LeaderboardEntry[];
   stats?: readonly Readonly<{ label: string; value: number }>[];
   sections?: readonly Readonly<{ id: string; title: string; entries: readonly LeaderboardEntry[] }>[];
@@ -96,6 +96,8 @@ export function LeaderboardPage({
                       <Orbit size={14} />
                     ) : board.accent === "missions" ? (
                       <Crosshair size={14} />
+                    ) : board.accent === "farms" ? (
+                      <Factory size={14} />
                     ) : null}
                     {t(board.title)}
                   </h3>

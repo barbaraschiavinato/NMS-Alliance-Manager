@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { sortByCreatedAtDescending } from "@/lib/utils/created-at";
 import { Sidebar, storePlanetCount } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
@@ -8,7 +8,12 @@ import { Hero } from "@/components/layout/hero";
 import { AdminPanel } from "@/components/modals/admin-panel";
 import { MemberProfilePanel } from "@/components/modals/member-profile-panel";
 import { PlanetList } from "@/components/sections/planet-list";
-import type { PlanetDestination, PlanetVisitControls } from "@/components/cards/planet-destination-card";
+import {
+  PlanetDestinationCard,
+  type PlanetDestination,
+  type PlanetVisitControls,
+} from "@/components/cards/planet-destination-card";
+import { DetailSection } from "@/components/shared/detail-page";
 import { Toast } from "@/components/shared/toast";
 import { PlanetCard } from "@/components/modals/planet-card";
 import type { AllianceMember, AllianceSettings } from "@/lib/members/access-store";
@@ -65,6 +70,9 @@ export function PlanetsPage({
   offlineCount,
   userCount,
   embedded = false,
+  featuredPlanet,
+  beforeSystem,
+  featuredOnly = false,
 }: Readonly<{
   alliance: AllianceSettings;
   currentMember: AllianceMember;
@@ -75,6 +83,9 @@ export function PlanetsPage({
   offlineCount?: number;
   userCount?: number;
   embedded?: boolean;
+  featuredPlanet?: PlanetDestination;
+  beforeSystem?: ReactNode;
+  featuredOnly?: boolean;
 }>) {
   const { t, systemLabel } = useLocale();
   const [renderedAt] = useState(() => Date.now());
@@ -306,44 +317,58 @@ export function PlanetsPage({
           </>
         )}
         <Content className={embedded ? "planets-page" : "content-wrap planets-page"}>
-          {almanacLookupFailed && <p className="form-error">{t("planet.almanac_partial_lookup_failed")}</p>}
-          {!embedded && (
-            <div className="planet-sticky-filters">
-              <PlanetFilters
-                hasActiveFilters={hasActiveFilters}
-                onChange={updateFilter}
-                onSearchChange={setSearch}
-                onToggle={() => setFiltersOpen((open) => !open)}
-                open={filtersOpen}
-                options={filterOptions}
-                search={search}
-                values={filters}
-              />
-              <PlanetActiveFilters onChange={updateFilter} onReset={resetFilters} values={filters} />
-            </div>
+          {featuredPlanet && (
+            <DetailSection title="details.planet">
+              <div className="planet-mission-list farm-detail-planet">
+                <PlanetDestinationCard planet={featuredPlanet} onOpen={openPlanet} visits={visitControls} />
+              </div>
+            </DetailSection>
           )}
-          {filteredPlanets.length === 0 ? (
-            <p className="station-list-empty">
-              {t(
-                hasActiveCriteria
-                  ? hasActiveFilters && !searchQuery
-                    ? "planet.no_planets_match_filters"
-                    : "planet.no_planets_match_search"
-                  : almanacLookupFailed
-                    ? "planet.no_verified_mission_planets"
-                    : "planet.no_mission_planets",
-              )}
-            </p>
-          ) : (
-            <PlanetList
-              renderedAt={renderedAt}
-              groups={pagination.items}
-              onOpen={openPlanet}
-              showStationLink={!embedded}
-              visits={visitControls}
-            />
+          {!featuredOnly && (
+            <>
+              {beforeSystem}
+              <DetailSection title={featuredPlanet ? "details.system_and_planets" : undefined}>
+                {almanacLookupFailed && <p className="form-error">{t("planet.almanac_partial_lookup_failed")}</p>}
+                {!embedded && (
+                  <div className="planet-sticky-filters">
+                    <PlanetFilters
+                      hasActiveFilters={hasActiveFilters}
+                      onChange={updateFilter}
+                      onSearchChange={setSearch}
+                      onToggle={() => setFiltersOpen((open) => !open)}
+                      open={filtersOpen}
+                      options={filterOptions}
+                      search={search}
+                      values={filters}
+                    />
+                    <PlanetActiveFilters onChange={updateFilter} onReset={resetFilters} values={filters} />
+                  </div>
+                )}
+                {filteredPlanets.length === 0 ? (
+                  <p className="station-list-empty">
+                    {t(
+                      hasActiveCriteria
+                        ? hasActiveFilters && !searchQuery
+                          ? "planet.no_planets_match_filters"
+                          : "planet.no_planets_match_search"
+                        : almanacLookupFailed
+                          ? "planet.no_verified_mission_planets"
+                          : "planet.no_mission_planets",
+                    )}
+                  </p>
+                ) : (
+                  <PlanetList
+                    renderedAt={renderedAt}
+                    groups={pagination.items}
+                    onOpen={openPlanet}
+                    showStationLink={!embedded}
+                    visits={visitControls}
+                  />
+                )}
+                <Pagination {...pagination} />
+              </DetailSection>
+            </>
           )}
-          <Pagination {...pagination} />
         </Content>
       </section>
       {selectedPlanet && (

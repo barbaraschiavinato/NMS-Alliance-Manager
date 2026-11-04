@@ -6,6 +6,7 @@ import { PendingApproval } from "@/components/pages/pending-approval";
 import { getCurrentMember } from "@/lib/auth/authorization";
 import { readAccessData } from "@/lib/members/access-store";
 import { readMissions } from "@/lib/missions/store";
+import { readFarms } from "@/lib/farms/farms-store";
 import { coveredSpecialties } from "@/lib/missions/missions";
 import { missionSystemStatuses, missionSystemStatusRoles } from "@/lib/planets/planet-system-status";
 import { readPlanetSystemStatuses } from "@/lib/planets/planet-system-status-store";
@@ -100,6 +101,17 @@ export default async function LeaderboardRoute() {
   } catch (error) {
     console.error("Unable to read planet visits", error instanceof Error ? error.message : "Unknown error");
   }
+  const farmsByMember = new Map<string, number>();
+  let farmTotal = 0;
+  try {
+    const farms = await readFarms();
+    farmTotal = farms.length;
+    for (const farm of farms) {
+      if (farm.ownerId) farmsByMember.set(farm.ownerId, (farmsByMember.get(farm.ownerId) ?? 0) + 1);
+    }
+  } catch (error) {
+    console.error("Unable to read farms", error instanceof Error ? error.message : "Unknown error");
+  }
   const approvedMembers = accessData.members.filter((candidate) => candidate.membershipStatus === "approved");
   const completedTasks = Object.values(planetStatuses).reduce(
     (total, statuses) => total + statuses.filter((task) => task !== "data_error").length,
@@ -141,6 +153,7 @@ export default async function LeaderboardRoute() {
         },
         { label: "leaderboard.stat_tasks", value: completedTasks },
         { label: "leaderboard.stat_planets", value: planetCount },
+        { label: "leaderboard.stat_farms", value: farmTotal },
         { label: "leaderboard.stat_members", value: approvedMembers.filter((candidate) => !candidate.offline).length },
       ],
     },
@@ -164,6 +177,13 @@ export default async function LeaderboardRoute() {
       empty: "leaderboard.empty_planets_visited",
       accent: "planets" as const,
       entries: buildEntries(visitedByMember),
+    },
+    {
+      id: "farms",
+      title: "leaderboard.board_farms",
+      empty: "leaderboard.empty_farms",
+      accent: "farms" as const,
+      entries: buildEntries(farmsByMember),
     },
     ...(["ranger", "explorer", "builder"] as const).map((role) => ({
       id: `${role}_tasks`,

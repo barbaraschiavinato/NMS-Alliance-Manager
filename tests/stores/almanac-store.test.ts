@@ -69,6 +69,19 @@ describe("reading (local filesystem)", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
+  it("reads single and batched responses in cache-only mode without migrating them", async () => {
+    writeDataFile(fileName, { [structuredPlanet.portal]: { 0: structuredPlanet } });
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    const { readAlmanacResponse, readAlmanacResponses } = await load();
+    expect(await readAlmanacResponse(structuredPlanet.portal, 0, true)).toMatchObject({
+      portal: structuredPlanet.portal,
+    });
+    expect((await readAlmanacResponses([structuredPlanet.portal], true))[structuredPlanet.portal]).toHaveLength(1);
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(readDataFile(fileName)).toEqual({ [structuredPlanet.portal]: { 0: structuredPlanet } });
+  });
+
   it("reads raw cache entries with image-only repairs and no network requests or writes", async () => {
     const raw = { ...structuredPlanet, words: "words.en.expired.json" };
     writeDataFile(fileName, { [structuredPlanet.portal]: { 0: raw } });

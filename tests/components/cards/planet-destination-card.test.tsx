@@ -9,6 +9,8 @@ import {
 import { renderWithLocale } from "../helpers";
 
 vi.mock("next/image", async () => (await import("../helpers")).nextImageModule);
+vi.mock("next/link", async () => (await import("../helpers")).nextLinkModule);
+vi.mock("next/navigation", () => ({ usePathname: () => window.location.pathname }));
 
 function makePlanet(overrides: Partial<PlanetDestination> = {}): PlanetDestination {
   return {
@@ -358,5 +360,24 @@ describe("PlanetDestinationCard", () => {
     // Only the empty water drop remains: Gigantic is not a known size.
     expect(screen.getAllByRole("img")).toHaveLength(1);
     expect(screen.getByRole("img", { name: "None" })).toHaveClass("planet-water-indicator");
+  });
+
+  it("links to the planet's farm detail, except on that farm's own detail page", () => {
+    window.history.replaceState(null, "", "/planets");
+    const { unmount } = renderWithLocale(
+      <PlanetDestinationCard onOpen={vi.fn()} planet={makePlanet({ farmId: "farm-7" })} />,
+    );
+    const link = screen.getByRole("link", { name: "Open farm" });
+    expect(link.getAttribute("href")).toMatch(/^\/farms\/farm-7\?from=planets/);
+    expect(link.closest(".planet-card-with-farm")).not.toBeNull();
+    unmount();
+
+    window.history.replaceState(null, "", "/farms/farm-7");
+    const { container } = renderWithLocale(
+      <PlanetDestinationCard onOpen={vi.fn()} planet={makePlanet({ farmId: "farm-7" })} />,
+    );
+    expect(screen.queryByRole("link", { name: "Open farm" })).toBeNull();
+    expect(container.querySelector(".planet-card-with-farm")).toBeNull();
+    window.history.replaceState(null, "", "/");
   });
 });

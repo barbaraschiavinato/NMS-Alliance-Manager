@@ -6,6 +6,7 @@ import { PlanetDiscoveryCounts } from "@/components/shared/planet-discovery-coun
 import { almanacDiscoveryCounts } from "@/lib/almanac/almanac-discovery-counts";
 import { galaxyLabel } from "@/lib/planets/galaxies";
 import { useLocale } from "@/components/providers/locale-provider";
+import { useAlmanacCacheOnly } from "@/components/providers/almanac-cache-policy";
 
 type PlanetRecord = Readonly<Record<string, unknown>>;
 type PlanetEntry = Readonly<{ portal: string; planet: PlanetRecord }>;
@@ -180,6 +181,7 @@ export function PlanetCard({
   inlinePreview?: boolean;
   onClose: () => void;
 }>) {
+  const cacheOnly = useAlmanacCacheOnly();
   const { t } = useLocale();
   const [planetEntries, setPlanetEntries] = useState<PlanetEntry[]>(() =>
     initialPlanetData ? [{ portal: initialPlanetPortal ?? portal, planet: initialPlanetData }] : [],
@@ -210,6 +212,13 @@ export function PlanetCard({
           Array.from({ length: bodyCount }, (_, index) => (index + 1).toString(16).toUpperCase()),
         );
         if (portal[0] !== "0") planetIndexes.add(portal[0].toUpperCase());
+        if (
+          initialPlanetPortal &&
+          /^[0-9A-F]{12}$/i.test(initialPlanetPortal) &&
+          initialPlanetPortal.slice(1).toUpperCase() === portal.slice(1).toUpperCase()
+        ) {
+          planetIndexes.add(initialPlanetPortal[0].toUpperCase());
+        }
         const entries: PlanetEntry[] = [];
         let lookupError = "";
 
@@ -217,6 +226,7 @@ export function PlanetCard({
           if (controller.signal.aborted) return;
           const address = `${planetIndex}${portal.slice(1).toUpperCase()}`;
           const params = new URLSearchParams({ address, galaxy: String(galaxy) });
+          if (cacheOnly) params.set("cacheOnly", "1");
           try {
             const response = await fetch(`/api/missions/planet?${params}`, {
               signal: controller.signal,
@@ -256,7 +266,7 @@ export function PlanetCard({
 
     void loadSystemPlanets();
     return () => controller.abort();
-  }, [galaxy, initialPlanetData, initialPlanetPortal, portal]);
+  }, [cacheOnly, galaxy, initialPlanetData, initialPlanetPortal, portal]);
 
   async function sendHelpRequest(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();

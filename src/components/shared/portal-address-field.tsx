@@ -3,13 +3,15 @@ import Image from "next/image";
 import { ArrowLeft, Check, CircleAlert, X } from "lucide-react";
 import { decodePortalAddress } from "@/lib/missions/missions";
 import { useLocale } from "@/components/providers/locale-provider";
+import { useAlmanacCacheOnly } from "@/components/providers/almanac-cache-policy";
 
 export type SystemAddressLookup = Readonly<{
   address: string;
   galaxy: number;
-  status: "checking" | "found" | "not-found" | "unavailable";
+  status: "checking" | "found" | "not-found" | "not-cached" | "unavailable";
   systemLabel?: string | null;
   planetType?: string | null;
+  planetName?: string | null;
 }>;
 
 export type SystemAddressValidation = Readonly<{
@@ -142,6 +144,8 @@ export function PortalValidation({
     statusClass = "address-incomplete";
     statusIcon = <CircleAlert size={13} />;
     statusText += ` · ${t("planet.no_planet_registered_with_nms_almanac_it_may_still_exist_in_the_game")}`;
+  } else if (currentLookup?.status === "not-cached") {
+    statusText += ` · ${t("planet.no_cached_planet_data")}`;
   } else if (currentLookup?.status === "unavailable") {
     statusClass = "address-incomplete";
     statusIcon = <CircleAlert size={13} />;
@@ -175,13 +179,17 @@ export function SystemAddressField({
   onChange,
   onStateChange,
   onLookupResolved,
+  lookupMode,
 }: Readonly<{
   address: string;
   galaxy?: number;
   onChange: (value: string) => void;
   onStateChange: (state: SystemAddressValidation) => void;
   onLookupResolved?: (lookup: SystemAddressLookup) => void;
+  lookupMode?: "cache-only" | "farm-create";
 }>) {
+  const cacheOnly = useAlmanacCacheOnly();
+  const effectiveLookupMode = cacheOnly ? "cache-only" : lookupMode;
   const { t } = useLocale();
   const [lookup, setLookup] = useState<SystemAddressLookup | null>(null);
   const decoded = decodePortalAddress(address);
@@ -201,6 +209,7 @@ export function SystemAddressField({
     const timeout = setTimeout(async () => {
       try {
         const params = new URLSearchParams({ address, galaxy: String(galaxy) });
+        if (effectiveLookupMode) params.set("lookup", effectiveLookupMode);
         const response = await fetch(`/api/missions/verify-system?${params}`, { signal: controller.signal });
         const result: unknown = await response.json();
         if (
@@ -213,16 +222,19 @@ export function SystemAddressField({
           throw new Error("System lookup unavailable");
         }
         const found = result.found === true;
+        const notCached = "cacheOnly" in result && result.cacheOnly === true;
         const systemLabel =
           "systemLabel" in result && typeof result.systemLabel === "string" ? result.systemLabel : null;
         const planetType = "planetType" in result && typeof result.planetType === "string" ? result.planetType : null;
+        const planetName = "planetName" in result && typeof result.planetName === "string" ? result.planetName : null;
         if (active) {
           const lookupResult = {
             address,
             galaxy,
-            status: found ? ("found" as const) : ("not-found" as const),
+            status: found ? ("found" as const) : notCached ? ("not-cached" as const) : ("not-found" as const),
             systemLabel,
             planetType,
+            planetName,
           };
           setLookup(lookupResult);
           emitLookupResult(lookupResult);
@@ -241,7 +253,7 @@ export function SystemAddressField({
       clearTimeout(timeout);
       controller.abort();
     };
-  }, [address, galaxy, valid]);
+  }, [address, effectiveLookupMode, galaxy, valid]);
 
   useEffect(() => {
     onStateChange({ valid, lookup: matchingLookup });

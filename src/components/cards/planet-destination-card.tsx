@@ -2,7 +2,10 @@
 
 import Image from "next/image";
 import { useId } from "react";
-import { AudioWaveform, Globe2, Moon, Palmtree, Siren } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { AudioWaveform, Factory, Globe2, Moon, Palmtree, Siren } from "lucide-react";
+import { DetailLink } from "@/components/shared/detail-page";
+import { farmDetailHref } from "@/lib/navigation/detail-links";
 import type { SystemFeature } from "@/lib/planets/system-feature";
 import type { AlmanacDiscoveryCounts } from "@/lib/almanac/almanac-discovery-counts";
 import { PlanetDiscoveryCounts } from "@/components/shared/planet-discovery-counts";
@@ -38,6 +41,7 @@ export type PlanetDestination = Readonly<{
   systemFeature?: SystemFeature;
   canMarkVisited?: boolean;
   visited?: boolean;
+  farmId?: string;
   station?: Readonly<{
     id: string;
     portal: string;
@@ -122,8 +126,18 @@ export function PlanetDestinationCard({
   visits?: PlanetVisitControls;
 }>) {
   const { t, tv } = useLocale();
+  const pathname = usePathname();
+  const farmHref = planet.farmId ? farmDetailHref(planet.farmId, "planets") : undefined;
+  const showFarmLink = Boolean(farmHref && pathname !== farmHref.split("?")[0]);
+  const withHelp = Boolean(planet.canMarkVisited && visits);
+  const className = [
+    withHelp ? "planet-card-with-visit planet-card-with-help" : "",
+    showFarmLink ? "planet-card-with-farm" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
   return (
-    <div className={planet.canMarkVisited && visits ? "planet-card-with-visit planet-card-with-help" : undefined}>
+    <div className={className || undefined}>
       <button className="planet-mission-card" onClick={() => onOpen(planet)} type="button">
         {planet.imageUrl ? (
           <Image alt="" className="planet-mission-image" height={96} src={planet.imageUrl} unoptimized width={96} />
@@ -178,6 +192,17 @@ export function PlanetDestinationCard({
           />
         </span>
       </button>
+      {showFarmLink && farmHref && (
+        <DetailLink
+          aria-label={t("planet.open_farm")}
+          className="member-icon-action planet-card-farm"
+          data-tooltip={t("planet.open_farm")}
+          href={farmHref}
+          prefetch={false}
+        >
+          <Factory aria-hidden="true" size={14} />
+        </DetailLink>
+      )}
       {planet.canMarkVisited && visits && (
         <button
           aria-label={t("help.request_help")}

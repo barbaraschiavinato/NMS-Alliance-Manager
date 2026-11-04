@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentMember } from "@/lib/auth/authorization";
 import { lookupAlmanacPlanet } from "@/lib/almanac/almanac-lookup";
+import { readAlmanacResponse } from "@/lib/almanac/almanac-store";
 import { decodePortalAddress } from "@/lib/missions/missions";
 import { almanacRetryAfterSeconds } from "@/lib/almanac/almanac-rate-limit";
 
@@ -29,7 +30,10 @@ export async function GET(request: Request) {
   }
 
   try {
-    const planet = await lookupAlmanacPlanet(address, galaxy);
+    const planet =
+      params.get("cacheOnly") === "1"
+        ? await readAlmanacResponse(address, galaxy, true)
+        : await lookupAlmanacPlanet(address, galaxy);
     if (!planet) {
       return NextResponse.json({ error: "planet.no_almanac_details_are_archived_for_this_mission" }, { status: 404 });
     }

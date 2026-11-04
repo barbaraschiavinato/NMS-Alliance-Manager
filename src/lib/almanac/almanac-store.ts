@@ -81,16 +81,24 @@ function serialized<T>(task: () => Promise<T>): Promise<T> {
   return result;
 }
 
-export async function readAlmanacResponse(portalCode: string, galaxy: number): Promise<AlmanacResponse | null> {
+export async function readAlmanacResponse(
+  portalCode: string,
+  galaxy: number,
+  cacheOnly = false,
+): Promise<AlmanacResponse | null> {
   const index = await readAlmanacIndex();
   const response = index[portalCode.toUpperCase()]?.[String(galaxy)];
   if (!response) return null;
+  if (cacheOnly) return normalizeAlmanacPictures(response);
   const normalized = await normalizeAlmanacPlanet(response);
   if (normalized !== response) await writeAlmanacResponse(portalCode, galaxy, normalized);
   return normalized;
 }
 
-export async function readAlmanacResponses(portalCodes: string[]): Promise<Record<string, CachedAlmanacPlanet[]>> {
+export async function readAlmanacResponses(
+  portalCodes: string[],
+  cacheOnly = false,
+): Promise<Record<string, CachedAlmanacPlanet[]>> {
   const index = await readAlmanacIndex();
   const results: Record<string, CachedAlmanacPlanet[]> = Object.fromEntries(
     await Promise.all(
@@ -109,7 +117,12 @@ export async function readAlmanacResponses(portalCodes: string[]): Promise<Recor
             await Promise.all(
               responses.map(async (entry) => {
                 try {
-                  return { ...entry, response: await normalizeAlmanacPlanet(entry.response) };
+                  return {
+                    ...entry,
+                    response: cacheOnly
+                      ? normalizeAlmanacPictures(entry.response)
+                      : await normalizeAlmanacPlanet(entry.response),
+                  };
                 } catch (error) {
                   console.error(
                     "Unable to normalize cached NMS Almanac planet",
@@ -126,13 +139,14 @@ export async function readAlmanacResponses(portalCodes: string[]): Promise<Recor
     ),
   );
   try {
-    await writeAlmanacResponses(
-      Object.entries(results).flatMap(([portalCode, entries]) =>
-        entries
-          .filter((entry) => entry.response !== index[portalCode]?.[String(entry.galaxy)])
-          .map((entry) => ({ portalCode, galaxy: entry.galaxy, response: entry.response })),
-      ),
-    );
+    if (!cacheOnly)
+      await writeAlmanacResponses(
+        Object.entries(results).flatMap(([portalCode, entries]) =>
+          entries
+            .filter((entry) => entry.response !== index[portalCode]?.[String(entry.galaxy)])
+            .map((entry) => ({ portalCode, galaxy: entry.galaxy, response: entry.response })),
+        ),
+      );
   } catch (error) {
     console.error("Unable to save migrated NMS Almanac planets", error);
   }
@@ -143,8 +157,9 @@ export async function writeAlmanacResponse(
   portalCode: string,
   galaxy: number,
   response: AlmanacResponse,
+  cacheOnly = false,
 ): Promise<void> {
-  const normalized = await normalizeAlmanacPlanet(response);
+  const normalized = cacheOnly ? normalizeAlmanacPictures(response) : await normalizeAlmanacPlanet(response);
   await serialized(async () => {
     const index = await readAlmanacIndex();
     const canonicalCode = portalCode.toUpperCase();

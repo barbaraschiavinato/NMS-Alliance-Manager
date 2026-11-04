@@ -64,6 +64,7 @@ describe("GET /api/missions/verify-system", () => {
       found: true,
       systemLabel: "Yellow · Trading · Low · Gek",
       planetType: "Test World",
+      planetName: "Test World",
       cached: false,
     });
     expect(readCache()[PORTAL]["0"]).toHaveProperty("lines");
@@ -111,6 +112,7 @@ describe("GET /api/missions/verify-system", () => {
       found: true,
       systemLabel: "Yellow · Trading · Gek",
       planetType: "Lush",
+      planetName: "Lush",
       cached: true,
     });
     expect(fetchMock).not.toHaveBeenCalled();
@@ -125,6 +127,7 @@ describe("GET /api/missions/verify-system", () => {
       found: true,
       systemLabel: "Yellow · Trading · Gek",
       planetType: "Lush",
+      planetName: "Lush",
       cached: false,
     });
     expect(String(fetchMock.mock.calls[0][0])).toBe(`https://nmsalmanac.com/api/planets/${PORTAL}?galaxy=8`);
@@ -158,6 +161,7 @@ describe("GET /api/missions/verify-system", () => {
       found: true,
       systemLabel: "Yellow · Trading · Gek",
       planetType: "Lush",
+      planetName: "Lush",
       cached: false,
     });
     expect(String(fetchMock.mock.calls[0][0])).toBe(`https://nmsalmanac.com/api/planets/${PORTAL}?galaxy=1`);
@@ -176,6 +180,68 @@ describe("GET /api/missions/verify-system", () => {
     expect(await res.json()).toMatchObject({ found: true, cached: true, planetType: "Lush" });
     expect(fetchMock).not.toHaveBeenCalled();
     expect(readCache()[PORTAL]["0"]).toMatchObject({ portal: planetOnePortal });
+  });
+
+  describe("lookup modes", () => {
+    const otherPlanet = "2123456789AB";
+
+    it("answers cache-only lookups from the cache without contacting the Almanac", async () => {
+      writeDataFile("almanac.json", { [SAME_SYSTEM_OTHER_PLANET]: { 0: almanacPlanet } });
+      signInAs(user);
+
+      const cached = await verify(`address=${SAME_SYSTEM_OTHER_PLANET}&galaxy=0&lookup=cache-only`);
+      expect(await cached.json()).toMatchObject({ found: true, cached: true, planetName: "Lush" });
+
+      const missing = await verify(`address=${otherPlanet}&galaxy=0&lookup=cache-only`);
+      expect(missing.status).toBe(200);
+      expect(missing.headers.get("Cache-Control")).toBe("no-store");
+      expect(await missing.json()).toEqual({ found: false, cacheOnly: true });
+      expect(fetchMock).not.toHaveBeenCalled();
+    });
+
+    it("reuses a cached planet-one response for zero-leading cache-only lookups", async () => {
+      writeDataFile("almanac.json", { [SAME_SYSTEM_OTHER_PLANET]: { 0: almanacPlanet } });
+      signInAs(user);
+
+      const res = await verify(`address=${PORTAL}&galaxy=0&lookup=cache-only`);
+
+      expect(await res.json()).toMatchObject({ found: true, cached: true, planetName: "Lush" });
+      expect(fetchMock).not.toHaveBeenCalled();
+      expect(readCache()[PORTAL]["0"]).toEqual(almanacPlanet);
+    });
+
+    it("answers farm insertions from the cache when the planet is already stored", async () => {
+      writeDataFile("almanac.json", { [otherPlanet]: { 3: almanacPlanet } });
+      signInAs(user);
+
+      const res = await verify(`address=${otherPlanet}&galaxy=3&lookup=farm-create`);
+
+      expect(await res.json()).toMatchObject({ found: true, cached: true, planetName: "Lush" });
+      expect(fetchMock).not.toHaveBeenCalled();
+    });
+
+    it("queries the Almanac once for a farm planet missing from the cache, even in a known system", async () => {
+      writeDataFile("almanac.json", { [SAME_SYSTEM_OTHER_PLANET]: { 0: almanacPlanet } });
+      fetchMock.mockResolvedValue(
+        Response.json({
+          ...almanacPlanet,
+          portal: otherPlanet,
+          lines: { ...almanacPlanet.lines, headline: { word: "Frozen" } },
+        }),
+      );
+      signInAs(user);
+
+      const res = await verify(`address=${otherPlanet}&galaxy=0&lookup=farm-create`);
+
+      expect(await res.json()).toMatchObject({ found: true, cached: false, planetName: "Frozen" });
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      expect(String(fetchMock.mock.calls[0][0])).toBe(`https://nmsalmanac.com/api/planets/${otherPlanet}?galaxy=1`);
+      expect(readCache()[otherPlanet]["0"]).toMatchObject({ portal: otherPlanet });
+
+      const again = await verify(`address=${otherPlanet}&galaxy=0&lookup=farm-create`);
+      expect(await again.json()).toMatchObject({ found: true, cached: true, planetName: "Frozen" });
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    });
   });
 
   it("tries planet one when the entered zero-leading portal is not in the Almanac", async () => {
@@ -207,6 +273,7 @@ describe("GET /api/missions/verify-system", () => {
       found: true,
       systemLabel: null,
       planetType: "Barren",
+      planetName: null,
       cached: false,
     });
   });
@@ -218,6 +285,7 @@ describe("GET /api/missions/verify-system", () => {
       found: true,
       systemLabel: null,
       planetType: null,
+      planetName: null,
       cached: false,
     });
   });
