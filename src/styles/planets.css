@@ -99,7 +99,7 @@
 .planet-mission-facts > span + span { margin-top: 4px; }
 .planet-mission-facts b { color: #75847a; font-weight: 600; }
 .planet-discovery-counts { display: flex; flex-wrap: wrap; gap: 12px; color: #a4adae; font-size: 9px; }
-.planet-mission-card-copy .planet-discovery-counts { overflow: visible; padding-right: 96px; white-space: normal; }
+.planet-mission-card-copy .planet-discovery-counts { overflow: visible; padding-right: calc(96px + var(--planet-size-indicator-added-width, 0px)); white-space: normal; }
 .planet-card-intro .planet-discovery-counts { margin: 8px 0; font-size: 12px; }
 .planet-discovery-counts > span { position: relative; display: inline-flex; align-items: center; gap: 4px; }
 .planet-discovery-counts svg { color: var(--lime); }
@@ -239,16 +239,20 @@ body:has(.sidebar-compact) .planet-notes-list li { font-size: 17px; }
 .planet-size-indicator > i[data-step="1"] { width: 6px; height: 6px; }
 .planet-size-indicator > i[data-step="2"] { width: 10px; height: 10px; }
 .planet-size-indicator > i[data-step="3"] { width: 14px; height: 14px; }
+.planet-size-indicator > i[data-step="4"] { width: 18px; height: 18px; }
 .planet-size-indicator > i.active { border-color: var(--lime); background: var(--lime); }
 .planet-size-indicator[data-tooltip]::after { position: absolute; z-index: 30; right: 0; bottom: calc(100% + 7px); padding: 6px 8px; color: #f1eee7; border: 1px solid #394548; border-radius: 3px; background: #111719; box-shadow: 0 4px 14px #0008; content: attr(data-tooltip); font-size: 9px; font-weight: 500; line-height: 1.2; opacity: 0; pointer-events: none; transform: translateY(3px); transition: opacity .12s, transform .12s; white-space: nowrap; }
 .planet-size-indicator[data-tooltip]:hover::after { opacity: 1; transform: translateY(0); }
 .sidebar-compact ~ .main-panel .planet-size-indicator > i[data-step="1"] { width: 8px; height: 8px; }
 .sidebar-compact ~ .main-panel .planet-size-indicator > i[data-step="2"] { width: 13px; height: 13px; }
 .sidebar-compact ~ .main-panel .planet-size-indicator > i[data-step="3"] { width: 18px; height: 18px; }
+.sidebar-compact ~ .main-panel .planet-size-indicator > i[data-step="4"] { width: 23px; height: 23px; }
 .sidebar-compact ~ .main-panel .planet-size-indicator svg { width: 18px; height: 18px; }
 .planet-size-indicator > svg { color: var(--lime); fill: var(--lime); stroke: var(--lime); }
-.planet-mission-card-copy .planet-mission-facts { padding-right: 96px; }
-.sidebar-compact ~ .main-panel .planet-mission-card-copy .planet-mission-facts { padding-right: 120px; }
+.planet-mission-card:has(.planet-size-indicator > i[data-step="4"]) { --planet-size-indicator-added-width: 22px; }
+.sidebar-compact ~ .main-panel .planet-mission-card:has(.planet-size-indicator > i[data-step="4"]) { --planet-size-indicator-added-width: 27px; }
+.planet-mission-card-copy .planet-mission-facts { padding-right: calc(96px + var(--planet-size-indicator-added-width, 0px)); }
+.sidebar-compact ~ .main-panel .planet-mission-card-copy .planet-mission-facts { padding-right: calc(120px + var(--planet-size-indicator-added-width, 0px)); }
 .planet-water-indicator { position: relative; display: inline-flex; color: #75847a; line-height: 0; }
 .planet-dissonant-indicator, .planet-paradise-indicator { position: relative; display: inline-flex; line-height: 0; }
 .planet-dissonant-indicator { color: #b57cf0; }
@@ -317,7 +321,7 @@ body:has(.sidebar-compact) .planet-notes-list li { font-size: 17px; }
 }
 
 @media (max-width: 720px) {
-  .main-panel.main-panel .planet-mission-card-copy .planet-mission-facts { padding-right: 96px; }
+  .main-panel.main-panel .planet-mission-card-copy .planet-mission-facts { padding-right: calc(96px + var(--planet-size-indicator-added-width, 0px)); }
 }
 
 @media (max-width: 720px) {

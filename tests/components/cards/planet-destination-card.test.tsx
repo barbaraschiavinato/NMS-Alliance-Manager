@@ -1,4 +1,6 @@
 // @vitest-environment jsdom
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import {
@@ -197,19 +199,93 @@ describe("PlanetDestinationCard", () => {
   });
 
   it.each([
-    ["Huge", 3],
-    ["Medium", 2],
-  ])("marks the %s size level", (size, level) => {
+    ["Small", "Piccolo", 1],
+    ["Medium", "Medio", 2],
+    ["Large", "Grande", 3],
+    ["Huge", "Enorme", 4],
+  ])("marks the distinct %s size level", (size, italian, level) => {
+    const planet = makePlanet({ almanacFacts: [{ label: "planet.size", value: size }] });
+    const { unmount } = renderWithLocale(<PlanetDestinationCard onOpen={vi.fn()} planet={planet} />);
+    const indicator = screen.getByRole("img", { name: size });
+    expect(indicator).toHaveAttribute("data-tooltip", size);
+    expect([...indicator.querySelectorAll("i")].map((step) => step.getAttribute("data-step"))).toEqual([
+      "1",
+      "2",
+      "3",
+      "4",
+    ]);
+    expect(indicator.querySelectorAll("i.active")).toHaveLength(1);
+    expect(indicator.querySelector("i.active")).toHaveAttribute("data-step", String(level));
+
+    unmount();
+    renderWithLocale(<PlanetDestinationCard onOpen={vi.fn()} planet={planet} />, { locale: "it" });
+    const translated = screen.getByRole("img", { name: italian });
+    expect(translated).toHaveAttribute("data-tooltip", italian);
+    expect(translated.querySelector("i.active")).toHaveAttribute("data-step", String(level));
+  });
+
+  it.each([
+    ["en", "Moon"],
+    ["it", "Luna"],
+  ] as const)("shows a separate moon icon in %s", (locale, label) => {
     renderWithLocale(
       <PlanetDestinationCard
         onOpen={vi.fn()}
-        planet={makePlanet({ almanacFacts: [{ label: "planet.size", value: size }] })}
+        planet={makePlanet({ almanacFacts: [{ label: "planet.size", value: "Moon" }] })}
       />,
+      { locale },
     );
-    expect(screen.getByRole("img", { name: size }).querySelector("i.active")).toHaveAttribute(
-      "data-step",
-      String(level),
-    );
+    const indicator = screen.getByRole("img", { name: label });
+    expect(indicator).toHaveAttribute("data-tooltip", label);
+    expect(indicator.querySelector("svg.lucide-moon")).not.toBeNull();
+    expect(indicator.querySelectorAll("i")).toHaveLength(0);
+  });
+
+  it("sizes four circles and reserves their added width in both views", () => {
+    const style = document.createElement("style");
+    style.textContent = readFileSync(path.resolve(__dirname, "../../../src/styles/planets.css"), "utf8");
+    document.head.append(style);
+    try {
+      if (!style.sheet) throw new Error("Unable to load planet styles.");
+      const rules = Array.from(style.sheet.cssRules);
+      const findRule = (selector: string, candidates = rules) => {
+        const rule = [...candidates]
+          .reverse()
+          .find((item): item is CSSStyleRule => item instanceof CSSStyleRule && item.selectorText === selector);
+        if (!rule) throw new Error(`Missing CSS rule: ${selector}`);
+        return rule;
+      };
+      const gap = Number.parseFloat(findRule(".planet-size-indicator").style.gap);
+      for (const [prefix, expected] of [
+        ["", [6, 10, 14, 18]],
+        [".sidebar-compact ~ .main-panel ", [8, 13, 18, 23]],
+      ] as const) {
+        const widths = [1, 2, 3, 4].map((step) => {
+          const rule = findRule(`${prefix}.planet-size-indicator > i[data-step="${step}"]`);
+          expect(rule.style.height).toBe(rule.style.width);
+          return Number.parseFloat(rule.style.width);
+        });
+        expect(widths).toEqual(expected);
+        const card = findRule(`${prefix}.planet-mission-card:has(.planet-size-indicator > i[data-step="4"])`);
+        expect(Number.parseFloat(card.style.getPropertyValue("--planet-size-indicator-added-width"))).toBe(
+          widths[3] + gap,
+        );
+      }
+      for (const selector of [
+        ".planet-mission-card-copy .planet-discovery-counts",
+        ".planet-mission-card-copy .planet-mission-facts",
+        ".sidebar-compact ~ .main-panel .planet-mission-card-copy .planet-mission-facts",
+      ]) {
+        expect(findRule(selector).style.paddingRight).toContain("--planet-size-indicator-added-width");
+      }
+      const mobileRules = rules.flatMap((rule) => (rule instanceof CSSMediaRule ? Array.from(rule.cssRules) : []));
+      expect(
+        findRule(".main-panel.main-panel .planet-mission-card-copy .planet-mission-facts", mobileRules).style
+          .paddingRight,
+      ).toContain("--planet-size-indicator-added-width");
+    } finally {
+      style.remove();
+    }
   });
 
   it.each([
