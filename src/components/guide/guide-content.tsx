@@ -1164,9 +1164,10 @@ export async function GuideContent({
               </li>
               <li>
                 In basso a destra ogni scheda mostra, da sinistra a destra, il simbolo Paradiso (palma verde, solo se il
-                pianeta lo è), il simbolo Dissonante (onda viola, solo se il pianeta lo è), la dimensione del pianeta o
-                della luna e una goccia d&apos;acqua che si riempie in base alla quantità: vuota se il pianeta è
-                asciutto, un terzo con acqua bassa, due terzi con l&apos;oceano e piena con l&apos;acqua profonda.
+                pianeta lo è), il simbolo Dissonante (onda viola, solo se il pianeta lo è), quattro cerchi che indicano
+                se il pianeta è Piccolo, Medio, Grande o Enorme (oppure il simbolo della Luna) e una goccia d&apos;acqua
+                che si riempie in base alla quantità: vuota se il pianeta è asciutto, un terzo con acqua bassa, due
+                terzi con l&apos;oceano e piena con l&apos;acqua profonda.
               </li>
               <li>
                 In alto a destra compare la casella personale «Visitato» sui pianeti dei sistemi della tua stazione (se

@@ -53,7 +53,7 @@ export type PlanetDestination = Readonly<{
   }>;
 }>;
 
-const planetSizeLevels: Record<string, number> = { Small: 1, Medium: 2, Large: 3, Huge: 3 };
+const planetSizeLevels: Record<string, number> = { Small: 1, Medium: 2, Large: 3, Huge: 4 };
 
 function PlanetSizeIndicator({ size, label }: Readonly<{ size?: string; label: (value: string) => string }>) {
   if (!size) return null;
@@ -68,7 +68,7 @@ function PlanetSizeIndicator({ size, label }: Readonly<{ size?: string; label: (
   if (!level) return null;
   return (
     <span aria-label={label(size)} className="planet-size-indicator" data-tooltip={label(size)} role="img">
-      {[1, 2, 3].map((step) => (
+      {[1, 2, 3, 4].map((step) => (
         <i className={step === level ? "active" : undefined} data-step={step} key={step} />
       ))}
     </span>
