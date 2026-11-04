@@ -51,6 +51,17 @@ describe("guide page", () => {
     expect(screen.getAllByRole("article").length).toBeGreaterThan(5);
   });
 
+  it("explains cultivable plants, extractor materials, and product search", async () => {
+    mockFetch({});
+    const { container } = renderPage(await GuideContent({ alliance: defaultAlliance, standalone: false }));
+    const section = container.querySelector("#farm");
+    expect(section).toHaveTextContent("Il modulo propone piante coltivabili");
+    expect(section).toHaveTextContent("materiali ottenibili con estrattori minerari o di gas");
+    expect(section).toHaveTextContent("il modulo e la scheda mostrano il prodotto");
+    expect(section).toHaveTextContent("puoi cercare sia la pianta sia il prodotto");
+    expect(section).toHaveTextContent("il prodotto compare tra parentesi dopo il nome della pianta");
+  });
+
   it("uses explorer and builder tasks in the matching third-method examples", async () => {
     mockFetch({});
     const { container } = renderPage(await GuideContent({ alliance: defaultAlliance, standalone: false }));

@@ -9,6 +9,7 @@ import { GalaxyLabel } from "@/components/cards/station-card/parts";
 import { useLocale } from "@/components/providers/locale-provider";
 import { isFarmPlant, type Farm } from "@/lib/farms/farms";
 import { farmDetailHref, type DetailOrigin } from "@/lib/navigation/detail-links";
+import { plantResourceProduct } from "@/lib/planets/plant-products";
 
 export type FarmEntry = Farm &
   Readonly<{
@@ -97,7 +98,7 @@ export function FarmCard({
           </span>
           <ul aria-label={t(title)}>
             {items.map((resource) => (
-              <li key={resource}>{tv(resource)}</li>
+              <li key={resource}>{tv(key === "plants" ? plantResourceProduct(resource) : resource)}</li>
             ))}
           </ul>
         </div>

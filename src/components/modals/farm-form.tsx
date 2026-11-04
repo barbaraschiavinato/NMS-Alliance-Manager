@@ -6,6 +6,7 @@ import { SystemAddressField, type SystemAddressValidation } from "@/components/s
 import { useLocale } from "@/components/providers/locale-provider";
 import type { AllianceMember } from "@/lib/members/member-types";
 import { galaxyNames } from "@/lib/planets/galaxies";
+import { plantResourceProduct, plantResourceSearchText } from "@/lib/planets/plant-products";
 import { generateSystemName } from "@/lib/planets/system-name";
 import { decodePortalAddress } from "@/lib/missions/missions";
 import { isSameSystem } from "@/lib/navigation/detail-links";
@@ -37,7 +38,10 @@ export type FarmFormValues = Readonly<{
 export function FarmResourcePicker({
   selected,
   onChange,
-}: Readonly<{ selected: readonly FarmResource[]; onChange: (resources: FarmResource[]) => void }>) {
+}: Readonly<{
+  selected: readonly FarmResource[];
+  onChange: (resources: FarmResource[]) => void;
+}>) {
   const { t, tv } = useLocale();
   const [filter, setFilter] = useState("");
   const query = filter.trim().toLocaleLowerCase();
@@ -68,11 +72,18 @@ export function FarmResourcePicker({
       <div className="farm-resource-groups">
         {groups.map((group) => {
           const items = (group.items as readonly FarmResource[])
-            .map((resource) => ({ resource, label: tv(resource) }))
-            .filter(
-              ({ resource, label }) =>
-                !query || label.toLocaleLowerCase().includes(query) || resource.toLocaleLowerCase().includes(query),
-            )
+            .map((resource) => {
+              const label = tv(group.key === "plants" ? plantResourceProduct(resource) : resource);
+              return {
+                resource,
+                label,
+                searchText:
+                  group.key === "plants"
+                    ? plantResourceSearchText(resource, tv)
+                    : `${resource} ${label}`.toLocaleLowerCase(),
+              };
+            })
+            .filter(({ searchText }) => !query || searchText.includes(query))
             .sort((left, right) => left.label.localeCompare(right.label));
           if (items.length === 0) return null;
           return (

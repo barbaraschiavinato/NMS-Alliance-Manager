@@ -279,6 +279,9 @@ describe("FarmExamples", () => {
     renderWithLocale(<FarmExamples />);
     expect(screen.getByDisplayValue("Sistema Esempio")).toBeInTheDocument();
     expect(screen.getByDisplayValue("+12.34, -56.78")).toBeInTheDocument();
+    expect(screen.getAllByText("Solanium")).toHaveLength(2);
+    expect(screen.getAllByText("Frost Crystal")).toHaveLength(2);
+    expect(screen.getByText("Solar Vine (Solanium)")).toBeInTheDocument();
     for (const button of screen.getAllByRole("button", { hidden: true })) fireEvent.click(button);
     expect(screen.getAllByText("Serra di Solanium").length).toBeGreaterThan(0);
   });

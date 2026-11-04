@@ -2,6 +2,7 @@
 
 import { useLocale } from "@/components/providers/locale-provider";
 import { RotateCcw, Search, SlidersHorizontal, X } from "lucide-react";
+import { plantResourceKey, plantResourceLabel } from "@/lib/planets/plant-products";
 import type { SystemFeature } from "@/lib/planets/system-feature";
 
 const featureLabels: Record<SystemFeature, string> = {
@@ -383,12 +384,15 @@ export function PlanetFilters({
             <select
               aria-label={t("planet.filter_plants")}
               onChange={(event) => onChange("plant", event.target.value)}
-              value={values.plant}
+              value={
+                options.plants.find((option) => plantResourceKey(option) === plantResourceKey(values.plant)) ??
+                values.plant
+              }
             >
               <option value="">{t("planet.all_plants")}</option>
               {options.plants.map((value) => (
                 <option key={value} value={value}>
-                  {tv(value)}
+                  {plantResourceLabel(value, tv)}
                 </option>
               ))}
             </select>
@@ -514,7 +518,7 @@ export function PlanetActiveFilters({
     },
     values.plant && {
       key: "plant",
-      label: `${t("common.plants")}: ${tv(values.plant)}`,
+      label: `${t("common.plants")}: ${plantResourceLabel(values.plant, tv)}`,
       clear: () => onChange("plant", ""),
     },
     values.mineral && {

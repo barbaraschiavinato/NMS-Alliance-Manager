@@ -5,6 +5,7 @@ import { FileSpreadsheet, Search, SlidersHorizontal } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { AllianceMember, AllianceSettings } from "@/lib/members/member-types";
 import { galaxyNames } from "@/lib/planets/galaxies";
+import { plantResourceLabel, plantResourceSearchText } from "@/lib/planets/plant-products";
 import { listPageSize } from "@/lib/navigation/pagination";
 import { isFarmPlant, type FarmStationName } from "@/lib/farms/farms";
 import { emptyPlanetFilterValues, PlanetActiveFilters } from "@/components/forms/planet-filters";
@@ -145,7 +146,7 @@ export function FarmsPage({
             farm.coordinates ?? "",
             farm.note ?? "",
             galaxyNames[farm.galaxy],
-            ...farm.resources.flatMap((resource) => [resource, tv(resource)]),
+            ...farm.resources.map((resource) => plantResourceSearchText(resource, tv)),
           ]
             .join(" ")
             .toLocaleLowerCase()
@@ -155,12 +156,14 @@ export function FarmsPage({
     return [...filtered].sort((left, right) => right.createdAt.localeCompare(left.createdAt));
   }, [farms, filters, ownFarms, search, t, tab, tv]);
   const filterOptions = useMemo(() => {
-    const resources = [...new Set(farms.flatMap((farm) => farm.resources))].sort((left, right) =>
-      tv(left).localeCompare(tv(right)),
-    );
+    const resources = [...new Set(farms.flatMap((farm) => farm.resources))];
     return {
-      plants: resources.filter((resource) => isFarmPlant(resource)),
-      minerals: resources.filter((resource) => !isFarmPlant(resource)),
+      plants: resources
+        .filter((resource) => isFarmPlant(resource))
+        .sort((left, right) => plantResourceLabel(left, tv).localeCompare(plantResourceLabel(right, tv))),
+      minerals: resources
+        .filter((resource) => !isFarmPlant(resource))
+        .sort((left, right) => tv(left).localeCompare(tv(right))),
     };
   }, [farms, tv]);
   const hasActiveFilters = Boolean(filters.plant || filters.mineral);
@@ -398,7 +401,7 @@ export function FarmsPage({
                       <option value="">{t("planet.all_plants")}</option>
                       {filterOptions.plants.map((value) => (
                         <option key={value} value={value}>
-                          {tv(value)}
+                          {plantResourceLabel(value, tv)}
                         </option>
                       ))}
                     </select>
