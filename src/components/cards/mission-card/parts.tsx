@@ -21,6 +21,7 @@ import { type MissionSystemStatus, type PlanetSystemStatuses } from "@/lib/plane
 import { useEffect, useRef, useState } from "react";
 import { type MemberMessageContext } from "@/components/modals/member-card-dialog";
 import { useLocale } from "@/components/providers/locale-provider";
+import { useAlmanacCacheOnly } from "@/components/providers/almanac-cache-policy";
 import type { StationOwnerOption } from "@/components/modals/mission-form";
 import {
   findMissionStation,
@@ -216,6 +217,7 @@ export function MissionStationLink({
 }>) {
   const { t } = useLocale();
   const station = findMissionStation(mission, stationOwners);
+  const cacheOnly = useAlmanacCacheOnly();
   if (!canManage || !stationOwnersLoaded) return null;
   if (station) {
     const label = t("missions.open_linked_station");
@@ -244,6 +246,7 @@ export function MissionStationLink({
       className="member-icon-action member-station-filter mission-create-station"
       data-tooltip={label}
       href={`/stations?${params.toString()}`}
+      prefetch={cacheOnly ? false : undefined}
       title={label}
     >
       <CirclePlus size={15} />
@@ -557,6 +560,7 @@ export function useMissionAlmanacPlanet(
   mission: Mission,
   provided?: Record<string, unknown> | null,
 ): Record<string, unknown> | null {
+  const cacheOnly = useAlmanacCacheOnly();
   const [planet, setPlanet] = useState<Record<string, unknown> | null>(null);
   const enabled = provided === undefined;
   const address = mission.systemAddress;
@@ -573,6 +577,7 @@ export function useMissionAlmanacPlanet(
       return;
     const controller = new AbortController();
     const params = new URLSearchParams({ address, galaxy: String(mission.galaxy) });
+    if (cacheOnly) params.set("cacheOnly", "1");
 
     fetch(`/api/missions/planet?${params}`, { signal: controller.signal, cache: "no-store" })
       .then(async (response) => {
@@ -586,7 +591,7 @@ export function useMissionAlmanacPlanet(
       });
 
     return () => controller.abort();
-  }, [address, enabled, mission.galaxy, validPortalAddress]);
+  }, [address, cacheOnly, enabled, mission.galaxy, validPortalAddress]);
 
   return provided ?? planet;
 }

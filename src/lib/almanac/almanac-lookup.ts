@@ -62,6 +62,7 @@ export type AlmanacLookupResult = Readonly<{ planet: Record<string, unknown> | n
 // Legge la cache una sola volta, scarica solo i pianeti mancanti e salva tutto con un'unica scrittura.
 export async function lookupAlmanacPlanets(
   targets: ReadonlyArray<Readonly<{ portal: string; galaxy: number }>>,
+  { cacheOnly = false }: Readonly<{ cacheOnly?: boolean }> = {},
 ): Promise<Map<string, AlmanacLookupResult>> {
   let getCached: Awaited<ReturnType<typeof readAlmanacCache>>;
   try {
@@ -78,11 +79,16 @@ export async function lookupAlmanacPlanets(
     const address = portal.toUpperCase();
     const key = `${address}:${galaxy}`;
     const cached = getCached(address, galaxy);
+    if (cacheOnly) {
+      results.set(key, { planet: cached, failed: false });
+      continue;
+    }
     if (cached && !(cached.kind === "planet" && cached.lines === undefined))
       results.set(key, { planet: cached, failed: false });
     else if (!results.has(key) && !missing.some((item) => item.key === key)) missing.push({ address, galaxy, key });
   }
 
+  if (cacheOnly) return results;
   const fetched: { portalCode: string; galaxy: number; response: Record<string, unknown> }[] = [];
   for (let index = 0; index < missing.length; index += 6) {
     await Promise.all(

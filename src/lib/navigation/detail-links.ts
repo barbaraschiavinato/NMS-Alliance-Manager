@@ -4,6 +4,7 @@ export const detailOrigins = {
   stations: { href: "/stations", label: "details.back_to_stations" },
   planets: { href: "/planets", label: "details.back_to_planets" },
   map: { href: "/map", label: "details.back_to_map" },
+  farms: { href: "/farms", label: "details.back_to_farms" },
   missions: { href: "/missions", label: "details.back_to_missions" },
   messages: { href: "/messages", label: "details.back_to_messages" },
   help: { href: "/help-requests", label: "details.back_to_help" },
@@ -13,7 +14,7 @@ export type DetailOrigin = keyof typeof detailOrigins;
 
 export function internalDetailDestination(value: unknown): string | undefined {
   if (typeof value !== "string" || value.length > 8192 || /[\\\s#]/.test(value)) return undefined;
-  if (!/^\/(stations|missions|planets|map|messages|help-requests|taxi)(\/[^/?]+)?(?:\?[^#]*)?$/.test(value))
+  if (!/^\/(stations|missions|planets|map|messages|help-requests|taxi|farms)(\/[^/?]+)?(?:\?[^#]*)?$/.test(value))
     return undefined;
   if (
     value
@@ -41,8 +42,8 @@ export function detailReturnDestination(current: string, fallback: string, delet
   return destination;
 }
 
-export function parseDetailOrigin(value: unknown): DetailOrigin {
-  return typeof value === "string" && Object.hasOwn(detailOrigins, value) ? (value as DetailOrigin) : "stations";
+export function parseDetailOrigin(value: unknown, fallback: DetailOrigin = "stations"): DetailOrigin {
+  return typeof value === "string" && Object.hasOwn(detailOrigins, value) ? (value as DetailOrigin) : fallback;
 }
 
 export function stationId(station: StationIdentity) {
@@ -56,6 +57,10 @@ export function stationDetailHref(station: StationIdentity | string, origin?: De
 
 export function missionDetailHref(id: string, origin: DetailOrigin = "missions") {
   return `/missions/${encodeURIComponent(id)}?from=${origin}`;
+}
+
+export function farmDetailHref(id: string, origin: DetailOrigin = "farms") {
+  return `/farms/${encodeURIComponent(id)}?from=${origin}`;
 }
 
 export function taxiDetailHref(id: string) {

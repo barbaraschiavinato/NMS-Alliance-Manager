@@ -1,7 +1,8 @@
-import { strFromU8, unzipSync } from "fflate";
+import { strFromU8 } from "fflate";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { signInAs } from "../../helpers/auth";
 import { makeMember, seedMembers, writeDataFile } from "../../helpers/members";
+import { readWorkbook } from "../../helpers/xlsx";
 import { castMembers, makeCast, resetData, storedMission, writeRawDataFile, type Cast } from "../helpers/fixtures";
 
 vi.mock("@/auth", async () => (await import("../../helpers/auth")).authMock);
@@ -21,29 +22,6 @@ beforeEach(() => {
 async function exportStations() {
   const { GET } = await import("@/app/api/stations/export/route");
   return GET();
-}
-
-function unescapeXml(value: string) {
-  return value
-    .replaceAll("&lt;", "<")
-    .replaceAll("&gt;", ">")
-    .replaceAll("&quot;", '"')
-    .replaceAll("&apos;", "'")
-    .replaceAll("&amp;", "&");
-}
-
-// Legge il workbook prodotto dalla route e restituisce le righe del primo foglio come matrice di stringhe.
-async function readWorkbook(response: Response) {
-  const files = unzipSync(new Uint8Array(await response.arrayBuffer()));
-  const sheet = strFromU8(files["xl/worksheets/sheet1.xml"]);
-  const rows = [...sheet.matchAll(/<row r="(\d+)">(.*?)<\/row>/g)].map(([, rowNumber, cells]) => {
-    const values = [
-      ...cells.matchAll(/<c r="([A-Z]+)(\d+)" t="inlineStr"><is><t xml:space="preserve">(.*?)<\/t><\/is><\/c>/g),
-    ];
-    for (const [, , cellRow] of values) expect(cellRow).toBe(rowNumber);
-    return values.map(([, , , text]) => unescapeXml(text));
-  });
-  return { files, sheet, rows };
 }
 
 describe("GET /api/stations/export", () => {
@@ -76,7 +54,7 @@ describe("GET /api/stations/export", () => {
     expect(response.headers.get("content-disposition")).toMatch(
       /^attachment; filename="stazioni-\d{4}-\d{2}-\d{2}\.xlsx"$/,
     );
-    const { files, rows } = await readWorkbook(response);
+    const { files, sheet, rows } = await readWorkbook(response);
     expect(Object.keys(files).sort()).toEqual([
       "[Content_Types].xml",
       "_rels/.rels",
@@ -85,6 +63,15 @@ describe("GET /api/stations/export", () => {
       "xl/worksheets/sheet1.xml",
     ]);
     expect(strFromU8(files["xl/workbook.xml"])).toContain('<sheet name="Stazioni"');
+    expect(
+      [...sheet.matchAll(/<col min="(\d+)" max="(\d+)" width="(\d+)" customWidth="1"\/>/g)].map(
+        ([, min, max, width]) => [Number(min), Number(max), Number(width)],
+      ),
+    ).toEqual(
+      [28, 18, 24, 28, 24, 32, 18, 18, 24, 18, 24, 24, 24, 60, 24, 18, 16, 34, 24, 24, 18, 24, 18, 18, 18, 24].map(
+        (width, index) => [index + 1, index + 1, width],
+      ),
+    );
     expect(rows).toEqual([
       [
         "Nome stazione",

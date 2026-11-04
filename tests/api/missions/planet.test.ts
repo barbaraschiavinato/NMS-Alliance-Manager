@@ -29,6 +29,16 @@ beforeEach(() => {
 });
 
 describe("GET /api/missions/planet", () => {
+  it("answers cache-only lookups from the cache without contacting the Almanac", async () => {
+    signInAs(user);
+    expect((await lookup(`address=${PORTAL}&galaxy=0&cacheOnly=1`)).status).toBe(404);
+    writeDataFile("almanac.json", { [PORTAL]: { 0: planet } });
+    const response = await lookup(`address=${PORTAL}&galaxy=0&cacheOnly=1`);
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ planet: { portal: PORTAL } });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it("requires a session", async () => {
     expect((await lookup(`address=${PORTAL}&galaxy=0`)).status).toBe(401);
     expect(fetchMock).not.toHaveBeenCalled();

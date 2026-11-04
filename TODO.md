@@ -7,6 +7,10 @@ description: Features and work that are still missing
 
 Things that are still missing. Remove an item once it is done.
 
+## T-t4d1as: Block path traversal in alliance image requests
+
+Fix C-rd3po4 in `src/app/api/alliance/image/route.ts` so approved members cannot retrieve unrelated private Blob objects. Reject encoded and unencoded traversal paths, preserve legitimate branding images and membership checks, and turn the pending regression in `tests/api/alliance/image.test.ts` into passing tests.
+
 ## T-cik3i5: Extend alerts to help requests and private messages
 
 Agreed scope (2026-10-22). Taxi is implemented with separate Discord/Telegram credentials, admin settings and tests, and per-member, multi-device Web Push preferences. Extend the same notification infrastructure to the remaining services:

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type SubmitEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type SubmitEvent } from "react";
 import { CircleAlert, Orbit, Pencil, Plus, X } from "lucide-react";
 
 import { Sidebar } from "@/components/layout/sidebar";
@@ -44,6 +44,7 @@ import { DetailBackLink, DetailSection, useDetailReturn } from "@/components/sha
 import { MissionDashboard } from "@/components/pages/mission-dashboard";
 import { PlanetsPage } from "@/components/pages/planets-page";
 import { HelpRequestsPage } from "@/components/pages/help-requests-page";
+import { LinkedFarms } from "@/components/shared/linked-farms";
 import type { PlanetDestination } from "@/components/cards/planet-destination-card";
 import {
   detailOrigins,
@@ -54,6 +55,17 @@ import {
   type StationIdentity,
   type SystemIdentity,
 } from "@/lib/navigation/detail-links";
+
+export type StationDetail = Readonly<{
+  station: StationIdentity | null;
+  system?: SystemIdentity;
+  missionId?: string;
+  associatedFirst?: boolean;
+  planets: PlanetDestination[];
+  featuredPlanet?: PlanetDestination;
+  almanacLookupFailed: boolean;
+  origin?: DetailOrigin;
+}>;
 
 export function StationsPage({
   currentMember,
@@ -66,6 +78,7 @@ export function StationsPage({
   sidebarStationCount,
   sidebarUserCount,
   detail,
+  embedded = false,
 }: Readonly<{
   currentMember: AllianceMember;
   alliance: AllianceSettings;
@@ -76,15 +89,8 @@ export function StationsPage({
   sidebarStationCount: number;
   sidebarOfflineCount?: number;
   sidebarUserCount?: number;
-  detail?: Readonly<{
-    station: StationIdentity | null;
-    system?: SystemIdentity;
-    missionId?: string;
-    associatedFirst?: boolean;
-    planets: PlanetDestination[];
-    almanacLookupFailed: boolean;
-    origin?: DetailOrigin;
-  }>;
+  detail?: StationDetail;
+  embedded?: boolean;
 }>) {
   const router = useRouter();
   const returnDestination = useDetailReturn(detailOrigins[detail?.origin ?? "stations"].href);
@@ -200,15 +206,15 @@ export function StationsPage({
     activeStationTab === "mine" ? ownDiscoveredStations : statusFilteredStations,
   );
 
-  async function fetchStations() {
-    const response = await fetch("/api/stations", { cache: "no-store" });
+  const fetchStations = useCallback(async () => {
+    const response = await fetch(embedded ? "/api/stations?cacheOnly=1" : "/api/stations", { cache: "no-store" });
     const body: unknown = await response.json();
     if (!response.ok || !body || typeof body !== "object" || !("stations" in body) || !Array.isArray(body.stations)) {
       const message = body && typeof body === "object" && "error" in body ? body.error : null;
       throw new Error(typeof message === "string" ? message : "Unable to load space stations.");
     }
     return parseStations(body.stations);
-  }
+  }, [embedded]);
 
   async function refreshStations() {
     setStations(await fetchStations());
@@ -294,7 +300,7 @@ export function StationsPage({
           setError(error_ instanceof Error ? error_.message : t("errors.unable_to_load_members"));
         });
     }
-  }, [canCreateMissions, t]);
+  }, [canCreateMissions, fetchStations, t]);
 
   useEffect(() => {
     if (!initialCreateStation) return;
@@ -421,7 +427,7 @@ export function StationsPage({
     setError("");
     setNotice("");
     try {
-      const response = await fetch("/api/stations", {
+      const response = await fetch(embedded ? "/api/stations?cacheOnly=1" : "/api/stations", {
         method: editingStation ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(
@@ -458,10 +464,11 @@ export function StationsPage({
       setStationNameEdited(false);
       setValidation({ valid: false, lookup: null });
       closeStationDialog();
-      if (detail?.missionId) router.refresh();
+      if (detail?.missionId || embedded) router.refresh();
       if (
         detail?.station &&
         !detail.missionId &&
+        !embedded &&
         (canonicalPortal !== detail.station.portal ||
           galaxy !== detail.station.galaxy ||
           requestedOwnerId !== detail.station.ownerId)
@@ -506,7 +513,7 @@ export function StationsPage({
     setError("");
     setNotice("");
     try {
-      const response = await fetch("/api/stations", {
+      const response = await fetch(embedded ? "/api/stations?cacheOnly=1" : "/api/stations", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ portal: stationPortal, galaxy: stationGalaxy, ownerId }),
@@ -518,7 +525,7 @@ export function StationsPage({
       }
       setStations(parseStations(body.stations));
       setNotice(t("stations.station_removed_from_the_owner_s_archive"));
-      if (detail?.missionId) router.refresh();
+      if (detail?.missionId || embedded) router.refresh();
       else if (detail) router.replace(returnDestination);
     } catch (error_: unknown) {
       setError(error_ instanceof Error ? error_.message : t("errors.deletion_failed"));
@@ -557,7 +564,7 @@ export function StationsPage({
       setFlashNotice("missions.mission_created");
       router.push(
         contextualDetailHref(
-          missionDetailHref(created[0].id, "stations"),
+          missionDetailHref(created[0].id, embedded ? "farms" : "stations"),
           `${window.location.pathname}${window.location.search}`,
         ),
       );
@@ -579,7 +586,7 @@ export function StationsPage({
         <StationList
           allianceHub={{ portal: allianceSettings.portalCode, galaxy: allianceSettings.galaxy }}
           compact={Boolean(detail)}
-          showDetailLink={!detail || Boolean(detail.missionId)}
+          showDetailLink={!detail || Boolean(detail.missionId) || embedded}
           activeStationTab={activeStationTab}
           canChooseStationView={canChooseStationView}
           canCreateMissions={canCreateMissions}
@@ -625,27 +632,80 @@ export function StationsPage({
     </DetailSection>
   );
 
-  return (
-    <div className={`app-shell${pageMember.pulseEffectsEnabled === false ? " pulse-effects-disabled" : ""}`}>
-      <Sidebar
-        activeSection={detail?.missionId ? "missioni" : "stazioni"}
+  const missionSection =
+    detail && detailSystem ? (
+      <MissionDashboard
+        refreshRevision={detailRevision}
         currentMember={pageMember}
-        missionCount={missionCount}
-        settings={allianceSettings}
-        stationCount={loading ? sidebarStationCount : stations.length}
-        offlineCount={sidebarOfflineCount}
-        userCount={sidebarUserCount}
+        alliance={allianceSettings}
+        sidebarStationCount={stations.length}
+        systemScope={detailSystem}
+        featuredMissionId={detail.missionId}
+        associatedFirst={detail.associatedFirst}
+        detailOrigin={embedded ? "farms" : undefined}
+        returnHref={detailOrigins[detail.origin ?? "missions"].href}
+        beforeAssociated={stationSection}
+        onChanged={() => {
+          void refreshStations().catch((error_: unknown) =>
+            setError(error_ instanceof Error ? error_.message : t("errors.unable_to_load_space_stations")),
+          );
+          void fetch("/api/planet-status", { cache: "no-store" })
+            .then(async (response) => {
+              const body = asRecord(await response.json());
+              if (!response.ok || !body) throw new Error(t("errors.request_failed"));
+              setPlanetStatuses(parsePlanetSystemStatuses(body.planets));
+            })
+            .catch((error_: unknown) =>
+              setError(error_ instanceof Error ? error_.message : t("errors.request_failed")),
+            );
+          router.refresh();
+        }}
       />
-      <section className="main-panel">
-        <Header
+    ) : null;
+  const planetSection = detail ? (
+    <PlanetsPage
+      embedded
+      alliance={allianceSettings}
+      currentMember={pageMember}
+      planets={detail.planets}
+      featuredPlanet={detail.featuredPlanet}
+      beforeSystem={detail.featuredPlanet ? missionSection : undefined}
+      almanacLookupFailed={detail.almanacLookupFailed}
+      missionCount={missionCount}
+      stationCount={stations.length}
+    />
+  ) : null;
+  const Content = embedded ? "div" : "main";
+
+  return (
+    <div
+      className={
+        embedded ? undefined : `app-shell${pageMember.pulseEffectsEnabled === false ? " pulse-effects-disabled" : ""}`
+      }
+    >
+      {!embedded && (
+        <Sidebar
+          activeSection={detail?.missionId ? "missioni" : "stazioni"}
           currentMember={pageMember}
-          onAdminOpen={() => setAdminOpen(true)}
-          onProfileOpen={() => setProfileOpen(true)}
-          onProfileSaved={(profile) => setPageMember((current) => ({ ...current, ...profile }))}
-          sectionTitle={t(detail?.missionId ? "missions.section_title" : "stations.stations")}
+          missionCount={missionCount}
           settings={allianceSettings}
+          stationCount={loading ? sidebarStationCount : stations.length}
+          offlineCount={sidebarOfflineCount}
+          userCount={sidebarUserCount}
         />
-        {!detail && (
+      )}
+      <section className={embedded ? undefined : "main-panel"}>
+        {!embedded && (
+          <Header
+            currentMember={pageMember}
+            onAdminOpen={() => setAdminOpen(true)}
+            onProfileOpen={() => setProfileOpen(true)}
+            onProfileSaved={(profile) => setPageMember((current) => ({ ...current, ...profile }))}
+            sectionTitle={t(detail?.missionId ? "missions.section_title" : "stations.stations")}
+            settings={allianceSettings}
+          />
+        )}
+        {!detail && !embedded && (
           <Hero
             subtitle={t(
               canSeeAll || canCreateOwnSpecialtyMission
@@ -662,55 +722,43 @@ export function StationsPage({
             />
           </Hero>
         )}
-        <main className="content-wrap stations-page">
-          {detail && <DetailBackLink {...detailOrigins[detail.origin ?? "stations"]} />}
-          {(error || notice) && (
-            <p className={error ? "form-error" : "address-validation address-valid"}>
-              {error ? <CircleAlert size={15} /> : null}
-              {t(error || notice)}
-            </p>
-          )}
+        <Content className={embedded ? "stations-page" : "content-wrap stations-page"}>
+          {detail && !embedded && <DetailBackLink {...detailOrigins[detail.origin ?? "stations"]} />}
+          {(error || notice) &&
+            (embedded ? (
+              <Toast
+                message={error || notice}
+                tone={error ? "error" : "success"}
+                onClose={() => {
+                  setError("");
+                  setNotice("");
+                }}
+              />
+            ) : (
+              <p className={error ? "form-error" : "address-validation address-valid"}>
+                {error ? <CircleAlert size={15} /> : null}
+                {t(error || notice)}
+              </p>
+            ))}
 
           {!detail && stationSection}
           {detail && detailSystem && (
             <>
-              <MissionDashboard
-                refreshRevision={detailRevision}
-                currentMember={pageMember}
-                alliance={allianceSettings}
-                sidebarStationCount={stations.length}
-                systemScope={detailSystem}
-                featuredMissionId={detail.missionId}
-                associatedFirst={detail.associatedFirst}
-                returnHref={detailOrigins[detail.origin ?? "missions"].href}
-                beforeAssociated={stationSection}
-                onChanged={() => {
-                  void refreshStations().catch((error_: unknown) =>
-                    setError(error_ instanceof Error ? error_.message : t("errors.unable_to_load_space_stations")),
-                  );
-                  void fetch("/api/planet-status", { cache: "no-store" })
-                    .then(async (response) => {
-                      const body = asRecord(await response.json());
-                      if (!response.ok || !body) throw new Error(t("errors.request_failed"));
-                      setPlanetStatuses(parsePlanetSystemStatuses(body.planets));
-                    })
-                    .catch((error_: unknown) =>
-                      setError(error_ instanceof Error ? error_.message : t("errors.request_failed")),
-                    );
-                  router.refresh();
-                }}
-              />
-              <DetailSection title="details.system_and_planets">
-                <PlanetsPage
-                  embedded
-                  alliance={allianceSettings}
-                  currentMember={pageMember}
-                  planets={detail.planets}
-                  almanacLookupFailed={detail.almanacLookupFailed}
-                  missionCount={missionCount}
-                  stationCount={stations.length}
+              {detail.featuredPlanet ? (
+                planetSection
+              ) : (
+                <>
+                  {missionSection}
+                  <DetailSection title="details.system_and_planets">{planetSection}</DetailSection>
+                </>
+              )}
+              {!embedded && (
+                <LinkedFarms
+                  currentMemberId={pageMember.publicId}
+                  origin={detail.missionId ? "missions" : "stations"}
+                  system={detailSystem}
                 />
-              </DetailSection>
+              )}
               <HelpRequestsPage
                 alliance={allianceSettings}
                 currentMember={pageMember}
@@ -720,7 +768,7 @@ export function StationsPage({
               />
             </>
           )}
-        </main>
+        </Content>
       </section>
       {toast && <Toast autoCloseMs={5000} message={toast} onClose={dismissFlashNotice} />}
       {addOpen && (

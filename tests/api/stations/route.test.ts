@@ -117,6 +117,27 @@ describe("authorization shared by every method", () => {
   }
 });
 
+describe("cache-only requests", () => {
+  const cacheOnlyRequest = (method: string, body?: unknown) => jsonRequest(`${url}?cacheOnly=1`, method, body);
+
+  it("never contacts the Almanac when reading, adding or editing stations", async () => {
+    const route = await routes();
+    signInAs(cast.user);
+    const listed = await route.GET(cacheOnlyRequest("GET"));
+    expect(listed.status).toBe(200);
+    expect((await listed.json()).stations).toHaveLength(1);
+
+    const added = await route.POST(cacheOnlyRequest("POST", { portal: Q0, galaxy: 0 }));
+    expect(added.status).toBeLessThan(300);
+    expect((await added.json()).stations).toHaveLength(2);
+
+    const edited = await route.PATCH(cacheOnlyRequest("PATCH", patchBody()));
+    expect(edited.status).toBe(200);
+    expect(storedStations().find((station) => station.portal === P0)?.name).toBe("Renamed");
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
 describe("GET /api/stations", () => {
   it("reads a fully cached station list once without per-station reads or external requests", async () => {
     const stations = Array.from({ length: 20 }, (_, index) => ({

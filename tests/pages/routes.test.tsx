@@ -5,6 +5,8 @@ import HelpRequestsRoute from "@/app/help-requests/page";
 import TaxiRoute from "@/app/taxi/page";
 import RootLayout, { generateMetadata } from "@/app/layout";
 import LeaderboardRoute from "@/app/leaderboard/page";
+import FarmsRoute from "@/app/farms/page";
+import FarmDetailRoute from "@/app/farms/[id]/page";
 import StationMapRoute from "@/app/map/page";
 import Loading from "@/app/loading";
 import MemberGuideRoute from "@/app/member-guide/page";
@@ -24,6 +26,7 @@ import UsersPage from "@/app/users/page";
 import { GuideAppPage } from "@/components/pages/guide-app-page";
 import { HelpRequestsPage } from "@/components/pages/help-requests-page";
 import { LeaderboardPage, type LeaderboardBoard } from "@/components/pages/leaderboard-page";
+import { FarmsPage } from "@/components/pages/farms-page";
 import { StationMapPage } from "@/components/pages/station-map-page";
 import { LoginScreen } from "@/components/pages/login-screen";
 import { MembersPage } from "@/components/pages/members-page";
@@ -40,7 +43,8 @@ import { readAllStationPortals, readStationPortals, type OwnedStationPortal } fr
 import { lookupAlmanacPlanets } from "@/lib/almanac/almanac-lookup";
 import { readPlanetSystemStatuses } from "@/lib/planets/planet-system-status-store";
 import * as visitsStore from "@/lib/planets/planet-visits-store";
-import { readAlmanacCache } from "@/lib/almanac/almanac-store";
+import * as farmsStore from "@/lib/farms/farms-store";
+import { readAlmanacCache, readAlmanacResponse } from "@/lib/almanac/almanac-store";
 import { signInAs } from "../helpers/auth";
 import { defaultAlliance, makeMember, seedMembers, writeDataFile } from "../helpers/members";
 import { makeMission } from "./helpers";
@@ -57,7 +61,10 @@ vi.mock("@/lib/stations/stations-store", () => ({
   readStationPortals: vi.fn(async () => []),
 }));
 vi.mock("@/lib/planets/planet-system-status-store", () => ({ readPlanetSystemStatuses: vi.fn(async () => ({})) }));
-vi.mock("@/lib/almanac/almanac-store", () => ({ readAlmanacCache: vi.fn(async () => () => null) }));
+vi.mock("@/lib/almanac/almanac-store", () => ({
+  readAlmanacCache: vi.fn(async () => () => null),
+  readAlmanacResponse: vi.fn(async () => null),
+}));
 vi.mock("@/lib/almanac/almanac-lookup", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/almanac/almanac-lookup")>()),
   lookupAlmanacPlanets: vi.fn(async () => new Map()),
@@ -186,6 +193,7 @@ const sectionRoutes: [string, () => Promise<ReactElement>, unknown][] = [
   ["taxi", () => TaxiRoute(), HelpRequestsPage],
   ["planets", () => PlanetsRoute(), PlanetsPage],
   ["leaderboard", () => LeaderboardRoute(), LeaderboardPage],
+  ["farms", () => FarmsRoute(), FarmsPage],
   ["station map", () => StationMapRoute(), StationMapPage],
   ["users", () => UsersPage(), MembersPage],
   ["offline players", () => OfflinePlayersRoute(), OfflinePlayersPage],
@@ -619,10 +627,13 @@ describe("station detail route", () => {
       sidebarStationCount: 2,
       detail: { station: { portal: "1234567890AB", galaxy: 0, ownerId: id.user }, planets: [] },
     });
-    expect(vi.mocked(lookupAlmanacPlanets)).toHaveBeenLastCalledWith([
-      { portal: "1234567890AB", galaxy: 0 },
-      { portal: "2234567890AB", galaxy: 0 },
-    ]);
+    expect(vi.mocked(lookupAlmanacPlanets)).toHaveBeenLastCalledWith(
+      [
+        { portal: "1234567890AB", galaxy: 0 },
+        { portal: "2234567890AB", galaxy: 0 },
+      ],
+      { cacheOnly: false },
+    );
   });
 });
 
@@ -643,6 +654,199 @@ describe("messages and help requests routes", () => {
 
     signIn(moderator);
     expect(props(await route())).toMatchObject({ missionCount: 1, stationCount: 2, offlineCount: 1, userCount: 7 });
+  });
+});
+
+describe("farms route", () => {
+  it("passes the sidebar counters by role", async () => {
+    vi.mocked(readMissions).mockResolvedValue([makeMission()]);
+    signIn(user);
+    expect(props(await FarmsRoute())).toMatchObject({
+      missionCount: 1,
+      stationCount: 1,
+      offlineCount: undefined,
+      userCount: undefined,
+    });
+    signIn(moderator);
+    expect(props(await FarmsRoute())).toMatchObject({
+      missionCount: 1,
+      stationCount: 2,
+      offlineCount: 1,
+      userCount: 7,
+    });
+  });
+
+  it("passes only visible station names and preserves the user's own station counter", async () => {
+    vi.mocked(readAllStationPortals).mockResolvedValue([
+      { ...stationList[0], note: "not exposed" },
+      { ...stationList[1], name: "Builder base", note: "private" },
+    ]);
+    signIn(user);
+    const explorerProps = props(await FarmsRoute());
+    expect(explorerProps.stationCount).toBe(1);
+    expect(explorerProps.stationNames).toEqual([
+      { portal: stationList[0].portal, galaxy: 0, name: "Home Base" },
+      { portal: stationList[1].portal, galaxy: 0, name: "Builder base" },
+    ]);
+
+    vi.mocked(readStationPortals).mockResolvedValue([{ portal: "1234567890AB", galaxy: 0, name: "Own base" }]);
+    vi.mocked(readAllStationPortals).mockClear();
+    signIn(plainUser);
+    expect(props(await FarmsRoute())).toMatchObject({
+      stationCount: 1,
+      stationNames: [{ portal: "1234567890AB", galaxy: 0, name: "Own base" }],
+    });
+    expect(readAllStationPortals).not.toHaveBeenCalled();
+  });
+
+  it("applies ordinary station visibility to staff in simple view", async () => {
+    const simpleAdmin = makeMember({
+      publicId: "simple-farm-admin",
+      email: "simple-farm-admin@example.com",
+      role: "admin",
+      simpleView: true,
+      specialty: "",
+    });
+    seedMembers([admin, moderator, user, builder, plainUser, simpleAdmin]);
+    vi.mocked(readStationPortals).mockResolvedValue([{ portal: "1234567890AB", galaxy: 0, name: "Own base" }]);
+    vi.mocked(readAllStationPortals).mockClear();
+    signIn(simpleAdmin);
+    expect(props(await FarmsRoute()).stationNames).toEqual([{ portal: "1234567890AB", galaxy: 0, name: "Own base" }]);
+    expect(readAllStationPortals).not.toHaveBeenCalled();
+  });
+});
+
+describe("farm detail route", () => {
+  const farmRecord = (overrides: Record<string, unknown> = {}) => ({
+    id: "farm-1",
+    name: "Copper farm",
+    portal: "2234567890AB",
+    galaxy: 0,
+    systemName: "Farmland",
+    planetName: "Fields",
+    resources: ["Copper"],
+    ownerId: id.user,
+    createdAt: "2026-01-01T00:00:00.000Z",
+    ...overrides,
+  });
+  const cachedPlanet = { lines: { headline: { word: "Cached" }, band: { type: { word: "Lush" } } }, carries: [] };
+  const open = (farmId = "farm-1", from?: string) =>
+    FarmDetailRoute({
+      params: Promise.resolve({ id: farmId }),
+      ...(from ? { searchParams: Promise.resolve({ from }) } : {}),
+    });
+
+  beforeEach(() => {
+    vi.mocked(readAlmanacResponse).mockReset().mockResolvedValue(null);
+    vi.mocked(lookupAlmanacPlanets).mockReset().mockResolvedValue(new Map());
+  });
+  afterEach(() => {
+    writeDataFile("farms.json", []);
+    writeDataFile("planet-visits.json", {});
+  });
+
+  it("returns 404 for an unknown farm and gates pending members", async () => {
+    writeDataFile("farms.json", [farmRecord()]);
+    signIn(user);
+    await expect(open("missing")).rejects.toThrow("NEXT_NOT_FOUND");
+    signIn(pending);
+    expect((await open()).type).toBe(PendingApproval);
+  });
+
+  it("embeds the linked station with a placeholder planet when the planet is not cached", async () => {
+    writeDataFile("farms.json", [farmRecord()]);
+    writeDataFile("planet-visits.json", { [id.user]: ["0:2234567890AB"] });
+    vi.mocked(readMissions).mockResolvedValue([
+      makeMission({ id: "same", systemAddress: "1234567890AB" }),
+      makeMission({ id: "other", systemAddress: "1234567890AD" }),
+    ]);
+    signIn(user);
+    const element = await open("farm-1", "planets");
+    expect(element.type).toBe(FarmsPage);
+    const detail = props(element).detail as Record<string, unknown> & {
+      stationDetail: Record<string, unknown> & { featuredPlanet: Record<string, unknown> };
+    };
+    expect(detail).toMatchObject({ id: "farm-1", origin: "planets", planetDataUnavailable: true });
+    expect(detail.stationDetail).toMatchObject({
+      station: { portal: "1234567890AB", galaxy: 0, ownerId: id.user },
+      system: { portal: "1234567890AB", galaxy: 0 },
+      origin: "farms",
+    });
+    expect(detail.stationDetail.featuredPlanet).toMatchObject({
+      planetPortal: "2234567890AB",
+      planetNumber: 2,
+      portal: "1234567890AB",
+      system: "Farmland",
+      almanacName: "Fields",
+      canMarkVisited: true,
+      visited: true,
+      station: { portal: "1234567890AB", name: "Home Base" },
+    });
+    expect(readAlmanacResponse).toHaveBeenCalledWith("2234567890AB", 0, true);
+    expect(vi.mocked(lookupAlmanacPlanets).mock.calls[0][1]).toEqual({ cacheOnly: true });
+  });
+
+  it("uses cached details and the station name for a farm without a system name", async () => {
+    writeDataFile("farms.json", [farmRecord({ systemName: "", ownerId: null })]);
+    vi.mocked(readAlmanacResponse).mockResolvedValue(cachedPlanet as never);
+    signIn(builder);
+    const detail = props(await open()).detail as {
+      origin: string;
+      planetDataUnavailable: boolean;
+      stationDetail: { featuredPlanet: Record<string, unknown> };
+    };
+    expect(detail.origin).toBe("farms");
+    expect(detail.planetDataUnavailable).toBe(false);
+    expect(detail.stationDetail.featuredPlanet).toMatchObject({ system: "Home Base", almanacName: "Cached" });
+    expect(detail.stationDetail.featuredPlanet.canMarkVisited).toBeUndefined();
+  });
+
+  it("reuses the planet loaded for the station system", async () => {
+    writeDataFile("farms.json", [farmRecord()]);
+    vi.mocked(lookupAlmanacPlanets).mockImplementation(
+      async (targets) =>
+        new Map(targets.map(({ portal, galaxy }) => [`${portal}:${galaxy}`, { planet: cachedPlanet, failed: false }])),
+    );
+    signIn(user);
+    const detail = props(await open()).detail as {
+      planetDataUnavailable: boolean;
+      stationDetail: { featuredPlanet: Record<string, unknown> };
+    };
+    expect(detail.planetDataUnavailable).toBe(false);
+    expect(detail.stationDetail.featuredPlanet).toMatchObject({ planetPortal: "2234567890AB", almanacName: "Cached" });
+    expect(readAlmanacResponse).not.toHaveBeenCalled();
+  });
+
+  it("adds the farm planet to the system when the generated planet list does not include it", async () => {
+    writeDataFile("farms.json", [farmRecord({ portal: "6234567890AB" })]);
+    signIn(user);
+    const detail = props(await open()).detail as { stationDetail: { featuredPlanet: Record<string, unknown> } };
+    expect(detail.stationDetail.featuredPlanet).toMatchObject({ planetPortal: "6234567890AB" });
+  });
+
+  it("shows only the farm card when there is no station and no cached planet", async () => {
+    writeDataFile("farms.json", [farmRecord({ portal: "2999999999AB" })]);
+    signIn(user);
+    const detail = props(await open()).detail as Record<string, unknown>;
+    expect(detail).toEqual({ id: "farm-1", origin: "farms" });
+    expect(lookupAlmanacPlanets).not.toHaveBeenCalled();
+  });
+
+  it("shows the cached planet card when there is no station", async () => {
+    writeDataFile("farms.json", [farmRecord({ portal: "2999999999AB" })]);
+    vi.mocked(readAlmanacResponse).mockResolvedValue(cachedPlanet as never);
+    vi.mocked(readMissions).mockResolvedValue([
+      makeMission({ systemAddress: "1999999999AB", assignedMemberId: id.user, status: "in_progress" }),
+    ]);
+    signIn(user);
+    expect((props(await open()).detail as { planet: Record<string, unknown> }).planet).toMatchObject({
+      planetPortal: "2999999999AB",
+      almanacName: "Cached",
+      canMarkVisited: true,
+      visited: false,
+    });
+    signIn(plainUser);
+    expect((props(await open()).detail as { planet: Record<string, unknown> }).planet.canMarkVisited).toBeUndefined();
   });
 });
 
@@ -781,6 +985,49 @@ describe("planets route", () => {
       expect.objectContaining({ id: "m1", system: "Yellow · Trading · Low · Gek", systemLabelFromAlmanac: true }),
       expect.objectContaining({ id: "m2", system: "" }),
     ]);
+  });
+
+  it("links each planet to its newest farm and survives unreadable farms", async () => {
+    const farmRecord = (farmId: string, portal: string, createdAt: string) => ({
+      id: farmId,
+      name: farmId,
+      portal,
+      galaxy: 0,
+      planetName: "Planet",
+      resources: ["Copper"],
+      ownerId: id.user,
+      createdAt,
+    });
+    writeDataFile("farms.json", [
+      farmRecord("older", "1234567890AB", "2026-01-01T00:00:00.000Z"),
+      farmRecord("newest", "1234567890ab", "2026-03-01T00:00:00.000Z"),
+      farmRecord("middle", "1234567890AB", "2026-02-01T00:00:00.000Z"),
+    ]);
+    vi.mocked(lookupAlmanacPlanets).mockImplementation(
+      async (targets) =>
+        new Map(targets.map(({ portal, galaxy }) => [`${portal}:${galaxy}`, { planet: verdant, failed: false }])),
+    );
+    signIn(user);
+    const planetsOf = async () =>
+      (props(await PlanetsRoute()).planets as { planetPortal: string; farmId?: string }[]).map(
+        ({ planetPortal, farmId }) => [planetPortal, farmId],
+      );
+    expect(await planetsOf()).toEqual([
+      ["1234567890AB", "newest"],
+      ["2234567890AB", undefined],
+      ["1234567890AC", undefined],
+      ["2234567890AC", undefined],
+    ]);
+
+    const error = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    vi.spyOn(farmsStore, "readFarms").mockRejectedValueOnce(new Error("farms offline"));
+    expect((await planetsOf()).every(([, farmId]) => farmId === undefined)).toBe(true);
+    expect(error).toHaveBeenCalledWith("Unable to read farms", "farms offline");
+    vi.spyOn(farmsStore, "readFarms").mockRejectedValueOnce("offline");
+    expect((await planetsOf()).every(([, farmId]) => farmId === undefined)).toBe(true);
+    expect(error).toHaveBeenLastCalledWith("Unable to read farms", "Unknown error");
+    error.mockRestore();
+    writeDataFile("farms.json", []);
   });
 
   it("marks station links according to whether the member can create a mission from the station", async () => {
@@ -1121,6 +1368,7 @@ describe("leaderboard route", () => {
       { label: "leaderboard.stat_missions_completed", value: 2 },
       { label: "leaderboard.stat_tasks", value: 3 },
       { label: "leaderboard.stat_planets", value: 1 },
+      { label: "leaderboard.stat_farms", value: 0 },
       { label: "leaderboard.stat_members", value: 5 },
     ]);
     expect(
@@ -1169,6 +1417,60 @@ describe("leaderboard route", () => {
       [id.builder, 1],
     ]);
     writeDataFile("planet-visits.json", {});
+  });
+
+  it("ranks approved farm owners and counts unassigned farms only in the alliance total", async () => {
+    vi.mocked(readMissions).mockResolvedValue([]);
+    vi.mocked(readPlanetSystemStatuses).mockResolvedValue({});
+    vi.mocked(readAlmanacCache).mockResolvedValue(() => null);
+    const farm = (farmId: string, ownerId: string | null) => ({
+      id: farmId,
+      name: farmId,
+      portal: "1234567890AB",
+      galaxy: 0,
+      planetName: "Planet",
+      resources: ["Copper"],
+      ownerId,
+      createdAt: "2026-01-01T00:00:00.000Z",
+    });
+    writeDataFile("farms.json", [
+      farm("f1", id.user),
+      farm("f2", id.user),
+      farm("f3", id.builder),
+      farm("f4", id.pending),
+      farm("f5", null),
+    ]);
+    signIn(user);
+    const boards = props(await LeaderboardRoute()).boards as LeaderboardBoard[];
+    const board = boards.find((item) => item.id === "farms")!;
+    expect(board).toMatchObject({ title: "leaderboard.board_farms", accent: "farms" });
+    expect(board.entries.map((entry) => [entry.publicId, entry.count])).toEqual([
+      [id.user, 2],
+      [id.builder, 1],
+    ]);
+    expect(boards.find((item) => item.id === "alliance_stats")!.stats).toContainEqual({
+      label: "leaderboard.stat_farms",
+      value: 5,
+    });
+    writeDataFile("farms.json", []);
+  });
+
+  it("keeps the leaderboard when the stored farms cannot be read", async () => {
+    vi.mocked(readMissions).mockResolvedValue([]);
+    vi.mocked(readPlanetSystemStatuses).mockResolvedValue({});
+    vi.mocked(readAlmanacCache).mockResolvedValue(() => null);
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.spyOn(farmsStore, "readFarms").mockRejectedValueOnce("unexpected").mockRejectedValueOnce(new Error("disk"));
+    signIn(user);
+    for (const message of ["Unknown error", "disk"]) {
+      const boards = props(await LeaderboardRoute()).boards as LeaderboardBoard[];
+      expect(boards.find((item) => item.id === "farms")!.entries).toEqual([]);
+      expect(boards.find((item) => item.id === "alliance_stats")!.stats).toContainEqual({
+        label: "leaderboard.stat_farms",
+        value: 0,
+      });
+      expect(log).toHaveBeenLastCalledWith("Unable to read farms", message);
+    }
   });
 
   it("keeps the leaderboard when the stored visits cannot be read", async () => {

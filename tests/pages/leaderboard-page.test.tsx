@@ -59,6 +59,31 @@ afterEach(() => {
 });
 
 describe("LeaderboardPage", () => {
+  it("shows the farm board with its accent and honours disabled pulse effects", () => {
+    mockFetch({});
+    const { container } = renderPage(
+      <LeaderboardPage
+        alliance={defaultAlliance}
+        boards={[
+          {
+            id: "farms",
+            title: "leaderboard.board_farms",
+            empty: "leaderboard.empty_farms",
+            accent: "farms",
+            entries: [entry(0)],
+          },
+        ]}
+        currentMember={{ ...me, pulseEffectsEnabled: false }}
+        missionCount={0}
+        stationCount={0}
+      />,
+    );
+    expect(container.querySelector(".app-shell")).toHaveClass("pulse-effects-disabled");
+    const board = screen.getByRole("heading", { name: t("leaderboard.board_farms") }).closest("section")!;
+    expect(board).toHaveClass("leaderboard-widget-farms");
+    expect(board.querySelector("h3 svg")).not.toBeNull();
+  });
+
   it("renders stats, top ten lists, role widgets and empty boards", () => {
     mockFetch({});
     renderPage(

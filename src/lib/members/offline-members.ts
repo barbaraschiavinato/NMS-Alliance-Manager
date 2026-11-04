@@ -2,6 +2,7 @@ import { isValidNmsFriendCode } from "@/lib/members/member-types";
 import { readAccessData, writeAccessData } from "@/lib/members/access-store";
 import { reassignPrivateMessageMember } from "@/lib/messages/private-messages-store";
 import { reassignStationOwner } from "@/lib/stations/stations-store";
+import { reassignFarmOwner } from "@/lib/farms/farms-store";
 import { readMissions, writeMissions } from "@/lib/missions/store";
 
 export async function linkOfflineMember(offlineId: string, targetId: string): Promise<boolean> {
@@ -36,6 +37,7 @@ export async function linkOfflineMember(offlineId: string, targetId: string): Pr
     })),
   );
   await reassignStationOwner(offlineId, targetId);
+  await reassignFarmOwner(offlineId, targetId);
   await reassignPrivateMessageMember(offlineId, targetId);
 
   data.members = data.members.filter((member) => member.publicId !== offlineId);

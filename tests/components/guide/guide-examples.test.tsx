@@ -2,6 +2,7 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AddStationButtonExample } from "@/components/guide/add-station-button-example";
+import { FarmExamples } from "@/components/guide/farm-examples";
 import { MessageTabsExample } from "@/components/guide/message-tabs-example";
 import { MessageComposerExamples } from "@/components/guide/message-composer-examples";
 import { TaxiExamples } from "@/components/guide/taxi-examples";
@@ -270,5 +271,15 @@ describe("PlanetListExampleView", () => {
       <PlanetListExampleView planet={{ ...planet, ...overrides }} planetData={guideStationInit.response} />,
     );
     expect(within(screen.getByRole("dialog")).getByRole("heading", { level: 2 })).toHaveTextContent(heading);
+  });
+});
+
+describe("FarmExamples", () => {
+  it("shows the add button, the form and an inert farm card", () => {
+    renderWithLocale(<FarmExamples />);
+    expect(screen.getByDisplayValue("Sistema Esempio")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("+12.34, -56.78")).toBeInTheDocument();
+    for (const button of screen.getAllByRole("button", { hidden: true })) fireEvent.click(button);
+    expect(screen.getAllByText("Serra di Solanium").length).toBeGreaterThan(0);
   });
 });

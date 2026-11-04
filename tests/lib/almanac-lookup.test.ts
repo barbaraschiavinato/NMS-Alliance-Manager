@@ -213,6 +213,24 @@ describe("lookupAlmanacPlanets", () => {
     );
   });
 
+  it("returns only cached planets in cache-only mode, without contacting the Almanac", async () => {
+    writeDataFile("almanac.json", { "0123456789AB": { "0": { portal: "0123456789AB", cached: true } } });
+    const fetchMock = stubAlmanac();
+    const results = await lookupAlmanacPlanets(
+      [
+        { portal: "0123456789ab", galaxy: 0 },
+        { portal: "2123456789AB", galaxy: 0 },
+      ],
+      { cacheOnly: true },
+    );
+    expect(results.get("0123456789AB:0")).toEqual({
+      planet: expect.objectContaining({ cached: true }),
+      failed: false,
+    });
+    expect(results.get("2123456789AB:0")).toEqual({ planet: null, failed: false });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it("returns explicit failures instead of crashing when the cache cannot be read", async () => {
     mkdirSync(cachePath(), { recursive: true });
     const fetchMock = stubAlmanac();

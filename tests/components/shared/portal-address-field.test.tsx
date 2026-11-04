@@ -202,7 +202,7 @@ describe("SystemAddressField", () => {
   });
 
   it("verifies a valid address and reports the found planet", async () => {
-    const fetchMock = stubFetchJson({ found: true, systemLabel: "Alpha", planetType: "Lush" });
+    const fetchMock = stubFetchJson({ found: true, systemLabel: "Alpha", planetType: "Lush", planetName: "Ruba" });
     const onStateChange = vi.fn();
     const onLookupResolved = vi.fn();
     renderWithLocale(
@@ -220,7 +220,14 @@ describe("SystemAddressField", () => {
       "/api/missions/verify-system?address=0123456789AB&galaxy=2",
       expect.objectContaining({ signal: expect.any(AbortSignal) }),
     );
-    const lookup = { address: validAddress, galaxy: 2, status: "found", systemLabel: "Alpha", planetType: "Lush" };
+    const lookup = {
+      address: validAddress,
+      galaxy: 2,
+      status: "found",
+      systemLabel: "Alpha",
+      planetType: "Lush",
+      planetName: "Ruba",
+    };
     expect(onLookupResolved).toHaveBeenCalledWith(lookup);
     await waitFor(() => expect(onStateChange).toHaveBeenLastCalledWith({ valid: true, lookup }));
   });
@@ -236,6 +243,7 @@ describe("SystemAddressField", () => {
       status: "not-found",
       systemLabel: null,
       planetType: null,
+      planetName: null,
     });
   });
 

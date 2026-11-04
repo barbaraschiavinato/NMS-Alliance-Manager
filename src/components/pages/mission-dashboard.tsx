@@ -34,7 +34,7 @@ import {
 import { useLocale } from "@/components/providers/locale-provider";
 import { useNavigationSearchState } from "@/components/shared/navigation-search-reset";
 import { sortByCreatedAtDescending } from "@/lib/utils/created-at";
-import { isSameSystem, type SystemIdentity } from "@/lib/navigation/detail-links";
+import { isSameSystem, type DetailOrigin, type SystemIdentity } from "@/lib/navigation/detail-links";
 import { DetailSection, useDetailReturn } from "@/components/shared/detail-page";
 
 const missionTypeLabels: Record<Mission["targetSpecialty"], string> = {
@@ -60,6 +60,7 @@ export function MissionDashboard({
   associatedFirst = false,
   returnHref = "/missions",
   refreshRevision = 0,
+  detailOrigin,
 }: Readonly<{
   currentMember: AllianceMember;
   alliance: AllianceSettings;
@@ -74,6 +75,7 @@ export function MissionDashboard({
   associatedFirst?: boolean;
   returnHref?: string;
   refreshRevision?: number;
+  detailOrigin?: DetailOrigin;
 }>) {
   const router = useRouter();
   const returnDestination = useDetailReturn(returnHref);
@@ -119,6 +121,7 @@ export function MissionDashboard({
     : systemScope
       ? `/api/missions?${new URLSearchParams({ stationPortal: systemScope.portal, galaxy: String(systemScope.galaxy) })}`
       : "/api/missions";
+  const stationOwnersUrl = detailOrigin === "farms" ? "/api/stations?cacheOnly=1" : "/api/stations";
   useEffect(() => {
     loadCovered();
     fetch(missionsUrl, { cache: "no-store" })
@@ -151,7 +154,7 @@ export function MissionDashboard({
           setMembers((await response.json()) as AllianceMember[]);
         })
         .catch(() => setMembers([]));
-      fetch("/api/stations", { cache: "no-store" })
+      fetch(stationOwnersUrl, { cache: "no-store" })
         .then(async (response) => {
           if (!response.ok) throw new Error("Unable to load station owners.");
           const body: unknown = await response.json();
@@ -182,7 +185,7 @@ export function MissionDashboard({
           setStationOwners([]);
         });
     }
-  }, [canManage, missionsUrl, refreshRevision]);
+  }, [canManage, missionsUrl, refreshRevision, stationOwnersUrl]);
 
   const permittedMissions = systemScope
     ? missions
@@ -461,7 +464,7 @@ export function MissionDashboard({
         compact={Boolean(systemScope)}
         fullWidth={featured}
         detailMissionId={featuredMissionId}
-        detailOrigin={systemScope && !featuredMissionId ? "stations" : "missions"}
+        detailOrigin={detailOrigin ?? (systemScope && !featuredMissionId ? "stations" : "missions")}
         assigneeActionsOnly={Boolean(systemScope)}
         counts={counts}
         filter={filter}

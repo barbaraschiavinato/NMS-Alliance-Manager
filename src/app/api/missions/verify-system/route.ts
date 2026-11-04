@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentMember } from "@/lib/auth/authorization";
-import { readAlmanacResponse, writeAlmanacResponse } from "@/lib/almanac/almanac-store";
+import { readAlmanacCache, readAlmanacResponse, writeAlmanacResponse } from "@/lib/almanac/almanac-store";
 import { decodePortalAddress } from "@/lib/missions/missions";
 import { normalizeAlmanacPlanet } from "@/lib/almanac/almanac-normalize";
 import { almanacRetryAfterSeconds, noteAlmanacRateLimit } from "@/lib/almanac/almanac-rate-limit";
@@ -32,13 +32,18 @@ export async function GET(request: Request) {
   const planetOneAddress = address.startsWith("0") ? `1${address.slice(1)}` : null;
 
   try {
-    const cachedResponse = await readAlmanacResponse(address, galaxy);
+    const lookupMode = params.get("lookup");
+    const farmLookup = lookupMode === "farm-create";
+    const cacheOnly = lookupMode === "cache-only";
+    const getCached = farmLookup || cacheOnly ? await readAlmanacCache() : undefined;
+    const cachedResponse = getCached ? getCached(address, galaxy) : await readAlmanacResponse(address, galaxy);
     if (cachedResponse) {
       return NextResponse.json(
         {
           found: true,
           systemLabel: almanacSystemLabel(cachedResponse),
           planetType: almanacPlanetType(cachedResponse),
+          planetName: almanacPlanetName(cachedResponse),
           cached: true,
         },
         {
@@ -47,24 +52,32 @@ export async function GET(request: Request) {
       );
     }
 
-    if (almanacRetryAfterSeconds() > 0) {
-      return NextResponse.json(
-        { error: "NMS Almanac non disponibile." },
-        { status: 429, headers: { "Cache-Control": "no-store" } },
-      );
-    }
-
-    const cachedPlanetOne = planetOneAddress ? await readAlmanacResponse(planetOneAddress, galaxy) : null;
+    const cachedPlanetOne = planetOneAddress
+      ? getCached
+        ? getCached(planetOneAddress, galaxy)
+        : await readAlmanacResponse(planetOneAddress, galaxy)
+      : null;
     if (cachedPlanetOne) {
-      await writeAlmanacResponse(address, galaxy, cachedPlanetOne);
+      await writeAlmanacResponse(address, galaxy, cachedPlanetOne, Boolean(getCached));
       return NextResponse.json(
         {
           found: true,
           systemLabel: almanacSystemLabel(cachedPlanetOne),
           planetType: almanacPlanetType(cachedPlanetOne),
+          planetName: almanacPlanetName(cachedPlanetOne),
           cached: true,
         },
         { headers: { "Cache-Control": "no-store" } },
+      );
+    }
+
+    if (cacheOnly)
+      return NextResponse.json({ found: false, cacheOnly: true }, { headers: { "Cache-Control": "no-store" } });
+
+    if (almanacRetryAfterSeconds() > 0) {
+      return NextResponse.json(
+        { error: "NMS Almanac non disponibile." },
+        { status: 429, headers: { "Cache-Control": "no-store" } },
       );
     }
 
@@ -108,6 +121,7 @@ export async function GET(request: Request) {
           found: true,
           systemLabel: almanacSystemLabel(normalized),
           planetType: almanacPlanetType(normalized),
+          planetName: almanacPlanetName(normalized),
           cached: false,
         },
         { headers: { "Cache-Control": "no-store" } },
@@ -134,6 +148,13 @@ function almanacSystemLabel(response: Record<string, unknown>) {
     return attribute && typeof attribute.word === "string" && attribute.word.trim() ? [attribute.word.trim()] : [];
   });
   return words.length > 0 ? words.join(" · ") : null;
+}
+
+// In-game planet name only, without the biome fallback of almanacPlanetType.
+function almanacPlanetName(response: Record<string, unknown>) {
+  const lines = isRecord(response.lines) ? response.lines : null;
+  const headline = lines && isRecord(lines.headline) ? lines.headline : null;
+  return headline && typeof headline.word === "string" && headline.word.trim() ? headline.word.trim() : null;
 }
 
 function almanacPlanetType(response: Record<string, unknown>) {
