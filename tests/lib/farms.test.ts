@@ -35,6 +35,68 @@ describe("farm resource catalogues", () => {
     expect(normalizeFarmResources(["Frost Crystal", "Copper", "Nope", "Copper"])).toEqual(["Copper", "Frost Crystal"]);
     expect(normalizeFarmResources("Copper")).toEqual([]);
   });
+
+  it("lists only resources obtainable with mineral or gas extractors", () => {
+    expect(farmMaterials).toEqual([
+      "Activated Cadmium",
+      "Activated Copper",
+      "Activated Emeril",
+      "Activated Indium",
+      "Activated Quartzite",
+      "Ammonia",
+      "Basalt",
+      "Cadmium",
+      "Cobalt",
+      "Copper",
+      "Crystallised Helium",
+      "Dioxite",
+      "Emeril",
+      "Gold",
+      "Indium",
+      "Lithium",
+      "Magnetised Ferrite",
+      "Methane",
+      "Nitrogen",
+      "Oxygen",
+      "Paraffinium",
+      "Phosphorus",
+      "Pyrite",
+      "Quartzite",
+      "Radon",
+      "Rusted Metal",
+      "Salt",
+      "Silver",
+      "Sodium",
+      "Sulphurine",
+      "Uranium",
+    ]);
+    for (const resource of ["Carbon", "Runaway Mould", "Storm Crystal", "Tritium", "Ancient Bones"]) {
+      expect(isFarmResource(resource)).toBe(false);
+    }
+  });
+
+  it("lists only cultivable plants", () => {
+    expect(farmPlants).toEqual([
+      "Albumen Pearl",
+      "Cactus Flesh",
+      "Faecium",
+      "Frost Crystal",
+      "Fungal Mould",
+      "Gamma Root",
+      "Gravitino Ball",
+      "Mordite",
+      "NipNip Buds",
+      "Sac Venom",
+      "Solanium",
+      "Star Bramble",
+    ]);
+    expect(isFarmPlant("Marrow Bulb")).toBe(false);
+    expect(isFarmResource("Kelp Sac")).toBe(false);
+    expect(normalizeFarmResources(["Mordite", "Marrow Bulb", "Basalt"])).toEqual(["Basalt", "Mordite"]);
+    expect(parseFarmInput({ ...valid, resources: ["Basalt", "Mordite"] })).toMatchObject({
+      input: { resources: ["Basalt", "Mordite"] },
+    });
+  });
 });
 
 describe("parseFarmInput", () => {
@@ -75,6 +137,7 @@ describe("parseFarmInput", () => {
     [{ planetName: "" }, "farms.error_planet_name_required"],
     [{ planetName: "x".repeat(81) }, "farms.error_planet_name_too_long"],
     [{ resources: ["Copper", "Unobtainium"] }, "farms.error_invalid_resources"],
+    [{ resources: ["Carbon"] }, "farms.error_invalid_resources"],
     [{ resources: "Copper" }, "farms.error_invalid_resources"],
     [{ resources: [] }, "farms.error_resources_required"],
     [{ coordinates: "x".repeat(61) }, "farms.error_coordinates_too_long"],

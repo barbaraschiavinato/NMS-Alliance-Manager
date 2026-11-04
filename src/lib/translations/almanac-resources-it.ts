@@ -24,7 +24,7 @@ export const almanacResourcesIt: Readonly<Record<string, string>> = {
   "Alpha Squid": "Calamaro alfa",
   "Ambrosial Curse": "Maledizione ambrosiale",
   "Ambrosial Wonder": "Meraviglia ambrosiale",
-  Ammonia: "Ammonio",
+  Ammonia: "Ammoniaca",
   "Ancestral Memories": "Ricordi ancestrali",
   "Ancient Irontail": "Coda di ferro antica",
   "Ancient Key": "Chiave Antica",

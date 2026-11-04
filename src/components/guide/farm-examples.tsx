@@ -6,6 +6,7 @@ import { FarmCard, type FarmEntry } from "@/components/cards/farm-card";
 import { GlyphStrip } from "@/components/shared/portal-address-field";
 import { useLocale } from "@/components/providers/locale-provider";
 import { galaxyLabel } from "@/lib/planets/galaxies";
+import { plantResourceLabel, plantResourceProduct } from "@/lib/planets/plant-products";
 
 const noop = () => undefined;
 
@@ -91,7 +92,7 @@ function FarmFormExample() {
                     {group.items.map((resource) => (
                       <label className="platform-option" key={resource}>
                         <input checked readOnly type="checkbox" />
-                        <span>{tv(resource)}</span>
+                        <span>{tv(group.key === "plants" ? plantResourceProduct(resource) : resource)}</span>
                       </label>
                     ))}
                   </div>
@@ -127,6 +128,7 @@ function FarmFormExample() {
 }
 
 export function FarmExamples() {
+  const { tv } = useLocale();
   return (
     <div className="guide-farm-examples">
       <figure className="guide-example">
@@ -155,7 +157,7 @@ export function FarmExamples() {
             <span>Piante</span>
             <select defaultValue="Solanium">
               <option value="">Tutte le piante</option>
-              <option value="Solanium">Solanium</option>
+              <option value="Solanium">{plantResourceLabel("Solanium", tv)}</option>
             </select>
           </label>
           <label className="planet-filter">

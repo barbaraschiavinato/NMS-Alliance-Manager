@@ -269,6 +269,35 @@ describe("POST /api/farms", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
+  it("saves the newly included extractor resources and Mordite", async () => {
+    signInAs(cast.user);
+
+    const resources = [
+      "Activated Quartzite",
+      "Basalt",
+      "Crystallised Helium",
+      "Lithium",
+      "Methane",
+      "Quartzite",
+      "Mordite",
+    ];
+    const created = await call("POST", { ...farmInput, resources });
+    expect(created.status).toBe(201);
+    expect((await farmsOf(created)).map((farm) => farm.resources)).toEqual([resources]);
+    expect(readDataFile<unknown[]>("farms.json")).toMatchObject([{ resources }]);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it.each(["Carbon", "Runaway Mould", "Storm Crystal", "Marrow Bulb"])(
+    "rejects a resource outside the farm catalogue: %s",
+    async (resource) => {
+      signInAs(cast.user);
+      const response = await call("POST", { ...farmInput, resources: [resource] });
+      expect(response.status).toBe(400);
+      expect(await response.json()).toEqual({ error: "farms.error_invalid_resources" });
+    },
+  );
+
   it("forbids regular users from choosing another owner", async () => {
     signInAs(cast.user);
     const response = await call("POST", { ...farmInput, ownerId: cast.admin.publicId });

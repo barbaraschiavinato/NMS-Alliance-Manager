@@ -1282,6 +1282,12 @@ export async function GuideContent({
                 compilano da soli e puoi cambiarli. Scegli almeno una pianta o un materiale; coordinate e note sono
                 facoltative.
               </li>
+              <li>
+                Il modulo propone piante coltivabili e materiali ottenibili con estrattori minerari o di gas. Per le
+                piante, il modulo e la scheda mostrano il prodotto; puoi cercare sia la pianta sia il prodotto. Nei
+                filtri delle farm e dei pianeti, se i nomi sono diversi, il prodotto compare tra parentesi dopo il nome
+                della pianta.
+              </li>
               <li>Le farm che aggiungi sono tue e solo tu puoi modificarle o eliminarle.</li>
               <li>
                 Cerca per nome, sistema, pianeta o risorsa; «Filtri» restringe l&apos;elenco per piante e materiali.

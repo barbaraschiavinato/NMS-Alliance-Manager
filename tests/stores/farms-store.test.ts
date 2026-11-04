@@ -114,6 +114,17 @@ describe("farms store (local filesystem)", () => {
     expect(await readFarms()).toEqual([]);
   });
 
+  it("persists newly added extractor resources and cultivable plants", async () => {
+    const { addFarm, readFarms, updateFarm } = await load();
+    const farm = await addFarm({ ...input, resources: ["Basalt", "Methane", "Mordite"] }, "owner", "owner");
+    expect((await readFarms())[0].resources).toEqual(["Basalt", "Methane", "Mordite"]);
+    await updateFarm(farm.id, { ...input, resources: ["Lithium", "Quartzite", "Frost Crystal"] }, "owner");
+    expect((await readFarms())[0].resources).toEqual(["Lithium", "Quartzite", "Frost Crystal"]);
+    expect(readDataFile("farms.json")).toMatchObject([
+      { id: farm.id, resources: ["Lithium", "Quartzite", "Frost Crystal"] },
+    ]);
+  });
+
   it("persists, changes and removes the optional system name", async () => {
     const { addFarm, readFarms, updateFarm } = await load();
     const farm = await addFarm({ ...input, systemName: "Station Alpha" }, "owner", "creator");

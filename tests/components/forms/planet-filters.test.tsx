@@ -32,7 +32,7 @@ const options: PlanetFilterOptions = {
   visitable: true,
 };
 
-function renderFilters(props: Partial<Parameters<typeof PlanetFilters>[0]> = {}) {
+function renderFilters(props: Partial<Parameters<typeof PlanetFilters>[0]> = {}, locale: "en" | "it" = "en") {
   const onChange = vi.fn();
   const onSearchChange = vi.fn();
   const onToggle = vi.fn();
@@ -48,6 +48,7 @@ function renderFilters(props: Partial<Parameters<typeof PlanetFilters>[0]> = {})
       values={emptyPlanetFilterValues}
       {...props}
     />,
+    { locale },
   );
   return { ...view, onChange, onSearchChange, onToggle };
 }
@@ -114,6 +115,27 @@ describe("PlanetFilters", () => {
     renderFilters();
     const select = screen.getByRole("combobox", { name: tr("planet.filter_star") });
     expect(within(select).getByRole("option", { name: translateAlmanacValue("en", "Yellow") })).toHaveValue("Yellow");
+  });
+
+  it("labels plant and product names without changing the selected resource", async () => {
+    const { user, onChange } = renderFilters(
+      { options: { ...options, plants: ["Star Bulb", "Frostwort", "Marrow Bulb"] } },
+      "it",
+    );
+    const select = screen.getByRole("combobox", { name: tr("planet.filter_plants", undefined, "it") });
+    expect(within(select).getByRole("option", { name: "Rovo stellare (Bulbo stellare)" })).toHaveValue("Star Bulb");
+    expect(within(select).getByRole("option", { name: "Bucaghiaccio (Cristallo gelido)" })).toHaveValue("Frostwort");
+    expect(within(select).getByRole("option", { name: "Bulbo di zucca" })).toHaveValue("Marrow Bulb");
+    await user.selectOptions(select, "Star Bulb");
+    expect(onChange).toHaveBeenCalledWith("plant", "Star Bulb");
+  });
+
+  it("keeps a selected plant when its option changes to the equivalent product", () => {
+    renderFilters({
+      values: { ...emptyPlanetFilterValues, plant: "Star Bramble" },
+      options: { ...options, plants: ["Star Bulb"] },
+    });
+    expect(screen.getByRole("combobox", { name: tr("planet.filter_plants") })).toHaveValue("Star Bulb");
   });
 
   it("converts economy stars to numbers and back to null", async () => {
@@ -221,7 +243,7 @@ describe("PlanetActiveFilters", () => {
       [`${tr("planet.weather")}: ${tv("Calm")}`, "weather", ""],
       [`${tr("common.conflict")}: ${tv("Low")}`, "conflict", ""],
       [`${tr("planet.sentinels")}: ${tv("Aggressive")}`, "sentinels", ""],
-      [`${tr("common.plants")}: ${tv("Faecium")}`, "plant", ""],
+      [`${tr("common.plants")}: Gutrot Flower (Faecium)`, "plant", ""],
       [`${tr("common.minerals")}: ${tv("Copper")}`, "mineral", ""],
       [`${tr("common.valuables")}: ${tv("Gold")}`, "valuable", ""],
     ];

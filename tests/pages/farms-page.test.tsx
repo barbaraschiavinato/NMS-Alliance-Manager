@@ -162,6 +162,22 @@ describe("FarmsPage", () => {
     expect(screen.queryByRole("button", { name: t("farms.delete_farm_named", { farm: "Frosty" }) })).toBeNull();
   });
 
+  it("shows harvested products instead of plant names on farm cards", async () => {
+    mockFetch({
+      "GET /api/farms": {
+        farms: [farm({ resources: ["Star Bramble", "Mordite"] })],
+      },
+    });
+    renderFarms(user, [], "it");
+    await screen.findByText("Copper hill");
+
+    const plants = screen.getByRole("list", { name: t("farms.plants", undefined, "it") });
+    expect(within(plants).getByText("Bulbo stellare")).toBeInTheDocument();
+    expect(within(plants).getByText("Mordite")).toBeInTheDocument();
+    expect(within(plants).queryByText("Rovo stellare")).toBeNull();
+    expect(within(plants).queryByText("Radice di mordite")).toBeNull();
+  });
+
   it("filters by tab and by search, including translated resources", async () => {
     mockFetch({
       "GET /api/farms": {
@@ -183,6 +199,102 @@ describe("FarmsPage", () => {
     await actor.clear(screen.getByRole("textbox", { name: t("farms.search_farms") }));
     await actor.type(screen.getByRole("textbox", { name: t("farms.search_farms") }), "nothing here");
     expect(screen.getByText(t("farms.no_farms_found"))).toBeInTheDocument();
+  });
+
+  it("finds farms by the plant or its product in English and Italian", async () => {
+    mockFetch({
+      "GET /api/farms": {
+        farms: [
+          farm({ resources: ["Star Bramble"] }),
+          farm({ id: "farm-2", name: "Other farm", resources: ["Sodium"] }),
+        ],
+      },
+    });
+    renderFarms(user, [], "it");
+    await screen.findByText("Copper hill");
+    const search = screen.getByRole("textbox", { name: t("farms.search_farms", undefined, "it") });
+    for (const value of ["Star Bulb", "Bulbo stellare", "Star Bramble", "Rovo stellare"]) {
+      fireEvent.change(search, { target: { value } });
+      expect(screen.getByText("Copper hill")).toBeInTheDocument();
+      expect(screen.queryByText("Other farm")).toBeNull();
+    }
+  });
+
+  it("searches the farm picker by plant and product and saves the original resource IDs", async () => {
+    const { requests } = mockFetch({
+      "GET /api/farms": { farms: [] },
+      "/api/missions/verify-system": { found: true, planetType: "Lush", planetName: "Ruba Prime" },
+      "POST /api/farms": { farms: [farm({ name: "Farm" })] },
+    });
+    const { user: actor } = renderFarms(user, [], "it");
+    await screen.findByText(t("farms.no_farms", undefined, "it"));
+    await actor.click(screen.getByRole("button", { name: t("farms.add_farm", undefined, "it") }));
+    const dialog = screen.getByRole("dialog", { name: t("farms.add_farm", undefined, "it") });
+    const search = within(dialog).getByRole("textbox", { name: t("farms.search_resources", undefined, "it") });
+
+    for (const term of ["Bulbo stellare", "Star Bulb", "Rovo stellare", "Star Bramble"]) {
+      fireEvent.change(search, { target: { value: term } });
+      expect(within(dialog).getByRole("checkbox", { name: "Bulbo stellare" })).toBeInTheDocument();
+    }
+    await actor.click(within(dialog).getByRole("checkbox", { name: "Bulbo stellare" }));
+    fireEvent.change(search, { target: { value: "Fiore di malviscere" } });
+    await actor.click(within(dialog).getByRole("checkbox", { name: "Faecium" }));
+    fireEvent.change(search, { target: { value: "Faecium" } });
+    expect(within(dialog).getByRole("checkbox", { name: "Faecium" })).toBeChecked();
+    fireEvent.change(search, { target: { value: "Cristallo gelido" } });
+    await actor.click(within(dialog).getByRole("checkbox", { name: "Cristallo gelido" }));
+    fireEvent.change(search, { target: { value: "Mordite" } });
+    await actor.click(within(dialog).getByRole("checkbox", { name: "Mordite" }));
+    expect(requests("GET", "/api/missions/verify-system")).toHaveLength(0);
+
+    await actor.type(within(dialog).getByRole("textbox", { name: t("farms.farm_name", undefined, "it") }), "Farm");
+    await actor.type(
+      within(dialog).getByRole("textbox", { name: t("stations.12_glyph_portal_address", undefined, "it") }),
+      "1234567890AB",
+    );
+    await waitFor(
+      () =>
+        expect(within(dialog).getByRole("textbox", { name: t("farms.planet_name", undefined, "it") })).toHaveValue(
+          "Ruba Prime",
+        ),
+      { timeout: 2000 },
+    );
+    await actor.click(within(dialog).getByRole("button", { name: t("common.add", undefined, "it") }));
+    await waitFor(() => expect(requests("POST", "/api/farms")).toHaveLength(1));
+    expect(requests("POST", "/api/farms")[0].body).toMatchObject({
+      resources: ["Star Bramble", "Faecium", "Frost Crystal", "Mordite"],
+    });
+  });
+
+  it("offers only cultivable plants and materials from extractors on a new farm", async () => {
+    mockFetch({ "GET /api/farms": { farms: [] } });
+    const { user: actor } = renderFarms();
+    await screen.findByText(t("farms.no_farms"));
+    await actor.click(screen.getByRole("button", { name: t("farms.add_farm") }));
+    const dialog = screen.getByRole("dialog", { name: t("farms.add_farm") });
+    const plants = within(dialog).getByText(t("farms.plants")).parentElement;
+    if (!plants) throw new Error("Missing farm plant group");
+    expect(within(plants).getAllByRole("checkbox")).toHaveLength(12);
+    expect(within(plants).getByRole("checkbox", { name: "Mordite" })).toBeInTheDocument();
+    expect(within(plants).queryByRole("checkbox", { name: "Marrow Bulb" })).toBeNull();
+    expect(within(plants).queryByRole("checkbox", { name: "Kelp Sac" })).toBeNull();
+    expect(within(plants).queryByRole("checkbox", { name: "Aloe Flesh" })).toBeNull();
+    const materials = within(dialog).getByText(t("farms.materials")).parentElement;
+    if (!materials) throw new Error("Missing farm material group");
+    expect(within(materials).getAllByRole("checkbox")).toHaveLength(31);
+    for (const resource of [
+      "Activated Quartzite",
+      "Basalt",
+      "Crystallised Helium",
+      "Lithium",
+      "Methane",
+      "Quartzite",
+    ]) {
+      expect(within(materials).getByRole("checkbox", { name: resource })).toBeInTheDocument();
+    }
+    for (const resource of ["Carbon", "Runaway Mould", "Storm Crystal", "Tritium", "Ancient Bones"]) {
+      expect(within(materials).queryByRole("checkbox", { name: resource })).toBeNull();
+    }
   });
 
   it("adds a farm with the planet name from the lookup, without an owner select for regular users", async () => {
@@ -271,7 +383,7 @@ describe("FarmsPage", () => {
     await actor.click(add);
     expect(within(dialog).getByText(t("farms.error_resources_required"))).toBeInTheDocument();
 
-    await actor.click(within(dialog).getByRole("checkbox", { name: "Carbon" }));
+    await actor.click(within(dialog).getByRole("checkbox", { name: "Cobalt" }));
     await actor.click(add);
     expect(await within(dialog).findByText(t("farms.error_unable_to_save"))).toBeInTheDocument();
     await actor.click(within(dialog).getByRole("button", { name: t("common.cancel") }));
@@ -593,14 +705,14 @@ describe("FarmsPage", () => {
     expect(within(dialog).getByText(t("farms.error_planet_name_required"))).toBeInTheDocument();
 
     await actor.type(within(dialog).getByRole("textbox", { name: t("farms.planet_name") }), "Planet");
-    const carbon = within(dialog).getByRole("checkbox", { name: "Carbon" });
-    await actor.click(carbon);
-    await actor.click(carbon);
-    expect(carbon).not.toBeChecked();
+    const cobalt = within(dialog).getByRole("checkbox", { name: "Cobalt" });
+    await actor.click(cobalt);
+    await actor.click(cobalt);
+    expect(cobalt).not.toBeChecked();
     await actor.click(add);
     expect(within(dialog).getByText(t("farms.error_resources_required"))).toBeInTheDocument();
 
-    await actor.click(carbon);
+    await actor.click(cobalt);
     await actor.type(within(dialog).getByRole("textbox", { name: t("farms.notes") }), "Bring a suit");
     await actor.selectOptions(within(dialog).getByRole("combobox", { name: t("stations.galaxy") }), "1");
     expect(within(dialog).getByRole("textbox", { name: t("farms.planet_name") })).toHaveValue("Planet");
@@ -610,7 +722,7 @@ describe("FarmsPage", () => {
     expect(requests("POST", "/api/farms")[0].body).toMatchObject({
       galaxy: 1,
       planetName: "Planet",
-      resources: ["Carbon"],
+      resources: ["Cobalt"],
       note: "Bring a suit",
     });
   });
@@ -780,6 +892,8 @@ describe("FarmsPage", () => {
         .getAllByRole("option")
         .map((option) => option.getAttribute("value")),
     ).toEqual(["", "Frost Crystal", "Gamma Root"]);
+    expect(within(plants).getByRole("option", { name: "Frostwort (Frost Crystal)" })).toHaveValue("Frost Crystal");
+    expect(within(plants).getByRole("option", { name: "Gamma Weed (Gamma Root)" })).toHaveValue("Gamma Root");
     expect(
       within(minerals)
         .getAllByRole("option")
@@ -798,7 +912,9 @@ describe("FarmsPage", () => {
     fireEvent.change(screen.getByRole("textbox", { name: t("farms.search_farms") }), { target: { value: "" } });
 
     fireEvent.click(
-      screen.getByRole("button", { name: `${t("planet.remove_filter")}: ${t("common.plants")}: Gamma Root` }),
+      screen.getByRole("button", {
+        name: `${t("planet.remove_filter")}: ${t("common.plants")}: Gamma Weed (Gamma Root)`,
+      }),
     );
     expect(screen.getByText("Sodium flats")).toBeInTheDocument();
     expect(screen.queryByText("Gamma field")).toBeNull();

@@ -20,6 +20,7 @@ import type { AllianceMember, AllianceSettings } from "@/lib/members/access-stor
 import { useLocale } from "@/components/providers/locale-provider";
 import { Pagination, usePagination } from "@/components/shared/pagination";
 import { planetSystemsPageSize } from "@/lib/navigation/pagination";
+import { plantResourceKey } from "@/lib/planets/plant-products";
 import {
   emptyPlanetFilterValues,
   hasActivePlanetFilters,
@@ -206,9 +207,11 @@ export function PlanetsPage({
       sentinels: [...new Set(planets.map(sentinelsValue).filter((value): value is string => Boolean(value)))].sort(
         (a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }),
       ),
-      plants: [...new Set(planets.flatMap((planet) => planet.plants))].sort((a, b) =>
-        a.localeCompare(b, undefined, { sensitivity: "base" }),
-      ),
+      plants: [
+        ...new Map(
+          planets.flatMap((planet) => planet.plants).map((value) => [plantResourceKey(value), value] as const),
+        ).values(),
+      ].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" })),
       minerals: [...new Set(planets.flatMap((planet) => planet.minerals))].sort((a, b) =>
         a.localeCompare(b, undefined, { sensitivity: "base" }),
       ),
@@ -257,7 +260,8 @@ export function PlanetsPage({
             (!filters.weather || weatherValue(planet) === filters.weather) &&
             (!filters.conflict || systemFactValue(planet, "common.conflict") === filters.conflict) &&
             (!filters.sentinels || sentinelsValue(planet) === filters.sentinels) &&
-            (!filters.plant || planet.plants.includes(filters.plant)) &&
+            (!filters.plant ||
+              planet.plants.some((plant) => plantResourceKey(plant) === plantResourceKey(filters.plant))) &&
             (!filters.mineral || planet.minerals.includes(filters.mineral)) &&
             (!filters.valuable || planet.valuables.includes(filters.valuable)),
         );

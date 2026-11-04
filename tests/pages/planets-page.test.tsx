@@ -296,6 +296,34 @@ describe("PlanetsPage", () => {
     expect(screen.getByRole("button", { name: t("planet.reset_filters") })).toBeInTheDocument();
   });
 
+  it("merges a plant and its harvested product into one filter that finds both", async () => {
+    mockFetch({});
+    const { user } = renderPlanets({
+      planets: [
+        planet({ almanacName: "Bulb world", plants: ["Star Bulb"] }),
+        planet({
+          id: "2234567890AB:0",
+          planetPortal: "2234567890AB",
+          almanacName: "Bramble world",
+          plants: ["Star Bramble"],
+        }),
+        { ...frozen, plants: ["Frost Crystal"] },
+      ],
+    });
+    await user.click(screen.getByRole("button", { name: t("planet.filters") }));
+    const select = screen.getByRole("combobox", { name: t("planet.filter_plants") });
+    expect(within(select).getAllByRole("option", { name: "Star Bramble (Star Bulb)" })).toHaveLength(1);
+    await user.selectOptions(select, "Star Bramble");
+    expect(screen.getByText("Bulb world")).toBeInTheDocument();
+    expect(screen.getByText("Bramble world")).toBeInTheDocument();
+    expect(screen.queryByText("Glacia")).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", {
+        name: `${t("planet.remove_filter")}: ${t("common.plants")}: Star Bramble (Star Bulb)`,
+      }),
+    ).toBeInTheDocument();
+  });
+
   it("removes each active filter tag", async () => {
     mockFetch({});
     const { user } = renderPlanets();
