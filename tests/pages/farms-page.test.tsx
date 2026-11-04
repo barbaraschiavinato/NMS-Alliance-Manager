@@ -56,7 +56,11 @@ function farm(overrides: Partial<FarmEntry> = {}): FarmEntry {
   };
 }
 
-function renderFarms(member: AllianceMember = user, stationNames: readonly FarmStationName[] = []) {
+function renderFarms(
+  member: AllianceMember = user,
+  stationNames: readonly FarmStationName[] = [],
+  locale: "en" | "it" = "en",
+) {
   return renderPage(
     <FarmsPage
       alliance={defaultAlliance}
@@ -65,14 +69,15 @@ function renderFarms(member: AllianceMember = user, stationNames: readonly FarmS
       stationCount={0}
       stationNames={stationNames}
     />,
+    { locale },
   );
 }
 
-function renderDetail(detail: FarmDetail) {
+function renderDetail(detail: FarmDetail, member: AllianceMember = user) {
   return renderPage(
     <FarmsPage
       alliance={defaultAlliance}
-      currentMember={user}
+      currentMember={member}
       detail={detail}
       missionCount={0}
       stationCount={0}
@@ -803,6 +808,170 @@ describe("FarmsPage", () => {
     expect(toggle).not.toHaveAttribute("data-active");
     fireEvent.click(toggle);
     expect(screen.queryByRole("combobox", { name: t("planet.filter_plants") })).toBeNull();
+  });
+
+  describe("Excel export", () => {
+    it.each(["moderator", "admin"] as const)("shows the export action to a %s", async (role) => {
+      const staff = makeMember({ role, simpleView: false });
+      mockFetch({ "GET /api/farms": { farms: [] }, "GET /api/members": [staff] });
+      renderFarms(staff);
+
+      await screen.findByText(t("farms.no_farms"));
+      const button = screen.getByRole("button", { name: t("farms.export_to_excel") });
+      expect(button).toBeEnabled();
+      expect(button).toHaveClass("station-export-button");
+      expect(button).toHaveAttribute("data-tooltip", t("farms.export_to_excel"));
+      expect(button).toHaveAttribute("title", t("farms.export_to_excel"));
+    });
+
+    it.each([
+      { description: "a regular member", member: user },
+      {
+        description: "an admin in simple view",
+        member: makeMember({ role: "user", displayRole: "admin", simpleView: true }),
+      },
+      {
+        description: "a moderator in simple view",
+        member: makeMember({ role: "user", displayRole: "moderator", simpleView: true }),
+      },
+    ])("hides the action from $description", async ({ member }) => {
+      mockFetch({ "GET /api/farms": { farms: [] } });
+      renderFarms(member);
+
+      await screen.findByText(t("farms.no_farms"));
+      expect(screen.queryByRole("button", { name: t("farms.export_to_excel") })).toBeNull();
+    });
+
+    it("does not show the list export action in a farm detail, even for staff", async () => {
+      mockFetch({ "GET /api/farms": { farms: [farm()] }, "GET /api/members": [moderator] });
+      renderDetail({ id: "farm-1", origin: "farms" }, moderator);
+
+      await screen.findByText("Copper hill");
+      expect(screen.queryByRole("button", { name: t("farms.export_to_excel") })).toBeNull();
+    });
+
+    it("disables repeat requests while exporting and downloads the supplied filename", async () => {
+      const pending = deferred<Response>();
+      const createObjectURL = vi.fn(() => "blob:farm-export");
+      const revokeObjectURL = vi.fn();
+      vi.stubGlobal("URL", Object.assign(class extends URL {}, { createObjectURL, revokeObjectURL }));
+      const downloads: { filename: string; href: string; attached: boolean }[] = [];
+      vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(function (this: HTMLAnchorElement) {
+        downloads.push({ filename: this.download, href: this.href, attached: document.body.contains(this) });
+      });
+      const { fetchMock, requests } = mockFetch({
+        "GET /api/farms": {
+          farms: [
+            farm(),
+            farm({ id: "farm-2", name: "Other farm", ownerId: other.publicId, ownerName: other.nmsName }),
+          ],
+        },
+        "GET /api/members": [moderator],
+        "GET /api/farms/export": () => pending.promise,
+      });
+      const { user: actor } = renderFarms(moderator, [], "it");
+      await screen.findByText("Copper hill");
+      await actor.click(screen.getByRole("tab", { name: new RegExp(t("farms.my_farms", undefined, "it")) }));
+      expect(screen.queryByText("Copper hill")).toBeNull();
+
+      const button = screen.getByRole("button", { name: "Esporta Excel" });
+      await actor.click(button);
+      const busy = screen.getByRole("button", { name: "Esportazione…" });
+      expect(busy).toBeDisabled();
+      expect(busy).toHaveAttribute("data-tooltip", "Esportazione…");
+      await actor.click(busy);
+      expect(requests("GET", "/api/farms/export")).toHaveLength(1);
+      expect(fetchMock).toHaveBeenCalledWith("/api/farms/export", { cache: "no-store" });
+
+      await act(async () => {
+        pending.resolve(
+          new Response("xlsx", {
+            headers: {
+              "Content-Disposition": 'attachment; filename="farm-2026-07-04.xlsx"',
+              "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            },
+          }),
+        );
+      });
+      await waitFor(() => expect(downloads).toHaveLength(1));
+      expect(createObjectURL).toHaveBeenCalledWith(
+        expect.objectContaining({ size: 4, type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }),
+      );
+      expect(downloads).toEqual([{ filename: "farm-2026-07-04.xlsx", href: "blob:farm-export", attached: true }]);
+      expect(document.querySelector('a[download="farm-2026-07-04.xlsx"]')).toBeNull();
+      expect(screen.getByRole("button", { name: "Esporta Excel" })).toBeEnabled();
+      await waitFor(() => expect(revokeObjectURL).toHaveBeenCalledWith("blob:farm-export"), { timeout: 2500 });
+    });
+
+    it("uses a dated fallback filename if the server omits Content-Disposition", async () => {
+      const createObjectURL = vi.fn(() => "blob:fallback");
+      const revokeObjectURL = vi.fn();
+      vi.stubGlobal("URL", Object.assign(class extends URL {}, { createObjectURL, revokeObjectURL }));
+      const filenames: string[] = [];
+      vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(function (this: HTMLAnchorElement) {
+        filenames.push(this.download);
+      });
+      mockFetch({
+        "GET /api/farms": { farms: [] },
+        "GET /api/members": [moderator],
+        "GET /api/farms/export": new Response("xlsx"),
+      });
+      const { user: actor } = renderFarms(moderator);
+      await screen.findByText(t("farms.no_farms"));
+
+      await actor.click(screen.getByRole("button", { name: t("farms.export_to_excel") }));
+      await waitFor(() => expect(filenames).toHaveLength(1));
+      expect(filenames[0]).toMatch(/^farm-\d{4}-\d{2}-\d{2}\.xlsx$/);
+      expect(screen.getByRole("button", { name: t("farms.export_to_excel") })).toBeEnabled();
+      await waitFor(() => expect(revokeObjectURL).toHaveBeenCalledWith("blob:fallback"), { timeout: 2500 });
+    });
+
+    it("shows translated server errors and handles unreadable, missing and rejected responses", async () => {
+      const exportResponse = vi
+        .fn()
+        .mockReturnValueOnce(json({ error: "farms.error_moderator_permission_required" }, 403))
+        .mockReturnValueOnce(new Response("not json", { status: 500 }))
+        .mockReturnValueOnce(json({}, 503))
+        .mockRejectedValueOnce(new Error("Connection failed"))
+        .mockRejectedValueOnce("offline");
+      const click = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => undefined);
+      const { requests } = mockFetch({
+        "GET /api/farms": { farms: [] },
+        "GET /api/members": [moderator],
+        "GET /api/farms/export": exportResponse,
+      });
+      const { user: actor } = renderFarms(moderator);
+      await screen.findByText(t("farms.no_farms"));
+
+      for (const message of [
+        t("farms.error_moderator_permission_required"),
+        t("farms.error_unable_to_export"),
+        t("farms.error_unable_to_export"),
+        "Connection failed",
+        t("farms.error_unable_to_export"),
+      ]) {
+        await actor.click(screen.getByRole("button", { name: t("farms.export_to_excel") }));
+        await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent(message));
+        expect(screen.getByRole("button", { name: t("farms.export_to_excel") })).toBeEnabled();
+        await actor.click(screen.getByRole("button", { name: t("common.close_notification") }));
+      }
+
+      expect(requests("GET", "/api/farms/export")).toHaveLength(5);
+      expect(click).not.toHaveBeenCalled();
+    });
+
+    it("translates export errors in Italian", async () => {
+      mockFetch({
+        "GET /api/farms": { farms: [] },
+        "GET /api/members": [moderator],
+        "GET /api/farms/export": json({ error: "farms.error_unable_to_export" }, 503),
+      });
+      const { user: actor } = renderFarms(moderator, [], "it");
+      await screen.findByText(t("farms.no_farms", undefined, "it"));
+
+      await actor.click(screen.getByRole("button", { name: "Esporta Excel" }));
+      expect(await screen.findByRole("alert")).toHaveTextContent("Impossibile esportare le farm.");
+    });
   });
 
   describe("detail", () => {

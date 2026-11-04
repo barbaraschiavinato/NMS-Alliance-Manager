@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Search, SlidersHorizontal } from "lucide-react";
+import { FileSpreadsheet, Search, SlidersHorizontal } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { AllianceMember, AllianceSettings } from "@/lib/members/member-types";
 import { galaxyNames } from "@/lib/planets/galaxies";
@@ -86,6 +86,7 @@ export function FarmsPage({
   const [tab, setTab] = useState<FarmTab>("all");
   const [search, setSearch] = useNavigationSearchState("");
   const [toast, setToast] = useState<ToastState | null>(null);
+  const [exporting, setExporting] = useState(false);
   const [filters, setFilters] = useState(emptyFarmFilters);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [dialog, setDialog] = useState<{ farm: FarmEntry | null } | null>(null);
@@ -207,6 +208,33 @@ export function FarmsPage({
       setToast({ message: "farms.farm_deleted", tone: "success" });
     } catch (error_: unknown) {
       setToast({ message: error_ instanceof Error ? error_.message : "farms.error_unable_to_remove", tone: "error" });
+    }
+  }
+
+  async function exportFarms() {
+    setExporting(true);
+    try {
+      const response = await fetch("/api/farms/export", { cache: "no-store" });
+      if (!response.ok) {
+        const body = (await response.json().catch(() => null)) as { error?: string } | null;
+        throw new Error(body?.error ?? "farms.error_unable_to_export");
+      }
+      const blob = await response.blob();
+      const filename =
+        /filename="([^"]+)"/.exec(response.headers.get("Content-Disposition") ?? "")?.[1] ??
+        `farm-${new Date().toISOString().slice(0, 10)}.xlsx`;
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.append(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (error_: unknown) {
+      setToast({ message: error_ instanceof Error ? error_.message : "farms.error_unable_to_export", tone: "error" });
+    } finally {
+      setExporting(false);
     }
   }
 
@@ -343,6 +371,19 @@ export function FarmsPage({
                   >
                     <SlidersHorizontal aria-hidden="true" size={14} />
                   </button>
+                  {canChooseOwner && (
+                    <button
+                      aria-label={t(exporting ? "farms.exporting" : "farms.export_to_excel")}
+                      className="station-export-button"
+                      data-tooltip={t(exporting ? "farms.exporting" : "farms.export_to_excel")}
+                      disabled={exporting}
+                      onClick={() => void exportFarms()}
+                      title={t(exporting ? "farms.exporting" : "farms.export_to_excel")}
+                      type="button"
+                    >
+                      <FileSpreadsheet aria-hidden="true" size={15} />
+                    </button>
+                  )}
                 </div>
               </div>
               {filtersOpen && (

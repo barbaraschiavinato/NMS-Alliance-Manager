@@ -259,5 +259,5 @@ Vedi la sezione [Concetti generali](#1-concetti-generali).
 - Approvare, bloccare o cambiare ruolo agli utenti.
 - Creare, modificare o cancellare missioni qualsiasi, o assegnarle ad altri.
 - Registrare stazioni per altri o modificare quelle altrui.
-- Esportare le stazioni in Excel.
+- Esportare le stazioni o le farm in Excel.
 - Modificare le impostazioni dell'alleanza.
