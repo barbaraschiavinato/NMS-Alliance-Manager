@@ -438,6 +438,32 @@ describe("PlanetDestinationCard", () => {
     expect(screen.getByRole("img", { name: "None" })).toHaveClass("planet-water-indicator");
   });
 
+  it("links to the planet's pet detail, except on that pet's own detail page, next to the farm and help buttons", () => {
+    window.history.replaceState(null, "", "/planets");
+    const { unmount } = renderWithLocale(
+      <PlanetDestinationCard onOpen={vi.fn()} planet={makePlanet({ petId: "pet-7" })} />,
+    );
+    const link = screen.getByRole("link", { name: "Open pet" });
+    expect(link.getAttribute("href")).toMatch(/^\/pets\/pet-7\?from=planets/);
+    expect(link.closest(".planet-card-with-pet")).not.toBeNull();
+    unmount();
+
+    const both = renderWithLocale(
+      <PlanetDestinationCard onOpen={vi.fn()} planet={makePlanet({ petId: "pet-7", farmId: "farm-7" })} />,
+    );
+    expect(both.container.querySelector(".planet-card-with-pet.planet-card-with-farm")).not.toBeNull();
+    expect(screen.getByRole("link", { name: "Open farm" })).toBeInTheDocument();
+    both.unmount();
+
+    window.history.replaceState(null, "", "/pets/pet-7");
+    const { container } = renderWithLocale(
+      <PlanetDestinationCard onOpen={vi.fn()} planet={makePlanet({ petId: "pet-7" })} />,
+    );
+    expect(screen.queryByRole("link", { name: "Open pet" })).toBeNull();
+    expect(container.querySelector(".planet-card-with-pet")).toBeNull();
+    window.history.replaceState(null, "", "/");
+  });
+
   it("links to the planet's farm detail, except on that farm's own detail page", () => {
     window.history.replaceState(null, "", "/planets");
     const { unmount } = renderWithLocale(

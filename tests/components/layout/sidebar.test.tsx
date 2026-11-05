@@ -44,6 +44,7 @@ describe("Sidebar", () => {
       "/planets",
       "/map",
       "/farms",
+      "/pets",
       "/leaderboard",
       "/taxi",
       "/messages",
@@ -55,6 +56,7 @@ describe("Sidebar", () => {
     expect(within(nav).getByRole("link", { name: /Missions/ })).toHaveTextContent("Missions4");
     expect(within(nav).getByRole("link", { name: /Planets/ })).toHaveTextContent("Planets12");
     expect(within(nav).getByRole("link", { name: "Farm" }).querySelector("svg")).toHaveClass("lucide-factory");
+    expect(within(nav).getByRole("link", { name: "Pets" }).querySelector("svg")).toHaveClass("lucide-paw-print");
     expect(screen.getByText("Nova")).toBeInTheDocument();
     expect(screen.getByText("Member")).toBeInTheDocument();
     expect(screen.getByText("NO")).toBeInTheDocument();
@@ -175,6 +177,7 @@ describe("Sidebar", () => {
     ["pianeti", "/planets"],
     ["mappa", "/map"],
     ["farm", "/farms"],
+    ["pet", "/pets"],
     ["offline", "/offline-players"],
     ["classifica", "/leaderboard"],
     ["aiuto", "/help-requests"],

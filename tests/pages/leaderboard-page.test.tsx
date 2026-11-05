@@ -84,6 +84,31 @@ describe("LeaderboardPage", () => {
     expect(board.querySelector("h3 svg")).not.toBeNull();
   });
 
+  it("shows the pet board with its accent and icon", () => {
+    mockFetch({});
+    renderPage(
+      <LeaderboardPage
+        alliance={defaultAlliance}
+        boards={[
+          {
+            id: "pets",
+            title: "leaderboard.board_pets",
+            empty: "leaderboard.empty_pets",
+            accent: "pets",
+            entries: [],
+          },
+        ]}
+        currentMember={me}
+        missionCount={0}
+        stationCount={0}
+      />,
+    );
+    const board = screen.getByRole("heading", { name: t("leaderboard.board_pets") }).closest("section")!;
+    expect(board).toHaveClass("leaderboard-widget-pets");
+    expect(board.querySelector("h3 svg")).toHaveClass("lucide-paw-print");
+    expect(within(board).getByText(t("leaderboard.empty_pets"))).toBeInTheDocument();
+  });
+
   it("renders stats, top ten lists, role widgets and empty boards", () => {
     mockFetch({});
     renderPage(

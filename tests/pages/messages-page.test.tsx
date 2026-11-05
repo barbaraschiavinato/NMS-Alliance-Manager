@@ -49,6 +49,38 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
+describe("MessagesPage pet messages", () => {
+  it("links the pet icon to the pet and asks for the pet notice when replying", async () => {
+    mockFetch({
+      "GET /api/messages": [
+        message({
+          id: "pet-msg",
+          subject: "Eggy",
+          subjectType: "pet",
+          petHref: "/pets/pet-1?from=messages",
+          stationHref: undefined,
+        }),
+      ],
+    });
+    const { user } = renderMessages();
+    const link = await screen.findByRole("link", { name: t("messages.open_pet") });
+    expect(link.getAttribute("href")).toMatch(/^\/pets\/pet-1\?from=messages/);
+    expect(link).toHaveClass("message-pet-link");
+
+    await user.click(screen.getByRole("button", { name: t("messages.reply") }));
+    expect(screen.getByRole("checkbox", { name: t("messages.pet_only_notice") })).toBeInTheDocument();
+  });
+
+  it("shows no pet link when the pet no longer exists or on replies", async () => {
+    mockFetch({
+      "GET /api/messages": [message({ id: "gone", subject: "Eggy", subjectType: "pet", stationHref: undefined })],
+    });
+    renderMessages();
+    await screen.findByText("Meet at the station");
+    expect(screen.queryByRole("link", { name: t("messages.open_pet") })).toBeNull();
+  });
+});
+
 describe("MessagesPage", () => {
   it("returns to the source conversation after deleting its detail root", async () => {
     window.history.replaceState(null, "", "/messages/msg-1?returnTo=%2Fmessages%2Fprevious");

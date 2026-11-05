@@ -166,6 +166,7 @@ describe("reading (local filesystem)", () => {
     ["a negative planet", message({ planetNumber: -1 })],
     ["a planet above 6", message({ planetNumber: 7 })],
     ["a non-string mission code", message({ missionCode: 1 })],
+    ["a non-string pet id", message({ petId: 1 })],
     ["a non-boolean unread flag", message({ unread: "yes" })],
     ["a missing createdAt", message({ createdAt: undefined })],
   ])("rejects a stored message with %s", async (_label, entry) => {
@@ -346,6 +347,13 @@ describe("private messages", () => {
       { threadId: "m1", replyToId: "m1" },
     );
     await savePrivateMessage("r", "s", "re2", { subjectType: "mission", subject: "M", missionCode: "X1" }, {});
+    await savePrivateMessage("s", "r", "egg", { subjectType: "pet", subject: "Eggy", petId: "pet-1" });
+    expect((await readPrivateMessages()).find((entry) => entry.body === "egg")).toMatchObject({
+      subjectType: "pet",
+      subject: "Eggy",
+      petId: "pet-1",
+      unread: true,
+    });
     const [, reply, standalone] = await readPrivateMessages();
     expect(reply).toMatchObject({ threadId: "m1", replyToId: "m1", missionCode: "X1", unread: true });
     expect(standalone.threadId).toBe(standalone.id);

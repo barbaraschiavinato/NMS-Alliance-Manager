@@ -10,9 +10,10 @@ import {
   savePrivateMessage,
 } from "@/lib/messages/private-messages-store";
 import { readAllStationPortals, readStationPortals } from "@/lib/stations/stations-store";
-import { isSameSystem, stationDetailHref } from "@/lib/navigation/detail-links";
+import { isSameSystem, petDetailHref, stationDetailHref } from "@/lib/navigation/detail-links";
 import { readMissions } from "@/lib/missions/store";
 import { isEmailAddress } from "@/lib/members/member-types";
+import { readPets } from "@/lib/pets/pets-store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -57,6 +58,9 @@ export async function GET(request: Request) {
         ? await readAllStationPortals()
         : (await readStationPortals(member.publicId)).map((station) => ({ ...station, ownerId: member.publicId }))
       : [];
+    const petIds = visibleMessages.some((message) => message.subjectType === "pet")
+      ? new Set((await readPets()).map((pet) => pet.id))
+      : new Set<string>();
     const responseMessages = visibleMessages
       .toSorted((left, right) => right.createdAt.localeCompare(left.createdAt))
       .map((message) => {
@@ -70,6 +74,10 @@ export async function GET(request: Request) {
         return {
           ...message,
           ...(station ? { stationHref: stationDetailHref(station, "messages") } : {}),
+          // Pet messages link to the pet while it still exists.
+          ...(message.subjectType === "pet" && message.petId && petIds.has(message.petId)
+            ? { petHref: petDetailHref(message.petId, "messages") }
+            : {}),
           senderName: [sender?.nmsName, sender?.name].find((name) => name && !isEmailAddress(name)) || "Former member",
           recipientName:
             [recipient?.nmsName, recipient?.name].find((name) => name && !isEmailAddress(name)) || "Former member",
@@ -174,7 +182,8 @@ export async function POST(request: Request) {
 
       let replyContext:
         | { subjectType: "planet"; subject: string; portal: string; galaxy: number; planetNumber: number }
-        | { subjectType: "mission"; subject: string; missionCode: string };
+        | { subjectType: "mission"; subject: string; missionCode: string }
+        | { subjectType: "pet"; subject: string; petId: string };
       if (
         original.subjectType === "planet" &&
         typeof original.subject === "string" &&
@@ -199,6 +208,12 @@ export async function POST(request: Request) {
           subject: original.subject,
           missionCode: original.missionCode,
         };
+      } else if (
+        original.subjectType === "pet" &&
+        typeof original.subject === "string" &&
+        typeof original.petId === "string"
+      ) {
+        replyContext = { subjectType: "pet", subject: original.subject, petId: original.petId };
       } else {
         return NextResponse.json({ error: "messages.reply_context_missing" }, { status: 400 });
       }
@@ -223,7 +238,8 @@ export async function POST(request: Request) {
     }
     let messageContext:
       | { subjectType: "planet"; subject: string; portal: string; galaxy: number; planetNumber: number }
-      | { subjectType: "mission"; subject: string; missionCode: string };
+      | { subjectType: "mission"; subject: string; missionCode: string }
+      | { subjectType: "pet"; subject: string; petId: string };
     if (
       context?.type === "planet" &&
       typeof context.portal === "string" &&
@@ -253,6 +269,18 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "profile.message_context_invalid" }, { status: 400 });
       }
       messageContext = { subjectType: "mission", subject: mission.title, missionCode: mission.id };
+    } else if (context?.type === "pet" && typeof context.petId === "string" && context.petId.trim()) {
+      // Egg trade requests go to the pet's discoverer only, and only while the trade is available.
+      const pet = (await readPets()).find((candidate) => candidate.id === context.petId);
+      if (
+        !pet ||
+        !pet.eggTradeAvailable ||
+        pet.ownerId !== recipient.publicId ||
+        recipient.publicId === member.publicId
+      ) {
+        return NextResponse.json({ error: "profile.message_context_invalid" }, { status: 400 });
+      }
+      messageContext = { subjectType: "pet", subject: pet.name, petId: pet.id };
     } else {
       return NextResponse.json({ error: "profile.message_context_required" }, { status: 400 });
     }

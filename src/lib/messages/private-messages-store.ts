@@ -19,13 +19,14 @@ export type PrivateMessage = Readonly<{
   recipientMemberId?: string;
   body: string;
   subject?: string;
-  subjectType?: "planet" | "mission" | "help" | "taxi";
+  subjectType?: "planet" | "mission" | "pet" | "help" | "taxi";
   meetingStation?: MeetingStation;
   meetingPoint?: TaxiMeetingPoint;
   portal?: string;
   galaxy?: number;
   planetNumber?: number;
   missionCode?: string;
+  petId?: string;
   unread?: boolean;
   archived?: boolean;
   createdAt: string;
@@ -70,6 +71,7 @@ function parseMessages(value: unknown): StoredPrivateMessage[] {
       (message.subjectType !== undefined &&
         message.subjectType !== "planet" &&
         message.subjectType !== "mission" &&
+        message.subjectType !== "pet" &&
         message.subjectType !== "help" &&
         message.subjectType !== "taxi") ||
       (message.meetingStation !== undefined &&
@@ -94,6 +96,7 @@ function parseMessages(value: unknown): StoredPrivateMessage[] {
           message.planetNumber < 0 ||
           message.planetNumber > 6)) ||
       (message.missionCode !== undefined && typeof message.missionCode !== "string") ||
+      (message.petId !== undefined && typeof message.petId !== "string") ||
       (message.unread !== undefined && typeof message.unread !== "boolean") ||
       (message.archived !== undefined && typeof message.archived !== "boolean") ||
       typeof message.createdAt !== "string"
@@ -244,6 +247,7 @@ export async function savePrivateMessage(
   context: Readonly<
     | { subjectType: "planet"; subject: string; portal: string; galaxy: number; planetNumber: number }
     | { subjectType: "mission"; subject: string; missionCode: string }
+    | { subjectType: "pet"; subject: string; petId: string }
   >,
   relation?: Readonly<{ threadId?: string; replyToId?: string }>,
 ): Promise<void> {

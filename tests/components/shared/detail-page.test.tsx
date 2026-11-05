@@ -16,6 +16,7 @@ describe("detail navigation", () => {
     ["/missions/previous", "Back to mission details"],
     ["/stations/previous", "Back to station details"],
     ["/farms/previous", "Back to farm details"],
+    ["/pets/previous", "Back to pet details"],
     ["/planets?search=Pilot", "Back to planets"],
     ["/messages/previous", "Back to messages"],
     ["/help-requests/previous", "Back to help requests"],

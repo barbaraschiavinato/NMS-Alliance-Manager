@@ -41,8 +41,15 @@ export type FarmDetail = Readonly<{
   planet?: PlanetDestination;
 }>;
 
-async function farmRequest(method: string, body?: unknown, detailId?: string): Promise<FarmEntry[]> {
-  const url = detailId ? `/api/farms?${new URLSearchParams({ detailFarm: detailId })}` : "/api/farms";
+async function farmRequest(
+  method: string,
+  body?: unknown,
+  detailId?: string,
+  samePlanet = false,
+): Promise<FarmEntry[]> {
+  const url = detailId
+    ? `/api/farms?${new URLSearchParams({ detailFarm: detailId, ...(samePlanet ? { samePlanet: "1" } : {}) })}`
+    : "/api/farms";
   const response = await fetch(url, {
     method,
     cache: "no-store",
@@ -96,7 +103,7 @@ export function FarmsPage({
 
   useEffect(() => {
     let active = true;
-    farmRequest("GET", undefined, detailId)
+    farmRequest("GET", undefined, detailId, detail?.origin === "planets")
       .then((entries) => {
         if (active) setFarms(entries);
       })
@@ -110,7 +117,7 @@ export function FarmsPage({
     return () => {
       active = false;
     };
-  }, [detailId, detailStationKey]);
+  }, [detailId, detailStationKey, detail?.origin]);
 
   useEffect(() => {
     if (!canChooseOwner) return;
@@ -171,6 +178,20 @@ export function FarmsPage({
   const updateFilter = (key: string, value: unknown) => setFilters((current) => ({ ...current, [key]: String(value) }));
   const pagination = usePagination(visibleFarms, listPageSize, JSON.stringify([tab, search, filters]));
   const selectedFarm = detail ? farms.find((farm) => farm.id === detail.id) : undefined;
+  // Arriving from a planet card shows every farm of that planet, the opened one first and the others newest first.
+  const detailFarms = useMemo(() => {
+    if (!selectedFarm) return [];
+    if (detail?.origin !== "planets") return [selectedFarm];
+    const others = farms
+      .filter(
+        (farm) =>
+          farm.id !== selectedFarm.id &&
+          farm.portal.toUpperCase() === selectedFarm.portal.toUpperCase() &&
+          farm.galaxy === selectedFarm.galaxy,
+      )
+      .sort((left, right) => right.createdAt.localeCompare(left.createdAt));
+    return [selectedFarm, ...others];
+  }, [detail?.origin, farms, selectedFarm]);
   const stationDetail = detail?.stationDetail;
   const showStationDetail = Boolean(
     selectedFarm &&
@@ -243,11 +264,12 @@ export function FarmsPage({
 
   const cards = (
     <ul className={`farm-list${detail ? " farm-detail-list" : ""}`}>
-      {(detail ? (selectedFarm ? [selectedFarm] : []) : pagination.items).map((farm) => (
+      {(detail ? detailFarms : pagination.items).map((farm) => (
         <FarmCard
           currentMemberId={member.publicId}
           farm={farm}
-          hideDetailLink={Boolean(detail)}
+          detailOrigin={detail ? "planets" : undefined}
+          hideDetailLink={Boolean(detail) && farm.id === detail?.id}
           key={farm.id}
           onEdit={(selected) => setDialog({ farm: selected })}
           onRemove={(selected) => void remove(selected)}
@@ -285,7 +307,7 @@ export function FarmsPage({
           {detail ? (
             <AlmanacCacheOnly>
               <DetailBackLink {...detailOrigins[detail.origin]} />
-              <DetailSection title="details.farm">
+              <DetailSection title={detailFarms.length > 1 ? "details.farms_on_planet" : "details.farm"}>
                 {loading ? (
                   <LoadingSpinner />
                 ) : selectedFarm ? (

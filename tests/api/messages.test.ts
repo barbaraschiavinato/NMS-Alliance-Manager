@@ -203,6 +203,38 @@ describe("GET /api/messages", () => {
     expect(entry).not.toHaveProperty("senderEmail");
   });
 
+  it("links pet messages to the pet while it exists and keeps them visible to the two members and real admins only", async () => {
+    const pet = {
+      id: "pet-1",
+      name: "Eggy",
+      petType: "frost",
+      classes: { combat: "S", agility: "A", health: "B" },
+      portal,
+      galaxy: 0,
+      planetName: "Ruba",
+      ownerId: cast.moderator.publicId,
+      createdAt: "2026-01-01T00:00:00.000Z",
+    };
+    writeDataFile("pets.json", [pet]);
+    writeDataFile("private-messages.json", [
+      message({ id: "alive", subjectType: "pet", subject: "Eggy", petId: "pet-1", portal: undefined }),
+      message({ id: "gone", subjectType: "pet", subject: "Old", petId: "deleted", portal: undefined }),
+    ]);
+    signInAs(cast.user);
+    const entries = (await (await getMessages()).json()) as { id: string; petHref?: string }[];
+    expect(entries.find((entry) => entry.id === "alive")?.petHref).toBe("/pets/pet-1?from=messages");
+    expect(entries.find((entry) => entry.id === "gone")?.petHref).toBeUndefined();
+
+    signInAs(cast.admin);
+    expect(((await (await getMessages("?scope=all")).json()) as unknown[]).length).toBe(2);
+    for (const member of [cast.moderator, cast.simpleAdmin]) {
+      signInAs(member);
+      expect((await getMessages("?scope=all")).status).toBe(403);
+    }
+    signInAs(cast.simpleAdmin);
+    expect(((await (await getMessages()).json()) as unknown[]).length).toBe(0);
+  });
+
   it("counts the member's unread received messages", async () => {
     writeDataFile("private-messages.json", [
       message({ recipientMemberId: cast.user.publicId, senderMemberId: cast.moderator.publicId }),
@@ -414,6 +446,94 @@ describe("POST /api/messages", () => {
         subjectType: "mission",
         subject: "Build a farm",
         missionCode: "M-1",
+      });
+    });
+
+    describe("egg trade messages about a pet", () => {
+      const petRecord = (overrides: Record<string, unknown> = {}) => ({
+        id: "pet-1",
+        name: "Eggy",
+        petType: "frost",
+        classes: { combat: "S", agility: "A", health: "B" },
+        eggTradeAvailable: true,
+        portal,
+        galaxy: 0,
+        planetName: "Ruba",
+        ownerId: cast.moderator.publicId,
+        createdAt: "2026-01-01T00:00:00.000Z",
+        ...overrides,
+      });
+      const petMessage = (id = "pet-1") => ({
+        message: "Trade eggs?",
+        recipientId: cast.moderator.publicId,
+        context: { type: "pet", petId: id },
+      });
+
+      it("sends a message to the discoverer with the pet as the subject", async () => {
+        writeDataFile("pets.json", [petRecord()]);
+        signInAs(cast.user);
+        expect((await post(petMessage())).status).toBe(201);
+        expect(storedMessages()).toHaveLength(1);
+        expect(storedMessages()[0]).toMatchObject({
+          senderMemberId: cast.user.publicId,
+          recipientMemberId: cast.moderator.publicId,
+          subjectType: "pet",
+          subject: "Eggy",
+          petId: "pet-1",
+          unread: true,
+        });
+      });
+
+      it.each([
+        ["an unknown pet", [], "pet-1"],
+        ["a pet without egg trade", [{ eggTradeAvailable: false }], "pet-1"],
+        ["a pet of another discoverer", [{ ownerId: "someone-else" }], "pet-1"],
+        ["an unassigned pet", [{ ownerId: null }], "pet-1"],
+      ])("rejects %s", async (_label, overrides, petId) => {
+        writeDataFile("pets.json", overrides.length ? [petRecord(overrides[0])] : []);
+        signInAs(cast.user);
+        const response = await post(petMessage(petId));
+        expect(response.status).toBe(400);
+        expect(await response.json()).toEqual({ error: "profile.message_context_invalid" });
+        expect(storedMessages()).toHaveLength(0);
+      });
+
+      it("does not let a member write to themselves about their own pet", async () => {
+        writeDataFile("pets.json", [petRecord({ ownerId: cast.user.publicId })]);
+        signInAs(cast.user);
+        const response = await post({ ...petMessage(), recipientId: cast.user.publicId });
+        expect(response.status).toBe(400);
+      });
+
+      it("requires a recipient that can receive messages", async () => {
+        writeDataFile("pets.json", [petRecord({ ownerId: cast.offline.publicId })]);
+        signInAs(cast.user);
+        expect((await post({ ...petMessage(), recipientId: cast.offline.publicId })).status).toBe(404);
+      });
+
+      it("keeps the pet in replies to a pet message", async () => {
+        writeDataFile("private-messages.json", [
+          message({
+            id: "orig",
+            subjectType: "pet",
+            subject: "Eggy",
+            petId: "pet-1",
+            portal: undefined,
+            galaxy: undefined,
+            planetNumber: undefined,
+          }),
+        ]);
+        signInAs(cast.moderator);
+        expect((await post({ message: "Sure", replyToId: "orig" })).status).toBe(201);
+        expect(storedMessages().find((entry) => entry.id !== "orig")).toMatchObject({
+          threadId: "orig",
+          replyToId: "orig",
+          senderMemberId: cast.moderator.publicId,
+          recipientMemberId: cast.user.publicId,
+          subjectType: "pet",
+          subject: "Eggy",
+          petId: "pet-1",
+        });
       });
     });
 

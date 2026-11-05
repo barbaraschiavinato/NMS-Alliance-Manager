@@ -43,7 +43,8 @@ function resolveOwner(
   return owner ? { ownerId: owner.publicId } : { error: "farms.error_owner_must_be_approved", status: 400 };
 }
 
-type FarmScope = Readonly<{ detailId?: string; system?: SystemIdentity }>;
+// `samePlanet` widens a detail request to every farm of the same planet (portal and galaxy), newest first.
+type FarmScope = Readonly<{ detailId?: string; system?: SystemIdentity; samePlanet?: boolean }>;
 
 function parseSystemScope(params: URLSearchParams): SystemIdentity | null | undefined {
   const portal = params.get("systemPortal");
@@ -56,10 +57,18 @@ function parseSystemScope(params: URLSearchParams): SystemIdentity | null | unde
 
 async function farmViews(member: AllianceMember, scope: FarmScope = {}) {
   const [storedFarms, access] = await Promise.all([readFarms(), readAccessData()]);
-  const { detailId, system } = scope;
-  const farms = storedFarms.filter(
-    (farm) => (detailId === undefined || farm.id === detailId) && (!system || isSameSystem(farm, system)),
-  );
+  const { detailId, system, samePlanet } = scope;
+  const detailFarm = detailId === undefined ? undefined : storedFarms.find((farm) => farm.id === detailId);
+  const farms = storedFarms.filter((farm) => {
+    if (detailId !== undefined) {
+      if (!detailFarm) return false;
+      const sameFarm = samePlanet
+        ? farm.portal.toUpperCase() === detailFarm.portal.toUpperCase() && farm.galaxy === detailFarm.galaxy
+        : farm.id === detailId;
+      if (!sameFarm) return false;
+    }
+    return !system || isSameSystem(farm, system);
+  });
   // Cache-only read: farm cards never trigger new NMS Almanac requests.
   const [almanac, stations] = await Promise.all([
     readAlmanacResponses([...new Set(farms.map((farm) => farm.portal))], true),
@@ -100,7 +109,11 @@ export async function GET(request?: Request) {
     const detailId = params.get("detailFarm");
     const system = parseSystemScope(params);
     if (system === null) return NextResponse.json({ error: "farms.error_invalid_portal_and_galaxy" }, { status: 400 });
-    const farms = await farmViews(member, { detailId: detailId ?? undefined, system });
+    const farms = await farmViews(member, {
+      detailId: detailId ?? undefined,
+      system,
+      samePlanet: params.get("samePlanet") === "1",
+    });
     if (detailId !== null && farms.length === 0)
       return NextResponse.json({ error: "farms.error_not_found" }, { status: 404 });
     return NextResponse.json({ farms }, { headers: { "Cache-Control": "no-store" } });

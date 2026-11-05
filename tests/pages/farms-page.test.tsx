@@ -1142,6 +1142,48 @@ describe("FarmsPage", () => {
       expect(screen.queryByTestId("embedded-station")).toBeNull();
     });
 
+    it("shows every farm of the planet when opened from a planet card, the opened one first", async () => {
+      const { calls } = mockFetch({
+        "GET /api/farms": {
+          farms: [
+            farm({ id: "farm-old", name: "Older", createdAt: "2026-01-01T00:00:00.000Z" }),
+            farm({ id: "farm-1", name: "Copper hill", createdAt: "2026-02-01T00:00:00.000Z" }),
+            farm({ id: "farm-new", name: "Newest", createdAt: "2026-03-01T00:00:00.000Z" }),
+            farm({ id: "farm-far", name: "Elsewhere", portal: "2123456789AB" }),
+          ],
+        },
+      });
+      renderDetail({ id: "farm-1", origin: "planets" });
+      expect(await screen.findByText("Newest")).toBeInTheDocument();
+      expect(calls.find((call) => call.url.searchParams.has("detailFarm"))?.url.searchParams.get("samePlanet")).toBe(
+        "1",
+      );
+      expect([...document.querySelectorAll(".farm-card-title")].map((node) => node.textContent)).toEqual([
+        "Copper hill",
+        "Newest",
+        "Older",
+      ]);
+      expect(screen.getByRole("region", { name: t("details.farms_on_planet") })).toBeInTheDocument();
+      expect(screen.queryByText("Elsewhere")).toBeNull();
+      expect(screen.queryByRole("link", { name: "Copper hill" })).toBeNull();
+      expect(screen.getByRole("link", { name: "Newest" }).getAttribute("href")).toMatch(
+        /^\/farms\/farm-new\?from=planets/,
+      );
+    });
+
+    it("keeps a single farm when the detail is opened from anywhere else", async () => {
+      const { calls } = mockFetch({
+        "GET /api/farms": { farms: [farm(), farm({ id: "farm-2", name: "Sibling" })] },
+      });
+      renderDetail({ id: "farm-1", origin: "farms" });
+      expect(await screen.findByText("Copper hill")).toBeInTheDocument();
+      expect(calls.find((call) => call.url.searchParams.has("detailFarm"))?.url.searchParams.has("samePlanet")).toBe(
+        false,
+      );
+      expect(screen.queryByText("Sibling")).toBeNull();
+      expect(screen.getByRole("region", { name: t("details.farm") })).toBeInTheDocument();
+    });
+
     it("reports a missing farm and refreshes the route after an edit", async () => {
       mockFetch({ "GET /api/farms": { farms: [] } });
       const { unmount } = renderDetail({ id: "farm-1", origin: "farms" });

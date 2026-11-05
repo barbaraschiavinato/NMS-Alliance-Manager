@@ -11,6 +11,7 @@ import {
   Siren,
   Mail,
   Orbit,
+  PawPrint,
   Send,
   Trophy,
   UsersRound,
@@ -75,6 +76,7 @@ export function Sidebar({
     | "pianeti"
     | "mappa"
     | "farm"
+    | "pet"
     | "utenti"
     | "offline"
     | "stazioni"
@@ -232,6 +234,15 @@ export function Sidebar({
           <Factory size={17} />
           <span>{t("navigation.farms")}</span>
           {isStaff && farmCount !== null && <span className="nav-count">{farmCount}</span>}
+        </Link>
+        <Link
+          className={`nav-item ${activeSection === "pet" ? "active" : ""}`}
+          href="/pets"
+          data-tooltip={t("navigation.pets")}
+          onClick={resetSearch}
+        >
+          <PawPrint size={17} />
+          <span>{t("navigation.pets")}</span>
         </Link>
         {(currentMember.role === "admin" || currentMember.role === "moderator") && (
           <Link

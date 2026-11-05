@@ -18,6 +18,8 @@
 .message-card-tools .member-icon-action.delete-member { color: #ef8067; }
 .message-card-tools .member-icon-action.delete-member:hover:not(:disabled) { border-color: #ef8067; background: #3a2724; }
 .message-subject-link { position: relative; flex: 0 0 29px; color: var(--lime); }
+.message-subject-link.message-pet-link { color: #ff8fb8; }
+.message-subject-link.message-pet-link:hover { border-color: #ff8fb8; }
 .message-card .member-icon-action[data-tooltip] { position: relative; }
 .message-card .member-icon-action[data-tooltip]::after { position: absolute; z-index: 30; right: 0; bottom: calc(100% + 7px); padding: 6px 8px; color: #f1eee7; border: 1px solid #394548; border-radius: 3px; background: #111719; box-shadow: 0 4px 14px #0008; content: attr(data-tooltip); font-size: 9px; font-weight: 500; line-height: 1.2; opacity: 0; pointer-events: none; text-transform: none; transform: translateY(3px); transition: opacity .12s, transform .12s; white-space: nowrap; }
 .message-card .member-icon-action[data-tooltip]:hover::after, .message-card .member-icon-action[data-tooltip]:focus-visible::after { opacity: 1; transform: translateY(0); }
