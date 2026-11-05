@@ -79,6 +79,41 @@ describe("Sidebar", () => {
     await waitFor(() => expect(farmLink).toHaveTextContent("Farm4"));
   });
 
+  it("shows the pet counter to staff and refreshes it when pets change", async () => {
+    let count = 7;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        async (url: string) =>
+          new Response(JSON.stringify(url === "/api/pets?count=1" ? { count: count++ } : { count: 0 })),
+      ),
+    );
+    renderWithLocale(<Sidebar {...baseProps} currentMember={makeMember({ role: "moderator" })} />);
+    const petLink = screen.getByRole("link", { name: /Pets/ });
+    await waitFor(() => expect(petLink).toHaveTextContent("Pets7"));
+    act(() => window.dispatchEvent(new Event("pets-changed")));
+    await waitFor(() => expect(petLink).toHaveTextContent("Pets8"));
+  });
+
+  it("keeps the pet counter hidden for regular members and on invalid responses", async () => {
+    const fetchMock = stubCounters();
+    renderWithLocale(<Sidebar {...baseProps} currentMember={makeMember({ role: "user" })} />);
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3));
+    expect(fetchMock.mock.calls.some(([url]) => url === "/api/pets?count=1")).toBe(false);
+    expect(screen.getByRole("link", { name: "Pets" })).toHaveTextContent(/^Pets$/);
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string) => {
+        if (url === "/api/pets?count=1") throw new Error("offline");
+        return new Response(JSON.stringify({ count: 0 }));
+      }),
+    );
+    renderWithLocale(<Sidebar {...baseProps} currentMember={makeMember({ role: "admin" })} />);
+    await waitFor(() => expect(fetch).toHaveBeenCalledWith("/api/pets?count=1", expect.anything()));
+    expect(screen.getAllByRole("link", { name: "Pets" }).at(-1)).toHaveTextContent(/^Pets$/);
+  });
+
   it("keeps the farm counter hidden for regular members and on invalid responses", async () => {
     const fetchMock = stubCounters();
     renderWithLocale(<Sidebar {...baseProps} currentMember={makeMember({ role: "user" })} />);

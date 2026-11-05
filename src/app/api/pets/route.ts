@@ -124,14 +124,25 @@ async function petViews(member: AllianceMember, scope: PetScope = {}) {
 export async function GET(request?: Request) {
   const member = await getCurrentMember();
   if (!member) return NextResponse.json({ error: "pets.error_access_required" }, { status: 401 });
-  const system = parseSystemScope(request ? new URL(request.url).searchParams : new URLSearchParams());
+  const params = request ? new URL(request.url).searchParams : new URLSearchParams();
+  if (params.get("count") === "1") {
+    if (!hasRole(member, "moderator"))
+      return NextResponse.json({ error: "pets.error_access_required" }, { status: 403 });
+    try {
+      return NextResponse.json({ count: (await readPets()).length }, { headers: { "Cache-Control": "no-store" } });
+    } catch (error) {
+      console.error("Unable to count pets", error);
+      return NextResponse.json({ error: "pets.error_unable_to_read" }, { status: 503 });
+    }
+  }
+  const system = parseSystemScope(params);
   if (system === null) return NextResponse.json({ error: "farms.error_invalid_portal_and_galaxy" }, { status: 400 });
-  const detailId = request ? new URL(request.url).searchParams.get("detailPet") : null;
+  const detailId = params.get("detailPet");
   try {
     const pets = await petViews(member, {
       detailId: detailId ?? undefined,
       system,
-      samePlanet: new URL(request?.url ?? "http://localhost").searchParams.get("samePlanet") === "1",
+      samePlanet: params.get("samePlanet") === "1",
     });
     if (detailId !== null && pets.length === 0)
       return NextResponse.json({ error: "pets.error_not_found" }, { status: 404 });

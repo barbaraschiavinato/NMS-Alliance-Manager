@@ -141,6 +141,35 @@ describe("GET /api/pets", () => {
   });
 });
 
+describe("GET /api/pets?count=1", () => {
+  const request = () => new Request("http://localhost:3000/api/pets?count=1");
+
+  it("returns the pet count to staff only, unassigned pets included", async () => {
+    writeDataFile("pets.json", [storedPet(), storedPet({ ownerId: null })]);
+    const route = await import("@/app/api/pets/route");
+    for (const member of [cast.moderator, cast.admin]) {
+      signInAs(member);
+      const response = await route.GET(request());
+      expect(response.status).toBe(200);
+      expect(await response.json()).toEqual({ count: 2 });
+    }
+    for (const member of [cast.user, cast.simpleAdmin]) {
+      signInAs(member);
+      const response = await route.GET(request());
+      expect(response.status).toBe(403);
+      expect(await response.json()).toEqual({ error: "pets.error_access_required" });
+    }
+  });
+
+  it("returns 503 when the pets cannot be counted", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    writeRawDataFile("pets.json", "{not json");
+    signInAs(cast.moderator);
+    const route = await import("@/app/api/pets/route");
+    expect((await route.GET(request())).status).toBe(503);
+  });
+});
+
 describe("canMessageOwner", () => {
   it("is true only with egg trade, a real discoverer and a different viewer", async () => {
     const offered = storedPet({ eggTradeAvailable: true, ownerId: cast.admin.publicId });

@@ -199,6 +199,7 @@ export function PetsPage({
       ...(removeImage ? { removeImage: true } : {}),
     };
     setPets(await petRequest(editing ? "PATCH" : "POST", payload, image));
+    if (!editing) window.dispatchEvent(new Event("pets-changed"));
     setDialog(null);
     setToast({ message: editing ? "pets.pet_updated" : "pets.pet_added", tone: "success" });
     if (detail) router.refresh();
@@ -208,6 +209,7 @@ export function PetsPage({
     if (!window.confirm(t("pets.delete_pet_confirm", { pet: pet.name }))) return;
     try {
       setPets(await petRequest("DELETE", { id: pet.id }));
+      window.dispatchEvent(new Event("pets-changed"));
       if (detail?.id === pet.id) {
         router.replace(returnDestination);
         return;

@@ -595,6 +595,34 @@ describe("pet form", () => {
     expect(payload).toMatchObject({ galaxy: 5, planetName: "Mystery", portal: "0123456789AB" });
   });
 
+  it("announces added and deleted pets so the sidebar counter refreshes, but not edits", async () => {
+    const changed = vi.fn();
+    window.addEventListener("pets-changed", changed);
+    mockFetch({
+      "GET /api/pets": { pets: [pet()] },
+      "/api/missions/verify-system": { found: true, planetName: "Ruba Prime" },
+      "POST /api/pets": { pets: [pet(), pet({ id: "pet-2", name: "New" })] },
+      "PATCH /api/pets": { pets: [pet({ name: "Renamed" })] },
+      "DELETE /api/pets": { pets: [] },
+    });
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    const { user: actor } = renderPets();
+    await screen.findByText("Fluffy");
+
+    await actor.click(screen.getByRole("button", { name: t("pets.edit_pet_named", { pet: "Fluffy" }) }));
+    const editDialog = screen.getByRole("dialog", { name: t("pets.edit_pet") });
+    const save = within(editDialog).getByRole("button", { name: t("common.save") });
+    await waitFor(() => expect(save).toBeEnabled(), { timeout: 2000 });
+    await actor.click(save);
+    await screen.findByText(t("pets.pet_updated"));
+    expect(changed).not.toHaveBeenCalled();
+
+    await actor.click(screen.getByRole("button", { name: t("pets.delete_pet_named", { pet: "Renamed" }) }));
+    await screen.findByText(t("pets.pet_deleted"));
+    expect(changed).toHaveBeenCalledTimes(1);
+    window.removeEventListener("pets-changed", changed);
+  });
+
   it("shows the server error without closing the form", async () => {
     const { dialog, user: actor } = await openForm({
       "POST /api/pets": json({ error: "pets.error_unable_to_save" }, 503),
