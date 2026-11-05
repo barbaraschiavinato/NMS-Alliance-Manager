@@ -203,7 +203,7 @@ Il nome della farm apre la sua pagina di dettaglio: prima la card farm a tutta l
 <a id="classifica"></a>
 
 ### `Trophy` Classifica
-Mostra la posizione dei membri per punti: stazioni scoperte, missioni completate, **pianeti visitati** (con l'icona e i colori della sezione Pianeti, come i tabelloni Stazioni scoperte e Missioni completate hanno quelli delle rispettive sezioni; conta solo quanti pianeti ha spuntato ciascuno, non quali), **farm** possedute (in verde con l'icona `Factory`; le farm non assegnate non contano) e voci spuntate, più i totali dell'alleanza (pianeti, membri, stazioni, missioni, task, farm). È solo in lettura.
+Mostra la posizione dei membri per punti: stazioni scoperte, missioni completate, **pianeti visitati** (con l'icona e i colori della sezione Pianeti, come i tabelloni Stazioni scoperte e Missioni completate hanno quelli delle rispettive sezioni; conta solo quanti pianeti ha spuntato ciascuno, non quali), **farm** possedute (in verde con l'icona `Factory`; le farm non assegnate non contano) e voci spuntate, più i totali dell'alleanza (pianeti, membri, stazioni, missioni, task, farm). Le schede delle specializzazioni (Ranger, Esploratore, Costruttore) mostrano sempre 12 posizioni in totale, divise in parti uguali tra i task della specializzazione (3 per ciascuno dei 4 task Ranger, 4 per ciascuno dei 3 task Esploratore, 6 per ciascuno dei 2 task Costruttore). È solo in lettura.
 
 ### `CarTaxiFront` Servizio taxi
 

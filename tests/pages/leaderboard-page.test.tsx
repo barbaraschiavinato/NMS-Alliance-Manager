@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { LeaderboardPage, type LeaderboardBoard } from "@/components/pages/leaderboard-page";
+import { entryLimit, LeaderboardPage, type LeaderboardBoard } from "@/components/pages/leaderboard-page";
 import { defaultAlliance, makeMember } from "../helpers/members";
 import { mockFetch, renderPage, t } from "./helpers";
 
@@ -109,7 +109,7 @@ describe("LeaderboardPage", () => {
     expect(within(missions).getByText(t("leaderboard.empty_missions"))).toBeInTheDocument();
 
     const ranger = screen.getByRole("heading", { name: t("common.ranger"), level: 3 }).closest("section")!;
-    expect(within(ranger).getAllByRole("listitem")).toHaveLength(3);
+    expect(within(ranger).getAllByRole("listitem")).toHaveLength(4);
     expect(within(ranger).getByRole("heading", { name: t("system.station_claimed") })).toBeInTheDocument();
     expect(within(ranger).getByText(t("leaderboard.empty_task"))).toBeInTheDocument();
     expect(within(ranger).getAllByRole("img", { name: t("common.ranger") }).length).toBeGreaterThan(0);
@@ -180,6 +180,39 @@ describe("LeaderboardPage", () => {
     const dialog = screen.getByRole("dialog", { name: t("profile.my_nms_profile") });
     await user.click(within(dialog).getAllByRole("button", { name: t("common.close") })[0]);
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it.each([
+    [4, 3],
+    [3, 4],
+    [2, 6],
+  ])("shows 12 entries in total on a specialty board with %i tasks (%i each)", (taskCount, perTask) => {
+    mockFetch({});
+    const sections = Array.from({ length: taskCount }, (_, task) => ({
+      id: `task_${task}`,
+      title: `Task ${task}`,
+      entries: Array.from({ length: 12 }, (_, index) => entry(index + 1)),
+    }));
+    const board: LeaderboardBoard = {
+      id: "ranger_tasks",
+      title: "common.ranger",
+      empty: "leaderboard.empty_task",
+      role: "ranger",
+      entries: [],
+      sections,
+    };
+    expect(entryLimit(board)).toBe(perTask);
+    renderPage(
+      <LeaderboardPage
+        alliance={defaultAlliance}
+        boards={[board]}
+        currentMember={me}
+        missionCount={0}
+        stationCount={0}
+      />,
+    );
+    const section = screen.getByRole("heading", { name: t("common.ranger"), level: 3 }).closest("section")!;
+    expect(within(section).getAllByRole("listitem")).toHaveLength(12);
   });
 
   it("shows an icon for builder and explorer task boards", () => {
