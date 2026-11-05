@@ -7,6 +7,12 @@ description: Things noticed during code changes that look wrong or risky and nee
 
 Things noticed during code changes that look wrong or risky and need a closer look. Remove an entry once it has been resolved or ruled out.
 
+## C-jj2ofp: The guide says moderators can read every message, the API only lets real admins (2026-11-05)
+
+`src/components/guide/guide-content.tsx:1558`, `src/app/api/messages/route.ts:43`
+
+The guide tells members that "moderatori e admin possono vedere tutti i messaggi", but `GET /api/messages?scope=all` and message deletion require the `admin` role (and not simple view), and AGENTS.md says moderators are not allowed. Either the guide sentence should name admins only, or the rule should change (which needs a decision, see the private message details rule in AGENTS.md).
+
 ## C-wjaol9: Dynamic data paths make Turbopack trace the whole project (2026-10-22)
 
 `src/lib/storage/local-data-path.ts:5`

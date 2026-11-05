@@ -1,3 +1,5 @@
+import { existsSync } from "node:fs";
+import path from "node:path";
 import { get, put } from "@vercel/blob";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { signInAs } from "../../helpers/auth";
@@ -48,9 +50,14 @@ describe("POST /api/admin/upload", () => {
     expect(put).not.toHaveBeenCalled();
   });
 
-  it("returns 503 when no Blob store is configured", async () => {
+  it("saves the image in the local data folder when no Blob store is configured", async () => {
     signInAs(cast.admin);
-    expect((await upload(imageForm())).status).toBe(503);
+    const response = await upload(imageForm("image/png", 16, "logo.png"));
+    expect(response.status).toBe(200);
+    const { url: imageUrl } = (await response.json()) as { url: string };
+    const pathname = new URL(imageUrl, "http://localhost").searchParams.get("path") ?? "";
+    expect(pathname).toMatch(/^alliance-manager\/branding\/[\da-f-]{36}\.png$/);
+    expect(existsSync(path.join(process.cwd(), "data", "uploads", pathname))).toBe(true);
     expect(put).not.toHaveBeenCalled();
   });
 

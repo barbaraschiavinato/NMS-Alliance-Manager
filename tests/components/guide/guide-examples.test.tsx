@@ -3,6 +3,7 @@ import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AddStationButtonExample } from "@/components/guide/add-station-button-example";
 import { FarmExamples } from "@/components/guide/farm-examples";
+import { PetExamples } from "@/components/guide/pet-examples";
 import { MessageTabsExample } from "@/components/guide/message-tabs-example";
 import { MessageComposerExamples } from "@/components/guide/message-composer-examples";
 import { TaxiExamples } from "@/components/guide/taxi-examples";
@@ -285,5 +286,21 @@ describe("FarmExamples", () => {
     expect(screen.getByText("Solar Vine (Solanium)")).toBeInTheDocument();
     for (const button of screen.getAllByRole("button", { hidden: true })) fireEvent.click(button);
     expect(screen.getAllByText("Serra di Solanium").length).toBeGreaterThan(0);
+  });
+});
+
+describe("PetExamples", () => {
+  it("shows the add button, the form, the filters, an inert pet card with the egg button and the message form", () => {
+    renderWithLocale(<PetExamples />);
+    expect(screen.getByDisplayValue("Pelo di Brina")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("+12.34, -56.78")).toBeInTheDocument();
+    expect(screen.getByRole("switch", { name: "Egg trade available" })).toBeChecked();
+    expect(screen.getByRole("heading", { name: "Message the discoverer" })).toBeInTheDocument();
+    expect(screen.getByDisplayValue("Ciao! Ti va di scambiare un uovo con me?")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Message Viaggiatore about the egg trade", hidden: true }),
+    ).toBeInTheDocument();
+    for (const button of screen.getAllByRole("button", { hidden: true })) fireEvent.click(button);
+    expect(screen.getAllByText("Pelo di Brina").length).toBeGreaterThan(0);
   });
 });

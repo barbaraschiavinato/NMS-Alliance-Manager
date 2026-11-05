@@ -7,6 +7,7 @@ import { getCurrentMember } from "@/lib/auth/authorization";
 import { readAccessData } from "@/lib/members/access-store";
 import { readMissions } from "@/lib/missions/store";
 import { readFarms } from "@/lib/farms/farms-store";
+import { readPets } from "@/lib/pets/pets-store";
 import { coveredSpecialties } from "@/lib/missions/missions";
 import {
   applicableSystemStatuses,
@@ -137,6 +138,17 @@ export default async function LeaderboardRoute() {
   } catch (error) {
     console.error("Unable to read farms", error instanceof Error ? error.message : "Unknown error");
   }
+  const petsByMember = new Map<string, number>();
+  let petTotal = 0;
+  try {
+    const pets = await readPets();
+    petTotal = pets.length;
+    for (const pet of pets) {
+      if (pet.ownerId) petsByMember.set(pet.ownerId, (petsByMember.get(pet.ownerId) ?? 0) + 1);
+    }
+  } catch (error) {
+    console.error("Unable to read pets", error instanceof Error ? error.message : "Unknown error");
+  }
   const approvedMembers = accessData.members.filter((candidate) => candidate.membershipStatus === "approved");
   const completedTasks = Object.values(planetStatuses).reduce(
     (total, statuses) => total + statuses.filter((task) => task !== "data_error").length,
@@ -179,6 +191,7 @@ export default async function LeaderboardRoute() {
         { label: "leaderboard.stat_tasks", value: completedTasks },
         { label: "leaderboard.stat_planets", value: planetCount },
         { label: "leaderboard.stat_farms", value: farmTotal },
+        { label: "leaderboard.stat_pets", value: petTotal },
         { label: "leaderboard.stat_members", value: approvedMembers.filter((candidate) => !candidate.offline).length },
       ],
     },
@@ -209,6 +222,13 @@ export default async function LeaderboardRoute() {
       empty: "leaderboard.empty_farms",
       accent: "farms" as const,
       entries: buildEntries(farmsByMember),
+    },
+    {
+      id: "pets",
+      title: "leaderboard.board_pets",
+      empty: "leaderboard.empty_pets",
+      accent: "pets" as const,
+      entries: buildEntries(petsByMember),
     },
     ...(["ranger", "explorer", "builder"] as const).map((role) => ({
       id: `${role}_tasks`,

@@ -1,5 +1,6 @@
 import { hasRole } from "@/lib/auth/authorization";
 import { readFarms } from "@/lib/farms/farms-store";
+import { readPets } from "@/lib/pets/pets-store";
 import type { AllianceMember } from "@/lib/members/access-store";
 import { canViewMission, type Mission } from "@/lib/missions/missions";
 import { isSameSystem, type SystemIdentity } from "@/lib/navigation/detail-links";
@@ -180,6 +181,18 @@ export async function loadPlanetDestinations(
   } catch (error) {
     console.error("Unable to read farms", error instanceof Error ? error.message : "Unknown error");
   }
+  // Pets are visible to every approved member; the newest one per planet is linked.
+  const petByPlanet = new Map<string, { id: string; createdAt: string }>();
+  try {
+    for (const pet of await readPets()) {
+      const key = `${pet.portal.toUpperCase()}:${pet.galaxy}`;
+      const current = petByPlanet.get(key);
+      if (!current || pet.createdAt.localeCompare(current.createdAt) > 0)
+        petByPlanet.set(key, { id: pet.id, createdAt: pet.createdAt });
+    }
+  } catch (error) {
+    console.error("Unable to read pets", error instanceof Error ? error.message : "Unknown error");
+  }
   const planetCandidates = (
     await Promise.all(
       [...systemsByAddress.values()].map(async (system) => {
@@ -207,6 +220,9 @@ export async function loadPlanetDestinations(
           planetNumber: number,
           ...(farmByPlanet.has(`${portal}:${system.galaxy}`)
             ? { farmId: farmByPlanet.get(`${portal}:${system.galaxy}`)?.id }
+            : {}),
+          ...(petByPlanet.has(`${portal}:${system.galaxy}`)
+            ? { petId: petByPlanet.get(`${portal}:${system.galaxy}`)?.id }
             : {}),
           ...(associatedStation
             ? {

@@ -1,7 +1,6 @@
-import { get } from "@vercel/blob";
 import { NextResponse } from "next/server";
 import { readAccessData } from "@/lib/members/access-store";
-import { getBlobAuthOptions } from "@/lib/storage/blob-config";
+import { readImage } from "@/lib/storage/image-storage";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -28,17 +27,14 @@ export async function GET() {
   }
 
   try {
-    const blobAuthOptions = getBlobAuthOptions();
-    if (!blobAuthOptions) return NextResponse.json({ error: "Logo non trovato." }, { status: 404 });
-
-    const blob = await get(path, { access: "private", useCache: false, ...blobAuthOptions });
-    if (!blob || blob.statusCode === 304 || !allowedImageTypes.has(blob.blob.contentType)) {
+    const image = await readImage(path);
+    if (!image || !allowedImageTypes.has(image.contentType)) {
       return NextResponse.json({ error: "Logo non trovato." }, { status: 404 });
     }
 
-    return new Response(blob.stream, {
+    return new Response(image.body, {
       headers: {
-        "Content-Type": blob.blob.contentType,
+        "Content-Type": image.contentType,
         "Cache-Control": "public, max-age=60, stale-while-revalidate=300",
         "X-Content-Type-Options": "nosniff",
       },

@@ -1,3 +1,5 @@
+import { mkdirSync, writeFileSync } from "node:fs";
+import path from "node:path";
 import { get } from "@vercel/blob";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { signInAs } from "../../helpers/auth";
@@ -63,6 +65,22 @@ describe("GET /api/alliance/image", () => {
     signInAs(cast.user);
     expect((await fetchImage(imagePath)).status).toBe(404);
     expect(get).not.toHaveBeenCalled();
+  });
+
+  it("serves an image saved in the local data folder when no Blob store is configured", async () => {
+    mkdirSync(path.join(process.cwd(), "data", "uploads", path.dirname(imagePath)), { recursive: true });
+    writeFileSync(path.join(process.cwd(), "data", "uploads", imagePath), "LOCALPNG");
+    signInAs(cast.user);
+    const response = await fetchImage(imagePath);
+    expect(response.status).toBe(200);
+    expect(response.headers.get("content-type")).toBe("image/png");
+    expect(await response.text()).toBe("LOCALPNG");
+    expect(get).not.toHaveBeenCalled();
+  });
+
+  it("does not serve local files outside the uploads folder", async () => {
+    signInAs(cast.user);
+    expect((await fetchImage("alliance-manager/branding/../../../access.json")).status).toBe(404);
   });
 
   describe("with a Blob store", () => {

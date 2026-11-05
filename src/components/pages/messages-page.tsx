@@ -5,7 +5,7 @@ import { MessageList } from "@/components/sections/message-list";
 import { Tabs } from "@/components/layout/tabs";
 import { useEffect, useState, type ReactNode, type SubmitEvent } from "react";
 import { DetailLink as Link, useDetailReturn } from "@/components/shared/detail-page";
-import { Crosshair, MailCheck, Orbit } from "lucide-react";
+import { Crosshair, MailCheck, Orbit, PawPrint } from "lucide-react";
 
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
@@ -27,7 +27,7 @@ type MessageEntry = Readonly<{
   recipientName: string;
   body: string;
   subject?: string;
-  subjectType?: "planet" | "mission";
+  subjectType?: "planet" | "mission" | "pet";
   threadId?: string;
   replyToId?: string;
   portal?: string;
@@ -35,6 +35,7 @@ type MessageEntry = Readonly<{
   planetNumber?: number;
   missionCode?: string;
   stationHref?: string;
+  petHref?: string;
   unread?: boolean;
   createdAt: string;
 }>;
@@ -239,6 +240,7 @@ export function MessagesPage({
           canReply && replyingTo === message.id ? (
             <MessageReplyForm
               acknowledged={replyAcknowledged}
+              acknowledgementLabel={message.subjectType === "pet" ? "messages.pet_only_notice" : undefined}
               error={replyError}
               onAcknowledgedChange={setReplyAcknowledged}
               onCancel={() => {
@@ -295,6 +297,17 @@ export function MessagesPage({
                 title={t("messages.open_mission")}
               >
                 <Crosshair size={15} />
+              </Link>
+            )}
+            {!isReply && message.subjectType === "pet" && message.petHref && (
+              <Link
+                aria-label={t("messages.open_pet")}
+                className="member-icon-action message-subject-link message-pet-link"
+                data-tooltip={t("messages.open_pet")}
+                href={message.petHref}
+                title={t("messages.open_pet")}
+              >
+                <PawPrint size={15} />
               </Link>
             )}
             {!isReply && message.subjectType === "planet" && message.stationHref && (

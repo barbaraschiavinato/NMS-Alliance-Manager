@@ -59,7 +59,7 @@ describe("linkOfflineMember", () => {
     expect(dataFileExists("missions.json")).toBe(false);
   });
 
-  it("reassigns missions, stations, farms and messages, then removes the offline profile", async () => {
+  it("reassigns missions, stations, farms, pets and messages, then removes the offline profile", async () => {
     const offline = makeMember({ offline: true, nmsName: "Offline" });
     const target = makeMember({ nmsName: "Target" });
     const other = makeMember();
@@ -89,6 +89,25 @@ describe("linkOfflineMember", () => {
       { ...farm, ownerId: offline.publicId, createdByMemberId: offline.publicId },
       { ...farm, id: "f2", ownerId: other.publicId },
     ]);
+    const pet = {
+      id: "pet1",
+      name: "Pet",
+      petType: "frost",
+      activity: "unknown",
+      habitat: "unknown",
+      rarity: "unknown",
+      eggTradeAvailable: false,
+      classes: { combat: "S", agility: "A", health: "B" },
+      portal: portalA,
+      galaxy: 0,
+      planetName: "Planet",
+      createdAt: now,
+    };
+    writeDataFile("pets.json", [
+      { ...pet, ownerId: offline.publicId, createdByMemberId: offline.publicId },
+      { ...pet, id: "pet2", ownerId: other.publicId },
+      { ...pet, id: "pet3", ownerId: null },
+    ]);
     writeDataFile("private-messages.json", [
       { id: "p1", senderMemberId: offline.publicId, recipientMemberId: other.publicId, body: "a", createdAt: now },
       { id: "p2", senderMemberId: other.publicId, recipientMemberId: offline.publicId, body: "b", createdAt: now },
@@ -115,6 +134,11 @@ describe("linkOfflineMember", () => {
     expect(readDataFile("farms.json")).toEqual([
       { ...farm, ownerId: target.publicId, createdByMemberId: target.publicId },
       { ...farm, id: "f2", ownerId: other.publicId },
+    ]);
+    expect(readDataFile("pets.json")).toEqual([
+      { ...pet, ownerId: target.publicId, createdByMemberId: target.publicId },
+      { ...pet, id: "pet2", ownerId: other.publicId },
+      { ...pet, id: "pet3", ownerId: null },
     ]);
     // Il target aveva già un profilo completo: resta invariato.
     expect(accessFile().members).toEqual([target, other]);

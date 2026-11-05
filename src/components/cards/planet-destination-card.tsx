@@ -3,9 +3,9 @@
 import Image from "next/image";
 import { useId } from "react";
 import { usePathname } from "next/navigation";
-import { AudioWaveform, Factory, Globe2, Moon, Palmtree, Siren } from "lucide-react";
+import { AudioWaveform, Factory, Globe2, Moon, PawPrint, Palmtree, Siren } from "lucide-react";
 import { DetailLink } from "@/components/shared/detail-page";
-import { farmDetailHref } from "@/lib/navigation/detail-links";
+import { farmDetailHref, petDetailHref } from "@/lib/navigation/detail-links";
 import type { SystemFeature } from "@/lib/planets/system-feature";
 import type { AlmanacDiscoveryCounts } from "@/lib/almanac/almanac-discovery-counts";
 import { PlanetDiscoveryCounts } from "@/components/shared/planet-discovery-counts";
@@ -42,6 +42,7 @@ export type PlanetDestination = Readonly<{
   canMarkVisited?: boolean;
   visited?: boolean;
   farmId?: string;
+  petId?: string;
   station?: Readonly<{
     id: string;
     portal: string;
@@ -129,10 +130,13 @@ export function PlanetDestinationCard({
   const pathname = usePathname();
   const farmHref = planet.farmId ? farmDetailHref(planet.farmId, "planets") : undefined;
   const showFarmLink = Boolean(farmHref && pathname !== farmHref.split("?")[0]);
+  const petHref = planet.petId ? petDetailHref(planet.petId, "planets") : undefined;
+  const showPetLink = Boolean(petHref && pathname !== petHref.split("?")[0]);
   const withHelp = Boolean(planet.canMarkVisited && visits);
   const className = [
     withHelp ? "planet-card-with-visit planet-card-with-help" : "",
     showFarmLink ? "planet-card-with-farm" : "",
+    showPetLink ? "planet-card-with-pet" : "",
   ]
     .filter(Boolean)
     .join(" ");
@@ -201,6 +205,17 @@ export function PlanetDestinationCard({
           prefetch={false}
         >
           <Factory aria-hidden="true" size={14} />
+        </DetailLink>
+      )}
+      {showPetLink && petHref && (
+        <DetailLink
+          aria-label={t("planet.open_pet")}
+          className="member-icon-action planet-card-pet"
+          data-tooltip={t("planet.open_pet")}
+          href={petHref}
+          prefetch={false}
+        >
+          <PawPrint aria-hidden="true" size={14} />
         </DetailLink>
       )}
       {planet.canMarkVisited && visits && (

@@ -11,6 +11,7 @@ import {
   Siren,
   Mail,
   Orbit,
+  PawPrint,
   Send,
   Trophy,
   UsersRound,
@@ -75,6 +76,7 @@ export function Sidebar({
     | "pianeti"
     | "mappa"
     | "farm"
+    | "pet"
     | "utenti"
     | "offline"
     | "stazioni"
@@ -92,6 +94,7 @@ export function Sidebar({
   const [helpCount, setHelpCount] = useState(0);
   const [taxiCount, setTaxiCount] = useState(0);
   const [farmCount, setFarmCount] = useState<number | null>(null);
+  const [petCount, setPetCount] = useState<number | null>(null);
   const isStaff = currentMember.role === "admin" || currentMember.role === "moderator";
   useEffect(() => {
     const controller = new AbortController();
@@ -158,6 +161,26 @@ export function Sidebar({
     return () => {
       controller.abort();
       window.removeEventListener("farms-changed", loadFarmCount);
+    };
+  }, [isStaff]);
+  useEffect(() => {
+    if (!isStaff) return;
+    const controller = new AbortController();
+    async function loadPetCount() {
+      try {
+        const response = await fetch("/api/pets?count=1", { cache: "no-store", signal: controller.signal });
+        const body: unknown = await response.json();
+        if (response.ok && body && typeof body === "object" && "count" in body && typeof body.count === "number")
+          setPetCount(body.count);
+      } catch {
+        // The counter is informational only.
+      }
+    }
+    void loadPetCount();
+    window.addEventListener("pets-changed", loadPetCount);
+    return () => {
+      controller.abort();
+      window.removeEventListener("pets-changed", loadPetCount);
     };
   }, [isStaff]);
   const displayName = currentMember.nmsName || currentMember.name;
@@ -232,6 +255,16 @@ export function Sidebar({
           <Factory size={17} />
           <span>{t("navigation.farms")}</span>
           {isStaff && farmCount !== null && <span className="nav-count">{farmCount}</span>}
+        </Link>
+        <Link
+          className={`nav-item ${activeSection === "pet" ? "active" : ""}`}
+          href="/pets"
+          data-tooltip={t("navigation.pets")}
+          onClick={resetSearch}
+        >
+          <PawPrint size={17} />
+          <span>{t("navigation.pets")}</span>
+          {isStaff && petCount !== null && <span className="nav-count">{petCount}</span>}
         </Link>
         {(currentMember.role === "admin" || currentMember.role === "moderator") && (
           <Link

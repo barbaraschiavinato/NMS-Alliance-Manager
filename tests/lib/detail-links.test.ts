@@ -4,6 +4,7 @@ import {
   findMissionStation,
   isSameSystem,
   missionDetailHref,
+  petDetailHref,
   parseDetailOrigin,
   parseStationId,
   stationDetailHref,
@@ -14,7 +15,7 @@ import {
 } from "@/lib/navigation/detail-links";
 
 describe("contextual detail navigation", () => {
-  it.each(["stations", "missions", "planets", "map", "messages", "help-requests", "taxi"])(
+  it.each(["stations", "missions", "planets", "map", "messages", "help-requests", "taxi", "farms", "pets"])(
     "retains %s list and detail destinations with encoded query values",
     (section) => {
       for (const source of [`/${section}?search=Pilot%20One%26Two`, `/${section}/record?from=messages`]) {
@@ -121,6 +122,15 @@ describe("station detail links", () => {
     expect(parseStationId(stationId(station))).toEqual({ ...station, portal: "1234567890AB" });
     expect(parseStationId(encodeURIComponent(stationId(station)))).toEqual({ ...station, portal: "1234567890AB" });
     expect(parseStationId("member-id:1234567890ab:0")).toEqual({ ...station, portal: "1234567890AB", galaxy: 0 });
+  });
+
+  describe("pet detail links", () => {
+    it("encodes pet IDs and preserves the section origin", () => {
+      expect(petDetailHref("pet id")).toBe("/pets/pet%20id?from=pets");
+      expect(petDetailHref("pet-id", "planets")).toBe("/pets/pet-id?from=planets");
+      expect(parseDetailOrigin("pets")).toBe("pets");
+      expect(detailOrigins.pets).toEqual({ href: "/pets", label: "details.back_to_pets" });
+    });
   });
 
   describe("mission detail links", () => {

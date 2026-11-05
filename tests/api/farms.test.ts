@@ -170,6 +170,22 @@ describe("GET /api/farms counters and details", () => {
     expect(missing.status).toBe(404);
     expect(await missing.json()).toEqual({ error: "farms.error_not_found" });
   });
+
+  it("widens a detail request to every farm of the same planet with samePlanet", async () => {
+    const wanted = storedFarm({ portal: "1123456789AB", galaxy: 2 });
+    const sibling = storedFarm({ portal: "1123456789ab", galaxy: 2 });
+    const otherPlanet = storedFarm({ portal: "2123456789AB", galaxy: 2 });
+    const otherGalaxy = storedFarm({ portal: "1123456789AB", galaxy: 3 });
+    writeDataFile("farms.json", [wanted, sibling, otherPlanet, otherGalaxy]);
+    signInAs(cast.user);
+    const route = await import("@/app/api/farms/route");
+    const found = await route.GET(new Request(`http://localhost/api/farms?detailFarm=${wanted.id}&samePlanet=1`));
+    expect((await farmsOf(found)).map((farm) => farm.id)).toEqual([wanted.id, sibling.id]);
+    const alone = await route.GET(new Request(`http://localhost/api/farms?detailFarm=${wanted.id}`));
+    expect((await farmsOf(alone)).map((farm) => farm.id)).toEqual([wanted.id]);
+    const missing = await route.GET(new Request("http://localhost/api/farms?detailFarm=missing&samePlanet=1"));
+    expect(missing.status).toBe(404);
+  });
 });
 
 describe("unassigned farms", () => {

@@ -49,6 +49,7 @@ import { MissionDashboard } from "@/components/pages/mission-dashboard";
 import { PlanetsPage } from "@/components/pages/planets-page";
 import { HelpRequestsPage } from "@/components/pages/help-requests-page";
 import { LinkedFarms } from "@/components/shared/linked-farms";
+import { LinkedPets } from "@/components/shared/linked-pets";
 import type { PlanetDestination } from "@/components/cards/planet-destination-card";
 import {
   detailOrigins,
@@ -83,6 +84,7 @@ export function StationsPage({
   sidebarUserCount,
   detail,
   embedded = false,
+  embeddedOrigin = "farms",
 }: Readonly<{
   currentMember: AllianceMember;
   alliance: AllianceSettings;
@@ -95,6 +97,8 @@ export function StationsPage({
   sidebarUserCount?: number;
   detail?: StationDetail;
   embedded?: boolean;
+  // Where the embedded page lives (a farm or pet detail): mission links and cache-only reads follow it.
+  embeddedOrigin?: DetailOrigin;
 }>) {
   const router = useRouter();
   const returnDestination = useDetailReturn(detailOrigins[detail?.origin ?? "stations"].href);
@@ -574,7 +578,7 @@ export function StationsPage({
       setFlashNotice("missions.mission_created");
       router.push(
         contextualDetailHref(
-          missionDetailHref(created[0].id, embedded ? "farms" : "stations"),
+          missionDetailHref(created[0].id, embedded ? embeddedOrigin : "stations"),
           `${window.location.pathname}${window.location.search}`,
         ),
       );
@@ -654,7 +658,7 @@ export function StationsPage({
         systemScope={detailSystem}
         featuredMissionId={detail.missionId}
         associatedFirst={detail.associatedFirst}
-        detailOrigin={embedded ? "farms" : undefined}
+        detailOrigin={embedded ? embeddedOrigin : undefined}
         returnHref={detailOrigins[detail.origin ?? "missions"].href}
         beforeAssociated={stationSection}
         onChanged={() => {
@@ -767,6 +771,13 @@ export function StationsPage({
               )}
               {!embedded && (
                 <LinkedFarms
+                  currentMemberId={pageMember.publicId}
+                  origin={detail.missionId ? "missions" : "stations"}
+                  system={detailSystem}
+                />
+              )}
+              {!embedded && (
+                <LinkedPets
                   currentMemberId={pageMember.publicId}
                   origin={detail.missionId ? "missions" : "stations"}
                   system={detailSystem}

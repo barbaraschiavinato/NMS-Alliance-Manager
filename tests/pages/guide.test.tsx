@@ -75,6 +75,20 @@ describe("guide page", () => {
     expect(section).toHaveTextContent("il prodotto compare tra parentesi dopo il nome della pianta");
   });
 
+  it("describes the pet section, the planet button, the egg trade message and the 12-position leaderboards", async () => {
+    mockFetch({});
+    const { container } = renderPage(await GuideContent({ alliance: defaultAlliance, standalone: false }));
+    const section = container.querySelector("#pet");
+    expect(section).toHaveTextContent("Con «Aggiungi pet» inserisci nome, tipo");
+    expect(section).toHaveTextContent("pulsante con l'uovo");
+    expect(section).toHaveTextContent(
+      "Dal pulsante rosa sulle card dei pianeti il dettaglio elenca tutti i pet di quel pianeta",
+    );
+    expect(container.querySelector('a[href="#pet"]')).toHaveClass("guide-index-pets");
+    expect(container.querySelector("#messaggi")).toHaveTextContent("Per lo scambio uova di un pet");
+    expect(container.querySelector("#classifica")).toHaveTextContent("12 posizioni in totale per specializzazione");
+  });
+
   it("uses explorer and builder tasks in the matching third-method examples", async () => {
     mockFetch({});
     const { container } = renderPage(await GuideContent({ alliance: defaultAlliance, standalone: false }));

@@ -1,7 +1,6 @@
-import { get } from "@vercel/blob";
 import { NextResponse } from "next/server";
 import { readAccessData } from "@/lib/members/access-store";
-import { getBlobAuthOptions } from "@/lib/storage/blob-config";
+import { readImage } from "@/lib/storage/image-storage";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -38,13 +37,11 @@ export async function GET(request: Request) {
   }
 
   try {
-    const blobAuthOptions = getBlobAuthOptions();
-    if (!blobAuthOptions) return NextResponse.json({ error: "Icona non trovata." }, { status: 404 });
-    const blob = await get(path, { access: "private", useCache: false, ...blobAuthOptions });
-    if (!blob || blob.statusCode === 304 || blob.blob.contentType !== "image/png") {
+    const image = await readImage(path);
+    if (!image || image.contentType !== "image/png") {
       return NextResponse.json({ error: "Icona non trovata." }, { status: 404 });
     }
-    return new Response(blob.stream, {
+    return new Response(image.body, {
       headers: {
         "Content-Type": "image/png",
         "Cache-Control": "public, max-age=300, stale-while-revalidate=3600",

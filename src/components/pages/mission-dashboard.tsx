@@ -127,7 +127,8 @@ export function MissionDashboard({
     : systemScope
       ? `/api/missions?${new URLSearchParams({ stationPortal: systemScope.portal, galaxy: String(systemScope.galaxy) })}`
       : "/api/missions";
-  const stationOwnersUrl = detailOrigin === "farms" ? "/api/stations?cacheOnly=1" : "/api/stations";
+  const stationOwnersUrl =
+    detailOrigin === "farms" || detailOrigin === "pets" ? "/api/stations?cacheOnly=1" : "/api/stations";
   useEffect(() => {
     loadCovered();
     fetch(missionsUrl, { cache: "no-store" })

@@ -5,6 +5,7 @@ import { AddStationButtonExample } from "@/components/guide/add-station-button-e
 import { MessageComposerExamples } from "@/components/guide/message-composer-examples";
 import { TaxiExamples } from "@/components/guide/taxi-examples";
 import { FarmExamples } from "@/components/guide/farm-examples";
+import { PetExamples } from "@/components/guide/pet-examples";
 import { MessageTabsExample } from "@/components/guide/message-tabs-example";
 import { translate } from "@/lib/translations";
 import { readAccessData } from "@/lib/members/access-store";
@@ -25,6 +26,7 @@ import {
   Mail,
   MailCheck,
   Orbit,
+  PawPrint,
   Pencil,
   Reply,
   RotateCcw,
@@ -148,6 +150,13 @@ const buttons: ReadonlyArray<{
     icon: Factory,
     color: "#8fd46a",
     meaning: "Sulle card dei pianeti: apre il dettaglio della farm registrata su quel pianeta.",
+  },
+  {
+    label: "Vai al pet",
+    specialty: ["ranger", "explorer", "builder"],
+    icon: PawPrint,
+    color: "#ff8fb8",
+    meaning: "Sulle card dei pianeti: apre il dettaglio del pet trovato su quel pianeta.",
   },
   {
     label: "Crea missione dalla stazione",
@@ -282,6 +291,13 @@ const sections = [
     color: "#8fd46a",
     tasks:
       "Registri i pianeti dove coltivi o raccogli risorse, filtri le farm dell'alleanza per piante e materiali e trovi la stazione del sistema",
+  },
+  {
+    name: "Pet",
+    icon: PawPrint,
+    color: "#ff8fb8",
+    tasks:
+      "Condividi dove hai trovato i tuoi pet, filtri quelli dell'alleanza per tipo, classi e altro, e scrivi allo scopritore per lo scambio uova",
   },
   {
     name: "Classifica",
@@ -476,6 +492,12 @@ export async function GuideContent({
             <a className="guide-index-farms" href="#farm">
               <Factory aria-hidden="true" size={15} />
               Farm
+            </a>
+          </li>
+          <li>
+            <a className="guide-index-pets" href="#pet">
+              <PawPrint aria-hidden="true" size={15} />
+              Pet
             </a>
           </li>
           <li>
@@ -1178,7 +1200,9 @@ export async function GuideContent({
               </li>
               <li>
                 Se sul pianeta è registrata una farm, in basso a destra compare il pulsante verde con la fabbrica (prima
-                della sirena, se c&apos;è): apre il dettaglio della farm, o della più recente se sono più di una.
+                della sirena, se c&apos;è): apre il dettaglio della farm, o della più recente se sono più di una. Se
+                c&apos;è anche un pet, il pulsante rosa con la zampa (a sinistra di quello della farm) apre il dettaglio
+                del pet più recente, e da lì vedi tutti i pet di quel pianeta.
               </li>
               <li>
                 Le informazioni sono raggruppate per sistema/stazione, così puoi vedere subito tutti i pianeti legati a
@@ -1328,6 +1352,49 @@ export async function GuideContent({
             <FarmExamples />
           </section>
 
+          <section id="pet">
+            <h2 style={{ color: "#ff8fb8" }}>
+              <PawPrint aria-hidden="true" size={20} />
+              Pet
+            </h2>
+            <p>
+              I pet sono gli animali che gli alleati hanno trovato sui pianeti. Tutti vedono tutti i pet, in schede con
+              paginazione; «I miei pet» mostra solo quelli di cui sei lo scopritore.
+            </p>
+            <ul>
+              <li>
+                Con «Aggiungi pet» inserisci nome, tipo (ognuno con la sua icona e il suo colore), classi di
+                Combattimento, Agilità e Salute (S, A, B o C), scambio uova, attività, habitat e rarità,
+                un&apos;immagine facoltativa, galassia e glifi del portale, nome del pianeta, coordinate e note. Il
+                pianeta può non essere in un sistema delle galassie conosciute: l&apos;indirizzo deve solo essere valido
+                e Almanac non blocca mai il salvataggio. Attività, habitat e rarità «Sconosciuto» non compaiono sulla
+                scheda. Cliccando l&apos;immagine del pet sulla scheda si apre una finestra che la mostra grande.
+              </li>
+              <li>
+                Chi aggiunge un pet ne è lo scopritore; moderatori e admin possono scegliere un altro scopritore o
+                lasciarlo non assegnato. Solo lo scopritore, i moderatori e gli admin possono modificare o eliminare un
+                pet, e quelli non assegnati sono gestibili solo da moderatori e admin.
+              </li>
+              <li>
+                Cerca per nome, pianeta, scopritore o caratteristiche; «Filtri» restringe l&apos;elenco per tipo,
+                attività, habitat, rarità, scambio uova e grado delle tre classi, con le etichette dei filtri attivi che
+                puoi rimuovere una a una.
+              </li>
+              <li>
+                Il nome del pet apre il suo dettaglio, con il pianeta e, se nel sistema c&apos;è una stazione, anche la
+                stazione, le missioni e le richieste d&apos;aiuto. Dal pulsante rosa sulle card dei pianeti il dettaglio
+                elenca tutti i pet di quel pianeta. Il pulsante blu con l&apos;orbita apre la stazione; stazioni e
+                missioni mostrano i pet del loro sistema.
+              </li>
+              <li>
+                Se lo scambio uova è disponibile, accanto al nome dello scopritore c&apos;è il pulsante con l&apos;uovo:
+                apre il messaggio allo scopritore, con il pet come oggetto. Se lo scopritore sei tu, se il pet non è
+                assegnato o se lo scopritore è un profilo offline compare solo l&apos;icona dell&apos;uovo.
+              </li>
+            </ul>
+            <PetExamples />
+          </section>
+
           <section id="classifica">
             <h2 style={{ color: "#e040c8" }}>
               <Trophy aria-hidden="true" size={20} />
@@ -1337,19 +1404,19 @@ export async function GuideContent({
             <ul>
               <li>
                 Il riquadro Alleanza mostra il totale di stazioni, missioni, missioni completate, task completati,
-                pianeti, membri approvati e farm.
+                pianeti, membri approvati, farm e pet.
               </li>
               <li>
                 Le classifiche individuali mostrano chi ha registrato più stazioni, completato più missioni, visitato
-                più pianeti (conta solo quanti, non quali) e possiede più farm (quelle non assegnate non contano), con
-                un massimo di 10 membri per classifica. Ogni classifica usa l&apos;icona e i colori della sua sezione:
-                Stazioni, Missioni, Pianeti e Farm.
+                più pianeti (conta solo quanti, non quali), possiede più farm o è lo scopritore di più pet (quelli non
+                assegnati non contano), con un massimo di 10 membri per classifica. Ogni classifica usa l&apos;icona e i
+                colori della sua sezione: Stazioni, Missioni, Pianeti, Farm e Pet.
               </li>
               <li>
                 Le classifiche dei task sono divise per specializzazione: Ranger, Esploratore e Costruttore. Per ogni
-                task vengono mostrati fino a 3 membri; il completamento è attribuito all&apos;assegnatario della
-                missione corrispondente oppure, se non c&apos;è una missione che copre quel task, al proprietario della
-                stazione.
+                task vengono mostrati i primi membri (12 posizioni in totale per specializzazione, divise tra i suoi
+                task); il completamento è attribuito all&apos;assegnatario della missione corrispondente oppure, se non
+                c&apos;è una missione che copre quel task, al proprietario della stazione.
               </li>
             </ul>
             <p>La pagina è di sola lettura.</p>
@@ -1489,6 +1556,19 @@ export async function GuideContent({
             <MessageTabsExample />
             <ul>
               <li>Mantieni sempre un tono rispettoso: moderatori e admin possono vedere tutti i messaggi.</li>
+              <li>
+                Per lo scambio uova di un pet, scrivi allo scopritore dal pulsante con l&apos;uovo sulla scheda del pet:
+                il messaggio ha il pet come oggetto e accanto all&apos;oggetto compare l&apos;icona{" "}
+                <span
+                  aria-label="Pet"
+                  className="guide-icon"
+                  style={{ color: "#ff8fb8", borderColor: "#ff8fb8" }}
+                  title="Pet"
+                >
+                  <PawPrint aria-hidden="true" size={16} />
+                </span>{" "}
+                che apre la scheda del pet.
+              </li>
               <li>
                 Accanto all&apos;oggetto, l&apos;icona{" "}
                 <span

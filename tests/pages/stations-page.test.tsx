@@ -49,6 +49,7 @@ function stationRoutes(stations: unknown[], overrides: Record<string, unknown> =
     "GET /api/planet-status": { planets: {} },
     "GET /api/help-requests": [],
     "GET /api/farms": { farms: [] },
+    "GET /api/pets": { pets: [] },
     "/api/members": [ranger, moderator, otherMember],
     ...overrides,
   };
@@ -257,6 +258,27 @@ describe("StationsPage as a member", () => {
             },
           ],
         },
+        "GET /api/pets": {
+          pets: [
+            {
+              id: "pet-1",
+              name: "Fluffy",
+              petType: "frost",
+              activity: "unknown",
+              habitat: "unknown",
+              rarity: "unknown",
+              eggTradeAvailable: false,
+              classes: { combat: "S", agility: "A", health: "B" },
+              portal: "2234567890AB",
+              galaxy: 0,
+              planetName: "Ruba",
+              ownerId: ranger.publicId,
+              ownerName: "Ranger One",
+              createdAt: "2026-01-01T00:00:00Z",
+              canManage: true,
+            },
+          ],
+        },
         "GET /api/help-requests": [
           {
             id: "help",
@@ -279,10 +301,14 @@ describe("StationsPage as a member", () => {
       t("details.station"),
       t("details.system_and_planets"),
       t("details.linked_farms"),
+      t("details.linked_pets"),
       t("help.help_requests"),
     ]);
     expect(screen.queryByRole("button", { name: t("farms.edit_farm_named", { farm: "Copper hill" }) })).toBeNull();
+    expect(await screen.findByText("Fluffy")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: t("pets.edit_pet_named", { pet: "Fluffy" }) })).toBeNull();
     expect(requests("GET", "/api/farms")).toHaveLength(1);
+    expect(requests("GET", "/api/pets")).toHaveLength(1);
   });
   it("embeds the station detail without the page chrome, farms or self navigation", async () => {
     const { requests } = mockFetch(stationRoutes([station()], emptyMissionRoutes()));
@@ -319,7 +345,23 @@ describe("StationsPage as a member", () => {
     expect(screen.queryByRole("link", { name: t("details.back_to_stations") })).toBeNull();
     expect(requests("GET", "/api/stations")[0].url.search).toBe("?cacheOnly=1");
     expect(requests("GET", "/api/farms")).toHaveLength(0);
+    expect(requests("GET", "/api/pets")).toHaveLength(0);
     expect(screen.getAllByText("Fields").length).toBeGreaterThan(0);
+  });
+  it("keeps every station read cache-only when embedded in a pet detail", async () => {
+    const { requests } = mockFetch(stationRoutes([station()], emptyMissionRoutes()));
+    const props = detailProps();
+    renderStations(ranger, {
+      ...props,
+      embedded: true,
+      embeddedOrigin: "pets",
+      detail: { ...props.detail, system: { portal: "1234567890AB", galaxy: 0 }, origin: "pets" },
+    });
+    expect(await screen.findByRole("link", { name: /Home Base/ })).toBeInTheDocument();
+    const reads = requests("GET", "/api/stations");
+    expect(reads.length).toBeGreaterThan(0);
+    expect(reads.every((call) => call.url.search === "?cacheOnly=1")).toBe(true);
+    expect(requests("GET", "/api/pets")).toHaveLength(0);
   });
 
   it("reports embedded loading errors through a dismissible toast", async () => {
