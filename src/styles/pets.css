@@ -5,7 +5,9 @@
   .pet-field-row { grid-template-columns: 1fr; }
   .pet-toggle-field { grid-column: auto; }
 }
-.pet-image-preview { width: 100%; aspect-ratio: 16 / 9; max-height: 220px; }
+.pet-image-preview { width: 100%; aspect-ratio: 16 / 9; max-height: 220px; padding: 0; cursor: pointer; }
+.pet-image-preview:hover, .pet-image-preview:focus-visible { border-color: #ff8fb8; color: #ff8fb8; }
+.pet-image-preview:focus-visible { outline: 2px solid #ff8fb8; outline-offset: 2px; }
 .pet-image-preview-empty { aspect-ratio: auto; height: 56px; min-height: 0; }
 .pet-image-actions { display: flex; align-items: center; gap: 8px; }
 .pet-image-actions > input { flex: 1 1 auto; min-width: 0; }

@@ -306,6 +306,7 @@ export const translations: TranslationCatalog = {
     "pets.rarity_rare": "Rara",
     "pets.image": "Immagine",
     "pets.image_hint": "facoltativa · PNG, JPEG, WebP o AVIF, max 5 MB",
+    "pets.choose_image": "Scegli un'immagine",
     "pets.remove_image": "Rimuovi immagine",
     "pets.error_image_invalid": "Immagine non valida: usa PNG, JPEG, WebP o AVIF fino a 5 MB.",
     "pets.discoverer": "Scopritore",

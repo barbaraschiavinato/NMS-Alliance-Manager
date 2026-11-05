@@ -317,12 +317,16 @@ export function PetForm({
             <span>
               {t("pets.image")} <small>{t("pets.image_hint")}</small>
             </span>
-            <span
+            <button
+              aria-label={t("pets.choose_image")}
               className={`image-preview pet-image-preview${displayedImageUrl ? "" : " pet-image-preview-empty"}`}
+              data-tooltip={t("pets.choose_image")}
+              onClick={() => imageInput.current?.click()}
               style={displayedImageUrl ? { backgroundImage: `url("${displayedImageUrl}")` } : undefined}
+              type="button"
             >
               {!displayedImageUrl && <ImagePlus aria-hidden="true" size={20} />}
-            </span>
+            </button>
             <div className="pet-image-actions">
               <input
                 accept={petImageTypes.join(",")}
