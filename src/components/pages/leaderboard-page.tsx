@@ -31,6 +31,15 @@ export type LeaderboardBoard = Readonly<{
   sections?: readonly Readonly<{ id: string; title: string; entries: readonly LeaderboardEntry[] }>[];
 }>;
 
+const BOARD_ENTRY_LIMIT = 10;
+const ROLE_BOARD_ENTRY_TOTAL = 12;
+
+// Specialty boards always show 12 entries in total, split evenly across their tasks.
+export function entryLimit(board: Pick<LeaderboardBoard, "role" | "sections">) {
+  if (!board.role) return BOARD_ENTRY_LIMIT;
+  return Math.floor(ROLE_BOARD_ENTRY_TOTAL / Math.max(board.sections?.length ?? 1, 1));
+}
+
 export function LeaderboardPage({
   currentMember,
   alliance,
@@ -117,7 +126,7 @@ export function LeaderboardPage({
                         {section.title && <h4>{t(section.title)}</h4>}
                         {section.entries.length === 0 && <p className="messages-empty">{t(board.empty)}</p>}
                         <ol className="leaderboard-list">
-                          {section.entries.slice(0, board.role ? 3 : 10).map((entry, index) => (
+                          {section.entries.slice(0, entryLimit(board)).map((entry, index) => (
                             <li
                               className={`leaderboard-row${entry.publicId === member.publicId ? " leaderboard-row-me" : ""}${index < 3 ? ` leaderboard-row-top-${index + 1}` : ""}`}
                               key={entry.publicId}
