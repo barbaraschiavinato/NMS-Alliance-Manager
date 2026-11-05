@@ -656,6 +656,21 @@ describe("pet form", () => {
     expect((requests("POST", "/api/pets")[0].body as FormData).get("image")).toBeInstanceOf(File);
   });
 
+  it("opens the file picker from the placeholder and from the loaded image, not only from the input", async () => {
+    const { dialog, user: actor } = await openForm();
+    const input = within(dialog).getByLabelText(t("pets.image")) as HTMLInputElement;
+    const click = vi.spyOn(input, "click");
+    const preview = within(dialog).getByRole("button", { name: t("pets.choose_image") });
+    expect(preview).toHaveClass("pet-image-preview-empty");
+    await actor.click(preview);
+    expect(click).toHaveBeenCalledTimes(1);
+
+    await actor.upload(input, new File(["png"], "pet.png", { type: "image/png" }));
+    expect(dialog.querySelector(".pet-image-preview-empty")).toBeNull();
+    await actor.click(within(dialog).getByRole("button", { name: t("pets.choose_image") }));
+    expect(click).toHaveBeenCalledTimes(2);
+  });
+
   it("rejects an image of the wrong type or size", async () => {
     const { dialog } = await openForm();
     const input = within(dialog).getByLabelText(t("pets.image"));
