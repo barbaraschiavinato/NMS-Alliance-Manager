@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, type SubmitEvent } from "react";
-import { CheckCircle2, CircleAlert, Send, UserCheck } from "lucide-react";
+import { AlertIcon, MemberNotificationsIcon, ReadyIcon, SendIcon } from "@/components/shared/icons";
 import { useLocale } from "@/components/providers/locale-provider";
 import type { MemberNotificationSettings } from "@/lib/notifications/member-notifications";
 
@@ -77,7 +77,7 @@ export function MemberNotificationAdmin() {
   return (
     <section className="admin-section taxi-notification-admin">
       <h3>
-        <UserCheck size={15} />
+        <MemberNotificationsIcon size={15} />
         {t("User notifications")}
       </h3>
       {!data && !error && <p>{t("Loading notification settings…")}</p>}
@@ -104,7 +104,7 @@ export function MemberNotificationAdmin() {
               <span>Telegram — {t("Enabled")}</span>
             </label>
             <p className={`taxi-notification-status ${data.readiness.telegram ? "is-ready" : "is-missing"}`}>
-              {data.readiness.telegram ? <CheckCircle2 size={14} /> : <CircleAlert size={14} />}
+              {data.readiness.telegram ? <ReadyIcon size={14} /> : <AlertIcon size={14} />}
               {t(data.readiness.telegram ? "Credentials configured" : "Credentials missing or invalid")}
             </p>
             <button
@@ -113,7 +113,7 @@ export function MemberNotificationAdmin() {
               disabled={busy || !data.settings.telegramEnabled || !data.readiness.telegram || !data.readiness.links}
               onClick={() => void test("telegram")}
             >
-              <Send size={14} />
+              <SendIcon size={14} />
               {t("Send test")} — Telegram
             </button>
             <label className="field taxi-notification-chat">
@@ -160,7 +160,7 @@ export function MemberNotificationAdmin() {
             </label>
             <p className="field-hint">{t("Sends the user one email when their account is approved.")}</p>
             <p className={`taxi-notification-status ${data.readiness.email ? "is-ready" : "is-missing"}`}>
-              {data.readiness.email ? <CheckCircle2 size={14} /> : <CircleAlert size={14} />}
+              {data.readiness.email ? <ReadyIcon size={14} /> : <AlertIcon size={14} />}
               {t(data.readiness.email ? "Credentials configured" : "Credentials missing or invalid")}
             </p>
             <button
@@ -169,7 +169,7 @@ export function MemberNotificationAdmin() {
               disabled={busy || !data.settings.approvalEmailEnabled || !data.readiness.email || !data.readiness.links}
               onClick={() => void test("email")}
             >
-              <Send size={14} />
+              <SendIcon size={14} />
               {t("Send test email to my address")}
             </button>
           </div>

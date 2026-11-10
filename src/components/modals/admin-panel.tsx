@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, type SubmitEvent } from "react";
-import { Check, CircleAlert, ImagePlus, ShieldCheck, X } from "lucide-react";
+import { AddImageIcon, AlertIcon, AllianceIdentityIcon, CheckIcon, CloseIcon } from "@/components/shared/icons";
 import type { AllianceSettings } from "@/lib/members/access-store";
 import { useLocale } from "@/components/providers/locale-provider";
 import { galaxyNames } from "@/lib/planets/galaxies";
@@ -154,13 +154,13 @@ export function AdminPanel({
             <h2 id="admin-title">{t("admin.alliance")}</h2>
           </div>
           <button aria-label={t("common.close")} className="icon-button" onClick={onClose} type="button">
-            <X size={18} />
+            <CloseIcon size={18} />
           </button>
         </div>
         <form onSubmit={saveSettings}>
           <section className="admin-section">
             <h3>
-              <ShieldCheck size={15} /> {t("admin.alliance_identity_section_heading")}
+              <AllianceIdentityIcon size={15} /> {t("admin.alliance_identity_section_heading")}
             </h3>
             <label className="field">
               <span>{t("admin.alliance_name")}</span>
@@ -240,7 +240,7 @@ export function AdminPanel({
                   className="image-preview logo-preview"
                   style={settings.logoUrl ? { backgroundImage: `url("${settings.logoUrl}")` } : undefined}
                 >
-                  {!settings.logoUrl && <ImagePlus size={20} />}
+                  {!settings.logoUrl && <AddImageIcon size={20} />}
                 </span>
                 <input
                   accept="image/png,image/jpeg,image/webp,image/avif"
@@ -261,7 +261,7 @@ export function AdminPanel({
                       : undefined
                   }
                 >
-                  {!settings.bannerUrl && <ImagePlus size={20} />}
+                  {!settings.bannerUrl && <AddImageIcon size={20} />}
                 </span>
                 <input
                   accept="image/png,image/jpeg,image/webp,image/avif"
@@ -280,7 +280,7 @@ export function AdminPanel({
                 className="image-preview app-icon-preview"
                 style={settings.appIcon192Url ? { backgroundImage: `url("${settings.appIcon192Url}")` } : undefined}
               >
-                {!settings.appIcon192Url && <ImagePlus size={20} />}
+                {!settings.appIcon192Url && <AddImageIcon size={20} />}
               </span>
               <input
                 accept="image/png,image/jpeg,image/webp,image/avif"
@@ -331,7 +331,7 @@ export function AdminPanel({
         <MemberNotificationAdmin />
         {(message || error) && (
           <p className={error ? "admin-feedback admin-error" : "admin-feedback admin-success"}>
-            {error ? <CircleAlert size={14} /> : <Check size={14} />}
+            {error ? <AlertIcon size={14} /> : <CheckIcon size={14} />}
             {t(error || message)}
           </p>
         )}

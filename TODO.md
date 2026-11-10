@@ -37,11 +37,6 @@ Agreed scope (2026-10-22). Taxi is implemented with separate Discord/Telegram cr
 
 
 
-## T-81euw0: Central icon registry
+## T-81euw0: Build the sidebar and the guide section table from one section list
 
-Icons are imported straight from `lucide-react` in about 60 files (73 distinct icons; `Orbit` alone in 22), and the custom SVGs live in six places (`galaxy-icon.tsx`, `pet-type-icons.ts`, `system-feature-badge.tsx`, the water drop in `planet-destination-card.tsx`, the Discord logo in `sidebar.tsx`, the Google logo in `google-login.tsx`), plus the race masks in `public/icons/`. Agreed approach (2026-11-10):
-
-- One module, `src/components/shared/icons/`, exporting icons by meaning (`StationIcon`, `MissionIcon`, `DeleteIcon`, `EditIcon`, ...), so changing what a concept looks like is a one-line edit. Named exports, not one object, so each page still bundles only the icons it uses.
-- Single-colour custom SVGs become `createLucideIcon` icons like `GalaxyIcon`; multi-colour ones (Google, pet types, water drop) stay components but move into the module; the race icon paths are listed there too.
-- A section config (icon, accent from `sectionAccents`, label, path) shared by the sidebar, the guide, the leaderboard and detail links.
-- An ESLint `no-restricted-imports` rule that allows `lucide-react` only inside the icon module.
+The icon registry is in place (`src/components/shared/icons/`, `sectionIcons` with the same keys as `sectionAccents`, ESLint blocks direct `lucide-react` imports) and the leaderboard already picks its icons from the maps. What is left: the sidebar links and the guide's "Sezioni" table still list every section by hand (icon, colour, label, path). Add one section list (key, icon, accent, label key, path) and render both from it, so adding or renaming a section is a single edit. Keep the sidebar counters and the per-section prefetch rules as they are.

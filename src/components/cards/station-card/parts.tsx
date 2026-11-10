@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import { AlertTriangle } from "lucide-react";
+import { GalaxyWarningIcon } from "@/components/shared/icons";
 import { type MemberMessageContext } from "@/components/modals/member-card-dialog";
 import type { AllianceMember } from "@/lib/members/access-store";
 import { galaxyLabel } from "@/lib/planets/galaxies";
@@ -52,7 +52,7 @@ export function GalaxyLabel({ galaxy }: Readonly<{ galaxy: number }>) {
       data-tooltip={foreign ? t("missions.galaxy_portals_warning") : undefined}
       tabIndex={foreign ? 0 : undefined}
     >
-      {foreign && <AlertTriangle size={9} />}
+      {foreign && <GalaxyWarningIcon size={9} />}
       {galaxyLabel(galaxy)}
     </span>
   );

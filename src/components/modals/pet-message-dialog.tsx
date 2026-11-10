@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type SubmitEvent } from "react";
-import { CircleAlert, Egg, Send, X } from "lucide-react";
+import { AlertIcon, CloseIcon, EggTradeIcon, SendIcon } from "@/components/shared/icons";
 import type { PetEntry } from "@/components/cards/pet-card";
 import { useLocale } from "@/components/providers/locale-provider";
 
@@ -57,14 +57,14 @@ export function PetMessageDialog({
             <h2 id="pet-message-title">{t("pets.message_discoverer")}</h2>
           </div>
           <button aria-label={t("common.close")} className="icon-button" onClick={onClose} type="button">
-            <X size={18} />
+            <CloseIcon size={18} />
           </button>
         </div>
         <form className="member-message-form" onSubmit={(event) => void send(event)}>
           <p>{t("profile.message_recipient", { recipient: pet.ownerName })}</p>
           <p className="member-message-subject">
             <strong>{t("profile.message_subject")}</strong>
-            <Egg aria-hidden="true" className="pet-message-egg" size={13} />
+            <EggTradeIcon aria-hidden="true" className="pet-message-egg" size={13} />
             {pet.name}
           </p>
           <label className="field">
@@ -89,7 +89,7 @@ export function PetMessageDialog({
           </label>
           {error && (
             <p className="form-error">
-              <CircleAlert size={15} />
+              <AlertIcon size={15} />
               {t(error)}
             </p>
           )}
@@ -99,7 +99,7 @@ export function PetMessageDialog({
             </button>
             <button className="primary-button" disabled={sending || !message.trim() || !acknowledged} type="submit">
               {sending ? t("common.saving") : t("profile.send_message")}
-              <Send size={14} />
+              <SendIcon size={14} />
             </button>
           </div>
         </form>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState, type SubmitEvent } from "react";
-import { ChevronDown, CircleAlert, Send, X } from "lucide-react";
+import { AlertIcon, CloseIcon, DropdownIcon, SendIcon } from "@/components/shared/icons";
 import { galaxyLabel, galaxyNames } from "@/lib/planets/galaxies";
 import type { TaxiStationOption } from "@/lib/messages/private-messages-store";
 import type { AllianceSettings } from "@/lib/members/member-types";
@@ -126,7 +126,7 @@ function TaxiCombobox({
             setOpen(!open);
           }}
         >
-          <ChevronDown size={18} aria-hidden="true" />
+          <DropdownIcon size={18} aria-hidden="true" />
         </button>
         {open && (
           <div ref={listRef} id={optionsId} role="listbox" aria-label={label} className="taxi-combobox-options">
@@ -217,7 +217,7 @@ export function TaxiRequestDialog({
         <div className="dialog-heading">
           <h2 id="taxi-request-title">{t("taxi.new_request")}</h2>
           <button aria-label={t("common.close")} className="icon-button" onClick={onClose} type="button">
-            <X size={18} />
+            <CloseIcon size={18} />
           </button>
         </div>
         <form className="member-message-form" onSubmit={(event) => void submit(event)}>
@@ -277,7 +277,7 @@ export function TaxiRequestDialog({
           </label>
           {error && (
             <p className="form-error">
-              <CircleAlert size={15} />
+              <AlertIcon size={15} />
               {t(error)}
             </p>
           )}
@@ -286,7 +286,7 @@ export function TaxiRequestDialog({
             disabled={sending || galaxy === "" || !meetingId || !message.trim() || !acknowledged}
             type="submit"
           >
-            <Send size={15} />
+            <SendIcon size={15} />
             {t("help.send_request")}
           </button>
         </form>

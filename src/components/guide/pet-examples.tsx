@@ -1,10 +1,9 @@
 "use client";
 
-import { ImagePlus, Search, Send, SlidersHorizontal } from "lucide-react";
+import { AddImageIcon, FiltersIcon, PetTypeIcon, SearchIcon, SendIcon } from "@/components/shared/icons";
 import { HeroAddButton } from "@/components/layout/hero";
 import { PetCard, type PetEntry } from "@/components/cards/pet-card";
 import { GlyphStrip } from "@/components/shared/portal-address-field";
-import { PetTypeIcon } from "@/components/shared/pet-type-icon";
 import { useLocale } from "@/components/providers/locale-provider";
 import { galaxyLabel } from "@/lib/planets/galaxies";
 import { petClassKeys } from "@/lib/pets/pets";
@@ -97,7 +96,7 @@ function PetFormExample() {
               {t("pets.image")} <small>{t("pets.image_hint")}</small>
             </span>
             <span className="image-preview pet-image-preview pet-image-preview-empty">
-              <ImagePlus aria-hidden="true" size={20} />
+              <AddImageIcon aria-hidden="true" size={20} />
             </span>
           </div>
           <label className="field full-field">
@@ -180,7 +179,7 @@ function PetMessageExample() {
           </button>
           <button className="primary-button" type="button">
             {t("profile.send_message")}
-            <Send aria-hidden="true" size={14} />
+            <SendIcon aria-hidden="true" size={14} />
           </button>
         </div>
       </div>
@@ -205,11 +204,11 @@ export function PetExamples() {
         <figcaption>Ricerca e filtri</figcaption>
         <div className="guide-pet-toolbar-example" inert>
           <label className="search-field member-search station-search">
-            <Search size={15} />
+            <SearchIcon size={15} />
             <input placeholder="Cerca pet" readOnly value="" />
           </label>
           <button aria-expanded="true" aria-label="Filtri" className="planet-filters-toggle" data-active type="button">
-            <SlidersHorizontal aria-hidden="true" size={14} />
+            <FiltersIcon aria-hidden="true" size={14} />
           </button>
         </div>
         <div className="planet-controls guide-pet-filters-example" inert>

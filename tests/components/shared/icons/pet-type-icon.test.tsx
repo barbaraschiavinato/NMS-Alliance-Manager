@@ -1,8 +1,7 @@
 // @vitest-environment jsdom
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { PetTypeIcon } from "@/components/shared/pet-type-icon";
-import { petTypeIcons } from "@/lib/pets/pet-type-icons";
+import { PetTypeIcon, petTypeIcons } from "@/components/shared/icons";
 import { petTypes } from "@/lib/pets/pets";
 
 describe("pet type icons", () => {

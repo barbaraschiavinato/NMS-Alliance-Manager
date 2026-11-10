@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type SubmitEvent } from "react";
 import { DetailLink as Link, useDetailReturn } from "@/components/shared/detail-page";
-import { Archive, ArchiveRestore, Crosshair, Eclipse, Orbit } from "lucide-react";
+import { ArchiveIcon, MissionIcon, PlanetIcon, RestoreIcon, StationIcon } from "@/components/shared/icons";
 import { broadcastRequestsEvent, dispatchAppEvent } from "@/lib/navigation/app-events";
 
 import { MessageCard, MessageReplyForm } from "@/components/cards/message-card";
@@ -398,7 +398,7 @@ export function HelpRequestsPage({
                             onClick={() => void archiveRequest(request)}
                             type="button"
                           >
-                            {request.archived ? <ArchiveRestore size={14} /> : <Archive size={14} />}
+                            {request.archived ? <RestoreIcon size={14} /> : <ArchiveIcon size={14} />}
                           </button>
                         ) : undefined
                       }
@@ -488,7 +488,7 @@ export function HelpRequestsPage({
                               aria-label={t("taxi.open_meeting_station")}
                               data-tooltip={t("taxi.open_meeting_station")}
                             >
-                              <Orbit size={15} />
+                              <StationIcon size={15} />
                               {t("taxi.meeting_at", {
                                 station:
                                   request.meetingPoint === "hub"
@@ -509,7 +509,7 @@ export function HelpRequestsPage({
                               href={missionDetailHref(request.missionCode, systemScope ? "stations" : kind)}
                               title={t("messages.open_mission")}
                             >
-                              <Crosshair size={15} />
+                              <MissionIcon size={15} />
                             </Link>
                           )}
                           {kind === "help" && request.portal && request.galaxy !== undefined && (
@@ -520,7 +520,7 @@ export function HelpRequestsPage({
                               title={t("planet.open_planet_details")}
                               type="button"
                             >
-                              <Eclipse size={15} />
+                              <PlanetIcon size={15} />
                             </button>
                           )}
                         </>

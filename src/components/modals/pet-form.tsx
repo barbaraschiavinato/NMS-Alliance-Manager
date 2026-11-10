@@ -1,11 +1,19 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type SubmitEvent } from "react";
-import { CircleAlert, ImagePlus, Orbit, Pencil, Plus, Trash2, X } from "lucide-react";
+import {
+  AddImageIcon,
+  AlertIcon,
+  CloseIcon,
+  ConfirmAddIcon,
+  DeleteIcon,
+  EditIcon,
+  LoadingIcon,
+  PetTypeIcon,
+} from "@/components/shared/icons";
 import { SystemAddressField, type SystemAddressValidation } from "@/components/shared/portal-address-field";
 import { useLocale } from "@/components/providers/locale-provider";
 import type { PetEntry } from "@/components/cards/pet-card";
-import { PetTypeIcon } from "@/components/shared/pet-type-icon";
 import type { AllianceMember } from "@/lib/members/member-types";
 import { galaxyNames } from "@/lib/planets/galaxies";
 import {
@@ -189,7 +197,7 @@ export function PetForm({
             <h2 id="pet-dialog-title">{t(pet ? "pets.edit_pet" : "pets.add_pet")}</h2>
           </div>
           <button aria-label={t("common.close")} className="icon-button" onClick={onClose} type="button">
-            <X size={18} />
+            <CloseIcon size={18} />
           </button>
         </div>
         <form className="station-add-form pet-form" onSubmit={submit}>
@@ -327,7 +335,7 @@ export function PetForm({
               style={displayedImageUrl ? { backgroundImage: `url("${displayedImageUrl}")` } : undefined}
               type="button"
             >
-              {!displayedImageUrl && <ImagePlus aria-hidden="true" size={20} />}
+              {!displayedImageUrl && <AddImageIcon aria-hidden="true" size={20} />}
             </button>
             <div className="pet-image-actions">
               <input
@@ -348,7 +356,7 @@ export function PetForm({
                   title={t("pets.remove_image")}
                   type="button"
                 >
-                  <Trash2 size={16} />
+                  <DeleteIcon size={16} />
                 </button>
               )}
             </div>
@@ -446,7 +454,7 @@ export function PetForm({
           )}
           {error && (
             <p className="form-error">
-              <CircleAlert size={15} />
+              <AlertIcon size={15} />
               {t(error)}
             </p>
           )}
@@ -458,11 +466,11 @@ export function PetForm({
             <button className="primary-button" disabled={saving || lookupPending || !validation.valid} type="submit">
               {saving ? t("common.saving") : t(pet ? "common.save" : "common.add")}
               {lookupPending ? (
-                <Orbit aria-hidden="true" className="button-spinner" size={15} />
+                <LoadingIcon aria-hidden="true" className="button-spinner" size={15} />
               ) : pet ? (
-                <Pencil size={15} />
+                <EditIcon size={15} />
               ) : (
-                <Plus size={15} />
+                <ConfirmAddIcon size={15} />
               )}
             </button>
           </div>

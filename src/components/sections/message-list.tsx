@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { CircleAlert } from "lucide-react";
+import { AlertIcon } from "@/components/shared/icons";
 
 import { useLocale } from "@/components/providers/locale-provider";
 import { LoadingSpinner } from "@/components/shared/loading-spinner";
@@ -25,7 +25,7 @@ export function MessageList({
     <>
       {error && (
         <p className="form-error">
-          <CircleAlert size={15} />
+          <AlertIcon size={15} />
           {t(error)}
         </p>
       )}

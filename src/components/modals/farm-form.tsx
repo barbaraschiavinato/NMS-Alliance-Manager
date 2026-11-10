@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, type SubmitEvent } from "react";
-import { CircleAlert, Orbit, Pencil, Plus, Search, X } from "lucide-react";
+import { AlertIcon, CloseIcon, ConfirmAddIcon, EditIcon, LoadingIcon, SearchIcon } from "@/components/shared/icons";
 import { SystemAddressField, type SystemAddressValidation } from "@/components/shared/portal-address-field";
 import { useLocale } from "@/components/providers/locale-provider";
 import type { AllianceMember } from "@/lib/members/member-types";
@@ -57,7 +57,7 @@ export function FarmResourcePicker({
         {t("farms.resources")} <small>{t("farms.selected_count", { count: selected.length })}</small>
       </legend>
       <label className="search-field farm-resource-search">
-        <Search size={15} />
+        <SearchIcon size={15} />
         <input
           aria-label={t("farms.search_resources")}
           onChange={(event) => setFilter(event.target.value)}
@@ -217,7 +217,7 @@ export function FarmForm({
             <h2 id="farm-dialog-title">{t(farm ? "farms.edit_farm" : "farms.add_farm")}</h2>
           </div>
           <button aria-label={t("common.close")} className="icon-button" onClick={onClose} type="button">
-            <X size={18} />
+            <CloseIcon size={18} />
           </button>
         </div>
         <form className="station-add-form farm-form" onSubmit={submit}>
@@ -279,7 +279,7 @@ export function FarmForm({
           </label>
           {systemNameUnavailable && (
             <p className="form-error full-field" role="status">
-              <CircleAlert size={15} />
+              <AlertIcon size={15} />
               {t("farms.error_system_name_unavailable")}
             </p>
           )}
@@ -347,7 +347,7 @@ export function FarmForm({
           )}
           {error && (
             <p className="form-error">
-              <CircleAlert size={15} />
+              <AlertIcon size={15} />
               {t(error)}
             </p>
           )}
@@ -363,11 +363,11 @@ export function FarmForm({
             >
               {saving ? t("common.saving") : t(farm ? "common.save" : "common.add")}
               {lookupPending || systemNamePending ? (
-                <Orbit aria-hidden="true" className="button-spinner" size={15} />
+                <LoadingIcon aria-hidden="true" className="button-spinner" size={15} />
               ) : farm ? (
-                <Pencil size={15} />
+                <EditIcon size={15} />
               ) : (
-                <Plus size={15} />
+                <ConfirmAddIcon size={15} />
               )}
             </button>
           </div>

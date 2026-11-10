@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { FileSpreadsheet, Search, SlidersHorizontal } from "lucide-react";
+import { ExportIcon, FiltersIcon, SearchIcon } from "@/components/shared/icons";
 import { useRouter } from "next/navigation";
 import type { AllianceMember, AllianceSettings } from "@/lib/members/member-types";
 import { galaxyNames } from "@/lib/planets/galaxies";
@@ -377,7 +377,7 @@ export function FarmsPage({
                 />
                 <div className="toolbar-actions station-toolbar-actions">
                   <label className="search-field member-search station-search">
-                    <Search size={15} />
+                    <SearchIcon size={15} />
                     <input
                       aria-label={t("farms.search_farms")}
                       onChange={(event) => setSearch(event.target.value)}
@@ -395,7 +395,7 @@ export function FarmsPage({
                     onClick={() => setFiltersOpen((open) => !open)}
                     type="button"
                   >
-                    <SlidersHorizontal aria-hidden="true" size={14} />
+                    <FiltersIcon aria-hidden="true" size={14} />
                   </button>
                   {canChooseOwner && (
                     <button
@@ -407,7 +407,7 @@ export function FarmsPage({
                       title={t(exporting ? "farms.exporting" : "farms.export_to_excel")}
                       type="button"
                     >
-                      <FileSpreadsheet aria-hidden="true" size={15} />
+                      <ExportIcon aria-hidden="true" size={15} />
                     </button>
                   )}
                 </div>

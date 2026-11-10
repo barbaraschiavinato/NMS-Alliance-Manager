@@ -3,8 +3,7 @@
 import Image from "next/image";
 import NextLink from "next/link";
 import { DetailLink as Link } from "@/components/shared/detail-page";
-import { GalaxyIcon } from "@/components/shared/galaxy-icon";
-import { CirclePlus, Crosshair, FileText, Pencil, Trash2 } from "lucide-react";
+import { CreateMissionIcon, DeleteIcon, EditIcon, MapIcon, MissionIcon, NotesIcon } from "@/components/shared/icons";
 import { missionDetailHref, stationDetailHref } from "@/lib/navigation/detail-links";
 import { GlyphStrip } from "@/components/shared/portal-address-field";
 import { StationSystemCoreInfo } from "@/components/shared/station-system-core-info";
@@ -184,7 +183,7 @@ export function StationCardExtended({
               onClick={() => onCreateMission(station)}
               type="button"
             >
-              <CirclePlus size={14} />
+              <CreateMissionIcon size={14} />
             </button>
           )}
           {!canCreateMission &&
@@ -214,7 +213,7 @@ export function StationCardExtended({
                 })}
                 role="img"
               >
-                <CirclePlus size={14} />
+                <CreateMissionIcon size={14} />
               </span>
             )}
           {showAssociatedMissionsLink && station.hasMissions && station.specialtyMissionId ? (
@@ -225,7 +224,7 @@ export function StationCardExtended({
                 data-tooltip={t("missions.open_associated_missions")}
                 href={`${missionDetailHref(station.specialtyMissionId, "stations")}&source=station-card`}
               >
-                <Crosshair size={14} />
+                <MissionIcon size={14} />
               </Link>
             ) : null
           ) : null}
@@ -236,7 +235,7 @@ export function StationCardExtended({
               data-tooltip={t("stations.show_on_map")}
               href={`/map?${new URLSearchParams({ galaxy: String(station.galaxy), portal: station.portal })}`}
             >
-              <GalaxyIcon size={14} />
+              <MapIcon size={14} />
             </NextLink>
           )}
           {canEditStation && (
@@ -247,7 +246,7 @@ export function StationCardExtended({
               onClick={() => onEdit(station)}
               type="button"
             >
-              <Pencil size={14} />
+              <EditIcon size={14} />
             </button>
           )}
           {station.note && (
@@ -258,7 +257,7 @@ export function StationCardExtended({
               onClick={() => onViewNote(station)}
               type="button"
             >
-              <FileText size={14} />
+              <NotesIcon size={14} />
             </button>
           )}
           {!station.hasMissions && (canSeeAll || station.ownerId === member.publicId) && (
@@ -273,7 +272,7 @@ export function StationCardExtended({
               onClick={() => onRemove(station)}
               type="button"
             >
-              <Trash2 size={14} />
+              <DeleteIcon size={14} />
             </button>
           )}
         </div>

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Search, SlidersHorizontal } from "lucide-react";
+import { FiltersIcon, SearchIcon } from "@/components/shared/icons";
 import type { AllianceMember, AllianceSettings } from "@/lib/members/member-types";
 import { galaxyNames } from "@/lib/planets/galaxies";
 import { listPageSize } from "@/lib/navigation/pagination";
@@ -333,7 +333,7 @@ export function PetsPage({
                 />
                 <div className="toolbar-actions station-toolbar-actions">
                   <label className="search-field member-search station-search">
-                    <Search size={15} />
+                    <SearchIcon size={15} />
                     <input
                       aria-label={t("pets.search_pets")}
                       onChange={(event) => setSearch(event.target.value)}
@@ -351,7 +351,7 @@ export function PetsPage({
                     onClick={() => setFiltersOpen((open) => !open)}
                     type="button"
                   >
-                    <SlidersHorizontal aria-hidden="true" size={14} />
+                    <FiltersIcon aria-hidden="true" size={14} />
                   </button>
                 </div>
               </div>

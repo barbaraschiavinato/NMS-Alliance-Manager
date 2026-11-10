@@ -1,7 +1,15 @@
 "use client";
 
 import type { ReactNode, SubmitEvent } from "react";
-import { ChevronDown, ChevronRight, CircleAlert, Reply, Send, Trash2, X } from "lucide-react";
+import {
+  AlertIcon,
+  CloseIcon,
+  CollapsedIcon,
+  DeleteIcon,
+  ExpandedIcon,
+  ReplyIcon,
+  SendIcon,
+} from "@/components/shared/icons";
 
 import { useLocale } from "@/components/providers/locale-provider";
 
@@ -64,7 +72,7 @@ export function MessageCard({
                   onClick={disclosure.onToggle}
                   type="button"
                 >
-                  {disclosure.collapsed ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
+                  {disclosure.collapsed ? <CollapsedIcon size={14} /> : <ExpandedIcon size={14} />}
                 </button>
               )}
               {subjectActions}
@@ -86,7 +94,7 @@ export function MessageCard({
                 title={deleteLabel}
                 type="button"
               >
-                <Trash2 size={14} />
+                <DeleteIcon size={14} />
               </button>
             )}
           </div>
@@ -106,7 +114,7 @@ export function MessageCard({
                   title={toggleLabel}
                   type="button"
                 >
-                  {toggle.collapsed ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
+                  {toggle.collapsed ? <CollapsedIcon size={14} /> : <ExpandedIcon size={14} />}
                   <span className="thread-count">{toggle.count}</span>
                 </button>
               )}
@@ -119,7 +127,7 @@ export function MessageCard({
                   title={t("messages.reply")}
                   type="button"
                 >
-                  <Reply size={14} />
+                  <ReplyIcon size={14} />
                 </button>
               )}
             </div>
@@ -183,7 +191,7 @@ export function MessageReplyForm({
       </label>
       {error && (
         <p className="form-error">
-          <CircleAlert size={15} />
+          <AlertIcon size={15} />
           {t(error)}
         </p>
       )}
@@ -196,7 +204,7 @@ export function MessageReplyForm({
           title={t("common.cancel")}
           type="button"
         >
-          <X size={14} />
+          <CloseIcon size={14} />
         </button>
         <button
           aria-label={t("messages.send_reply")}
@@ -206,7 +214,7 @@ export function MessageReplyForm({
           title={t("messages.send_reply")}
           type="submit"
         >
-          <Send size={14} />
+          <SendIcon size={14} />
         </button>
       </div>
     </form>

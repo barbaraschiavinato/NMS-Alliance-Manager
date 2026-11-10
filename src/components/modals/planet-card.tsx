@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { useEffect, useState, type SubmitEvent } from "react";
-import { Siren, X } from "lucide-react";
+import { CloseIcon, HelpRequestIcon } from "@/components/shared/icons";
 import { GlyphStrip } from "@/components/shared/portal-address-field";
 import { PlanetDiscoveryCounts } from "@/components/shared/planet-discovery-counts";
 import { almanacDiscoveryCounts } from "@/lib/almanac/almanac-discovery-counts";
@@ -324,7 +324,7 @@ export function PlanetCard({
             {missionDescription?.trim() && <p className="planet-dialog-mission-description">{missionDescription}</p>}
           </div>
           <button aria-label={t("planet.close_planet_details")} className="icon-button" onClick={onClose} type="button">
-            <X size={18} />
+            <CloseIcon size={18} />
           </button>
         </div>
         <div className="planet-card-body">
@@ -384,7 +384,7 @@ export function PlanetCard({
                       data-tooltip={t("help.request_help")}
                       type="button"
                     >
-                      <Siren size={15} />
+                      <HelpRequestIcon size={15} />
                     </button>
                   </h3>
                   {helpSent && <p className="address-validation address-valid">{t("help.request_sent")}</p>}

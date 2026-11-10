@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle } from "lucide-react";
+import { GalaxyWarningIcon } from "@/components/shared/icons";
 import { GlyphStrip } from "@/components/shared/portal-address-field";
 import { galaxyLabel } from "@/lib/planets/galaxies";
 import { planetSystemStatusKey } from "@/lib/planets/planet-system-status";
@@ -84,7 +84,7 @@ export function MissionCardSimple({
               data-tooltip={(mission.galaxy ?? 0) !== 0 ? t("missions.galaxy_portals_warning") : undefined}
               tabIndex={(mission.galaxy ?? 0) !== 0 ? 0 : undefined}
             >
-              {(mission.galaxy ?? 0) !== 0 && <AlertTriangle size={9} />}
+              {(mission.galaxy ?? 0) !== 0 && <GalaxyWarningIcon size={9} />}
               {galaxyLabel(mission.galaxy ?? 0)}
             </span>
             <div className="mission-title-with-info">

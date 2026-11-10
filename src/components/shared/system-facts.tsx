@@ -3,13 +3,10 @@
 import type { CSSProperties } from "react";
 import { conflictLevels } from "@/components/cards/planet-destination-card";
 import { useLocale } from "@/components/providers/locale-provider";
+import { raceIconPaths } from "@/components/shared/icons";
 import type { AlmanacFact } from "@/lib/almanac/almanac-facts";
 
-const raceIcons: Record<string, string> = {
-  Gek: "/icons/nms-gek.svg",
-  Korvax: "/icons/nms-korvax.svg",
-  "Vy’keen": "/icons/nms-vykeen.svg",
-};
+const raceIcons: Readonly<Record<string, string>> = raceIconPaths;
 
 // Star, economy (with stars), conflict (with dots) and race (with icon) of a system.
 export function SystemFacts({

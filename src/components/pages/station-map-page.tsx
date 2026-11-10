@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
-import { Minus, Plus, Scan, X } from "lucide-react";
+import { CloseIcon, FitMapIcon, ZoomInIcon, ZoomOutIcon } from "@/components/shared/icons";
 
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
@@ -205,7 +205,7 @@ export function StationMapPage({
                   onClick={() => setView((current) => zoomMapView(current, zoomStep))}
                   type="button"
                 >
-                  <Plus size={15} />
+                  <ZoomInIcon size={15} />
                 </button>
                 <button
                   aria-label={t("map.zoom_out")}
@@ -214,7 +214,7 @@ export function StationMapPage({
                   onClick={() => setView((current) => zoomMapView(current, 1 / zoomStep))}
                   type="button"
                 >
-                  <Minus size={15} />
+                  <ZoomOutIcon size={15} />
                 </button>
                 <button
                   aria-label={t("map.reset_view")}
@@ -223,7 +223,7 @@ export function StationMapPage({
                   onClick={() => setView(fullMapView)}
                   type="button"
                 >
-                  <Scan size={15} />
+                  <FitMapIcon size={15} />
                 </button>
               </div>
               <svg
@@ -342,7 +342,7 @@ export function StationMapPage({
                 onClick={() => setSelectedKey(null)}
                 type="button"
               >
-                <X size={18} />
+                <CloseIcon size={18} />
               </button>
             </div>
             <ul className="station-map-stations">
