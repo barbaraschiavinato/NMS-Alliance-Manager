@@ -36,3 +36,12 @@ Agreed scope (2026-10-22). Taxi is implemented with separate Discord/Telegram cr
 - Keep the in-app guide and `docs/manuale-utente.md` consistent, in both Italian and English.
 
 
+
+## T-81euw0: Central icon registry
+
+Icons are imported straight from `lucide-react` in about 60 files (73 distinct icons; `Orbit` alone in 22), and the custom SVGs live in six places (`galaxy-icon.tsx`, `pet-type-icons.ts`, `system-feature-badge.tsx`, the water drop in `planet-destination-card.tsx`, the Discord logo in `sidebar.tsx`, the Google logo in `google-login.tsx`), plus the race masks in `public/icons/`. Agreed approach (2026-11-10):
+
+- One module, `src/components/shared/icons/`, exporting icons by meaning (`StationIcon`, `MissionIcon`, `DeleteIcon`, `EditIcon`, ...), so changing what a concept looks like is a one-line edit. Named exports, not one object, so each page still bundles only the icons it uses.
+- Single-colour custom SVGs become `createLucideIcon` icons like `GalaxyIcon`; multi-colour ones (Google, pet types, water drop) stay components but move into the module; the race icon paths are listed there too.
+- A section config (icon, accent from `sectionAccents`, label, path) shared by the sidebar, the guide, the leaderboard and detail links.
+- An ESLint `no-restricted-imports` rule that allows `lucide-react` only inside the icon module.
