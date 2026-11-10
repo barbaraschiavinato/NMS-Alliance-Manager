@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -22,6 +22,12 @@ import type { AllianceMember, AllianceSettings } from "@/lib/members/access-stor
 import { useLocale } from "@/components/providers/locale-provider";
 import { GalaxyIcon } from "@/components/shared/galaxy-icon";
 import { useRequestSearchReset } from "@/components/shared/navigation-search-reset";
+import {
+  loadSidebarCounts,
+  readServerSidebarCounts,
+  readSidebarCounts,
+  subscribeSidebarCounts,
+} from "@/components/layout/sidebar-counts";
 
 const counterRefreshMs = 2 * 60 * 1000;
 const planetCountKey = "nms-planet-count";
@@ -90,99 +96,36 @@ export function Sidebar({
   const resetSearch = useRequestSearchReset();
   const storedPlanetCount = useSyncExternalStore(subscribePlanetCount, readPlanetCount, () => null);
   const shownPlanetCount = planetCount ?? (storedPlanetCount === null ? null : Number(storedPlanetCount));
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [helpCount, setHelpCount] = useState(0);
-  const [taxiCount, setTaxiCount] = useState(0);
-  const [farmCount, setFarmCount] = useState<number | null>(null);
-  const [petCount, setPetCount] = useState<number | null>(null);
+  const counts = useSyncExternalStore(
+    subscribeSidebarCounts,
+    () => readSidebarCounts(currentMember.publicId),
+    readServerSidebarCounts,
+  );
+  const { unread: unreadCount, help: helpCount, taxi: taxiCount, farms: farmCount, pets: petCount } = counts;
   const isStaff = currentMember.role === "admin" || currentMember.role === "moderator";
   useEffect(() => {
-    const controller = new AbortController();
-    async function loadUnread() {
-      try {
-        const response = await fetch("/api/messages?count=unread", { cache: "no-store", signal: controller.signal });
-        const body: unknown = await response.json();
-        if (response.ok && body && typeof body === "object" && "count" in body && typeof body.count === "number")
-          setUnreadCount(body.count);
-      } catch {
-        // Il contatore è solo informativo.
-      }
-    }
-    async function loadRequestCount(kind: "help" | "taxi", setCount: (count: number) => void) {
-      try {
-        const response = await fetch(`/api/${kind}-requests?count=1`, { cache: "no-store", signal: controller.signal });
-        const body: unknown = await response.json();
-        if (response.ok && body && typeof body === "object" && "count" in body && typeof body.count === "number")
-          setCount(body.count);
-      } catch {
-        // Il contatore è solo informativo.
-      }
-    }
-    const loadHelpCount = () => loadRequestCount("help", setHelpCount);
-    const loadTaxiCount = () => loadRequestCount("taxi", setTaxiCount);
-    void loadUnread();
-    void loadHelpCount();
-    void loadTaxiCount();
-    window.addEventListener("help-requests-changed", loadHelpCount);
-    window.addEventListener("taxi-requests-changed", loadTaxiCount);
+    const memberId = currentMember.publicId;
+    const reload = () => void loadSidebarCounts(memberId, { force: true });
+    void loadSidebarCounts(memberId);
     function refreshCounters() {
-      if (document.visibilityState !== "visible") return;
-      void loadUnread();
-      void loadHelpCount();
-      void loadTaxiCount();
+      if (document.visibilityState === "visible") reload();
     }
+    const changeEvents = [
+      "messages-unread-changed",
+      "help-requests-changed",
+      "taxi-requests-changed",
+      "farms-changed",
+      "pets-changed",
+    ];
+    for (const event of changeEvents) window.addEventListener(event, reload);
     const interval = window.setInterval(refreshCounters, counterRefreshMs);
     document.addEventListener("visibilitychange", refreshCounters);
-    window.addEventListener("messages-unread-changed", loadUnread);
     return () => {
-      controller.abort();
       window.clearInterval(interval);
       document.removeEventListener("visibilitychange", refreshCounters);
-      window.removeEventListener("messages-unread-changed", loadUnread);
-      window.removeEventListener("help-requests-changed", loadHelpCount);
-      window.removeEventListener("taxi-requests-changed", loadTaxiCount);
+      for (const event of changeEvents) window.removeEventListener(event, reload);
     };
-  }, []);
-  useEffect(() => {
-    if (!isStaff) return;
-    const controller = new AbortController();
-    async function loadFarmCount() {
-      try {
-        const response = await fetch("/api/farms?count=1", { cache: "no-store", signal: controller.signal });
-        const body: unknown = await response.json();
-        if (response.ok && body && typeof body === "object" && "count" in body && typeof body.count === "number")
-          setFarmCount(body.count);
-      } catch {
-        // The counter is informational only.
-      }
-    }
-    void loadFarmCount();
-    window.addEventListener("farms-changed", loadFarmCount);
-    return () => {
-      controller.abort();
-      window.removeEventListener("farms-changed", loadFarmCount);
-    };
-  }, [isStaff]);
-  useEffect(() => {
-    if (!isStaff) return;
-    const controller = new AbortController();
-    async function loadPetCount() {
-      try {
-        const response = await fetch("/api/pets?count=1", { cache: "no-store", signal: controller.signal });
-        const body: unknown = await response.json();
-        if (response.ok && body && typeof body === "object" && "count" in body && typeof body.count === "number")
-          setPetCount(body.count);
-      } catch {
-        // The counter is informational only.
-      }
-    }
-    void loadPetCount();
-    window.addEventListener("pets-changed", loadPetCount);
-    return () => {
-      controller.abort();
-      window.removeEventListener("pets-changed", loadPetCount);
-    };
-  }, [isStaff]);
+  }, [currentMember.publicId]);
   const displayName = currentMember.nmsName || currentMember.name;
   const displayRole = currentMember.displayRole ?? currentMember.role;
   let roleLabel = t("members.member_role_label");

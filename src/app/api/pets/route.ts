@@ -7,6 +7,7 @@ import { addPet, readPets, removePet, updatePet } from "@/lib/pets/pets-store";
 import { deleteImage, storeImage } from "@/lib/storage/image-storage";
 import { isSameSystem, stationDetailHref, type SystemIdentity } from "@/lib/navigation/detail-links";
 import { readVisibleStationPortals } from "@/lib/stations/visible-stations";
+import { withRequestMemo } from "@/lib/storage/request-memo";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -121,7 +122,7 @@ async function petViews(member: AllianceMember, scope: PetScope = {}) {
   });
 }
 
-export async function GET(request?: Request) {
+export const GET = withRequestMemo(async function GET(request?: Request) {
   const member = await getCurrentMember();
   if (!member) return NextResponse.json({ error: "pets.error_access_required" }, { status: 401 });
   const params = request ? new URL(request.url).searchParams : new URLSearchParams();
@@ -151,9 +152,9 @@ export async function GET(request?: Request) {
     console.error("Unable to read pets", error);
     return NextResponse.json({ error: "pets.error_unable_to_read" }, { status: 503 });
   }
-}
+});
 
-export async function POST(request: Request) {
+export const POST = withRequestMemo(async function POST(request: Request) {
   const member = await getCurrentMember();
   if (!member) return NextResponse.json({ error: "pets.error_access_required" }, { status: 401 });
   const { payload, image } = await readSubmission(request);
@@ -176,9 +177,9 @@ export async function POST(request: Request) {
     await deleteImageQuietly(imagePath);
     return NextResponse.json({ error: "pets.error_unable_to_save" }, { status: 503 });
   }
-}
+});
 
-export async function PATCH(request: Request) {
+export const PATCH = withRequestMemo(async function PATCH(request: Request) {
   const member = await getCurrentMember();
   if (!member) return NextResponse.json({ error: "pets.error_access_required" }, { status: 401 });
   const { payload, image } = await readSubmission(request);
@@ -217,9 +218,9 @@ export async function PATCH(request: Request) {
     await deleteImageQuietly(newImagePath);
     return NextResponse.json({ error: "pets.error_unable_to_save" }, { status: 503 });
   }
-}
+});
 
-export async function DELETE(request: Request) {
+export const DELETE = withRequestMemo(async function DELETE(request: Request) {
   const member = await getCurrentMember();
   if (!member) return NextResponse.json({ error: "pets.error_access_required" }, { status: 401 });
   const { payload } = await readSubmission(request);
@@ -236,4 +237,4 @@ export async function DELETE(request: Request) {
     console.error("Unable to remove pet", error);
     return NextResponse.json({ error: "pets.error_unable_to_remove" }, { status: 503 });
   }
-}
+});

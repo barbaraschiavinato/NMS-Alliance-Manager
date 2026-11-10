@@ -4,12 +4,17 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { localDataPath } from "@/lib/storage/local-data-path";
 import { getBlobAuthOptions } from "@/lib/storage/blob-config";
+import { clearRequestMemo, memoizedRead } from "@/lib/storage/request-memo";
 import { normalizeStoredPet, type Pet, type PetInput } from "@/lib/pets/pets";
 
 const blobPath = "alliance-manager/pets.json";
 const localPath = () => localDataPath("pets.json");
 
-export async function readPets(): Promise<Pet[]> {
+export function readPets(): Promise<Pet[]> {
+  return memoizedRead("pets", readPetsFromStore);
+}
+
+async function readPetsFromStore(): Promise<Pet[]> {
   let raw: unknown;
   const blobAuthOptions = getBlobAuthOptions();
   if (blobAuthOptions) {
@@ -35,6 +40,14 @@ export async function readPets(): Promise<Pet[]> {
 }
 
 async function writePets(pets: readonly Pet[]): Promise<void> {
+  try {
+    await writePetsToStore(pets);
+  } finally {
+    clearRequestMemo();
+  }
+}
+
+async function writePetsToStore(pets: readonly Pet[]): Promise<void> {
   const json = `${JSON.stringify(pets, null, 2)}\n`;
   const blobAuthOptions = getBlobAuthOptions();
   if (blobAuthOptions) {

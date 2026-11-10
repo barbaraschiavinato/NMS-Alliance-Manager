@@ -13,11 +13,12 @@ import { readAllStationPortals, readStationPortals } from "@/lib/stations/statio
 import { isValidNmsFriendCode } from "@/lib/members/member-types";
 import { serializeMission } from "@/lib/missions/mission-view";
 import { findMissionStation, isSameSystem } from "@/lib/navigation/detail-links";
+import { withRequestMemo } from "@/lib/storage/request-memo";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function GET(request?: Request) {
+export const GET = withRequestMemo(async function GET(request?: Request) {
   try {
     const member = await getCurrentMember();
     if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
@@ -69,9 +70,9 @@ export async function GET(request?: Request) {
     console.error("Unable to read missions", error);
     return NextResponse.json({ error: "Impossibile leggere le missioni." }, { status: 503 });
   }
-}
+});
 
-export async function POST(request: Request) {
+export const POST = withRequestMemo(async function POST(request: Request) {
   const member = await getCurrentMember();
   if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
   const isModerator = hasRole(member, "moderator");
@@ -183,7 +184,7 @@ export async function POST(request: Request) {
     console.error("Unable to save mission", error);
     return NextResponse.json({ error: "Impossibile salvare la missione." }, { status: 503 });
   }
-}
+});
 
 async function findStationOwner(publicId: string, portal: string, galaxy: number) {
   const access = await readAccessData();

@@ -50,9 +50,7 @@ function parseBody(body: RequestInit["body"]): unknown {
 // Le richieste senza route rispondono 404 {}. I contatori della sidebar hanno una route di default.
 export function mockFetch(pageRoutes: Routes = {}) {
   const routes: Routes = {
-    "/api/messages?count=unread": { count: 0 },
-    "/api/help-requests?count=1": { count: 0 },
-    "/api/taxi-requests?count=1": { count: 0 },
+    "/api/sidebar-counts": { unread: 0, help: 0, taxi: 0 },
     "GET /api/admin/taxi-notifications": {
       settings: defaultTaxiNotificationSettings,
       readiness: { discord: false, telegram: false, push: false, links: false },

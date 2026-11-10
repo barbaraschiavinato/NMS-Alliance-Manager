@@ -25,6 +25,8 @@ The production build succeeds but warns that resolving `NMS_DATA_DIR` relative t
 
 Every store reads the full JSON, modifies it in memory and writes it back with `allowOverwrite: true`. Two concurrent requests (e.g. two members claiming missions at the same time) can lose one of the updates. Check whether the Blob SDK supports conditional writes (ETag / `ifMatch`) or whether a lock or retry is needed.
 
+Since 2026-11-10 store reads are memoized per request (`src/lib/storage/request-memo.ts`): a read-modify-write inside a route can start from the copy read earlier in the same request rather than a fresh read, which widens the window by the time between the two reads (the Almanac cache still reads the store directly inside its serialized writes). Any write clears the memo.
+
 ## C-kl5mdm: Migration on read writes during GET requests (2026-10-11)
 
 `src/lib/missions/store.ts:114`
@@ -60,12 +62,6 @@ With the local backend (`data/`) these stores call `writeFile(localPath, ...)` d
 `src/app/api/alliance/image/route.ts:10`
 
 The only check on `path` is `startsWith("alliance-manager/branding/")`. `@vercel/blob`'s `get()` builds `https://<store>.private.blob.vercel-storage.com/${path}` and passes it through `new URL()`, which resolves `..`. So `?path=alliance-manager/branding/../access.json` returns `alliance-manager/access.json` (every member's email and role) to any approved member, and the same works for `private-messages.json`. It only affects deployments with a Blob store, i.e. production. `login-logo/route.ts:26` already validates with a strict regex; use the same approach here. Test placeholder: `it.todo` in `tests/api/alliance/image.test.ts`.
-
-## C-1tpyag: Shared default access data is mutated by callers (2026-10-11)
-
-`src/lib/members/access-store.ts:43` (returned at lines 58, 146 and 159), `src/lib/missions/store.ts:137`, `:144`
-
-When the file or blob is missing (or Blob returns 304, or the payload is not an object), `readAccessData()` returns the module-level `defaultData` object itself, not a copy. `registerMember`, `updateAllianceSettings` and the others then mutate it, so in a long-lived process a later missing read brings back stale members and settings and writes them to storage. `readMissions()` returns the shared `initialMissions` array the same way (harmless while it is empty).
 
 ## C-txcf5e: Private messages become unreadable after migrating an unknown legacy email (2026-10-11)
 

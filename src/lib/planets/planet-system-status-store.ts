@@ -3,6 +3,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { localDataPath } from "@/lib/storage/local-data-path";
 import { getBlobAuthOptions } from "@/lib/storage/blob-config";
+import { clearRequestMemo, memoizedRead } from "@/lib/storage/request-memo";
 import {
   isMissionSystemStatus,
   normalizeMissionSystemStatus,
@@ -47,7 +48,11 @@ function normalizeStatuses(value: unknown): {
   return { data, hasLegacyValues, isValid };
 }
 
-async function readDocument(documentBlobPath: string, documentLocalPath: string): Promise<unknown> {
+function readDocument(documentBlobPath: string, documentLocalPath: string): Promise<unknown> {
+  return memoizedRead(documentBlobPath, () => readDocumentFromStore(documentBlobPath, documentLocalPath));
+}
+
+async function readDocumentFromStore(documentBlobPath: string, documentLocalPath: string): Promise<unknown> {
   const blobAuthOptions = getBlobAuthOptions();
   if (blobAuthOptions) {
     const blob = await get(documentBlobPath, { access: "private", useCache: false, ...blobAuthOptions });
@@ -63,6 +68,14 @@ async function readDocument(documentBlobPath: string, documentLocalPath: string)
 }
 
 async function writeDocument(documentBlobPath: string, documentLocalPath: string, data: unknown): Promise<void> {
+  try {
+    await writeDocumentToStore(documentBlobPath, documentLocalPath, data);
+  } finally {
+    clearRequestMemo();
+  }
+}
+
+async function writeDocumentToStore(documentBlobPath: string, documentLocalPath: string, data: unknown): Promise<void> {
   const json = `${JSON.stringify(data, null, 2)}\n`;
   const blobAuthOptions = getBlobAuthOptions();
   if (blobAuthOptions) {

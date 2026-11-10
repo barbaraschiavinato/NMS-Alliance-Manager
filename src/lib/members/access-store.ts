@@ -4,6 +4,7 @@ import path from "node:path";
 import { localDataPath } from "@/lib/storage/local-data-path";
 import { randomUUID } from "node:crypto";
 import { getBlobAuthOptions } from "@/lib/storage/blob-config";
+import { clearRequestMemo, memoizedRead } from "@/lib/storage/request-memo";
 import {
   isValidNmsFriendCode,
   memberRoles,
@@ -148,7 +149,11 @@ function needsPublicIdMigration(value: unknown): boolean {
   );
 }
 
-export async function readAccessData(): Promise<AccessData> {
+export function readAccessData(): Promise<AccessData> {
+  return memoizedRead("access", readAccessDataFromStore);
+}
+
+async function readAccessDataFromStore(): Promise<AccessData> {
   const blobAuthOptions = getBlobAuthOptions();
   if (blobAuthOptions) {
     const blob = await get(blobPath, { access: "private", useCache: false, ...blobAuthOptions });
@@ -171,6 +176,14 @@ export async function readAccessData(): Promise<AccessData> {
 }
 
 export async function writeAccessData(data: AccessData): Promise<void> {
+  try {
+    await writeAccessDataToStore(data);
+  } finally {
+    clearRequestMemo();
+  }
+}
+
+async function writeAccessDataToStore(data: AccessData): Promise<void> {
   const json = `${JSON.stringify(data, null, 2)}\n`;
   const blobAuthOptions = getBlobAuthOptions();
   if (blobAuthOptions) {

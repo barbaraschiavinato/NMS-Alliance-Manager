@@ -4,12 +4,17 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { localDataPath } from "@/lib/storage/local-data-path";
 import { getBlobAuthOptions } from "@/lib/storage/blob-config";
+import { clearRequestMemo, memoizedRead } from "@/lib/storage/request-memo";
 import { normalizeStoredFarm, type Farm, type FarmInput } from "@/lib/farms/farms";
 
 const blobPath = "alliance-manager/farms.json";
 const localPath = () => localDataPath("farms.json");
 
-export async function readFarms(): Promise<Farm[]> {
+export function readFarms(): Promise<Farm[]> {
+  return memoizedRead("farms", readFarmsFromStore);
+}
+
+async function readFarmsFromStore(): Promise<Farm[]> {
   let raw: unknown;
   const blobAuthOptions = getBlobAuthOptions();
   if (blobAuthOptions) {
@@ -35,6 +40,14 @@ export async function readFarms(): Promise<Farm[]> {
 }
 
 async function writeFarms(farms: readonly Farm[]): Promise<void> {
+  try {
+    await writeFarmsToStore(farms);
+  } finally {
+    clearRequestMemo();
+  }
+}
+
+async function writeFarmsToStore(farms: readonly Farm[]): Promise<void> {
   const json = `${JSON.stringify(farms, null, 2)}\n`;
   const blobAuthOptions = getBlobAuthOptions();
   if (blobAuthOptions) {

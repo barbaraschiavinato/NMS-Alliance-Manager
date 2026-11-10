@@ -4,11 +4,12 @@ import { lookupAlmanacPlanet } from "@/lib/almanac/almanac-lookup";
 import { readAlmanacResponse } from "@/lib/almanac/almanac-store";
 import { decodePortalAddress } from "@/lib/missions/missions";
 import { almanacRetryAfterSeconds } from "@/lib/almanac/almanac-rate-limit";
+import { withRequestMemo } from "@/lib/storage/request-memo";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function GET(request: Request) {
+export const GET = withRequestMemo(async function GET(request: Request) {
   const member = await getCurrentMember();
   if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
 
@@ -49,4 +50,4 @@ export async function GET(request: Request) {
     console.error("Unable to read archived Almanac planet", { address, galaxy }, error);
     return NextResponse.json({ error: "planet.almanac_lookup_failed" }, { status: 503 });
   }
-}
+});

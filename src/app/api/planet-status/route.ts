@@ -18,11 +18,12 @@ import {
 } from "@/lib/planets/planet-system-status-store";
 import { readMissions } from "@/lib/missions/store";
 import { readAllStationPortals, readStationPortals } from "@/lib/stations/stations-store";
+import { withRequestMemo } from "@/lib/storage/request-memo";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function GET(request: Request) {
+export const GET = withRequestMemo(async function GET(request: Request) {
   const member = await getCurrentMember();
   if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
 
@@ -91,9 +92,9 @@ export async function GET(request: Request) {
     console.error("Unable to read planet system status", error);
     return NextResponse.json({ error: "Impossibile leggere lo stato del pianeta." }, { status: 503 });
   }
-}
+});
 
-export async function PATCH(request: Request) {
+export const PATCH = withRequestMemo(async function PATCH(request: Request) {
   const member = await getCurrentMember();
   if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
 
@@ -179,7 +180,7 @@ export async function PATCH(request: Request) {
     console.error("Unable to save planet system status", error);
     return NextResponse.json({ error: "Impossibile salvare lo stato del pianeta." }, { status: 503 });
   }
-}
+});
 
 function isPlanetStatusUpdate(value: unknown): value is {
   portal: string;

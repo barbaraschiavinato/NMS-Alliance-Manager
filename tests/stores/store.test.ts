@@ -66,7 +66,7 @@ describe("readMissions (local filesystem)", () => {
   it("returns the seed when the file does not exist, without writing", async () => {
     const { readMissions } = await load();
     const { initialMissions } = await import("@/lib/missions/seed");
-    expect(await readMissions()).toBe(initialMissions);
+    expect(await readMissions()).toEqual(initialMissions);
     expect(dataFileExists("missions.json")).toBe(false);
   });
 
@@ -74,7 +74,7 @@ describe("readMissions (local filesystem)", () => {
     writeDataFile("missions.json", { missions: [] });
     const { readMissions } = await load();
     const { initialMissions } = await import("@/lib/missions/seed");
-    expect(await readMissions()).toBe(initialMissions);
+    expect(await readMissions()).toEqual(initialMissions);
     expect(readDataFile("missions.json")).toEqual({ missions: [] });
   });
 
@@ -364,11 +364,11 @@ describe("Blob backend", () => {
   it("returns the seed when the blob is missing or unchanged", async () => {
     const { readMissions } = await load();
     const { initialMissions } = await import("@/lib/missions/seed");
-    expect(await readMissions()).toBe(initialMissions);
+    expect(await readMissions()).toEqual(initialMissions);
     expect(blobMock.get).toHaveBeenCalledWith("alliance-manager/missions.json", blobReadOptions());
     setBlobJson("alliance-manager/missions.json", [storedMission()]);
     blobMock.get.mockResolvedValueOnce({ statusCode: 304, stream: null });
-    expect(await readMissions()).toBe(initialMissions);
+    expect(await readMissions()).toEqual(initialMissions);
   });
 
   it("reads, migrates and writes back through Blob", async () => {

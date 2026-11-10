@@ -7,6 +7,7 @@ import { isEmailAddress } from "@/lib/members/member-types";
 import { galaxyLabel } from "@/lib/planets/galaxies";
 import { translateAlmanacValue } from "@/lib/translations";
 import { buildWorkbook, workbookContentType } from "@/lib/utils/xlsx-workbook";
+import { withRequestMemo } from "@/lib/storage/request-memo";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -22,7 +23,7 @@ function resourceList(resources: readonly string[]) {
   return resources.map((resource) => translateAlmanacValue("it", resource)).join(", ");
 }
 
-export async function GET() {
+export const GET = withRequestMemo(async function GET() {
   const member = await getCurrentMember();
   if (!member) return NextResponse.json({ error: "farms.error_access_required" }, { status: 401 });
   if (!hasRole(member, "moderator")) {
@@ -88,4 +89,4 @@ export async function GET() {
     console.error("Unable to export farms", error);
     return NextResponse.json({ error: "farms.error_unable_to_export" }, { status: 503 });
   }
-}
+});

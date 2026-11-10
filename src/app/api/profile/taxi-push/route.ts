@@ -8,6 +8,7 @@ import {
   setTaxiPushPreference,
 } from "@/lib/notifications/taxi-notifications-store";
 import { taxiNotificationReadiness, taxiPushPublicKey } from "@/lib/notifications/taxi-notification-delivery";
+import { withRequestMemo } from "@/lib/storage/request-memo";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -17,7 +18,7 @@ function failure(error: unknown) {
   return NextResponse.json({ error: "Unable to configure taxi push notifications." }, { status: 503 });
 }
 
-export async function GET() {
+export const GET = withRequestMemo(async function GET() {
   const member = await getCurrentMember();
   if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
   try {
@@ -34,9 +35,9 @@ export async function GET() {
   } catch (error) {
     return failure(error);
   }
-}
+});
 
-export async function PATCH(request: Request) {
+export const PATCH = withRequestMemo(async function PATCH(request: Request) {
   const member = await getCurrentMember();
   if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
   const value: unknown = await request.json().catch(() => null);
@@ -48,9 +49,9 @@ export async function PATCH(request: Request) {
   } catch (error) {
     return failure(error);
   }
-}
+});
 
-export async function POST(request: Request) {
+export const POST = withRequestMemo(async function POST(request: Request) {
   const member = await getCurrentMember();
   if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
   const value: unknown = await request.json().catch(() => null);
@@ -67,9 +68,9 @@ export async function POST(request: Request) {
   } catch (error) {
     return failure(error);
   }
-}
+});
 
-export async function DELETE(request: Request) {
+export const DELETE = withRequestMemo(async function DELETE(request: Request) {
   const member = await getCurrentMember();
   if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
   const value: unknown = await request.json().catch(() => null);
@@ -88,4 +89,4 @@ export async function DELETE(request: Request) {
   } catch (error) {
     return failure(error);
   }
-}
+});

@@ -2,11 +2,12 @@ import { NextResponse } from "next/server";
 import { getCurrentMember, hasRole } from "@/lib/auth/authorization";
 import { getBlobAuthOptions } from "@/lib/storage/blob-config";
 import { storeImage } from "@/lib/storage/image-storage";
+import { withRequestMemo } from "@/lib/storage/request-memo";
 
 const allowedTypes = new Set(["image/jpeg", "image/png", "image/webp", "image/avif"]);
 const maxUploadBytes = 5 * 1024 * 1024;
 
-export async function POST(request: Request) {
+export const POST = withRequestMemo(async function POST(request: Request) {
   const member = await getCurrentMember();
   if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
   if (!hasRole(member, "admin")) return NextResponse.json({ error: "Permesso admin richiesto." }, { status: 403 });
@@ -38,4 +39,4 @@ export async function POST(request: Request) {
     console.error("Unable to upload alliance image", error);
     return NextResponse.json({ error: "Caricamento immagine non riuscito." }, { status: 503 });
   }
-}
+});

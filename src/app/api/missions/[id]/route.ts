@@ -12,10 +12,11 @@ import { isValidNmsFriendCode } from "@/lib/members/member-types";
 import { readAllStationPortals, readStationPortals } from "@/lib/stations/stations-store";
 import { readAccessData } from "@/lib/members/access-store";
 import { serializeMission } from "@/lib/missions/mission-view";
+import { withRequestMemo } from "@/lib/storage/request-memo";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
-export async function PATCH(request: Request, context: RouteContext) {
+export const PATCH = withRequestMemo(async function PATCH(request: Request, context: RouteContext) {
   const input: unknown = await request.json().catch(() => null);
   const member = await getCurrentMember();
   if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
@@ -106,7 +107,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     console.error("Unable to update mission", error);
     return NextResponse.json({ error: "Impossibile aggiornare la missione." }, { status: 503 });
   }
-}
+});
 
 async function findStationOwner(publicId: string, portal: string, galaxy: number) {
   const access = await readAccessData();
@@ -119,7 +120,7 @@ async function findStationOwner(publicId: string, portal: string, galaxy: number
   return { publicId: owner.publicId, name: owner.nmsName || owner.name };
 }
 
-export async function DELETE(_request: Request, context: RouteContext) {
+export const DELETE = withRequestMemo(async function DELETE(_request: Request, context: RouteContext) {
   const member = await getCurrentMember();
   if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
   if (!hasRole(member, "moderator")) {
@@ -138,7 +139,7 @@ export async function DELETE(_request: Request, context: RouteContext) {
     console.error("Unable to delete mission", error);
     return NextResponse.json({ error: "Impossibile eliminare la missione." }, { status: 503 });
   }
-}
+});
 
 function isProgressUpdate(value: unknown): value is { status: MissionStatus; progress: number } {
   if (!value || typeof value !== "object") return false;

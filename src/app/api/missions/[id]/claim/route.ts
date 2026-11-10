@@ -5,10 +5,11 @@ import { isValidNmsFriendCode } from "@/lib/members/member-types";
 import type { Mission } from "@/lib/missions/missions";
 import { readAccessData } from "@/lib/members/access-store";
 import { serializeMission } from "@/lib/missions/mission-view";
+import { withRequestMemo } from "@/lib/storage/request-memo";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
-export async function POST(_request: Request, context: RouteContext) {
+export const POST = withRequestMemo(async function POST(_request: Request, context: RouteContext) {
   const member = await getCurrentMember();
   if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
   if (!member.nmsName.trim() || !isValidNmsFriendCode(member.nmsCode) || !member.specialty) {
@@ -44,4 +45,4 @@ export async function POST(_request: Request, context: RouteContext) {
     console.error("Unable to claim mission", error);
     return NextResponse.json({ error: "Impossibile prendere la missione." }, { status: 503 });
   }
-}
+});

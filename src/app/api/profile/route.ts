@@ -3,6 +3,7 @@ import { getCurrentMember } from "@/lib/auth/authorization";
 import { isMemberProfileInput, updateMemberProfile } from "@/lib/members/access-store";
 import { isFixedLocalAccount } from "@/lib/auth/local-auth";
 import { normalizeNmsFriendCode, type AllianceMember } from "@/lib/members/member-types";
+import { withRequestMemo } from "@/lib/storage/request-memo";
 
 const profileConflictMessages = {
   name: "members.duplicate_in_game_name",
@@ -23,7 +24,7 @@ function profileFieldsChanged(member: AllianceMember, input: Parameters<typeof u
     member.platforms.some((platform) => !platforms.has(platform))
   );
 }
-export async function GET() {
+export const GET = withRequestMemo(async function GET() {
   const member = await getCurrentMember({ allowPending: true });
   if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
   return NextResponse.json({
@@ -37,9 +38,9 @@ export async function GET() {
     pulseEffectsEnabled: member.pulseEffectsEnabled !== false,
     role: member.role,
   });
-}
+});
 
-export async function PATCH(request: Request) {
+export const PATCH = withRequestMemo(async function PATCH(request: Request) {
   const member = await getCurrentMember({ allowPending: true });
   if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
   const input: unknown = await request.json().catch(() => null);
@@ -70,4 +71,4 @@ export async function PATCH(request: Request) {
     pulseEffectsEnabled: updated.pulseEffectsEnabled !== false,
     role: updated.role,
   });
-}
+});

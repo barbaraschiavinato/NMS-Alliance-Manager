@@ -14,6 +14,7 @@ import { readAllStationPortals } from "@/lib/stations/stations-store";
 import { galaxyLabel } from "@/lib/planets/galaxies";
 import { isValidNmsFriendCode } from "@/lib/members/member-types";
 import { notifyTaxi } from "@/lib/notifications/taxi-notification-delivery";
+import { withRequestMemo } from "@/lib/storage/request-memo";
 
 function scheduleTaxiNotification(requestId: string, authorId: string, reply: boolean) {
   try {
@@ -231,5 +232,10 @@ export function createBroadcastRequestHandlers(kind: BroadcastKind) {
       return NextResponse.json({ error: "broadcast.archive_failed" }, { status: 503 });
     }
   }
-  return { GET, POST, DELETE, PATCH };
+  return {
+    GET: withRequestMemo(GET),
+    POST: withRequestMemo(POST),
+    DELETE: withRequestMemo(DELETE),
+    PATCH: withRequestMemo(PATCH),
+  };
 }

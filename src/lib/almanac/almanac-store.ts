@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import path from "node:path";
 import { localDataPath } from "@/lib/storage/local-data-path";
 import { getBlobAuthOptions } from "@/lib/storage/blob-config";
+import { clearRequestMemo, memoizedRead } from "@/lib/storage/request-memo";
 import { normalizeAlmanacPictures, normalizeAlmanacPlanet } from "@/lib/almanac/almanac-normalize";
 
 type AlmanacResponse = Record<string, unknown>;
@@ -30,7 +31,13 @@ function normalizeAlmanacIndex(value: unknown): AlmanacResponseIndex {
   return index;
 }
 
-async function readAlmanacIndex(): Promise<AlmanacResponseIndex> {
+// Plain reads share one copy per request; the serialized read-modify-write cycles below read the store directly, so a
+// write never starts from a copy older than the one it replaces.
+function readAlmanacIndex(): Promise<AlmanacResponseIndex> {
+  return memoizedRead("almanac", readAlmanacIndexFromStore);
+}
+
+async function readAlmanacIndexFromStore(): Promise<AlmanacResponseIndex> {
   const blobAuthOptions = getBlobAuthOptions();
   if (blobAuthOptions) {
     const blob = await get(blobPath, { access: "private", useCache: false, ...blobAuthOptions });
@@ -53,6 +60,14 @@ async function readAlmanacIndex(): Promise<AlmanacResponseIndex> {
 }
 
 async function writeAlmanacIndex(index: AlmanacResponseIndex): Promise<void> {
+  try {
+    await writeAlmanacIndexToStore(index);
+  } finally {
+    clearRequestMemo();
+  }
+}
+
+async function writeAlmanacIndexToStore(index: AlmanacResponseIndex): Promise<void> {
   const json = `${JSON.stringify(index, null, 2)}\n`;
   const blobAuthOptions = getBlobAuthOptions();
   if (blobAuthOptions) {
@@ -161,7 +176,7 @@ export async function writeAlmanacResponse(
 ): Promise<void> {
   const normalized = cacheOnly ? normalizeAlmanacPictures(response) : await normalizeAlmanacPlanet(response);
   await serialized(async () => {
-    const index = await readAlmanacIndex();
+    const index = await readAlmanacIndexFromStore();
     const canonicalCode = portalCode.toUpperCase();
     index[canonicalCode] ??= {};
     index[canonicalCode][String(galaxy)] = normalized;
@@ -189,7 +204,7 @@ export async function writeAlmanacResponses(
     })),
   );
   await serialized(async () => {
-    const index = await readAlmanacIndex();
+    const index = await readAlmanacIndexFromStore();
     for (const { portalCode, galaxy, response } of normalizedEntries) {
       const canonicalCode = portalCode.toUpperCase();
       index[canonicalCode] ??= {};

@@ -3,13 +3,14 @@ import { getCurrentMember, hasRole } from "@/lib/auth/authorization";
 import { canViewMission } from "@/lib/missions/missions";
 import { readMissions } from "@/lib/missions/store";
 import { readAllStationPortals } from "@/lib/stations/stations-store";
+import { withRequestMemo } from "@/lib/storage/request-memo";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
-export async function GET(_request: Request, context: RouteContext) {
+export const GET = withRequestMemo(async function GET(_request: Request, context: RouteContext) {
   const member = await getCurrentMember();
   if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
 
@@ -34,4 +35,4 @@ export async function GET(_request: Request, context: RouteContext) {
     console.error("Unable to read mission station note", error);
     return NextResponse.json({ error: "Impossibile leggere le note della stazione." }, { status: 503 });
   }
-}
+});

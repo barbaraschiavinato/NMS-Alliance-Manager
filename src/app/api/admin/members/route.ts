@@ -22,6 +22,7 @@ import {
   notifyMemberStatusChanged,
   scheduleMemberNotification,
 } from "@/lib/notifications/member-notification-delivery";
+import { withRequestMemo } from "@/lib/storage/request-memo";
 
 function actorOf(member: AllianceMember) {
   return { name: member.nmsName || member.name, telegramName: member.telegramName };
@@ -31,7 +32,7 @@ const profileConflictMessages = {
   name: "members.duplicate_in_game_name",
   code: "members.duplicate_friend_code",
 } as const;
-export async function GET() {
+export const GET = withRequestMemo(async function GET() {
   const member = await getCurrentMember();
   if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
   if (!hasRole(member, "moderator"))
@@ -47,9 +48,9 @@ export async function GET() {
       };
     }),
   );
-}
+});
 
-export async function PATCH(request: Request) {
+export const PATCH = withRequestMemo(async function PATCH(request: Request) {
   const member = await getCurrentMember();
   if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
   if (!hasRole(member, "moderator"))
@@ -121,9 +122,9 @@ export async function PATCH(request: Request) {
     notifyMemberRoleChanged(target.publicId, target.role, role as MemberRole, actorOf(member)),
   );
   return NextResponse.json({ ok: true });
-}
+});
 
-export async function DELETE(request: Request) {
+export const DELETE = withRequestMemo(async function DELETE(request: Request) {
   const member = await getCurrentMember();
   if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
   if (!hasRole(member, "moderator"))
@@ -161,8 +162,8 @@ export async function DELETE(request: Request) {
     }
   }
   return NextResponse.json({ ok: true });
-}
-export async function POST(request: Request) {
+});
+export const POST = withRequestMemo(async function POST(request: Request) {
   const member = await getCurrentMember();
   if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
   if (!hasRole(member, "moderator"))
@@ -196,4 +197,4 @@ export async function POST(request: Request) {
   if (typeof created === "string")
     return NextResponse.json({ error: profileConflictMessages[created] }, { status: 409 });
   return NextResponse.json(created, { status: 201 });
-}
+});

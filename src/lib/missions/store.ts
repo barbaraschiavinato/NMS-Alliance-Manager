@@ -3,6 +3,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { localDataPath } from "@/lib/storage/local-data-path";
 import { getBlobAuthOptions } from "@/lib/storage/blob-config";
+import { clearRequestMemo, memoizedRead } from "@/lib/storage/request-memo";
 import {
   isMissionPriority,
   isMissionStatus,
@@ -130,7 +131,11 @@ async function readAndMigrateMissions(value: unknown): Promise<Mission[]> {
   return migrated.missions;
 }
 
-export async function readMissions(): Promise<Mission[]> {
+export function readMissions(): Promise<Mission[]> {
+  return memoizedRead("missions", readMissionsFromStore);
+}
+
+async function readMissionsFromStore(): Promise<Mission[]> {
   const blobAuthOptions = getBlobAuthOptions();
   if (blobAuthOptions) {
     const blob = await get(blobPath, { access: "private", useCache: false, ...blobAuthOptions });
@@ -147,6 +152,14 @@ export async function readMissions(): Promise<Mission[]> {
 }
 
 export async function writeMissions(missions: Mission[]): Promise<void> {
+  try {
+    await writeMissionsToStore(missions);
+  } finally {
+    clearRequestMemo();
+  }
+}
+
+async function writeMissionsToStore(missions: Mission[]): Promise<void> {
   const derivedFields = new Set([
     "stationOwnerEmail",
     "createdByEmail",

@@ -19,11 +19,12 @@ import {
   updateStationPortal,
 } from "@/lib/stations/stations-store";
 import { readMissions, writeMissions } from "@/lib/missions/store";
+import { withRequestMemo } from "@/lib/storage/request-memo";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function GET(request?: Request) {
+export const GET = withRequestMemo(async function GET(request?: Request) {
   const member = await getCurrentMember();
   if (!member) return NextResponse.json({ error: "stations.error_access_required" }, { status: 401 });
   try {
@@ -36,9 +37,9 @@ export async function GET(request?: Request) {
     console.error("Unable to read station portals", error);
     return NextResponse.json({ error: "stations.error_unable_to_read_stations" }, { status: 503 });
   }
-}
+});
 
-export async function POST(request: Request) {
+export const POST = withRequestMemo(async function POST(request: Request) {
   const member = await getCurrentMember();
   if (!member) return NextResponse.json({ error: "stations.error_access_required" }, { status: 401 });
   const body: unknown = await request.json().catch(() => null);
@@ -101,9 +102,9 @@ export async function POST(request: Request) {
     console.error("Unable to save station portal", error);
     return NextResponse.json({ error: "stations.error_unable_to_save_station" }, { status: 503 });
   }
-}
+});
 
-export async function DELETE(request: Request) {
+export const DELETE = withRequestMemo(async function DELETE(request: Request) {
   const member = await getCurrentMember();
   if (!member) return NextResponse.json({ error: "stations.error_access_required" }, { status: 401 });
   const body: unknown = await request.json().catch(() => null);
@@ -152,9 +153,9 @@ export async function DELETE(request: Request) {
     console.error("Unable to remove station portal", error);
     return NextResponse.json({ error: "stations.error_unable_to_remove_station" }, { status: 503 });
   }
-}
+});
 
-export async function PATCH(request: Request) {
+export const PATCH = withRequestMemo(async function PATCH(request: Request) {
   const member = await getCurrentMember();
   if (!member) return NextResponse.json({ error: "stations.error_access_required" }, { status: 401 });
 
@@ -299,7 +300,7 @@ export async function PATCH(request: Request) {
     console.error("Unable to update station portal", error);
     return NextResponse.json({ error: "stations.error_unable_to_update_station" }, { status: 503 });
   }
-}
+});
 
 async function readStations(member: AllianceMember, loadMissingZeroPlanets = true, cacheOnly = false) {
   const canViewAllStations =

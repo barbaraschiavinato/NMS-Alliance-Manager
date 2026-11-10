@@ -3,6 +3,7 @@ import { getCurrentMember, hasRole } from "@/lib/auth/authorization";
 import { readTaxiNotifications, saveTaxiNotificationSettings } from "@/lib/notifications/taxi-notifications-store";
 import { isTaxiNotificationSettings } from "@/lib/notifications/taxi-notifications";
 import { sendTaxiTest, taxiNotificationReadiness } from "@/lib/notifications/taxi-notification-delivery";
+import { withRequestMemo } from "@/lib/storage/request-memo";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -23,7 +24,7 @@ function failure(error: unknown) {
   );
 }
 
-export async function GET() {
+export const GET = withRequestMemo(async function GET() {
   const auth = await authorize();
   if (auth.error) return auth.error;
   try {
@@ -34,9 +35,9 @@ export async function GET() {
   } catch (error) {
     return failure(error);
   }
-}
+});
 
-export async function PATCH(request: Request) {
+export const PATCH = withRequestMemo(async function PATCH(request: Request) {
   const auth = await authorize();
   if (auth.error) return auth.error;
   const value: unknown = await request.json().catch(() => null);
@@ -59,9 +60,9 @@ export async function PATCH(request: Request) {
   } catch (error) {
     return failure(error);
   }
-}
+});
 
-export async function POST(request: Request) {
+export const POST = withRequestMemo(async function POST(request: Request) {
   const auth = await authorize();
   if (auth.error) return auth.error;
   const value: unknown = await request.json().catch(() => null);
@@ -78,4 +79,4 @@ export async function POST(request: Request) {
   } catch (error) {
     return failure(error);
   }
-}
+});
