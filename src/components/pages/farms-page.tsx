@@ -28,6 +28,7 @@ import type { PlanetDestination } from "@/components/cards/planet-destination-ca
 import { DetailBackLink, DetailSection, useDetailReturn } from "@/components/shared/detail-page";
 import { StationsPage, type StationDetail } from "@/components/pages/stations-page";
 import { detailOrigins, stationId, type DetailOrigin } from "@/lib/navigation/detail-links";
+import { dispatchAppEvent } from "@/lib/navigation/app-events";
 
 type FarmTab = "all" | "mine";
 type FarmFilterValues = Readonly<{ plant: string; mineral: string }>;
@@ -214,7 +215,7 @@ export function FarmsPage({
       ...(canChooseOwner ? { ownerId: values.ownerId || null } : {}),
     };
     setFarms(await farmRequest(editing ? "PATCH" : "POST", payload));
-    if (!editing) window.dispatchEvent(new Event("farms-changed"));
+    if (!editing) dispatchAppEvent("farms-changed");
     setDialog(null);
     setToast({ message: editing ? "farms.farm_updated" : "farms.farm_added", tone: "success" });
     if (detail) router.refresh();
@@ -224,7 +225,7 @@ export function FarmsPage({
     if (!window.confirm(t("farms.delete_farm_confirm", { farm: farm.name }))) return;
     try {
       setFarms(await farmRequest("DELETE", { id: farm.id }));
-      window.dispatchEvent(new Event("farms-changed"));
+      dispatchAppEvent("farms-changed");
       if (detail?.id === farm.id) {
         router.replace(returnDestination);
         return;

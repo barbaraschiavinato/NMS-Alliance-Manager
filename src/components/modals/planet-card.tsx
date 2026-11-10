@@ -8,6 +8,7 @@ import { galaxyLabel } from "@/lib/planets/galaxies";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useAlmanacCacheOnly } from "@/components/providers/almanac-cache-policy";
 import { almanacImageUrl, almanacSiteUrl } from "@/lib/almanac/almanac-config";
+import { dispatchAppEvent } from "@/lib/navigation/app-events";
 
 type PlanetRecord = Readonly<Record<string, unknown>>;
 type PlanetEntry = Readonly<{ portal: string; planet: PlanetRecord }>;
@@ -288,7 +289,7 @@ export function PlanetCard({
       setHelpOpen(false);
       setHelpBody("");
       setHelpAcknowledged(false);
-      window.dispatchEvent(new Event("help-requests-changed"));
+      dispatchAppEvent("help-requests-changed");
     } catch (error_: unknown) {
       setHelpError(error_ instanceof Error ? error_.message : "help.request_unable_to_save");
     } finally {

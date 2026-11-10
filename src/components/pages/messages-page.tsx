@@ -6,6 +6,7 @@ import { Tabs } from "@/components/layout/tabs";
 import { useEffect, useState, type ReactNode, type SubmitEvent } from "react";
 import { DetailLink as Link, useDetailReturn } from "@/components/shared/detail-page";
 import { Crosshair, MailCheck, Orbit, PawPrint } from "lucide-react";
+import { dispatchAppEvent } from "@/lib/navigation/app-events";
 
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
@@ -143,7 +144,7 @@ export function MessagesPage({
         method: "PATCH",
       });
     } finally {
-      window.dispatchEvent(new Event("messages-unread-changed"));
+      dispatchAppEvent("messages-unread-changed");
     }
   }
 

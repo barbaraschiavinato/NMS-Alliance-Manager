@@ -28,17 +28,24 @@ import {
   readSidebarCounts,
   subscribeSidebarCounts,
 } from "@/components/layout/sidebar-counts";
+import { dispatchAppEvent, onAppEvent, type AppEvent } from "@/lib/navigation/app-events";
 
 const counterRefreshMs = 2 * 60 * 1000;
+const sidebarCountEvents = [
+  "messages-unread-changed",
+  "help-requests-changed",
+  "taxi-requests-changed",
+  "farms-changed",
+  "pets-changed",
+] as const satisfies readonly AppEvent[];
 const planetCountKey = "nms-planet-count";
-const planetCountEvent = "planet-count-changed";
 
 function subscribePlanetCount(callback: () => void) {
   window.addEventListener("storage", callback);
-  window.addEventListener(planetCountEvent, callback);
+  const stopListening = onAppEvent("planet-count-changed", callback);
   return () => {
     window.removeEventListener("storage", callback);
-    window.removeEventListener(planetCountEvent, callback);
+    stopListening();
   };
 }
 
@@ -54,7 +61,7 @@ export function storePlanetCount(count: number) {
   try {
     if (window.localStorage.getItem(planetCountKey) === String(count)) return;
     window.localStorage.setItem(planetCountKey, String(count));
-    window.dispatchEvent(new Event(planetCountEvent));
+    dispatchAppEvent("planet-count-changed");
   } catch {
     // Il contatore è solo informativo.
   }
@@ -110,20 +117,13 @@ export function Sidebar({
     function refreshCounters() {
       if (document.visibilityState === "visible") reload();
     }
-    const changeEvents = [
-      "messages-unread-changed",
-      "help-requests-changed",
-      "taxi-requests-changed",
-      "farms-changed",
-      "pets-changed",
-    ];
-    for (const event of changeEvents) window.addEventListener(event, reload);
+    const stopListening = onAppEvent(sidebarCountEvents, reload);
     const interval = window.setInterval(refreshCounters, counterRefreshMs);
     document.addEventListener("visibilitychange", refreshCounters);
     return () => {
       window.clearInterval(interval);
       document.removeEventListener("visibilitychange", refreshCounters);
-      for (const event of changeEvents) window.removeEventListener(event, reload);
+      stopListening();
     };
   }, [currentMember.publicId]);
   const displayName = currentMember.nmsName || currentMember.name;
