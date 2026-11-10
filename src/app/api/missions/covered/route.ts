@@ -3,13 +3,14 @@ import { getCurrentMember } from "@/lib/auth/authorization";
 import { coveredSpecialties } from "@/lib/missions/missions";
 import { readMissions } from "@/lib/missions/store";
 import { withRequestMemo } from "@/lib/storage/request-memo";
+import { apiError, unauthorized } from "@/lib/utils/api-responses";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export const GET = withRequestMemo(async function GET() {
   const member = await getCurrentMember();
-  if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
+  if (!member) return unauthorized();
   try {
     const covered: Record<string, string[]> = {};
     for (const mission of await readMissions()) {
@@ -19,6 +20,6 @@ export const GET = withRequestMemo(async function GET() {
     return NextResponse.json({ covered });
   } catch (error) {
     console.error("Unable to read covered specialties", error);
-    return NextResponse.json({ error: "Impossibile leggere le missioni." }, { status: 503 });
+    return apiError("errors.unable_to_read_missions", 503);
   }
 });

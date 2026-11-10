@@ -38,7 +38,7 @@ describe("MemberNotificationAdmin", () => {
   it("warns when links or credentials are missing and shows server errors in Italian", async () => {
     mockFetch({
       [`GET ${url}`]: { ...state, readiness: { telegram: false, email: false, links: false } },
-      [`PATCH ${url}`]: () => json({ error: "Invalid member notification settings." }, 400),
+      [`PATCH ${url}`]: () => json({ error: "member_notifications.invalid_settings" }, 400),
     });
     const { user } = renderWithLocale(<MemberNotificationAdmin />, { locale: "it" });
     expect(await screen.findAllByText("Credenziali mancanti o non valide")).toHaveLength(2);

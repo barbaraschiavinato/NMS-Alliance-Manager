@@ -175,7 +175,7 @@ Each `src/app/<section>/page.tsx` is a thin server component. It loads access da
 
 - Italian is the primary language and English is also supported. The locale is chosen client-side (browser language, then a selector stored in the browser), and URLs never change.
 - `src/lib/translations.ts` merges the catalogs in `src/lib/translations/` (`en.ts`, `it.ts`, which is grouped by namespace). **Canonical keys are English strings.** A missing translation falls back to the key. Italian strings that are still used as keys in older components are mapped back automatically, and `aliases` in `it.ts` holds only extra legacy variants. Some keys are dotted ids (e.g. `missions.only_create_and_assign_your_specialty`).
-- Client components use `useLocale()` (`components/providers/locale-provider.tsx`). Server code uses `translate()`. API error messages are often Italian strings or translation keys that the client translates.
+- Client components use `useLocale()` (`components/providers/locale-provider.tsx`). Server code uses `translate()`. API errors are translation keys returned through the helpers in `src/lib/utils/api-responses.ts` (`unauthorized()`, `moderatorRequired()`, `adminRequired()`, `badRequest(key)`, `forbidden(key)`, `notFound(key)`, `conflict(key)`, `apiError(key, status)`); the client shows them with `t()`. Add new keys to both catalogs: `tests/lib/utils/api-responses.test.ts` fails on untranslated route keys.
 - `docs/manuale-utente.md` is the Italian user manual for the simple view. Update it when user-facing behaviour changes.
 
 ## Concerns and TODO tracking

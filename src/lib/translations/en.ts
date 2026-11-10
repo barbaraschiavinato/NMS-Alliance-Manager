@@ -1172,5 +1172,28 @@ export const translations: TranslationCatalog = {
       "Invalid image: use PNG, JPEG, WebP, or AVIF up to 5 MB.",
     "errors.image_upload_failed": "Image upload failed.",
     "errors.request_failed": "Request failed.",
+    "errors.invalid_data": "Invalid data.",
+    "errors.mission_of_this_type_already_exists_for_the_station":
+      "A mission of this type already exists for this station.",
+    "errors.offline_player_not_found": "Offline player not found.",
+    "errors.rangers_can_only_create_explorer_builder_missions_from_their_own_stations":
+      "Rangers can only create missions for Explorers and Builders, from their own stations.",
+    "errors.icon_not_configured": "Icon not configured.",
+    "errors.icon_not_found": "Icon not found.",
+    "errors.invalid_icon": "Invalid icon.",
+    "errors.unable_to_link_the_profile": "Unable to link the profile.",
+    "errors.unable_to_read_the_icon": "Unable to read the icon.",
+    "errors.unable_to_read_the_station_notes": "Unable to read the station notes.",
+    "errors.unable_to_save_the_planet_visit": "Unable to save the planet visit.",
+    "errors.mission_already_completed": "The mission is already completed.",
+    "errors.no_access_to_this_mission": "You don't have access to this mission.",
+    "errors.invalid_profile": "Invalid profile.",
+    "errors.you_can_only_update_your_group_statuses": "You can only update the statuses of your own group.",
+    "errors.you_can_only_mark_planets_of_your_stations_or_missions_as_visited":
+      "You can only mark as visited the planets of one of your stations or of a mission assigned to you.",
+    "errors.fixed_test_account_profiles_cannot_be_edited":
+      "This local account is fixed for testing: profiles cannot be edited.",
+    "errors.fixed_test_account_profile_cannot_be_edited":
+      "This local account is fixed for testing: the profile cannot be edited.",
   },
 };

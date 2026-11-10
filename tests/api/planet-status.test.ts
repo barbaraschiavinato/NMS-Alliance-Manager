@@ -334,7 +334,7 @@ describe("Ranger task authors", () => {
     signInAs(ranger);
     const res = await patch({ portal: THIRD_PORTAL, galaxy: 0, systemStatuses: ["station_claimed"] });
     expect(res.status).toBe(403);
-    expect((await res.json()).error).toBe("Questo task è già stato preso in carico da un altro membro.");
+    expect((await res.json()).error).toBe("errors.system_task_taken_by_another_member");
   });
 
   it("lets the author remove their task and forgets the author", async () => {

@@ -8,6 +8,7 @@ import { galaxyLabel } from "@/lib/planets/galaxies";
 import { translateAlmanacValue } from "@/lib/translations";
 import { buildWorkbook, workbookContentType } from "@/lib/utils/xlsx-workbook";
 import { withRequestMemo } from "@/lib/storage/request-memo";
+import { apiError, forbidden } from "@/lib/utils/api-responses";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -25,9 +26,9 @@ function resourceList(resources: readonly string[]) {
 
 export const GET = withRequestMemo(async function GET() {
   const member = await getCurrentMember();
-  if (!member) return NextResponse.json({ error: "farms.error_access_required" }, { status: 401 });
+  if (!member) return apiError("farms.error_access_required", 401);
   if (!hasRole(member, "moderator")) {
-    return NextResponse.json({ error: "farms.error_moderator_permission_required" }, { status: 403 });
+    return forbidden("farms.error_moderator_permission_required");
   }
 
   try {
@@ -87,6 +88,6 @@ export const GET = withRequestMemo(async function GET() {
     });
   } catch (error) {
     console.error("Unable to export farms", error);
-    return NextResponse.json({ error: "farms.error_unable_to_export" }, { status: 503 });
+    return apiError("farms.error_unable_to_export", 503);
   }
 });

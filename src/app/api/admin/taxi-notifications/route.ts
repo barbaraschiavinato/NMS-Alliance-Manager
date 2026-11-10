@@ -4,24 +4,21 @@ import { readTaxiNotifications, saveTaxiNotificationSettings } from "@/lib/notif
 import { isTaxiNotificationSettings } from "@/lib/notifications/taxi-notifications";
 import { sendTaxiTest, taxiNotificationReadiness } from "@/lib/notifications/taxi-notification-delivery";
 import { withRequestMemo } from "@/lib/storage/request-memo";
+import { adminRequired, apiError, badRequest, unauthorized } from "@/lib/utils/api-responses";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 async function authorize() {
   const member = await getCurrentMember();
-  if (!member) return { error: NextResponse.json({ error: "Accesso richiesto." }, { status: 401 }) };
-  if (!hasRole(member, "admin"))
-    return { error: NextResponse.json({ error: "Permesso admin richiesto." }, { status: 403 }) };
+  if (!member) return { error: unauthorized() };
+  if (!hasRole(member, "admin")) return { error: adminRequired() };
   return { member };
 }
 
 function failure(error: unknown) {
   console.error("Taxi notification administration failed", error instanceof Error ? error.message : "Unknown error");
-  return NextResponse.json(
-    { error: "Unable to configure or send taxi notifications. Check the channel configuration and server logs." },
-    { status: 503 },
-  );
+  return apiError("taxi_notifications.admin_error", 503);
 }
 
 export const GET = withRequestMemo(async function GET() {
@@ -41,8 +38,7 @@ export const PATCH = withRequestMemo(async function PATCH(request: Request) {
   const auth = await authorize();
   if (auth.error) return auth.error;
   const value: unknown = await request.json().catch(() => null);
-  if (!isTaxiNotificationSettings(value))
-    return NextResponse.json({ error: "Invalid taxi notification settings." }, { status: 400 });
+  if (!isTaxiNotificationSettings(value)) return badRequest("taxi_notifications.invalid_settings");
   const readiness = taxiNotificationReadiness();
   if (
     ((value.discordEnabled || value.telegramEnabled || value.pushEnabled) && !readiness.links) ||
@@ -50,10 +46,7 @@ export const PATCH = withRequestMemo(async function PATCH(request: Request) {
     (value.telegramEnabled && !readiness.telegram) ||
     (value.pushEnabled && !readiness.push)
   )
-    return NextResponse.json(
-      { error: "Configure the environment credentials before enabling this channel." },
-      { status: 400 },
-    );
+    return badRequest("taxi_notifications.configure_credentials");
   try {
     await saveTaxiNotificationSettings(value);
     return NextResponse.json({ settings: (await readTaxiNotifications()).settings, readiness });
@@ -72,7 +65,7 @@ export const POST = withRequestMemo(async function POST(request: Request) {
     !("channel" in value) ||
     (value.channel !== "discord" && value.channel !== "telegram" && value.channel !== "push")
   )
-    return NextResponse.json({ error: "Invalid notification channel." }, { status: 400 });
+    return badRequest("taxi_notifications.invalid_channel");
   try {
     await sendTaxiTest(value.channel, auth.member.publicId);
     return NextResponse.json({ ok: true });

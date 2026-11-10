@@ -209,7 +209,7 @@ export function TaxiPushPreferences() {
       }
     }
     load().catch((error: unknown) => {
-      if (active) setError(error instanceof Error ? error.message : "Unable to configure taxi push notifications.");
+      if (active) setError(error instanceof Error ? error.message : "taxi_notifications.push_error");
     });
     return () => {
       active = false;
@@ -225,7 +225,7 @@ export function TaxiPushPreferences() {
       setData({ ...current, enabled });
       setFeedback("Taxi notification settings saved.");
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Unable to configure taxi push notifications.");
+      setError(error instanceof Error ? error.message : "taxi_notifications.push_error");
     } finally {
       setBusy(false);
     }
@@ -257,7 +257,7 @@ export function TaxiPushPreferences() {
       await requestJson(url, "POST", current.toJSON());
       setFeedback("This browser is connected for taxi notifications.");
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Unable to configure taxi push notifications.");
+      setError(error instanceof Error ? error.message : "taxi_notifications.push_error");
     } finally {
       setBusy(false);
     }
@@ -273,7 +273,7 @@ export function TaxiPushPreferences() {
       setSubscription(null);
       setFeedback("This browser is disconnected.");
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Unable to configure taxi push notifications.");
+      setError(error instanceof Error ? error.message : "taxi_notifications.push_error");
     } finally {
       setBusy(false);
     }

@@ -6,13 +6,14 @@ import { normalizeAlmanacPlanet } from "@/lib/almanac/almanac-normalize";
 import { almanacRetryAfterSeconds, noteAlmanacRateLimit } from "@/lib/almanac/almanac-rate-limit";
 import { withRequestMemo } from "@/lib/storage/request-memo";
 import { almanacPlanetUrl } from "@/lib/almanac/almanac-config";
+import { apiError, badRequest, unauthorized } from "@/lib/utils/api-responses";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export const GET = withRequestMemo(async function GET(request: Request) {
   const member = await getCurrentMember();
-  if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
+  if (!member) return unauthorized();
 
   const params = new URL(request.url).searchParams;
   const address = (params.get("address") ?? "").toUpperCase();
@@ -28,7 +29,7 @@ export const GET = withRequestMemo(async function GET(request: Request) {
     galaxy < 0 ||
     galaxy > 255
   ) {
-    return NextResponse.json({ error: "Indirizzo portale o galassia non validi." }, { status: 400 });
+    return badRequest("errors.invalid_portal_address_or_galaxy");
   }
 
   const planetOneAddress = address.startsWith("0") ? `1${address.slice(1)}` : null;
@@ -78,7 +79,7 @@ export const GET = withRequestMemo(async function GET(request: Request) {
 
     if (almanacRetryAfterSeconds() > 0) {
       return NextResponse.json(
-        { error: "NMS Almanac non disponibile." },
+        { error: "planet.nms_almanac_is_unavailable" },
         { status: 429, headers: { "Cache-Control": "no-store" } },
       );
     }
@@ -95,13 +96,13 @@ export const GET = withRequestMemo(async function GET(request: Request) {
         const headers = new Headers({ "Cache-Control": "no-store" });
         const retryAfter = response.headers.get("Retry-After");
         if (retryAfter) headers.set("Retry-After", retryAfter);
-        return NextResponse.json({ error: "NMS Almanac non disponibile." }, { status: 429, headers });
+        return NextResponse.json({ error: "planet.nms_almanac_is_unavailable" }, { status: 429, headers });
       }
       if (!response.ok) {
         const headers = new Headers({ "Cache-Control": "no-store" });
         const retryAfter = response.headers.get("Retry-After");
         if (retryAfter) headers.set("Retry-After", retryAfter);
-        return NextResponse.json({ error: "NMS Almanac non disponibile." }, { status: 502, headers });
+        return NextResponse.json({ error: "planet.nms_almanac_is_unavailable" }, { status: 502, headers });
       }
 
       const result: unknown = await response.json();
@@ -131,7 +132,7 @@ export const GET = withRequestMemo(async function GET(request: Request) {
     return NextResponse.json({ found: false }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     console.error("Unable to verify portal address in NMS Almanac", error);
-    return NextResponse.json({ error: "NMS Almanac non disponibile." }, { status: 502 });
+    return apiError("planet.nms_almanac_is_unavailable", 502);
   }
 });
 

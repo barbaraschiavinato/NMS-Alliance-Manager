@@ -5,13 +5,14 @@ import { readAlmanacResponse } from "@/lib/almanac/almanac-store";
 import { decodePortalAddress } from "@/lib/missions/missions";
 import { almanacRetryAfterSeconds } from "@/lib/almanac/almanac-rate-limit";
 import { withRequestMemo } from "@/lib/storage/request-memo";
+import { apiError, badRequest, notFound, unauthorized } from "@/lib/utils/api-responses";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export const GET = withRequestMemo(async function GET(request: Request) {
   const member = await getCurrentMember();
-  if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
+  if (!member) return unauthorized();
 
   const params = new URL(request.url).searchParams;
   const address = (params.get("address") ?? "").toUpperCase();
@@ -27,7 +28,7 @@ export const GET = withRequestMemo(async function GET(request: Request) {
     galaxy < 0 ||
     galaxy > 255
   ) {
-    return NextResponse.json({ error: "Indirizzo portale o galassia non validi." }, { status: 400 });
+    return badRequest("errors.invalid_portal_address_or_galaxy");
   }
 
   try {
@@ -36,7 +37,7 @@ export const GET = withRequestMemo(async function GET(request: Request) {
         ? await readAlmanacResponse(address, galaxy, true)
         : await lookupAlmanacPlanet(address, galaxy);
     if (!planet) {
-      return NextResponse.json({ error: "planet.no_almanac_details_are_archived_for_this_mission" }, { status: 404 });
+      return notFound("planet.no_almanac_details_are_archived_for_this_mission");
     }
     return NextResponse.json({ planet }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
@@ -48,6 +49,6 @@ export const GET = withRequestMemo(async function GET(request: Request) {
       );
     }
     console.error("Unable to read archived Almanac planet", { address, galaxy }, error);
-    return NextResponse.json({ error: "planet.almanac_lookup_failed" }, { status: 503 });
+    return apiError("planet.almanac_lookup_failed", 503);
   }
 });

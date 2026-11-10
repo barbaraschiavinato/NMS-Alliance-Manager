@@ -4,6 +4,7 @@ import { canViewMission } from "@/lib/missions/missions";
 import { readMissions } from "@/lib/missions/store";
 import { readAllStationPortals } from "@/lib/stations/stations-store";
 import { withRequestMemo } from "@/lib/storage/request-memo";
+import { apiError, forbidden, notFound, unauthorized } from "@/lib/utils/api-responses";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -12,14 +13,14 @@ type RouteContext = { params: Promise<{ id: string }> };
 
 export const GET = withRequestMemo(async function GET(_request: Request, context: RouteContext) {
   const member = await getCurrentMember();
-  if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
+  if (!member) return unauthorized();
 
   try {
     const { id } = await context.params;
     const mission = (await readMissions()).find((candidate) => candidate.id === id);
-    if (!mission) return NextResponse.json({ error: "Missione non trovata." }, { status: 404 });
+    if (!mission) return notFound("errors.mission_not_found");
     if (!hasRole(member, "moderator") && !canViewMission(mission, member)) {
-      return NextResponse.json({ error: "Non hai accesso a questa missione." }, { status: 403 });
+      return forbidden("errors.no_access_to_this_mission");
     }
     const portal = mission.systemAddress.toUpperCase();
     const stations = (await readAllStationPortals()).filter(
@@ -33,6 +34,6 @@ export const GET = withRequestMemo(async function GET(_request: Request, context
     return NextResponse.json({ note: station?.note ?? null }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     console.error("Unable to read mission station note", error);
-    return NextResponse.json({ error: "Impossibile leggere le note della stazione." }, { status: 503 });
+    return apiError("errors.unable_to_read_the_station_notes", 503);
   }
 });

@@ -13,22 +13,31 @@ import { readAllStationPortals, readStationPortals } from "@/lib/stations/statio
 import { readAccessData } from "@/lib/members/access-store";
 import { serializeMission } from "@/lib/missions/mission-view";
 import { withRequestMemo } from "@/lib/storage/request-memo";
+import {
+  apiError,
+  badRequest,
+  conflict,
+  forbidden,
+  moderatorRequired,
+  notFound,
+  unauthorized,
+} from "@/lib/utils/api-responses";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
 export const PATCH = withRequestMemo(async function PATCH(request: Request, context: RouteContext) {
   const input: unknown = await request.json().catch(() => null);
   const member = await getCurrentMember();
-  if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
+  if (!member) return unauthorized();
 
   try {
     const { id } = await context.params;
     const missions = await readMissions();
     const index = missions.findIndex((mission) => mission.id === id);
-    if (index === -1) return NextResponse.json({ error: "Missione non trovata." }, { status: 404 });
+    if (index === -1) return notFound("errors.mission_not_found");
     let updated;
     if (hasRole(member, "moderator") && !isProgressUpdate(input)) {
-      if (!isMissionInput(input)) return NextResponse.json({ error: "Dati missione non validi." }, { status: 400 });
+      if (!isMissionInput(input)) return badRequest("errors.invalid_mission_data");
       const existingMission = missions[index];
       const stations = await readAllStationPortals();
       const conflictsWithRegisteredPlanet = [
@@ -41,10 +50,10 @@ export const PATCH = withRequestMemo(async function PATCH(request: Request, cont
         input.targetSpecialty !== existingMission.targetSpecialty &&
         specialtyAlreadyCovered(input.targetSpecialty, missions, input.systemAddress, input.galaxy, id)
       ) {
-        return NextResponse.json({ error: "Esiste già una missione di questo tipo per la stazione." }, { status: 409 });
+        return conflict("errors.mission_of_this_type_already_exists_for_the_station");
       }
       if (conflictsWithRegisteredPlanet) {
-        return NextResponse.json({ error: "errors.another_planet_from_system_already_registered" }, { status: 409 });
+        return conflict("errors.another_planet_from_system_already_registered");
       }
       const access = await readAccessData();
       const assignedMemberId = input.assignedMemberId?.trim() || undefined;
@@ -59,7 +68,7 @@ export const PATCH = withRequestMemo(async function PATCH(request: Request, cont
           )
         : null;
       if (assignedMemberId && !assignedMember && assignedMemberId !== existingMission.assignedMemberId) {
-        return NextResponse.json({ error: "Membro assegnatario non trovato." }, { status: 400 });
+        return badRequest("errors.assigned_member_not_found");
       }
       const stationOwner = input.stationOwnerMemberId
         ? await findStationOwner(input.stationOwnerMemberId, input.systemAddress, input.galaxy)
@@ -69,10 +78,7 @@ export const PATCH = withRequestMemo(async function PATCH(request: Request, cont
         !stationOwner &&
         input.stationOwnerMemberId !== existingMission.stationOwnerMemberId
       ) {
-        return NextResponse.json(
-          { error: "Lo scopritore selezionato non risulta proprietario della stazione." },
-          { status: 400 },
-        );
+        return badRequest("stations.the_selected_discoverer_is_not_the_station_owner");
       }
       updated = {
         ...input,
@@ -89,13 +95,10 @@ export const PATCH = withRequestMemo(async function PATCH(request: Request, cont
       };
     } else {
       if (missions[index].assignedMemberId !== member.publicId || !isProgressUpdate(input)) {
-        return NextResponse.json(
-          { error: "Puoi aggiornare solo l'avanzamento delle missioni assegnate a te." },
-          { status: 403 },
-        );
+        return forbidden("missions.you_can_only_update_progress_on_missions_assigned_to_you");
       }
       if (missions[index].status === "completed" && input.status === "completed") {
-        return NextResponse.json({ error: "La missione è già completata." }, { status: 409 });
+        return conflict("errors.mission_already_completed");
       }
       updated = { ...missions[index], ...input };
     }
@@ -105,7 +108,7 @@ export const PATCH = withRequestMemo(async function PATCH(request: Request, cont
     return NextResponse.json(serializeMission(updated, accessData.members));
   } catch (error) {
     console.error("Unable to update mission", error);
-    return NextResponse.json({ error: "Impossibile aggiornare la missione." }, { status: 503 });
+    return apiError("errors.unable_to_update_the_mission", 503);
   }
 });
 
@@ -122,22 +125,22 @@ async function findStationOwner(publicId: string, portal: string, galaxy: number
 
 export const DELETE = withRequestMemo(async function DELETE(_request: Request, context: RouteContext) {
   const member = await getCurrentMember();
-  if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
+  if (!member) return unauthorized();
   if (!hasRole(member, "moderator")) {
-    return NextResponse.json({ error: "Permesso moderator richiesto." }, { status: 403 });
+    return moderatorRequired();
   }
   try {
     const { id } = await context.params;
     const missions = await readMissions();
     const remaining = missions.filter((mission) => mission.id !== id);
     if (remaining.length === missions.length) {
-      return NextResponse.json({ error: "Missione non trovata." }, { status: 404 });
+      return notFound("errors.mission_not_found");
     }
     await writeMissions(remaining);
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("Unable to delete mission", error);
-    return NextResponse.json({ error: "Impossibile eliminare la missione." }, { status: 503 });
+    return apiError("errors.unable_to_delete_the_mission", 503);
   }
 });
 

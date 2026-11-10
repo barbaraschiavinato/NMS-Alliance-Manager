@@ -80,7 +80,7 @@ describe("PATCH /api/alliance", () => {
     signInAs(cast.admin);
     const response = await patch("{");
     expect(response.status).toBe(400);
-    expect(await response.json()).toEqual({ error: "Impostazioni non valide." });
+    expect(await response.json()).toEqual({ error: "errors.invalid_settings" });
   });
 
   it.each([

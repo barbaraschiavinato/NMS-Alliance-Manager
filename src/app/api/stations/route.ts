@@ -20,13 +20,14 @@ import {
 } from "@/lib/stations/stations-store";
 import { readMissions, writeMissions } from "@/lib/missions/store";
 import { withRequestMemo } from "@/lib/storage/request-memo";
+import { apiError, badRequest, conflict, forbidden, notFound } from "@/lib/utils/api-responses";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export const GET = withRequestMemo(async function GET(request?: Request) {
   const member = await getCurrentMember();
-  if (!member) return NextResponse.json({ error: "stations.error_access_required" }, { status: 401 });
+  if (!member) return apiError("stations.error_access_required", 401);
   try {
     const cacheOnly = request ? new URL(request.url).searchParams.get("cacheOnly") === "1" : false;
     return NextResponse.json(
@@ -35,13 +36,13 @@ export const GET = withRequestMemo(async function GET(request?: Request) {
     );
   } catch (error) {
     console.error("Unable to read station portals", error);
-    return NextResponse.json({ error: "stations.error_unable_to_read_stations" }, { status: 503 });
+    return apiError("stations.error_unable_to_read_stations", 503);
   }
 });
 
 export const POST = withRequestMemo(async function POST(request: Request) {
   const member = await getCurrentMember();
-  if (!member) return NextResponse.json({ error: "stations.error_access_required" }, { status: 401 });
+  if (!member) return apiError("stations.error_access_required", 401);
   const body: unknown = await request.json().catch(() => null);
   const payload = body && typeof body === "object" ? (body as Record<string, unknown>) : {};
   const portal = typeof payload.portal === "string" ? payload.portal.toUpperCase() : "";
@@ -58,13 +59,13 @@ export const POST = withRequestMemo(async function POST(request: Request) {
     galaxy < 0 ||
     galaxy > 255
   ) {
-    return NextResponse.json({ error: "stations.error_invalid_portal_and_galaxy" }, { status: 400 });
+    return badRequest("stations.error_invalid_portal_and_galaxy");
   }
   if (name.length > 80) {
-    return NextResponse.json({ error: "stations.error_station_name_too_long" }, { status: 400 });
+    return badRequest("stations.error_station_name_too_long");
   }
   if (note.length > 1000) {
-    return NextResponse.json({ error: "stations.error_station_note_too_long" }, { status: 400 });
+    return badRequest("stations.error_station_note_too_long");
   }
   try {
     const accessData = await readAccessData();
@@ -73,24 +74,21 @@ export const POST = withRequestMemo(async function POST(request: Request) {
       (candidate) => candidate.publicId === requestedOwnerId && candidate.membershipStatus === "approved",
     );
     if (!ownerMember) {
-      return NextResponse.json({ error: "stations.error_owner_must_be_approved" }, { status: 400 });
+      return badRequest("stations.error_owner_must_be_approved");
     }
     if (!isModerator && ownerMember.publicId !== member.publicId) {
-      return NextResponse.json({ error: "stations.error_cannot_create_stations_for_another_member" }, { status: 403 });
+      return forbidden("stations.error_cannot_create_stations_for_another_member");
     }
     const [stations, missions] = await Promise.all([readAllStationPortals(), readMissions()]);
     if (stations.some((station) => station.portal === portal && station.galaxy === galaxy)) {
-      return NextResponse.json(
-        { error: "stations.this_portal_is_already_in_the_selected_owner_s_list" },
-        { status: 409 },
-      );
+      return conflict("stations.this_portal_is_already_in_the_selected_owner_s_list");
     }
     const conflictsWithRegisteredPlanet = [
       ...missions.map((mission) => ({ portal: mission.systemAddress, galaxy: mission.galaxy })),
       ...stations.map((station) => ({ portal: station.portal, galaxy: station.galaxy })),
     ].some((entry) => isDifferentPlanetInSameSystem(portal, galaxy, entry.portal, entry.galaxy));
     if (conflictsWithRegisteredPlanet) {
-      return NextResponse.json({ error: "errors.another_planet_from_system_already_registered" }, { status: 409 });
+      return conflict("errors.another_planet_from_system_already_registered");
     }
     await addStationPortal(ownerMember.publicId, portal, galaxy, name, member.publicId, note);
     if (new URL(request.url).searchParams.get("cacheOnly") !== "1") await cacheStationPlanet(portal, galaxy);
@@ -100,13 +98,13 @@ export const POST = withRequestMemo(async function POST(request: Request) {
     );
   } catch (error) {
     console.error("Unable to save station portal", error);
-    return NextResponse.json({ error: "stations.error_unable_to_save_station" }, { status: 503 });
+    return apiError("stations.error_unable_to_save_station", 503);
   }
 });
 
 export const DELETE = withRequestMemo(async function DELETE(request: Request) {
   const member = await getCurrentMember();
-  if (!member) return NextResponse.json({ error: "stations.error_access_required" }, { status: 401 });
+  if (!member) return apiError("stations.error_access_required", 401);
   const body: unknown = await request.json().catch(() => null);
   const payload = body && typeof body === "object" ? (body as Record<string, unknown>) : {};
   const portal = typeof payload.portal === "string" ? payload.portal.toUpperCase() : "";
@@ -121,7 +119,7 @@ export const DELETE = withRequestMemo(async function DELETE(request: Request) {
     galaxy < 0 ||
     galaxy > 255
   ) {
-    return NextResponse.json({ error: "stations.error_invalid_portal_or_galaxy" }, { status: 400 });
+    return badRequest("stations.error_invalid_portal_or_galaxy");
   }
 
   try {
@@ -130,20 +128,17 @@ export const DELETE = withRequestMemo(async function DELETE(request: Request) {
     const ownerMember = accessData.members.find(
       (candidate) => candidate.publicId === (ownerId || member.publicId) && candidate.membershipStatus === "approved",
     );
-    if (!ownerMember) return NextResponse.json({ error: "stations.error_invalid_station_owner" }, { status: 400 });
+    if (!ownerMember) return badRequest("stations.error_invalid_station_owner");
     if (!isModerator && ownerMember.publicId !== member.publicId) {
-      return NextResponse.json({ error: "stations.error_cannot_remove_another_member_s_station" }, { status: 403 });
+      return forbidden("stations.error_cannot_remove_another_member_s_station");
     }
     const missions = await readMissions();
     if (missions.some((mission) => mission.systemAddress.toUpperCase() === portal && mission.galaxy === galaxy)) {
-      return NextResponse.json(
-        { error: "stations.error_station_associated_with_mission_cannot_be_removed" },
-        { status: 409 },
-      );
+      return conflict("stations.error_station_associated_with_mission_cannot_be_removed");
     }
     const ownedStations = await readStationPortals(ownerMember.publicId);
     if (!ownedStations.some((station) => station.portal === portal && station.galaxy === galaxy)) {
-      return NextResponse.json({ error: "stations.error_station_not_found_in_owner_archive" }, { status: 404 });
+      return notFound("stations.error_station_not_found_in_owner_archive");
     }
     await removeStationPortal(ownerMember.publicId, portal, galaxy);
     return NextResponse.json({
@@ -151,13 +146,13 @@ export const DELETE = withRequestMemo(async function DELETE(request: Request) {
     });
   } catch (error) {
     console.error("Unable to remove station portal", error);
-    return NextResponse.json({ error: "stations.error_unable_to_remove_station" }, { status: 503 });
+    return apiError("stations.error_unable_to_remove_station", 503);
   }
 });
 
 export const PATCH = withRequestMemo(async function PATCH(request: Request) {
   const member = await getCurrentMember();
-  if (!member) return NextResponse.json({ error: "stations.error_access_required" }, { status: 401 });
+  if (!member) return apiError("stations.error_access_required", 401);
 
   const body: unknown = await request.json().catch(() => null);
   const payload = body && typeof body === "object" && !Array.isArray(body) ? (body as Record<string, unknown>) : {};
@@ -194,7 +189,7 @@ export const PATCH = withRequestMemo(async function PATCH(request: Request) {
         ),
     )
   ) {
-    return NextResponse.json({ error: "stations.error_invalid_station_data" }, { status: 400 });
+    return badRequest("stations.error_invalid_station_data");
   }
   const isModerator = hasRole(member, "moderator");
 
@@ -207,10 +202,10 @@ export const PATCH = withRequestMemo(async function PATCH(request: Request) {
       (candidate) => candidate.publicId === ownerId && candidate.membershipStatus === "approved",
     );
     if (!currentOwner || !owner) {
-      return NextResponse.json({ error: "stations.error_invalid_station_owner" }, { status: 400 });
+      return badRequest("stations.error_invalid_station_owner");
     }
     if (!isModerator && (currentOwner.publicId !== member.publicId || owner.publicId !== member.publicId)) {
-      return NextResponse.json({ error: "stations.error_cannot_edit_another_member_s_station" }, { status: 403 });
+      return forbidden("stations.error_cannot_edit_another_member_s_station");
     }
     const [missions, stations, currentStations] = await Promise.all([
       readMissions(),
@@ -221,7 +216,7 @@ export const PATCH = withRequestMemo(async function PATCH(request: Request) {
       (station) => station.portal === currentPortal && station.galaxy === currentGalaxy,
     );
     if (!currentStation) {
-      return NextResponse.json({ error: "stations.error_station_not_found_in_owner_archive" }, { status: 404 });
+      return notFound("stations.error_station_not_found_in_owner_archive");
     }
     const hasAssociatedMission = missions.some(
       (mission) => mission.systemAddress.toUpperCase() === currentPortal && mission.galaxy === currentGalaxy,
@@ -232,7 +227,7 @@ export const PATCH = withRequestMemo(async function PATCH(request: Request) {
         galaxy !== currentGalaxy ||
         (!isModerator && owner.publicId !== currentOwner.publicId))
     ) {
-      return NextResponse.json({ error: "stations.error_station_associated_with_mission_title_only" }, { status: 409 });
+      return conflict("stations.error_station_associated_with_mission_title_only");
     }
     if (
       stations.some(
@@ -246,10 +241,7 @@ export const PATCH = withRequestMemo(async function PATCH(request: Request) {
           ),
       )
     ) {
-      return NextResponse.json(
-        { error: "stations.this_portal_is_already_in_the_selected_owner_s_list" },
-        { status: 409 },
-      );
+      return conflict("stations.this_portal_is_already_in_the_selected_owner_s_list");
     }
     const conflictsWithRegisteredPlanet = [
       ...missions.map((mission) => ({ portal: mission.systemAddress, galaxy: mission.galaxy })),
@@ -265,7 +257,7 @@ export const PATCH = withRequestMemo(async function PATCH(request: Request) {
         .map((station) => ({ portal: station.portal, galaxy: station.galaxy })),
     ].some((entry) => isDifferentPlanetInSameSystem(portal, galaxy, entry.portal, entry.galaxy));
     if (conflictsWithRegisteredPlanet) {
-      return NextResponse.json({ error: "errors.another_planet_from_system_already_registered" }, { status: 409 });
+      return conflict("errors.another_planet_from_system_already_registered");
     }
 
     const updated = await updateStationPortal(
@@ -279,7 +271,7 @@ export const PATCH = withRequestMemo(async function PATCH(request: Request) {
       note,
     );
     if (!updated) {
-      return NextResponse.json({ error: "stations.error_station_missing_or_portal_already_saved" }, { status: 409 });
+      return conflict("stations.error_station_missing_or_portal_already_saved");
     }
     if (currentOwner.publicId !== owner.publicId) {
       await writeMissions(
@@ -298,7 +290,7 @@ export const PATCH = withRequestMemo(async function PATCH(request: Request) {
     });
   } catch (error) {
     console.error("Unable to update station portal", error);
-    return NextResponse.json({ error: "stations.error_unable_to_update_station" }, { status: 503 });
+    return apiError("stations.error_unable_to_update_station", 503);
   }
 });
 

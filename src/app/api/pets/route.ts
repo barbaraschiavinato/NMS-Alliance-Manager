@@ -9,6 +9,7 @@ import { deleteImage, storeImage } from "@/lib/storage/image-storage";
 import { isSameSystem, stationDetailHref, type SystemIdentity } from "@/lib/navigation/detail-links";
 import { readVisibleStationPortals } from "@/lib/stations/visible-stations";
 import { withRequestMemo } from "@/lib/storage/request-memo";
+import { apiError, badRequest, forbidden, notFound } from "@/lib/utils/api-responses";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -125,20 +126,19 @@ async function petViews(member: AllianceMember, scope: PetScope = {}) {
 
 export const GET = withRequestMemo(async function GET(request?: Request) {
   const member = await getCurrentMember();
-  if (!member) return NextResponse.json({ error: "pets.error_access_required" }, { status: 401 });
+  if (!member) return apiError("pets.error_access_required", 401);
   const params = request ? new URL(request.url).searchParams : new URLSearchParams();
   if (params.get("count") === "1") {
-    if (!hasRole(member, "moderator"))
-      return NextResponse.json({ error: "pets.error_access_required" }, { status: 403 });
+    if (!hasRole(member, "moderator")) return forbidden("pets.error_access_required");
     try {
       return NextResponse.json({ count: (await readPets()).length }, { headers: { "Cache-Control": "no-store" } });
     } catch (error) {
       console.error("Unable to count pets", error);
-      return NextResponse.json({ error: "pets.error_unable_to_read" }, { status: 503 });
+      return apiError("pets.error_unable_to_read", 503);
     }
   }
   const system = parseSystemScope(params);
-  if (system === null) return NextResponse.json({ error: "farms.error_invalid_portal_and_galaxy" }, { status: 400 });
+  if (system === null) return badRequest("farms.error_invalid_portal_and_galaxy");
   const detailId = params.get("detailPet");
   try {
     const pets = await petViews(member, {
@@ -146,22 +146,21 @@ export const GET = withRequestMemo(async function GET(request?: Request) {
       system,
       samePlanet: params.get("samePlanet") === "1",
     });
-    if (detailId !== null && pets.length === 0)
-      return NextResponse.json({ error: "pets.error_not_found" }, { status: 404 });
+    if (detailId !== null && pets.length === 0) return notFound("pets.error_not_found");
     return NextResponse.json({ pets }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     console.error("Unable to read pets", error);
-    return NextResponse.json({ error: "pets.error_unable_to_read" }, { status: 503 });
+    return apiError("pets.error_unable_to_read", 503);
   }
 });
 
 export const POST = withRequestMemo(async function POST(request: Request) {
   const member = await getCurrentMember();
-  if (!member) return NextResponse.json({ error: "pets.error_access_required" }, { status: 401 });
+  if (!member) return apiError("pets.error_access_required", 401);
   const { payload, image } = await readSubmission(request);
   const parsed = parsePetInput(payload);
   if ("error" in parsed) return NextResponse.json({ error: parsed.error }, { status: 400 });
-  if (image && !isValidImage(image)) return NextResponse.json({ error: "pets.error_image_invalid" }, { status: 400 });
+  if (image && !isValidImage(image)) return badRequest("pets.error_image_invalid");
   let imagePath: string | undefined;
   try {
     const access = await readAccessData();
@@ -176,26 +175,25 @@ export const POST = withRequestMemo(async function POST(request: Request) {
   } catch (error) {
     console.error("Unable to save pet", error);
     await deleteImageQuietly(imagePath);
-    return NextResponse.json({ error: "pets.error_unable_to_save" }, { status: 503 });
+    return apiError("pets.error_unable_to_save", 503);
   }
 });
 
 export const PATCH = withRequestMemo(async function PATCH(request: Request) {
   const member = await getCurrentMember();
-  if (!member) return NextResponse.json({ error: "pets.error_access_required" }, { status: 401 });
+  if (!member) return apiError("pets.error_access_required", 401);
   const { payload, image } = await readSubmission(request);
   const id = typeof payload.id === "string" ? payload.id.trim() : "";
-  if (!id) return NextResponse.json({ error: "pets.error_not_found" }, { status: 404 });
+  if (!id) return notFound("pets.error_not_found");
   const parsed = parsePetInput(payload);
   if ("error" in parsed) return NextResponse.json({ error: parsed.error }, { status: 400 });
-  if (image && !isValidImage(image)) return NextResponse.json({ error: "pets.error_image_invalid" }, { status: 400 });
+  if (image && !isValidImage(image)) return badRequest("pets.error_image_invalid");
   let newImagePath: string | undefined;
   try {
     const [pets, access] = await Promise.all([readPets(), readAccessData()]);
     const current = pets.find((pet) => pet.id === id);
-    if (!current) return NextResponse.json({ error: "pets.error_not_found" }, { status: 404 });
-    if (!canManagePet(member, current))
-      return NextResponse.json({ error: "pets.error_cannot_edit_another_member_s_pet" }, { status: 403 });
+    if (!current) return notFound("pets.error_not_found");
+    if (!canManagePet(member, current)) return forbidden("pets.error_cannot_edit_another_member_s_pet");
     const owner = resolveOwner(member, access.members, payload.ownerId, current.ownerId);
     if ("error" in owner) return NextResponse.json({ error: owner.error }, { status: owner.status });
     if (image) {
@@ -210,32 +208,31 @@ export const PATCH = withRequestMemo(async function PATCH(request: Request) {
     );
     if (!pet) {
       await deleteImageQuietly(newImagePath);
-      return NextResponse.json({ error: "pets.error_not_found" }, { status: 404 });
+      return notFound("pets.error_not_found");
     }
     if (pet.imagePath !== current.imagePath) await deleteImageQuietly(current.imagePath);
     return NextResponse.json({ pet, pets: await petViews(member) });
   } catch (error) {
     console.error("Unable to update pet", error);
     await deleteImageQuietly(newImagePath);
-    return NextResponse.json({ error: "pets.error_unable_to_save" }, { status: 503 });
+    return apiError("pets.error_unable_to_save", 503);
   }
 });
 
 export const DELETE = withRequestMemo(async function DELETE(request: Request) {
   const member = await getCurrentMember();
-  if (!member) return NextResponse.json({ error: "pets.error_access_required" }, { status: 401 });
+  if (!member) return apiError("pets.error_access_required", 401);
   const { payload } = await readSubmission(request);
   const id = typeof payload.id === "string" ? payload.id.trim() : "";
   try {
     const current = (await readPets()).find((pet) => pet.id === id);
-    if (!current) return NextResponse.json({ error: "pets.error_not_found" }, { status: 404 });
-    if (!canManagePet(member, current))
-      return NextResponse.json({ error: "pets.error_cannot_remove_another_member_s_pet" }, { status: 403 });
+    if (!current) return notFound("pets.error_not_found");
+    if (!canManagePet(member, current)) return forbidden("pets.error_cannot_remove_another_member_s_pet");
     await removePet(id);
     await deleteImageQuietly(current.imagePath);
     return NextResponse.json({ pets: await petViews(member) });
   } catch (error) {
     console.error("Unable to remove pet", error);
-    return NextResponse.json({ error: "pets.error_unable_to_remove" }, { status: 503 });
+    return apiError("pets.error_unable_to_remove", 503);
   }
 });

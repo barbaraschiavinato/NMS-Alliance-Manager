@@ -44,6 +44,3 @@ Section accents (stations `#6cb4ff`, missions `#72d1c4`, planets `#b48cf2`, map 
 
 Farm and pet stores differ in roughly 100 of 274 lines, mostly type names, and repeat the same owner rules (regular users own what they save, staff may pick an approved owner or leave it unassigned) and offline-profile reassignment. Extract a shared owned-item helper (the JSON read/write is already shared through `storage/json-document.ts`).
 
-## T-3ob0r7: Shared API error responses
-
-`"Accesso richiesto."` is returned 34 times, `"Permesso moderator richiesto."` 7 and `"Permesso admin richiesto."` 4, and routes mix Italian strings with translation keys. Add helpers such as `forbidden()` / `notFound(key)` and move to translation keys.

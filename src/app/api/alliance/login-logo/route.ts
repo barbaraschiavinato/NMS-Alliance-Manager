@@ -1,7 +1,7 @@
-import { NextResponse } from "next/server";
 import { readAccessData } from "@/lib/members/access-store";
 import { readImage } from "@/lib/storage/image-storage";
 import { withRequestMemo } from "@/lib/storage/request-memo";
+import { apiError, notFound } from "@/lib/utils/api-responses";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -10,27 +10,27 @@ const allowedImageTypes = new Set(["image/jpeg", "image/png", "image/webp", "ima
 
 export const GET = withRequestMemo(async function GET() {
   const logoUrl = (await readAccessData()).alliance.logoUrl;
-  if (!logoUrl) return NextResponse.json({ error: "Logo non configurato." }, { status: 404 });
+  if (!logoUrl) return notFound("admin.logo_is_not_configured");
 
   let path: string;
   try {
     const url = new URL(logoUrl, "http://localhost");
     if (url.pathname !== "/api/alliance/image") {
-      return NextResponse.json({ error: "Logo non trovato." }, { status: 404 });
+      return notFound("errors.logo_not_found");
     }
     path = url.searchParams.get("path") ?? "";
   } catch {
-    return NextResponse.json({ error: "Logo non valido." }, { status: 404 });
+    return notFound("errors.invalid_logo");
   }
 
   if (!/^alliance-manager\/branding\/[a-f0-9-]+\.(jpg|png|webp|avif)$/i.test(path)) {
-    return NextResponse.json({ error: "Logo non trovato." }, { status: 404 });
+    return notFound("errors.logo_not_found");
   }
 
   try {
     const image = await readImage(path);
     if (!image || !allowedImageTypes.has(image.contentType)) {
-      return NextResponse.json({ error: "Logo non trovato." }, { status: 404 });
+      return notFound("errors.logo_not_found");
     }
 
     return new Response(image.body, {
@@ -42,6 +42,6 @@ export const GET = withRequestMemo(async function GET() {
     });
   } catch (error) {
     console.error("Unable to read public alliance login logo", error);
-    return NextResponse.json({ error: "Impossibile leggere il logo." }, { status: 503 });
+    return apiError("errors.unable_to_read_the_logo", 503);
   }
 });

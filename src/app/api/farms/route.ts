@@ -9,6 +9,7 @@ import { isSameSystem, stationDetailHref, type SystemIdentity } from "@/lib/navi
 import { readVisibleStationPortals } from "@/lib/stations/visible-stations";
 import { withRequestMemo } from "@/lib/storage/request-memo";
 import { almanacImageUrl } from "@/lib/almanac/almanac-config";
+import { apiError, badRequest, forbidden, notFound } from "@/lib/utils/api-responses";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -100,34 +101,32 @@ async function farmViews(member: AllianceMember, scope: FarmScope = {}) {
 
 export const GET = withRequestMemo(async function GET(request?: Request) {
   const member = await getCurrentMember();
-  if (!member) return NextResponse.json({ error: "farms.error_access_required" }, { status: 401 });
+  if (!member) return apiError("farms.error_access_required", 401);
   try {
     const params = request ? new URL(request.url).searchParams : new URLSearchParams();
     if (params.get("count") === "1") {
-      if (!hasRole(member, "moderator"))
-        return NextResponse.json({ error: "farms.error_access_required" }, { status: 403 });
+      if (!hasRole(member, "moderator")) return forbidden("farms.error_access_required");
       return NextResponse.json({ count: (await readFarms()).length }, { headers: { "Cache-Control": "no-store" } });
     }
     const detailId = params.get("detailFarm");
     const system = parseSystemScope(params);
-    if (system === null) return NextResponse.json({ error: "farms.error_invalid_portal_and_galaxy" }, { status: 400 });
+    if (system === null) return badRequest("farms.error_invalid_portal_and_galaxy");
     const farms = await farmViews(member, {
       detailId: detailId ?? undefined,
       system,
       samePlanet: params.get("samePlanet") === "1",
     });
-    if (detailId !== null && farms.length === 0)
-      return NextResponse.json({ error: "farms.error_not_found" }, { status: 404 });
+    if (detailId !== null && farms.length === 0) return notFound("farms.error_not_found");
     return NextResponse.json({ farms }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     console.error("Unable to read farms", error);
-    return NextResponse.json({ error: "farms.error_unable_to_read" }, { status: 503 });
+    return apiError("farms.error_unable_to_read", 503);
   }
 });
 
 export const POST = withRequestMemo(async function POST(request: Request) {
   const member = await getCurrentMember();
-  if (!member) return NextResponse.json({ error: "farms.error_access_required" }, { status: 401 });
+  if (!member) return apiError("farms.error_access_required", 401);
   const payload = await readPayload(request);
   const parsed = parseFarmInput(payload);
   if ("error" in parsed) return NextResponse.json({ error: parsed.error }, { status: 400 });
@@ -139,24 +138,23 @@ export const POST = withRequestMemo(async function POST(request: Request) {
     return NextResponse.json({ farm, farms: await farmViews(member) }, { status: 201 });
   } catch (error) {
     console.error("Unable to save farm", error);
-    return NextResponse.json({ error: "farms.error_unable_to_save" }, { status: 503 });
+    return apiError("farms.error_unable_to_save", 503);
   }
 });
 
 export const PATCH = withRequestMemo(async function PATCH(request: Request) {
   const member = await getCurrentMember();
-  if (!member) return NextResponse.json({ error: "farms.error_access_required" }, { status: 401 });
+  if (!member) return apiError("farms.error_access_required", 401);
   const payload = await readPayload(request);
   const id = typeof payload.id === "string" ? payload.id.trim() : "";
-  if (!id) return NextResponse.json({ error: "farms.error_not_found" }, { status: 404 });
+  if (!id) return notFound("farms.error_not_found");
   const parsed = parseFarmInput(payload);
   if ("error" in parsed) return NextResponse.json({ error: parsed.error }, { status: 400 });
   try {
     const [farms, access] = await Promise.all([readFarms(), readAccessData()]);
     const current = farms.find((farm) => farm.id === id);
-    if (!current) return NextResponse.json({ error: "farms.error_not_found" }, { status: 404 });
-    if (!canManageFarm(member, current))
-      return NextResponse.json({ error: "farms.error_cannot_edit_another_member_s_farm" }, { status: 403 });
+    if (!current) return notFound("farms.error_not_found");
+    if (!canManageFarm(member, current)) return forbidden("farms.error_cannot_edit_another_member_s_farm");
     const owner = resolveOwner(member, access.members, payload.ownerId, current.ownerId);
     if ("error" in owner) return NextResponse.json({ error: owner.error }, { status: owner.status });
     const input =
@@ -164,28 +162,27 @@ export const PATCH = withRequestMemo(async function PATCH(request: Request) {
         ? { ...parsed.input, systemName: current.systemName }
         : parsed.input;
     const farm = await updateFarm(id, input, owner.ownerId);
-    if (!farm) return NextResponse.json({ error: "farms.error_not_found" }, { status: 404 });
+    if (!farm) return notFound("farms.error_not_found");
     return NextResponse.json({ farm, farms: await farmViews(member) });
   } catch (error) {
     console.error("Unable to update farm", error);
-    return NextResponse.json({ error: "farms.error_unable_to_save" }, { status: 503 });
+    return apiError("farms.error_unable_to_save", 503);
   }
 });
 
 export const DELETE = withRequestMemo(async function DELETE(request: Request) {
   const member = await getCurrentMember();
-  if (!member) return NextResponse.json({ error: "farms.error_access_required" }, { status: 401 });
+  if (!member) return apiError("farms.error_access_required", 401);
   const payload = await readPayload(request);
   const id = typeof payload.id === "string" ? payload.id.trim() : "";
   try {
     const current = (await readFarms()).find((farm) => farm.id === id);
-    if (!current) return NextResponse.json({ error: "farms.error_not_found" }, { status: 404 });
-    if (!canManageFarm(member, current))
-      return NextResponse.json({ error: "farms.error_cannot_remove_another_member_s_farm" }, { status: 403 });
+    if (!current) return notFound("farms.error_not_found");
+    if (!canManageFarm(member, current)) return forbidden("farms.error_cannot_remove_another_member_s_farm");
     await removeFarm(id);
     return NextResponse.json({ farms: await farmViews(member) });
   } catch (error) {
     console.error("Unable to remove farm", error);
-    return NextResponse.json({ error: "farms.error_unable_to_remove" }, { status: 503 });
+    return apiError("farms.error_unable_to_remove", 503);
   }
 });

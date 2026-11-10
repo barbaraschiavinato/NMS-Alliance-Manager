@@ -3,10 +3,11 @@ import { getCurrentMember, hasRole } from "@/lib/auth/authorization";
 import { readAccessData } from "@/lib/members/access-store";
 import { isEmailAddress, isValidNmsFriendCode } from "@/lib/members/member-types";
 import { withRequestMemo } from "@/lib/storage/request-memo";
+import { moderatorRequired, notFound, unauthorized } from "@/lib/utils/api-responses";
 
 export const GET = withRequestMemo(async function GET(request: Request) {
   const member = await getCurrentMember();
-  if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
+  if (!member) return unauthorized();
   const data = await readAccessData();
   const searchParams = new URL(request.url).searchParams;
   const requestedIds = searchParams.get("ids");
@@ -28,7 +29,7 @@ export const GET = withRequestMemo(async function GET(request: Request) {
     const profile = data.members.find(
       (candidate) => candidate.publicId === publicId && candidate.membershipStatus === "approved",
     );
-    if (!profile) return NextResponse.json({ error: "Profilo membro non trovato." }, { status: 404 });
+    if (!profile) return notFound("errors.member_profile_not_found");
     return NextResponse.json({
       publicId: profile.publicId,
       name: isEmailAddress(profile.name) ? "" : profile.name,
@@ -44,8 +45,7 @@ export const GET = withRequestMemo(async function GET(request: Request) {
       ...(hasRole(member, "moderator") ? { role: profile.role } : {}),
     });
   }
-  if (!hasRole(member, "moderator"))
-    return NextResponse.json({ error: "Permesso moderator richiesto." }, { status: 403 });
+  if (!hasRole(member, "moderator")) return moderatorRequired();
   return NextResponse.json(
     data.members
       .filter(

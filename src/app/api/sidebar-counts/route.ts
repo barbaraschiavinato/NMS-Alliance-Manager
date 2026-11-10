@@ -4,6 +4,7 @@ import { readFarms } from "@/lib/farms/farms-store";
 import { readPrivateMessages } from "@/lib/messages/private-messages-store";
 import { readPets } from "@/lib/pets/pets-store";
 import { withRequestMemo } from "@/lib/storage/request-memo";
+import { unauthorized } from "@/lib/utils/api-responses";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -22,7 +23,7 @@ async function countOrNull(count: () => Promise<number>): Promise<number | null>
 
 export const GET = withRequestMemo(async function GET() {
   const member = await getCurrentMember();
-  if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
+  if (!member) return unauthorized();
 
   const isStaff = hasRole(member, "moderator");
   const openRequests = (kind: "help" | "taxi") => async () =>

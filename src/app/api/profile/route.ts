@@ -4,6 +4,7 @@ import { isMemberProfileInput, updateMemberProfile } from "@/lib/members/access-
 import { isFixedLocalAccount } from "@/lib/auth/local-auth";
 import { normalizeNmsFriendCode, type AllianceMember } from "@/lib/members/member-types";
 import { withRequestMemo } from "@/lib/storage/request-memo";
+import { badRequest, forbidden, notFound, unauthorized } from "@/lib/utils/api-responses";
 
 const profileConflictMessages = {
   name: "members.duplicate_in_game_name",
@@ -26,7 +27,7 @@ function profileFieldsChanged(member: AllianceMember, input: Parameters<typeof u
 }
 export const GET = withRequestMemo(async function GET() {
   const member = await getCurrentMember({ allowPending: true });
-  if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
+  if (!member) return unauthorized();
   return NextResponse.json({
     nmsName: member.nmsName,
     nmsCode: member.nmsCode,
@@ -42,22 +43,18 @@ export const GET = withRequestMemo(async function GET() {
 
 export const PATCH = withRequestMemo(async function PATCH(request: Request) {
   const member = await getCurrentMember({ allowPending: true });
-  if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
+  if (!member) return unauthorized();
   const input: unknown = await request.json().catch(() => null);
   if (!isMemberProfileInput(input)) {
-    return NextResponse.json(
-      { error: "Inserisci nome NMS, codice amico NMS di 13 caratteri alfanumerici e una specializzazione." },
-      { status: 400 },
+    return badRequest(
+      "profile.enter_an_nms_name_a_13_character_alphanumeric_friend_code_at_least_one_platform_and_a_specialty",
     );
   }
   if (isFixedLocalAccount(member.email) && profileFieldsChanged(member, input)) {
-    return NextResponse.json(
-      { error: "Questo account locale è fisso per i test: il profilo non è modificabile." },
-      { status: 403 },
-    );
+    return forbidden("errors.fixed_test_account_profile_cannot_be_edited");
   }
   const updated = await updateMemberProfile(member.email, input);
-  if (!updated) return NextResponse.json({ error: "Profilo non trovato." }, { status: 404 });
+  if (!updated) return notFound("errors.profile_not_found");
   if (typeof updated === "string")
     return NextResponse.json({ error: profileConflictMessages[updated] }, { status: 409 });
   return NextResponse.json({

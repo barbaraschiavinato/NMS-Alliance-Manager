@@ -15,6 +15,7 @@ import {
 import { readPlanetSystemStatuses } from "@/lib/planets/planet-system-status-store";
 import { buildWorkbook, workbookContentType } from "@/lib/utils/xlsx-workbook";
 import { withRequestMemo } from "@/lib/storage/request-memo";
+import { apiError, forbidden } from "@/lib/utils/api-responses";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -83,9 +84,9 @@ function memberDisplayName(member: Awaited<ReturnType<typeof readAccessData>>["m
 
 export const GET = withRequestMemo(async function GET() {
   const member = await getCurrentMember();
-  if (!member) return NextResponse.json({ error: "stations.error_access_required" }, { status: 401 });
+  if (!member) return apiError("stations.error_access_required", 401);
   if (!hasRole(member, "moderator")) {
-    return NextResponse.json({ error: "stations.error_moderator_permission_required" }, { status: 403 });
+    return forbidden("stations.error_moderator_permission_required");
   }
 
   try {
@@ -180,6 +181,6 @@ export const GET = withRequestMemo(async function GET() {
     });
   } catch (error) {
     console.error("Unable to export station portals", error);
-    return NextResponse.json({ error: "stations.error_unable_to_export_stations" }, { status: 503 });
+    return apiError("stations.error_unable_to_export_stations", 503);
   }
 });
