@@ -52,10 +52,6 @@ Section accents (stations `#6cb4ff`, missions `#72d1c4`, planets `#b48cf2`, map 
 
 The "New" window (7 days) is computed three times (`station-card/simple.tsx`, `station-card/extended.tsx`, `planet-list.tsx`); the 5 MB upload limit appears three times (`api/admin/upload`, `admin-panel.tsx`, `pets.ts`); farm and pet field length limits are identical under different names. Extract shared constants and an `isNewItem(createdAt, now)` helper.
 
-## T-1crna2: Typed environment configuration
-
-`process.env.ALLIANCE_ADMIN_EMAIL?.trim().toLowerCase()` is repeated eight times (`access-store.ts`, `stations-store.ts`, `api/admin/members`). Add an `allianceAdminEmail()` helper, and consider a `src/lib/config/env.ts` module that groups all environment variables (Blob, Telegram, Resend, VAPID, Discord) with one missing-configuration check.
-
 ## T-mxu22f: Typed client event names
 
 `farms-changed`, `pets-changed`, `taxi-requests-changed`, `help-requests-changed`, `messages-unread-changed` and `planet-count-changed` are string literals on both the dispatch and listen side. Add `src/lib/navigation/app-events.ts` with the names and typed `dispatchAppEvent` / `onAppEvent` helpers.

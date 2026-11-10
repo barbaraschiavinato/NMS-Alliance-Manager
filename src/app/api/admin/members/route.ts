@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { allianceAdminEmail } from "@/lib/auth/alliance-admin";
 import { getCurrentMember, hasRole } from "@/lib/auth/authorization";
 import { linkOfflineMember } from "@/lib/members/offline-members";
 import {
@@ -37,7 +38,7 @@ export const GET = withRequestMemo(async function GET() {
   if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
   if (!hasRole(member, "moderator"))
     return NextResponse.json({ error: "Permesso moderator richiesto." }, { status: 403 });
-  const protectedAdminEmail = process.env.ALLIANCE_ADMIN_EMAIL?.trim().toLowerCase();
+  const protectedAdminEmail = allianceAdminEmail();
   return NextResponse.json(
     (await readAccessData()).members.map((profile) => {
       const visibleProfile = { ...profile };
@@ -136,9 +137,8 @@ export const DELETE = withRequestMemo(async function DELETE(request: Request) {
   const removedEmail = (input as { email: string }).email.trim().toLowerCase();
   const access = await readAccessData();
   const removedMember = access.members.find((candidate) => candidate.email === removedEmail);
-  const adminMember = access.members.find(
-    (candidate) => candidate.email === process.env.ALLIANCE_ADMIN_EMAIL?.trim().toLowerCase(),
-  );
+  const adminEmail = allianceAdminEmail();
+  const adminMember = adminEmail ? access.members.find((candidate) => candidate.email === adminEmail) : undefined;
   const removed = await deleteMember((input as { email: string }).email, member.role, member.email);
   if (!removed || !removedMember)
     return NextResponse.json({ error: "Membro non trovato o non eliminabile con il tuo ruolo." }, { status: 404 });

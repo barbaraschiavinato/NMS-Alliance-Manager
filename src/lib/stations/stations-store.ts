@@ -1,4 +1,5 @@
 import { readJsonDocument, writeJsonDocument } from "@/lib/storage/json-document";
+import { allianceAdminEmail } from "@/lib/auth/alliance-admin";
 import { memoizedRead } from "@/lib/storage/request-memo";
 import { decodePortalAddress } from "@/lib/missions/missions";
 import { readAccessData } from "@/lib/members/access-store";
@@ -68,7 +69,7 @@ function normalizeStationIndex(
   if (!value || typeof value !== "object" || Array.isArray(value)) return { index: {}, migrated: false };
 
   const index: StationIndex = {};
-  const adminEmail = process.env.ALLIANCE_ADMIN_EMAIL?.trim().toLowerCase();
+  const adminEmail = allianceAdminEmail();
   let migrated = false;
   for (const [storedOwner, entries] of Object.entries(value)) {
     if (!Array.isArray(entries)) continue;
@@ -144,7 +145,7 @@ function readStationList(): Promise<StationList> {
 async function readStationListFromStore(): Promise<StationList> {
   const current = await readJsonDocument(stationsDocument);
   const access = await readAccessData();
-  const adminEmail = process.env.ALLIANCE_ADMIN_EMAIL?.trim().toLowerCase();
+  const adminEmail = allianceAdminEmail();
   const fallbackOwnerId = access.members.find((candidate) => candidate.email.toLowerCase() === adminEmail)?.publicId;
   if (current !== undefined) return normalizeStationList(current, fallbackOwnerId);
   const legacy = await readJsonDocument(legacyDocument);

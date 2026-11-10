@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { allianceAdminEmail } from "@/lib/auth/alliance-admin";
 import { readJsonDocument, writeJsonDocument } from "@/lib/storage/json-document";
 import { memoizedRead } from "@/lib/storage/request-memo";
 import {
@@ -164,7 +165,7 @@ export async function registerMember(identity: Pick<AllianceMember, "email" | "n
   const email = identity.email.trim().toLowerCase();
   const data = await readAccessData();
   const index = data.members.findIndex((member) => member.email === email);
-  const adminEmail = process.env.ALLIANCE_ADMIN_EMAIL?.trim().toLowerCase();
+  const adminEmail = allianceAdminEmail();
   const role: MemberRole = email === adminEmail ? "admin" : (data.members[index]?.role ?? "user");
   const existingMember = data.members[index];
   const membershipStatus = email === adminEmail ? "approved" : (existingMember?.membershipStatus ?? "pending");
@@ -306,7 +307,7 @@ export async function updateMemberApproval(
   actorRole: MemberRole,
 ) {
   const normalizedEmail = email.trim().toLowerCase();
-  const adminEmail = process.env.ALLIANCE_ADMIN_EMAIL?.trim().toLowerCase();
+  const adminEmail = allianceAdminEmail();
   if (!normalizedEmail || !membershipStatuses.includes(membershipStatus) || normalizedEmail === adminEmail) return null;
   const data = await readAccessData();
   const member = data.members.find((item) => item.email === normalizedEmail);
@@ -321,7 +322,7 @@ export async function updateMemberApproval(
 
 export async function deleteMember(email: string, actorRole: MemberRole, actorEmail: string) {
   const normalizedEmail = email.trim().toLowerCase();
-  const adminEmail = process.env.ALLIANCE_ADMIN_EMAIL?.trim().toLowerCase();
+  const adminEmail = allianceAdminEmail();
   const normalizedActorEmail = actorEmail.trim().toLowerCase();
   if (!normalizedEmail || normalizedEmail === adminEmail || normalizedEmail === normalizedActorEmail) return false;
   const data = await readAccessData();
@@ -406,7 +407,7 @@ export async function updateMemberProfile(email: string, profile: MemberProfileI
 
 export async function updateMemberRole(email: string, role: MemberRole) {
   const normalizedEmail = email.trim().toLowerCase();
-  const adminEmail = process.env.ALLIANCE_ADMIN_EMAIL?.trim().toLowerCase();
+  const adminEmail = allianceAdminEmail();
   if (!normalizedEmail || !memberRoles.includes(role) || normalizedEmail === adminEmail) return false;
   const data = await readAccessData();
   const member = data.members.find((item) => item.email === normalizedEmail);
