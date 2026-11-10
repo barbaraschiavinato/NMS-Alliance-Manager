@@ -3,15 +3,22 @@
 import { useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
-import { Egg, FileText, MapPin, Orbit, Pencil, Trash2 } from "lucide-react";
+import {
+  CoordinatesIcon,
+  DeleteIcon,
+  EditIcon,
+  EggTradeIcon,
+  NotesIcon,
+  PetTypeIcon,
+  petTypeIcons,
+  StationIcon,
+} from "@/components/shared/icons";
 import { DetailLink } from "@/components/shared/detail-page";
 import { GlyphStrip } from "@/components/shared/portal-address-field";
 import { PetImageDialog } from "@/components/modals/pet-image-dialog";
-import { PetTypeIcon } from "@/components/shared/pet-type-icon";
 import { MemberProfileLink } from "@/components/shared/member-profile-link";
 import { GalaxyLabel } from "@/components/cards/station-card/parts";
 import { useLocale } from "@/components/providers/locale-provider";
-import { petTypeIcons } from "@/lib/pets/pet-type-icons";
 import { petClassColors, petClassKeys, type Pet } from "@/lib/pets/pets";
 import { petDetailHref, type DetailOrigin } from "@/lib/navigation/detail-links";
 
@@ -101,7 +108,7 @@ export function PetCard({
                   onClick={() => onMessageOwner(pet)}
                   type="button"
                 >
-                  <Egg aria-hidden="true" size={15} />
+                  <EggTradeIcon aria-hidden="true" size={15} />
                 </button>
               ) : (
                 <span
@@ -110,7 +117,7 @@ export function PetCard({
                   data-tooltip={t("pets.egg_trade")}
                   role="img"
                 >
-                  <Egg aria-hidden="true" size={13} />
+                  <EggTradeIcon aria-hidden="true" size={13} />
                 </span>
               ))}
           </span>
@@ -142,14 +149,14 @@ export function PetCard({
       </ul>
       {pet.coordinates && (
         <p className="pet-card-coordinates">
-          <MapPin aria-hidden="true" size={12} />
+          <CoordinatesIcon aria-hidden="true" size={12} />
           <span>{t("farms.coordinates")}:</span> <code>{pet.coordinates}</code>
         </p>
       )}
       {pet.note && (
         <div className="pet-card-note">
           <span className="pet-card-label">
-            <FileText aria-hidden="true" size={12} />
+            <NotesIcon aria-hidden="true" size={12} />
             {t("pets.notes")}
           </span>
           <p>{pet.note}</p>
@@ -167,7 +174,7 @@ export function PetCard({
                 href={stationHref}
                 prefetch={false}
               >
-                <Orbit aria-hidden="true" size={14} />
+                <StationIcon aria-hidden="true" size={14} />
               </DetailLink>
             )}
             {actions && (
@@ -179,7 +186,7 @@ export function PetCard({
                   onClick={() => actions.onEdit(pet)}
                   type="button"
                 >
-                  <Pencil size={14} />
+                  <EditIcon size={14} />
                 </button>
                 <button
                   aria-label={t("pets.delete_pet_named", { pet: pet.name })}
@@ -188,7 +195,7 @@ export function PetCard({
                   onClick={() => actions.onRemove(pet)}
                   type="button"
                 >
-                  <Trash2 size={14} />
+                  <DeleteIcon size={14} />
                 </button>
               </>
             )}

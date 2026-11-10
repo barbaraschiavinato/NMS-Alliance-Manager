@@ -1,4 +1,5 @@
 import { decodePortalAddress } from "@/lib/missions/missions";
+import { coordinatesMaxLength, itemNameMaxLength, noteMaxLength, planetNameMaxLength } from "@/lib/utils/limits";
 
 export const petTypes = [
   "tropical",
@@ -69,12 +70,6 @@ export function isPetClassGrade(value: unknown): value is PetClassGrade {
 }
 
 export const petImageTypes = ["image/jpeg", "image/png", "image/webp", "image/avif"] as const;
-export const petImageMaxBytes = 5 * 1024 * 1024;
-
-export const petNameMaxLength = 80;
-export const petPlanetNameMaxLength = 80;
-export const petCoordinatesMaxLength = 60;
-export const petNoteMaxLength = 1000;
 
 export const petImagePathPattern = /^alliance-manager\/pets\/[a-f0-9-]{36}\.(jpg|png|webp|avif)$/i;
 
@@ -144,7 +139,7 @@ export function parsePetInput(value: unknown): { input: PetInput } | { error: st
   const note = text(payload.note);
   const decoded = decodePortalAddress(portal);
   if (!name) return { error: "pets.error_name_required" };
-  if (name.length > petNameMaxLength) return { error: "pets.error_name_too_long" };
+  if (name.length > itemNameMaxLength) return { error: "pets.error_name_too_long" };
   if (!isPetType(payload.petType)) return { error: "pets.error_type_required" };
   if (!isPetActivity(payload.activity)) return { error: "pets.error_invalid_activity" };
   if (!isPetHabitat(payload.habitat)) return { error: "pets.error_invalid_habitat" };
@@ -155,9 +150,9 @@ export function parsePetInput(value: unknown): { input: PetInput } | { error: st
   if (decoded?.kind !== "portal" || decoded.errors.length > 0 || !isValidGalaxy(payload.galaxy))
     return { error: "farms.error_invalid_portal_and_galaxy" };
   if (!planetName) return { error: "farms.error_planet_name_required" };
-  if (planetName.length > petPlanetNameMaxLength) return { error: "farms.error_planet_name_too_long" };
-  if (coordinates.length > petCoordinatesMaxLength) return { error: "farms.error_coordinates_too_long" };
-  if (note.length > petNoteMaxLength) return { error: "farms.error_note_too_long" };
+  if (planetName.length > planetNameMaxLength) return { error: "farms.error_planet_name_too_long" };
+  if (coordinates.length > coordinatesMaxLength) return { error: "farms.error_coordinates_too_long" };
+  if (note.length > noteMaxLength) return { error: "farms.error_note_too_long" };
   return {
     input: {
       name,
@@ -183,7 +178,7 @@ export function normalizeStoredPet(value: unknown): Pet | null {
   const id = text(entry.id);
   const ownerId = entry.ownerId === null ? null : text(entry.ownerId);
   const portal = text(entry.portal).toUpperCase();
-  const name = text(entry.name).slice(0, petNameMaxLength);
+  const name = text(entry.name).slice(0, itemNameMaxLength);
   const decoded = decodePortalAddress(portal);
   const classes = parseClasses(entry.classes);
   if (!id || ownerId === "" || !name || !classes || !isPetType(entry.petType)) return null;
@@ -194,8 +189,8 @@ export function normalizeStoredPet(value: unknown): Pet | null {
       : new Date(0).toISOString();
   const updatedAt =
     typeof entry.updatedAt === "string" && Number.isFinite(Date.parse(entry.updatedAt)) ? entry.updatedAt : "";
-  const coordinates = text(entry.coordinates).slice(0, petCoordinatesMaxLength);
-  const note = text(entry.note).slice(0, petNoteMaxLength);
+  const coordinates = text(entry.coordinates).slice(0, coordinatesMaxLength);
+  const note = text(entry.note).slice(0, noteMaxLength);
   const imagePath = text(entry.imagePath);
   const createdByMemberId = text(entry.createdByMemberId);
   return {
@@ -209,7 +204,7 @@ export function normalizeStoredPet(value: unknown): Pet | null {
     classes,
     portal,
     galaxy: entry.galaxy,
-    planetName: text(entry.planetName).slice(0, petPlanetNameMaxLength),
+    planetName: text(entry.planetName).slice(0, planetNameMaxLength),
     ...(coordinates ? { coordinates } : {}),
     ...(note ? { note } : {}),
     ...(petImagePathPattern.test(imagePath) ? { imagePath } : {}),

@@ -1,29 +1,15 @@
-import { get, put } from "@vercel/blob";
 import { randomUUID } from "node:crypto";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
-import path from "node:path";
-import { localDataPath } from "@/lib/storage/local-data-path";
-import { getBlobAuthOptions } from "@/lib/storage/blob-config";
+import { readJsonDocument, writeJsonDocument } from "@/lib/storage/json-document";
+import { memoizedRead } from "@/lib/storage/request-memo";
+import { reassignOwnedItems } from "@/lib/members/owned-items";
 import { normalizeStoredFarm, type Farm, type FarmInput } from "@/lib/farms/farms";
 
-const blobPath = "alliance-manager/farms.json";
-const localPath = () => localDataPath("farms.json");
+export function readFarms(): Promise<Farm[]> {
+  return memoizedRead("farms", readFarmsFromStore);
+}
 
-export async function readFarms(): Promise<Farm[]> {
-  let raw: unknown;
-  const blobAuthOptions = getBlobAuthOptions();
-  if (blobAuthOptions) {
-    const blob = await get(blobPath, { access: "private", useCache: false, ...blobAuthOptions });
-    if (!blob || blob.statusCode === 304) return [];
-    raw = JSON.parse(await new Response(blob.stream).text());
-  } else {
-    try {
-      raw = JSON.parse(await readFile(localPath(), "utf8"));
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code === "ENOENT") return [];
-      throw error;
-    }
-  }
+async function readFarmsFromStore(): Promise<Farm[]> {
+  const raw = await readJsonDocument("farms");
   if (!Array.isArray(raw)) return [];
   const seen = new Set<string>();
   return raw.flatMap((entry) => {
@@ -34,22 +20,8 @@ export async function readFarms(): Promise<Farm[]> {
   });
 }
 
-async function writeFarms(farms: readonly Farm[]): Promise<void> {
-  const json = `${JSON.stringify(farms, null, 2)}\n`;
-  const blobAuthOptions = getBlobAuthOptions();
-  if (blobAuthOptions) {
-    await put(blobPath, json, {
-      access: "private",
-      ...blobAuthOptions,
-      addRandomSuffix: false,
-      allowOverwrite: true,
-      contentType: "application/json",
-    });
-    return;
-  }
-  const filePath = localPath();
-  await mkdir(path.dirname(filePath), { recursive: true });
-  await writeFile(filePath, json, "utf8");
+function writeFarms(farms: readonly Farm[]): Promise<void> {
+  return writeJsonDocument("farms", farms);
 }
 
 function farmFields(input: FarmInput) {
@@ -103,13 +75,6 @@ export async function removeFarm(id: string): Promise<boolean> {
 }
 
 export async function reassignFarmOwner(fromMemberId: string, toMemberId: string): Promise<void> {
-  const farms = await readFarms();
-  if (!farms.some((farm) => farm.ownerId === fromMemberId || farm.createdByMemberId === fromMemberId)) return;
-  await writeFarms(
-    farms.map((farm) => ({
-      ...farm,
-      ownerId: farm.ownerId === fromMemberId ? toMemberId : farm.ownerId,
-      ...(farm.createdByMemberId === fromMemberId ? { createdByMemberId: toMemberId } : {}),
-    })),
-  );
+  const reassigned = reassignOwnedItems(await readFarms(), fromMemberId, toMemberId);
+  if (reassigned) await writeFarms(reassigned);
 }

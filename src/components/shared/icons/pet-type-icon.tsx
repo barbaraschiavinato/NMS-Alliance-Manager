@@ -1,4 +1,4 @@
-import { petTypeIcons } from "@/lib/pets/pet-type-icons";
+import { petTypeIcons } from "./pet-type-icons";
 import type { PetType } from "@/lib/pets/pets";
 
 export function PetTypeIcon({

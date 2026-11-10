@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CircleAlert, MessageSquareText, Send, X } from "lucide-react";
+import { AlertIcon, CloseIcon, SendIcon, WriteMessageIcon } from "@/components/shared/icons";
 import type { MemberRole, MemberSpecialty, NmsPlatform } from "@/lib/members/member-types";
 import { formatNmsFriendCode } from "@/lib/members/member-types";
 import { useLocale } from "@/components/providers/locale-provider";
@@ -131,13 +131,13 @@ export function MemberCardDialog({
             <h2 id="member-card-title">{t(composing ? "profile.write_message" : "profile.nms_profile")}</h2>
           </div>
           <button aria-label={t("common.close")} className="icon-button" onClick={onClose} type="button">
-            <X size={18} />
+            <CloseIcon size={18} />
           </button>
         </div>
         {loading && <p>{t("profile.loading_profile")}</p>}
         {error && (
           <p className="form-error">
-            <CircleAlert size={15} />
+            <AlertIcon size={15} />
             {t(error)}
           </p>
         )}
@@ -203,7 +203,7 @@ export function MemberCardDialog({
                 }}
                 type="button"
               >
-                <MessageSquareText size={15} />
+                <WriteMessageIcon size={15} />
                 {t("profile.leave_a_message")}
               </button>
             )}
@@ -254,7 +254,7 @@ export function MemberCardDialog({
               </label>
               {messageError && (
                 <p className="form-error">
-                  <CircleAlert size={15} />
+                  <AlertIcon size={15} />
                   {t(messageError)}
                 </p>
               )}
@@ -271,7 +271,7 @@ export function MemberCardDialog({
                 </button>
                 <button className="primary-button" disabled={sending || !message.trim() || !acknowledged} type="submit">
                   {sending ? t("common.saving") : t("profile.send_message")}
-                  <Send size={14} />
+                  <SendIcon size={14} />
                 </button>
               </div>
             </form>

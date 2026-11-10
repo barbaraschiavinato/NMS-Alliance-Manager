@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { Check, CircleAlert, X } from "lucide-react";
+import { AlertIcon, CheckIcon, CloseIcon } from "@/components/shared/icons";
 import { useLocale } from "@/components/providers/locale-provider";
 
 export function Toast({
@@ -16,13 +16,13 @@ export function Toast({
     const timer = setTimeout(onClose, autoCloseMs);
     return () => clearTimeout(timer);
   }, [autoCloseMs, message, onClose]);
-  const Icon = tone === "error" ? CircleAlert : Check;
+  const Icon = tone === "error" ? AlertIcon : CheckIcon;
   const content = (
     <>
       <Icon aria-hidden="true" size={15} />
       <span>{t(message)}</span>
       <button aria-label={t("common.close_notification")} onClick={onClose} type="button">
-        <X size={14} />
+        <CloseIcon size={14} />
       </button>
     </>
   );

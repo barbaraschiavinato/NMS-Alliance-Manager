@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Search, SlidersHorizontal } from "lucide-react";
+import { FiltersIcon, SearchIcon } from "@/components/shared/icons";
 import type { AllianceMember, AllianceSettings } from "@/lib/members/member-types";
 import { galaxyNames } from "@/lib/planets/galaxies";
 import { listPageSize } from "@/lib/navigation/pagination";
@@ -28,6 +28,7 @@ import { PlanetsPage } from "@/components/pages/planets-page";
 import { StationsPage, type StationDetail } from "@/components/pages/stations-page";
 import type { PlanetDestination } from "@/components/cards/planet-destination-card";
 import { DetailBackLink, DetailSection, useDetailReturn } from "@/components/shared/detail-page";
+import { dispatchAppEvent } from "@/lib/navigation/app-events";
 
 type PetTab = "all" | "mine";
 type ToastState = Readonly<{ message: string; tone: "success" | "error" }>;
@@ -199,7 +200,7 @@ export function PetsPage({
       ...(removeImage ? { removeImage: true } : {}),
     };
     setPets(await petRequest(editing ? "PATCH" : "POST", payload, image));
-    if (!editing) window.dispatchEvent(new Event("pets-changed"));
+    if (!editing) dispatchAppEvent("pets-changed");
     setDialog(null);
     setToast({ message: editing ? "pets.pet_updated" : "pets.pet_added", tone: "success" });
     if (detail) router.refresh();
@@ -209,7 +210,7 @@ export function PetsPage({
     if (!window.confirm(t("pets.delete_pet_confirm", { pet: pet.name }))) return;
     try {
       setPets(await petRequest("DELETE", { id: pet.id }));
-      window.dispatchEvent(new Event("pets-changed"));
+      dispatchAppEvent("pets-changed");
       if (detail?.id === pet.id) {
         router.replace(returnDestination);
         return;
@@ -332,7 +333,7 @@ export function PetsPage({
                 />
                 <div className="toolbar-actions station-toolbar-actions">
                   <label className="search-field member-search station-search">
-                    <Search size={15} />
+                    <SearchIcon size={15} />
                     <input
                       aria-label={t("pets.search_pets")}
                       onChange={(event) => setSearch(event.target.value)}
@@ -350,7 +351,7 @@ export function PetsPage({
                     onClick={() => setFiltersOpen((open) => !open)}
                     type="button"
                   >
-                    <SlidersHorizontal aria-hidden="true" size={14} />
+                    <FiltersIcon aria-hidden="true" size={14} />
                   </button>
                 </div>
               </div>

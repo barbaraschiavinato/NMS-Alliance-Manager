@@ -1,20 +1,21 @@
 import { NextResponse } from "next/server";
 import { getCurrentMember, hasRole } from "@/lib/auth/authorization";
 import { readAccessData, updateAllianceSettings } from "@/lib/members/access-store";
+import { withRequestMemo } from "@/lib/storage/request-memo";
+import { adminRequired, badRequest, unauthorized } from "@/lib/utils/api-responses";
 
-export async function GET() {
+export const GET = withRequestMemo(async function GET() {
   const member = await getCurrentMember();
-  if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
+  if (!member) return unauthorized();
   return NextResponse.json((await readAccessData()).alliance);
-}
+});
 
-export async function PATCH(request: Request) {
+export const PATCH = withRequestMemo(async function PATCH(request: Request) {
   const member = await getCurrentMember();
-  if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
-  if (!hasRole(member, "admin")) return NextResponse.json({ error: "Permesso admin richiesto." }, { status: 403 });
+  if (!member) return unauthorized();
+  if (!hasRole(member, "admin")) return adminRequired();
   const input: unknown = await request.json().catch(() => null);
-  if (!input || typeof input !== "object")
-    return NextResponse.json({ error: "Impostazioni non valide." }, { status: 400 });
+  if (!input || typeof input !== "object") return badRequest("errors.invalid_settings");
   const value = input as Record<string, unknown>;
   if (
     typeof value.name !== "string" ||
@@ -42,10 +43,7 @@ export async function PATCH(request: Request) {
     !isIconUrl(value.appIcon512Url) ||
     (value.heroGradientMode !== "none" && value.heroGradientMode !== "left" && value.heroGradientMode !== "full")
   ) {
-    return NextResponse.json(
-      { error: "Controlla il nome, il codice portale, la galassia, le immagini e i link Discord/Telegram." },
-      { status: 400 },
-    );
+    return badRequest("admin.check_the_alliance_name_images_and_discord_telegram_links");
   }
   const settings = await updateAllianceSettings({
     name: value.name.trim(),
@@ -62,7 +60,7 @@ export async function PATCH(request: Request) {
     appIcon512Url: value.appIcon512Url,
   });
   return NextResponse.json(settings);
-}
+});
 
 function isIconUrl(value: unknown): value is string {
   if (typeof value !== "string" || value.length > 500) return false;

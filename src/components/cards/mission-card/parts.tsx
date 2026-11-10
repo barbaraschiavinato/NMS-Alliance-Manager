@@ -1,17 +1,17 @@
 import {
-  Check,
-  CirclePlus,
-  Compass,
-  FileText,
-  Hammer,
-  Info,
-  Orbit,
-  Pencil,
-  RotateCcw,
-  Search,
-  ShieldPlus,
-  Trash2,
-} from "lucide-react";
+  BuilderIcon,
+  CheckIcon,
+  CreateStationIcon,
+  DeleteIcon,
+  EditIcon,
+  ExplorerIcon,
+  NotesIcon,
+  PlanetNotesIcon,
+  RangerIcon,
+  ReopenIcon,
+  SpecialistRequestIcon,
+  StationIcon,
+} from "@/components/shared/icons";
 import Image from "next/image";
 import Link from "next/link";
 import { DetailLink } from "@/components/shared/detail-page";
@@ -33,6 +33,7 @@ import {
   stationDetailHref,
   type DetailOrigin,
 } from "@/lib/navigation/detail-links";
+import { almanacImageUrl } from "@/lib/almanac/almanac-config";
 
 export function asRecord(value: unknown): Record<string, unknown> | null {
   return value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : null;
@@ -106,13 +107,13 @@ export function MissionRowAction({
       type="button"
     >
       {requestedSpecialty === "builder" ? (
-        <Hammer size={15} />
+        <BuilderIcon size={15} />
       ) : requestedSpecialty === "ranger" ? (
-        <Compass size={15} />
+        <RangerIcon size={15} />
       ) : requestedSpecialty === "explorer" ? (
-        <Search size={15} />
+        <ExplorerIcon size={15} />
       ) : (
-        <ShieldPlus size={15} />
+        <SpecialistRequestIcon size={15} />
       )}
     </button>
   );
@@ -128,7 +129,7 @@ export function MissionRowAction({
             onClick={() => onReopen(mission)}
             type="button"
           >
-            <RotateCcw size={15} />
+            <ReopenIcon size={15} />
           </button>
         </span>
       );
@@ -147,7 +148,7 @@ export function MissionRowAction({
             onClick={() => onReopen(mission)}
             type="button"
           >
-            <RotateCcw size={15} />
+            <ReopenIcon size={15} />
           </button>
         )}
         <button
@@ -157,7 +158,7 @@ export function MissionRowAction({
           onClick={() => onEdit(mission)}
           type="button"
         >
-          <Pencil size={15} />
+          <EditIcon size={15} />
         </button>
         <button
           aria-label={`${t("common.delete")} ${mission.title}`}
@@ -166,7 +167,7 @@ export function MissionRowAction({
           onClick={() => onDeleteMission(mission)}
           type="button"
         >
-          <Trash2 size={15} />
+          <DeleteIcon size={15} />
         </button>
       </span>
     );
@@ -233,7 +234,7 @@ export function MissionStationLink({
         href={stationDetailHref(station, "missions")}
         title={label}
       >
-        <Orbit size={14} />
+        <StationIcon size={14} />
       </DetailLink>
     );
   }
@@ -253,7 +254,7 @@ export function MissionStationLink({
       prefetch={cacheOnly ? false : undefined}
       title={label}
     >
-      <CirclePlus size={15} />
+      <CreateStationIcon size={15} />
     </Link>
   );
 }
@@ -459,7 +460,7 @@ export function MissionNotesButton({
       onClick={() => onView(mission)}
       type="button"
     >
-      <FileText size={14} />
+      <NotesIcon size={14} />
     </button>
   );
 }
@@ -538,7 +539,7 @@ export function PlanetNotesButton({
       }
       type="button"
     >
-      <Info size={14} />
+      <PlanetNotesIcon size={14} />
     </button>
   );
 }
@@ -601,8 +602,7 @@ export function useMissionAlmanacPlanet(
 }
 
 export function almanacDiscImageUrl(planet: Record<string, unknown> | null): string {
-  const disc = asRecord(planet?.pictures)?.disc;
-  return typeof disc === "string" && disc.startsWith("/planets/") ? `https://nmsalmanac.com/api${disc}` : "";
+  return almanacImageUrl(asRecord(planet?.pictures)?.disc) ?? "";
 }
 
 export function MissionPlanetThumbnail({
@@ -630,7 +630,7 @@ export function MissionPlanetThumbnail({
       aria-hidden="true"
       className={`mission-card-planet-thumb mission-card-planet-fallback${completed ? " mission-card-planet-thumb-done" : ""}`}
     >
-      {completed ? <Check size={15} /> : <Compass size={15} />}
+      {completed ? <CheckIcon size={15} /> : <RangerIcon size={15} />}
     </span>
   );
 }

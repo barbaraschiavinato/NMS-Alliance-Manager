@@ -1,7 +1,15 @@
 "use client";
 
 import Image from "next/image";
-import { FileText, MapPin, Orbit, Pencil, Sprout, Trash2, Pickaxe } from "lucide-react";
+import {
+  CoordinatesIcon,
+  DeleteIcon,
+  EditIcon,
+  MaterialsIcon,
+  NotesIcon,
+  PlantsIcon,
+  StationIcon,
+} from "@/components/shared/icons";
 import { DetailLink } from "@/components/shared/detail-page";
 import { GlyphStrip } from "@/components/shared/portal-address-field";
 import { MemberProfileLink } from "@/components/shared/member-profile-link";
@@ -44,8 +52,8 @@ export function FarmCard({
   const materials = farm.resources.filter((resource) => !isFarmPlant(resource));
   const plants = farm.resources.filter((resource) => isFarmPlant(resource));
   const resourceGroups = [
-    { key: "materials", title: "farms.materials", items: materials, Icon: Pickaxe },
-    { key: "plants", title: "farms.plants", items: plants, Icon: Sprout },
+    { key: "materials", title: "farms.materials", items: materials, Icon: MaterialsIcon },
+    { key: "plants", title: "farms.plants", items: plants, Icon: PlantsIcon },
   ].filter((group) => group.items.length > 0);
 
   return (
@@ -105,14 +113,14 @@ export function FarmCard({
       ))}
       {farm.coordinates && (
         <p className="farm-card-coordinates">
-          <MapPin aria-hidden="true" size={12} />
+          <CoordinatesIcon aria-hidden="true" size={12} />
           <span>{t("farms.coordinates")}:</span> <code>{farm.coordinates}</code>
         </p>
       )}
       {farm.note && (
         <div className="farm-card-note">
           <span className="farm-card-label">
-            <FileText aria-hidden="true" size={12} />
+            <NotesIcon aria-hidden="true" size={12} />
             {t("farms.notes")}
           </span>
           <p>{farm.note}</p>
@@ -130,7 +138,7 @@ export function FarmCard({
                 href={stationHref}
                 prefetch={false}
               >
-                <Orbit aria-hidden="true" size={14} />
+                <StationIcon aria-hidden="true" size={14} />
               </DetailLink>
             )}
             {actions && (
@@ -142,7 +150,7 @@ export function FarmCard({
                   onClick={() => actions.onEdit(farm)}
                   type="button"
                 >
-                  <Pencil size={14} />
+                  <EditIcon size={14} />
                 </button>
                 <button
                   aria-label={t("farms.delete_farm_named", { farm: farm.name })}
@@ -151,7 +159,7 @@ export function FarmCard({
                   onClick={() => actions.onRemove(farm)}
                   type="button"
                 >
-                  <Trash2 size={14} />
+                  <DeleteIcon size={14} />
                 </button>
               </>
             )}

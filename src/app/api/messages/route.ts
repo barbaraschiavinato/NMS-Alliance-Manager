@@ -14,13 +14,15 @@ import { isSameSystem, petDetailHref, stationDetailHref } from "@/lib/navigation
 import { readMissions } from "@/lib/missions/store";
 import { isEmailAddress } from "@/lib/members/member-types";
 import { readPets } from "@/lib/pets/pets-store";
+import { withRequestMemo } from "@/lib/storage/request-memo";
+import { apiError, badRequest, forbidden, notFound, unauthorized } from "@/lib/utils/api-responses";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function GET(request: Request) {
+export const GET = withRequestMemo(async function GET(request: Request) {
   const member = await getCurrentMember();
-  if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
+  if (!member) return unauthorized();
 
   const params = new URL(request.url).searchParams;
   if (params.has("recipientId")) return getPlanetSubject(params);
@@ -33,7 +35,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ count }, { headers: { "Cache-Control": "no-store" } });
     } catch (error) {
       console.error("Unable to count unread messages", error);
-      return NextResponse.json({ error: "profile.message_unable_to_read" }, { status: 503 });
+      return apiError("messages.error_unable_to_read", 503);
     }
   }
 
@@ -41,7 +43,7 @@ export async function GET(request: Request) {
     const [messages, accessData] = await Promise.all([readPrivateMessages(), readAccessData()]);
     const wantsAll = params.get("scope") === "all";
     if (wantsAll && !hasRole(member, "admin")) {
-      return NextResponse.json({ error: "messages.delete_not_allowed" }, { status: 403 });
+      return forbidden("messages.delete_not_allowed");
     }
     const visibleMessages = messages.filter(
       (message) =>
@@ -86,9 +88,9 @@ export async function GET(request: Request) {
     return NextResponse.json(responseMessages, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     console.error("Unable to read private messages", error);
-    return NextResponse.json({ error: "profile.message_unable_to_read" }, { status: 503 });
+    return apiError("messages.error_unable_to_read", 503);
   }
-}
+});
 
 async function resolvePlanetSubject(recipientMemberId: string, portal: string, galaxy: number, planetNumber: number) {
   const stations = await readStationPortals(recipientMemberId);
@@ -119,7 +121,7 @@ async function getPlanetSubject(params: URLSearchParams) {
     galaxy < 0 ||
     galaxy > 255
   ) {
-    return NextResponse.json({ error: "profile.message_context_invalid" }, { status: 400 });
+    return badRequest("profile.message_context_invalid");
   }
 
   try {
@@ -127,24 +129,24 @@ async function getPlanetSubject(params: URLSearchParams) {
       (candidate) =>
         candidate.publicId === recipientId && candidate.membershipStatus === "approved" && !candidate.offline,
     );
-    if (!recipient) return NextResponse.json({ error: "profile.message_recipient_not_found" }, { status: 404 });
+    if (!recipient) return notFound("profile.message_recipient_not_found");
 
     const subject = await resolvePlanetSubject(recipient.publicId, portal, galaxy, decoded.planet);
-    if (!subject) return NextResponse.json({ error: "profile.message_context_invalid" }, { status: 404 });
+    if (!subject) return notFound("profile.message_context_invalid");
     return NextResponse.json({ subject }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     console.error("Unable to resolve message planet subject", error);
-    return NextResponse.json({ error: "profile.message_unable_to_save" }, { status: 503 });
+    return apiError("profile.message_unable_to_save", 503);
   }
 }
 
-export async function POST(request: Request) {
+export const POST = withRequestMemo(async function POST(request: Request) {
   const member = await getCurrentMember();
-  if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
+  if (!member) return unauthorized();
 
   const body: unknown = await request.json().catch(() => null);
   if (!body || typeof body !== "object" || Array.isArray(body)) {
-    return NextResponse.json({ error: "profile.message_text_required" }, { status: 400 });
+    return badRequest("profile.message_text_required");
   }
   const payload = body as Record<string, unknown>;
   const message = typeof payload.message === "string" ? payload.message.trim() : "";
@@ -154,17 +156,17 @@ export async function POST(request: Request) {
       ? (payload.context as Record<string, unknown>)
       : null;
   if (!message) {
-    return NextResponse.json({ error: "profile.message_text_required" }, { status: 400 });
+    return badRequest("profile.message_text_required");
   }
   if (message.length > 2000) {
-    return NextResponse.json({ error: "profile.message_text_too_long" }, { status: 400 });
+    return badRequest("profile.message_text_too_long");
   }
 
   try {
     if (replyToId) {
       const messages = await readPrivateMessages();
       const original = messages.find((entry) => entry.id === replyToId);
-      if (!original) return NextResponse.json({ error: "messages.reply_original_not_found" }, { status: 404 });
+      if (!original) return notFound("messages.reply_original_not_found");
 
       const recipientId =
         member.publicId === original.senderMemberId
@@ -172,13 +174,13 @@ export async function POST(request: Request) {
           : member.publicId === original.recipientMemberId
             ? original.senderMemberId
             : "";
-      if (!recipientId) return NextResponse.json({ error: "messages.reply_not_allowed" }, { status: 403 });
+      if (!recipientId) return forbidden("messages.reply_not_allowed");
 
       const recipient = (await readAccessData()).members.find(
         (candidate) =>
           candidate.publicId === recipientId && candidate.membershipStatus === "approved" && !candidate.offline,
       );
-      if (!recipient) return NextResponse.json({ error: "profile.message_recipient_not_found" }, { status: 404 });
+      if (!recipient) return notFound("profile.message_recipient_not_found");
 
       let replyContext:
         | { subjectType: "planet"; subject: string; portal: string; galaxy: number; planetNumber: number }
@@ -215,7 +217,7 @@ export async function POST(request: Request) {
       ) {
         replyContext = { subjectType: "pet", subject: original.subject, petId: original.petId };
       } else {
-        return NextResponse.json({ error: "messages.reply_context_missing" }, { status: 400 });
+        return badRequest("messages.reply_context_missing");
       }
 
       await savePrivateMessage(member.publicId, recipient.publicId, message, replyContext, {
@@ -227,14 +229,14 @@ export async function POST(request: Request) {
 
     const recipientId = typeof payload.recipientId === "string" ? payload.recipientId.trim() : "";
     if (!recipientId) {
-      return NextResponse.json({ error: "profile.message_recipient_not_found" }, { status: 400 });
+      return badRequest("profile.message_recipient_not_found");
     }
     const recipient = (await readAccessData()).members.find(
       (candidate) =>
         candidate.publicId === recipientId && candidate.membershipStatus === "approved" && !candidate.offline,
     );
     if (!recipient) {
-      return NextResponse.json({ error: "profile.message_recipient_not_found" }, { status: 404 });
+      return notFound("profile.message_recipient_not_found");
     }
     let messageContext:
       | { subjectType: "planet"; subject: string; portal: string; galaxy: number; planetNumber: number }
@@ -251,10 +253,10 @@ export async function POST(request: Request) {
       const portal = context.portal.toUpperCase();
       const decoded = decodePortalAddress(portal);
       if (!decoded || decoded.errors.length > 0) {
-        return NextResponse.json({ error: "profile.message_context_invalid" }, { status: 400 });
+        return badRequest("profile.message_context_invalid");
       }
       const planetName = await resolvePlanetSubject(recipient.publicId, portal, context.galaxy, decoded.planet);
-      if (!planetName) return NextResponse.json({ error: "profile.message_context_invalid" }, { status: 400 });
+      if (!planetName) return badRequest("profile.message_context_invalid");
       messageContext = {
         subjectType: "planet",
         subject: planetName,
@@ -266,7 +268,7 @@ export async function POST(request: Request) {
       const mission = (await readMissions()).find((candidate) => candidate.id === context.missionCode);
       const isAssignee = mission?.assignedMemberId === recipient.publicId;
       if (!mission || !isAssignee) {
-        return NextResponse.json({ error: "profile.message_context_invalid" }, { status: 400 });
+        return badRequest("profile.message_context_invalid");
       }
       messageContext = { subjectType: "mission", subject: mission.title, missionCode: mission.id };
     } else if (context?.type === "pet" && typeof context.petId === "string" && context.petId.trim()) {
@@ -278,23 +280,23 @@ export async function POST(request: Request) {
         pet.ownerId !== recipient.publicId ||
         recipient.publicId === member.publicId
       ) {
-        return NextResponse.json({ error: "profile.message_context_invalid" }, { status: 400 });
+        return badRequest("profile.message_context_invalid");
       }
       messageContext = { subjectType: "pet", subject: pet.name, petId: pet.id };
     } else {
-      return NextResponse.json({ error: "profile.message_context_required" }, { status: 400 });
+      return badRequest("profile.message_context_required");
     }
     await savePrivateMessage(member.publicId, recipient.publicId, message, messageContext);
     return NextResponse.json({ ok: true }, { status: 201 });
   } catch (error) {
     console.error("Unable to save private message", error);
-    return NextResponse.json({ error: "profile.message_unable_to_save" }, { status: 503 });
+    return apiError("profile.message_unable_to_save", 503);
   }
-}
+});
 
-export async function DELETE(request: Request) {
+export const DELETE = withRequestMemo(async function DELETE(request: Request) {
   const member = await getCurrentMember();
-  if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
+  if (!member) return unauthorized();
 
   const body: unknown = await request.json().catch(() => null);
   const messageId =
@@ -305,43 +307,43 @@ export async function DELETE(request: Request) {
     typeof body.messageId === "string"
       ? body.messageId.trim()
       : "";
-  if (!messageId) return NextResponse.json({ error: "messages.message_not_found" }, { status: 400 });
+  if (!messageId) return badRequest("messages.message_not_found");
 
   try {
     const messages = await readPrivateMessages();
     const message = messages.find((entry) => entry.id === messageId);
-    if (!message) return NextResponse.json({ error: "messages.message_not_found" }, { status: 404 });
+    if (!message) return notFound("messages.message_not_found");
 
     const isParticipant = member.publicId === message.senderMemberId || member.publicId === message.recipientMemberId;
     if (!isParticipant && !hasRole(member, "admin")) {
-      return NextResponse.json({ error: "messages.delete_not_allowed" }, { status: 403 });
+      return forbidden("messages.delete_not_allowed");
     }
 
     const deletedCount = await deletePrivateMessageBranch(messageId);
-    if (!deletedCount) return NextResponse.json({ error: "messages.message_not_found" }, { status: 404 });
+    if (!deletedCount) return notFound("messages.message_not_found");
     return NextResponse.json({ ok: true, deletedCount });
   } catch (error) {
     console.error("Unable to delete private message", error);
-    return NextResponse.json({ error: "messages.error_unable_to_delete" }, { status: 503 });
+    return apiError("messages.error_unable_to_delete", 503);
   }
-}
+});
 
-export async function PATCH(request: Request) {
+export const PATCH = withRequestMemo(async function PATCH(request: Request) {
   const member = await getCurrentMember();
-  if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
+  if (!member) return unauthorized();
 
   const body: unknown = await request.json().catch(() => null);
   const ids =
     body && typeof body === "object" && !Array.isArray(body) && "messageIds" in body && Array.isArray(body.messageIds)
       ? body.messageIds.filter((id): id is string => typeof id === "string").slice(0, 200)
       : [];
-  if (ids.length === 0) return NextResponse.json({ error: "messages.message_not_found" }, { status: 400 });
+  if (ids.length === 0) return badRequest("messages.message_not_found");
 
   try {
     await markPrivateMessagesRead(member.publicId, ids);
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("Unable to mark messages as read", error);
-    return NextResponse.json({ error: "profile.message_unable_to_save" }, { status: 503 });
+    return apiError("profile.message_unable_to_save", 503);
   }
-}
+});

@@ -1,9 +1,6 @@
-import { get, put } from "@vercel/blob";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
-import path from "node:path";
-import { localDataPath } from "@/lib/storage/local-data-path";
-import { getBlobAuthOptions } from "@/lib/storage/blob-config";
+import { readJsonDocument, writeJsonDocument } from "@/lib/storage/json-document";
+import { memoizedRead } from "@/lib/storage/request-memo";
 import { readAccessData } from "@/lib/members/access-store";
 
 export type MeetingStation = Readonly<{ portal: string; galaxy: number; name?: string }>;
@@ -38,8 +35,7 @@ type StoredPrivateMessage = PrivateMessage &
     recipientEmail?: string;
   }>;
 
-const blobPath = "alliance-manager/private-messages.json";
-const localPath = localDataPath("private-messages.json");
+const messagesDocument = "private-messages";
 
 function parseMessages(value: unknown): StoredPrivateMessage[] {
   if (!Array.isArray(value)) throw new Error("Invalid private message storage format.");
@@ -107,21 +103,14 @@ function parseMessages(value: unknown): StoredPrivateMessage[] {
   });
 }
 
-async function readMessages(): Promise<PrivateMessage[]> {
-  const blobAuthOptions = getBlobAuthOptions();
-  let stored: StoredPrivateMessage[];
-  if (blobAuthOptions) {
-    const blob = await get(blobPath, { access: "private", useCache: false, ...blobAuthOptions });
-    if (!blob || blob.statusCode === 304) return [];
-    stored = parseMessages(JSON.parse(await new Response(blob.stream).text()));
-  } else {
-    try {
-      stored = parseMessages(JSON.parse(await readFile(localPath, "utf8")));
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code === "ENOENT") return [];
-      throw error;
-    }
-  }
+function readMessages(): Promise<PrivateMessage[]> {
+  return memoizedRead("private-messages", readMessagesFromStore);
+}
+
+async function readMessagesFromStore(): Promise<PrivateMessage[]> {
+  const raw = await readJsonDocument(messagesDocument);
+  if (raw === undefined) return [];
+  const stored = parseMessages(raw);
 
   const access = await readAccessData();
   const membersByEmail = new Map(access.members.map((member) => [member.email.toLowerCase(), member.publicId]));
@@ -222,22 +211,8 @@ export async function deletePrivateMessageBranch(messageId: string): Promise<num
   return deletedIds.size;
 }
 
-async function writeMessages(messages: PrivateMessage[]): Promise<void> {
-  const json = `${JSON.stringify(messages, null, 2)}\n`;
-  const blobAuthOptions = getBlobAuthOptions();
-  if (blobAuthOptions) {
-    await put(blobPath, json, {
-      access: "private",
-      ...blobAuthOptions,
-      addRandomSuffix: false,
-      allowOverwrite: true,
-      contentType: "application/json",
-    });
-    return;
-  }
-
-  await mkdir(path.dirname(localPath), { recursive: true });
-  await writeFile(localPath, json, "utf8");
+function writeMessages(messages: PrivateMessage[]): Promise<void> {
+  return writeJsonDocument(messagesDocument, messages);
 }
 
 export async function savePrivateMessage(

@@ -41,7 +41,7 @@ describe("GET /api/alliance/app-icon", () => {
     seedMembers([], defaultAlliance);
     const response = await (await route()).GET(new Request("http://localhost/api/alliance/app-icon?size=64"));
     expect(response.status).toBe(404);
-    expect(await response.json()).toEqual({ error: "Icona non trovata." });
+    expect(await response.json()).toEqual({ error: "errors.icon_not_found" });
   });
 
   it("does not accept inherited property names as icon sizes", async () => {
@@ -54,7 +54,7 @@ describe("GET /api/alliance/app-icon", () => {
     seedMembers([], defaultAlliance);
     const response = await (await route()).GET(new Request("http://localhost/api/alliance/app-icon?size=192"));
     expect(response.status).toBe(404);
-    expect(await response.json()).toEqual({ error: "Icona non configurata." });
+    expect(await response.json()).toEqual({ error: "errors.icon_not_configured" });
   });
 
   it.each([
@@ -126,7 +126,7 @@ describe("GET /api/alliance/app-icon", () => {
     const response = await fetchIcon("192");
 
     expect(response.status).toBe(503);
-    expect(await response.json()).toEqual({ error: "Impossibile leggere l'icona." });
+    expect(await response.json()).toEqual({ error: "errors.unable_to_read_the_icon" });
     expect(console.error).toHaveBeenCalledWith("Unable to read public alliance app icon", expect.any(Error));
   });
 });

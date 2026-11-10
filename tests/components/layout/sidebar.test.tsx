@@ -3,6 +3,7 @@ import { act, screen, waitFor, within } from "@testing-library/react";
 import { renderToString } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Sidebar, storePlanetCount } from "@/components/layout/sidebar";
+import { resetSidebarCounts } from "@/components/layout/sidebar-counts";
 import { NavigationSearchResetProvider, useNavigationSearchState } from "@/components/shared/navigation-search-reset";
 import { defaultAlliance, makeMember } from "../../helpers/members";
 import { LocaleProvider } from "@/components/providers/locale-provider";
@@ -11,10 +12,14 @@ import { renderWithLocale } from "../helpers";
 vi.mock("next/image", async () => (await import("../helpers")).nextImageModule);
 vi.mock("next/link", async () => (await import("../helpers")).nextLinkModule);
 
-function stubCounters(unread: unknown = { count: 0 }, help: unknown = { count: 0 }) {
-  const fetchMock = vi.fn(
-    async (url: string) => new Response(JSON.stringify(url.startsWith("/api/messages") ? unread : help)),
-  );
+type CounterBody = Record<string, unknown> | (() => Record<string, unknown>);
+
+// Answers /api/sidebar-counts with the given body; any other URL fails the test.
+function stubCounters(body: CounterBody = { unread: 0, help: 0, taxi: 0 }, init?: ResponseInit) {
+  const fetchMock = vi.fn(async (url: string) => {
+    if (url !== "/api/sidebar-counts") throw new Error(`Unexpected request ${url}`);
+    return new Response(JSON.stringify(typeof body === "function" ? body() : body), init);
+  });
   vi.stubGlobal("fetch", fetchMock);
   return fetchMock;
 }
@@ -28,6 +33,7 @@ const baseProps = { missionCount: 4, stationCount: 7, settings: defaultAlliance,
 
 beforeEach(() => {
   window.localStorage.clear();
+  resetSidebarCounts();
 });
 
 describe("Sidebar", () => {
@@ -60,18 +66,13 @@ describe("Sidebar", () => {
     expect(screen.getByText("Nova")).toBeInTheDocument();
     expect(screen.getByText("Member")).toBeInTheDocument();
     expect(screen.getByText("NO")).toBeInTheDocument();
-    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(3));
+    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
+    expect(fetch).toHaveBeenCalledWith("/api/sidebar-counts", expect.objectContaining({ cache: "no-store" }));
   });
 
   it("shows the farm counter to staff and refreshes it when farms change", async () => {
     let count = 3;
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(
-        async (url: string) =>
-          new Response(JSON.stringify(url === "/api/farms?count=1" ? { count: count++ } : { count: 0 })),
-      ),
-    );
+    stubCounters(() => ({ unread: 0, help: 0, taxi: 0, farms: count++, pets: 0 }));
     renderWithLocale(<Sidebar {...baseProps} currentMember={makeMember({ role: "moderator" })} />);
     const farmLink = screen.getByRole("link", { name: /Farm/ });
     await waitFor(() => expect(farmLink).toHaveTextContent("Farm3"));
@@ -81,13 +82,7 @@ describe("Sidebar", () => {
 
   it("shows the pet counter to staff and refreshes it when pets change", async () => {
     let count = 7;
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(
-        async (url: string) =>
-          new Response(JSON.stringify(url === "/api/pets?count=1" ? { count: count++ } : { count: 0 })),
-      ),
-    );
+    stubCounters(() => ({ unread: 0, help: 0, taxi: 0, farms: 0, pets: count++ }));
     renderWithLocale(<Sidebar {...baseProps} currentMember={makeMember({ role: "moderator" })} />);
     const petLink = screen.getByRole("link", { name: /Pets/ });
     await waitFor(() => expect(petLink).toHaveTextContent("Pets7"));
@@ -95,42 +90,18 @@ describe("Sidebar", () => {
     await waitFor(() => expect(petLink).toHaveTextContent("Pets8"));
   });
 
-  it("keeps the pet counter hidden for regular members and on invalid responses", async () => {
-    const fetchMock = stubCounters();
+  it("keeps the farm and pet counters hidden for regular members and when they are missing", async () => {
+    stubCounters({ unread: 0, help: 0, taxi: 0, farms: 4, pets: 2 });
     renderWithLocale(<Sidebar {...baseProps} currentMember={makeMember({ role: "user" })} />);
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3));
-    expect(fetchMock.mock.calls.some(([url]) => url === "/api/pets?count=1")).toBe(false);
+    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
+    expect(screen.getByRole("link", { name: "Farm" })).toHaveTextContent(/^Farm$/);
     expect(screen.getByRole("link", { name: "Pets" })).toHaveTextContent(/^Pets$/);
 
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(async (url: string) => {
-        if (url === "/api/pets?count=1") throw new Error("offline");
-        return new Response(JSON.stringify({ count: 0 }));
-      }),
-    );
+    stubCounters({ unread: 0, help: 0, taxi: 0, farms: null, pets: "many" });
     renderWithLocale(<Sidebar {...baseProps} currentMember={makeMember({ role: "admin" })} />);
-    await waitFor(() => expect(fetch).toHaveBeenCalledWith("/api/pets?count=1", expect.anything()));
-    expect(screen.getAllByRole("link", { name: "Pets" }).at(-1)).toHaveTextContent(/^Pets$/);
-  });
-
-  it("keeps the farm counter hidden for regular members and on invalid responses", async () => {
-    const fetchMock = stubCounters();
-    renderWithLocale(<Sidebar {...baseProps} currentMember={makeMember({ role: "user" })} />);
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3));
-    expect(fetchMock.mock.calls.some(([url]) => url === "/api/farms?count=1")).toBe(false);
-    expect(screen.getByRole("link", { name: "Farm" })).toHaveTextContent(/^Farm$/);
-
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(async (url: string) => {
-        if (url === "/api/farms?count=1") throw new Error("offline");
-        return new Response(JSON.stringify({ count: 0 }));
-      }),
-    );
-    renderWithLocale(<Sidebar {...baseProps} currentMember={makeMember({ role: "admin" })} />);
-    await waitFor(() => expect(fetch).toHaveBeenCalledWith("/api/farms?count=1", expect.anything()));
+    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
     expect(screen.getAllByRole("link", { name: "Farm" }).at(-1)).toHaveTextContent(/^Farm$/);
+    expect(screen.getAllByRole("link", { name: "Pets" }).at(-1)).toHaveTextContent(/^Pets$/);
   });
 
   it("adds user management links for moderators, in Italian", () => {
@@ -159,52 +130,78 @@ describe("Sidebar", () => {
     expect(screen.getByText("Administrator")).toBeInTheDocument();
   });
 
-  it("shows unread messages and open help requests from the API", async () => {
-    const fetchMock = stubCounters({ count: 3 }, { count: 5 });
+  it("shows unread messages, open help requests and taxi requests from one API call", async () => {
+    stubCounters({ unread: 3, help: 5, taxi: 2 });
     renderWithLocale(<Sidebar {...baseProps} currentMember={makeMember()} />);
     expect(await screen.findByLabelText("3 unread")).toHaveClass("nav-unread-active");
     expect(screen.getByRole("link", { name: /Help requests/ })).toHaveTextContent("Help requests5");
-    expect(screen.getByRole("link", { name: /Taxi service/ })).toHaveTextContent("Taxi service5");
-    expect(fetchMock).toHaveBeenCalledWith(
-      "/api/taxi-requests?count=1",
-      expect.objectContaining({ cache: "no-store" }),
-    );
-    expect(fetchMock).toHaveBeenCalledWith(
-      "/api/messages?count=unread",
-      expect.objectContaining({ cache: "no-store" }),
-    );
-    expect(fetchMock).toHaveBeenCalledWith(
-      "/api/help-requests?count=1",
-      expect.objectContaining({ cache: "no-store" }),
-    );
+    expect(screen.getByRole("link", { name: /Taxi service/ })).toHaveTextContent("Taxi service2");
+    expect(fetch).toHaveBeenCalledTimes(1);
   });
 
   it("keeps zero counters when the API fails or returns junk", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn(async (url: string) => {
-        if (url.startsWith("/api/messages")) throw new Error("offline");
-        return new Response(JSON.stringify({ count: "many" }));
+      vi.fn(async () => {
+        throw new Error("offline");
       }),
     );
     renderWithLocale(<Sidebar {...baseProps} currentMember={makeMember()} />);
-    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(3));
+    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
     expect(screen.getByLabelText("0 unread")).not.toHaveClass("nav-unread-active");
-    expect(screen.getByRole("link", { name: /Help requests/ })).toHaveTextContent("Help requests0");
+
+    stubCounters({ unread: "many", help: "many", taxi: null });
+    renderWithLocale(<Sidebar {...baseProps} currentMember={makeMember()} />);
+    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
+    expect(screen.getAllByLabelText("0 unread").at(-1)).not.toHaveClass("nav-unread-active");
+    expect(screen.getAllByRole("link", { name: /Help requests/ }).at(-1)).toHaveTextContent("Help requests0");
   });
 
-  it("ignores the unread count when the messages API answers with an error", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(async (url: string) =>
-        url.startsWith("/api/messages")
-          ? new Response(JSON.stringify({ count: 5 }), { status: 500 })
-          : new Response(JSON.stringify({ count: 0 })),
-      ),
-    );
+  it("ignores the counters when the API answers with an error", async () => {
+    stubCounters({ unread: 5, help: 5, taxi: 5 }, { status: 500 });
     renderWithLocale(<Sidebar {...baseProps} currentMember={makeMember()} />);
-    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(3));
+    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
     expect(screen.getByLabelText("0 unread")).not.toHaveClass("nav-unread-active");
+  });
+
+  it("keeps the previous value of a counter the server could not compute", async () => {
+    let body: Record<string, unknown> = { unread: 4, help: 2, taxi: 1 };
+    stubCounters(() => body);
+    renderWithLocale(<Sidebar {...baseProps} currentMember={makeMember()} />);
+    expect(await screen.findByLabelText("4 unread")).toBeInTheDocument();
+    body = { unread: null, help: 3, taxi: 1 };
+    act(() => window.dispatchEvent(new Event("help-requests-changed")));
+    await waitFor(() =>
+      expect(screen.getByRole("link", { name: /Help requests/ })).toHaveTextContent("Help requests3"),
+    );
+    expect(screen.getByLabelText("4 unread")).toBeInTheDocument();
+  });
+
+  it("reuses recent counters when the sidebar remounts on another page", async () => {
+    const member = makeMember();
+    stubCounters({ unread: 2, help: 0, taxi: 0 });
+    const { unmount } = renderWithLocale(<Sidebar {...baseProps} currentMember={member} />);
+    expect(await screen.findByLabelText("2 unread")).toBeInTheDocument();
+    unmount();
+    renderWithLocale(<Sidebar {...baseProps} activeSection="missioni" currentMember={member} />);
+    expect(screen.getByLabelText("2 unread")).toBeInTheDocument();
+    expect(fetch).toHaveBeenCalledTimes(1);
+
+    // Another account never sees these counters and loads its own.
+    renderWithLocale(<Sidebar {...baseProps} currentMember={makeMember()} />);
+    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(2));
+  });
+
+  it("asks again once the reused counters are old", async () => {
+    const member = makeMember();
+    const now = vi.spyOn(Date, "now").mockReturnValue(1_000_000);
+    stubCounters();
+    const { unmount } = renderWithLocale(<Sidebar {...baseProps} currentMember={member} />);
+    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
+    unmount();
+    now.mockReturnValue(1_000_000 + 31 * 1000);
+    renderWithLocale(<Sidebar {...baseProps} currentMember={member} />);
+    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(2));
   });
 
   it.each([
@@ -253,27 +250,18 @@ describe("Sidebar", () => {
   it("reloads counters when the app announces changes", async () => {
     let unread = 0;
     let help = 0;
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(
-        async (url: string) => new Response(JSON.stringify({ count: url.startsWith("/api/messages") ? unread : help })),
-      ),
-    );
+    stubCounters(() => ({ unread, help, taxi: help }));
     renderWithLocale(<Sidebar {...baseProps} currentMember={makeMember()} />);
-    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(3));
+    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
 
-    unread = 2;
-    help = 1;
-    act(() => {
-      window.dispatchEvent(new Event("messages-unread-changed"));
-      window.dispatchEvent(new Event("help-requests-changed"));
-      window.dispatchEvent(new Event("taxi-requests-changed"));
-    });
-    expect(await screen.findByLabelText("2 unread")).toBeInTheDocument();
-    await waitFor(() => expect(screen.getByRole("link", { name: /Taxi service/ })).toHaveTextContent("Taxi service1"));
-    await waitFor(() =>
-      expect(screen.getByRole("link", { name: /Help requests/ })).toHaveTextContent("Help requests1"),
-    );
+    for (const event of ["messages-unread-changed", "help-requests-changed", "taxi-requests-changed"]) {
+      unread += 1;
+      help += 1;
+      act(() => window.dispatchEvent(new Event(event)));
+      expect(await screen.findByLabelText(`${unread} unread`)).toBeInTheDocument();
+    }
+    await waitFor(() => expect(screen.getByRole("link", { name: /Taxi service/ })).toHaveTextContent("Taxi service3"));
+    expect(screen.getByRole("link", { name: /Help requests/ })).toHaveTextContent("Help requests3");
 
     unread = 6;
     act(() => {
@@ -285,12 +273,12 @@ describe("Sidebar", () => {
   it("does not refresh counters while the page is hidden", async () => {
     stubCounters();
     renderWithLocale(<Sidebar {...baseProps} currentMember={makeMember()} />);
-    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(3));
+    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
     const visibility = vi.spyOn(document, "visibilityState", "get").mockReturnValue("hidden");
     act(() => {
       document.dispatchEvent(new Event("visibilitychange"));
     });
-    expect(fetch).toHaveBeenCalledTimes(3);
+    expect(fetch).toHaveBeenCalledTimes(1);
     visibility.mockRestore();
   });
 
@@ -299,11 +287,11 @@ describe("Sidebar", () => {
     try {
       stubCounters();
       renderWithLocale(<Sidebar {...baseProps} currentMember={makeMember()} />);
-      expect(fetch).toHaveBeenCalledTimes(3);
+      expect(fetch).toHaveBeenCalledTimes(1);
       act(() => {
         vi.advanceTimersByTime(2 * 60 * 1000);
       });
-      expect(fetch).toHaveBeenCalledTimes(6);
+      expect(fetch).toHaveBeenCalledTimes(2);
     } finally {
       vi.useRealTimers();
     }

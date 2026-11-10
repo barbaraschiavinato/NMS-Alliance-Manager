@@ -13,28 +13,38 @@ import { readAllStationPortals, readStationPortals } from "@/lib/stations/statio
 import { isValidNmsFriendCode } from "@/lib/members/member-types";
 import { serializeMission } from "@/lib/missions/mission-view";
 import { findMissionStation, isSameSystem } from "@/lib/navigation/detail-links";
+import { withRequestMemo } from "@/lib/storage/request-memo";
+import {
+  apiError,
+  badRequest,
+  conflict,
+  forbidden,
+  moderatorRequired,
+  notFound,
+  unauthorized,
+} from "@/lib/utils/api-responses";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function GET(request?: Request) {
+export const GET = withRequestMemo(async function GET(request?: Request) {
   try {
     const member = await getCurrentMember();
-    if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
+    if (!member) return unauthorized();
     const [missions, accessData] = await Promise.all([readMissions(), readAccessData()]);
     const canManage = hasRole(member, "moderator");
     const params = request ? new URL(request.url).searchParams : new URLSearchParams();
     let visibleMissions: Mission[];
     if (params.has("detailMission")) {
       const selected = missions.find((mission) => mission.id === params.get("detailMission"));
-      if (!selected) return NextResponse.json({ error: "missions.mission_not_found" }, { status: 404 });
+      if (!selected) return notFound("missions.mission_not_found");
       const stations =
         canManage || member.specialty === "ranger" || member.specialty === "explorer" || member.specialty === "builder"
           ? await readAllStationPortals()
           : await readStationPortals(member.publicId);
       const station = findMissionStation(selected, stations);
       if (!station && !canManage && !canViewMission(selected, member)) {
-        return NextResponse.json({ error: "missions.mission_not_found" }, { status: 404 });
+        return notFound("missions.mission_not_found");
       }
       visibleMissions = missions.filter(
         (mission) =>
@@ -48,7 +58,7 @@ export async function GET(request?: Request) {
       const portal = params.get("stationPortal")?.toUpperCase() ?? "";
       const galaxy = params.get("galaxy") ?? "";
       if (!/^[0-9A-F]{12}$/.test(portal) || !/^\d{1,3}$/.test(galaxy) || Number(galaxy) > 255) {
-        return NextResponse.json({ error: "stations.error_invalid_portal_and_galaxy" }, { status: 400 });
+        return badRequest("stations.error_invalid_portal_and_galaxy");
       }
       const stations =
         canManage || member.specialty === "ranger" || member.specialty === "explorer" || member.specialty === "builder"
@@ -56,7 +66,7 @@ export async function GET(request?: Request) {
           : await readStationPortals(member.publicId);
       const station = stations.find((entry) => entry.portal === portal && entry.galaxy === Number(galaxy));
       if (!station) {
-        return NextResponse.json({ error: "stations.error_station_not_found_in_owner_archive" }, { status: 404 });
+        return notFound("stations.error_station_not_found_in_owner_archive");
       }
       visibleMissions = missions.filter((mission) =>
         isSameSystem({ portal: mission.systemAddress, galaxy: mission.galaxy }, station),
@@ -67,19 +77,19 @@ export async function GET(request?: Request) {
     return NextResponse.json(visibleMissions.map((mission) => serializeMission(mission, accessData.members)));
   } catch (error) {
     console.error("Unable to read missions", error);
-    return NextResponse.json({ error: "Impossibile leggere le missioni." }, { status: 503 });
+    return apiError("errors.unable_to_read_missions", 503);
   }
-}
+});
 
-export async function POST(request: Request) {
+export const POST = withRequestMemo(async function POST(request: Request) {
   const member = await getCurrentMember();
-  if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
+  if (!member) return unauthorized();
   const isModerator = hasRole(member, "moderator");
   const canCreateOwnSpecialtyMission =
     !isModerator && (member.specialty === "explorer" || member.specialty === "builder");
   const input: unknown = await request.json().catch(() => null);
   if (!isMissionInput(input)) {
-    return NextResponse.json({ error: "Dati missione non validi." }, { status: 400 });
+    return badRequest("errors.invalid_mission_data");
   }
   const isFollowUp =
     !isModerator &&
@@ -93,7 +103,7 @@ export async function POST(request: Request) {
         mission.targetSpecialty !== input.targetSpecialty,
     );
   if (!isModerator && !isFollowUp && member.specialty !== "ranger" && !canCreateOwnSpecialtyMission) {
-    return NextResponse.json({ error: "Permesso moderator richiesto." }, { status: 403 });
+    return moderatorRequired();
   }
   if (
     !isModerator &&
@@ -103,10 +113,7 @@ export async function POST(request: Request) {
       input.assignedMemberId ||
       !["explorer_builder", "explorer", "builder"].includes(input.targetSpecialty))
   ) {
-    return NextResponse.json(
-      { error: "I Ranger possono creare missioni solo per le proprie stazioni, per Esploratori e Costruttori." },
-      { status: 403 },
-    );
+    return forbidden("errors.rangers_can_only_create_explorer_builder_missions_from_their_own_stations");
   }
   if (
     canCreateOwnSpecialtyMission &&
@@ -115,7 +122,7 @@ export async function POST(request: Request) {
       input.assignedMemberId !== member.publicId ||
       !input.stationOwnerMemberId)
   ) {
-    return NextResponse.json({ error: "missions.only_create_and_assign_your_specialty" }, { status: 403 });
+    return forbidden("missions.only_create_and_assign_your_specialty");
   }
 
   try {
@@ -124,29 +131,26 @@ export async function POST(request: Request) {
       (canCreateOwnSpecialtyMission || isFollowUp) &&
       specialtyAlreadyCovered(input.targetSpecialty, missions, input.systemAddress, input.galaxy)
     ) {
-      return NextResponse.json({ error: "missions.mission_already_exists_for_specialty" }, { status: 409 });
+      return conflict("missions.mission_already_exists_for_specialty");
     }
     const conflictsWithRegisteredPlanet = [
       ...missions.map((mission) => ({ portal: mission.systemAddress, galaxy: mission.galaxy })),
       ...stations.map((station) => ({ portal: station.portal, galaxy: station.galaxy })),
     ].some((entry) => isDifferentPlanetInSameSystem(input.systemAddress, input.galaxy, entry.portal, entry.galaxy));
     if (conflictsWithRegisteredPlanet) {
-      return NextResponse.json({ error: "errors.another_planet_from_system_already_registered" }, { status: 409 });
+      return conflict("errors.another_planet_from_system_already_registered");
     }
     const assignedMember =
       typeof input.assignedMemberId === "string" ? await findAssignableMember(input.assignedMemberId) : null;
     if (input.assignedMemberId && !assignedMember) {
-      return NextResponse.json({ error: "Seleziona un membro registrato per l'assegnazione." }, { status: 400 });
+      return badRequest("members.select_a_registered_member_to_assign_the_mission");
     }
     const stationOwner =
       typeof input.stationOwnerMemberId === "string"
         ? await findStationOwner(input.stationOwnerMemberId, input.systemAddress, input.galaxy)
         : null;
     if (input.stationOwnerMemberId && !stationOwner) {
-      return NextResponse.json(
-        { error: "La stazione indicata non appartiene all’utente selezionato." },
-        { status: 400 },
-      );
+      return badRequest("stations.the_specified_station_does_not_belong_to_the_selected_user");
     }
     const targetSpecialties =
       input.targetSpecialty === "all"
@@ -181,9 +185,9 @@ export async function POST(request: Request) {
     );
   } catch (error) {
     console.error("Unable to save mission", error);
-    return NextResponse.json({ error: "Impossibile salvare la missione." }, { status: 503 });
+    return apiError("errors.unable_to_save_the_mission", 503);
   }
-}
+});
 
 async function findStationOwner(publicId: string, portal: string, galaxy: number) {
   const access = await readAccessData();

@@ -5,14 +5,15 @@ description: Project instructions for Copilot
 
 # NMS Alliance Manager
 
-- App Next.js App Router in TypeScript; interfaccia e testi rivolti all'utente sono in italiano.
-- Il modello delle missioni è definito in `src/lib/missions/missions.ts`; gli esempi iniziali sono in `src/lib/missions/seed.ts`.
-- Ogni missione deve avere un codice sistema di 8 glifi oppure un indirizzo portale di 12 glifi esadecimali validato e un indice galattico 0-255; i glifi sono in `public/glyphs/`.
-- Ogni membro ha ruolo server-side, nome in gioco, codice amico NMS alfanumerico di 13 caratteri (i trattini sono ignorati), una o più piattaforme e specializzazione Costruttore/Ranger/Esploratore. Il profilo è modificabile solo dal proprietario; i ruoli solo dall'admin.
-- I nuovi account sono `pending` per default; solo moderatori/admin li possono approvare. Tutti gli endpoint operativi richiedono `membershipStatus: approved`.
-- Le Route Handlers API leggono e scrivono JSON tramite `src/lib/missions/store.ts`: locale in `data/missions.json`, produzione su Vercel Blob privato.
-- Non usare il filesystem locale per la persistenza in produzione e non esporre né committare token o dati runtime.
-- `src/lib/` è raggruppata per dominio (`almanac/`, `auth/`, `farms/`, `members/`, `messages/`, `missions/`, `navigation/`, `notifications/`, `planets/`, `stations/`, `storage/`, `utils/`): metti i nuovi moduli nella cartella giusta, non nella radice.
-- Riusa i componenti condivisi (`Tabs`, `Pagination`, `Toast`, `DetailSection`) invece di crearne copie; il feedback delle azioni usa `Toast`.
-- Le notifiche Telegram degli utenti (registrazione, approvazione, blocco, cambio ruolo, rimozione) sono in `src/lib/notifications/member-*` e non devono mai contenere email.
-- Verifica le modifiche con `npm run lint` e `npm run build`.
+**`AGENTS.md` at the repository root is the source of truth for this project. Read and follow it before making any change.** This file only repeats the rules that must never be missed.
+
+- Next.js 16 App Router, React 19, TypeScript. This Next.js version differs from older ones: check `node_modules/next/dist/docs/` before writing code.
+- Code, comments, tests, commit messages and developer docs are in English. Only user-facing text (UI strings, `docs/manuale-utente.md`) is Italian.
+- There is no database: each domain has a `*-store.ts` in its `src/lib/` folder that reads and writes a JSON document (local `data/`, private Vercel Blob in production). Never persist to the local filesystem in production, and never commit tokens, `.env*` files or runtime data.
+- When a stored shape changes, add a migration on read in the matching store.
+- Every API route checks session, approved membership and role itself. Simple view downgrades staff to user-level permissions on the server too.
+- Minimize calls to the external NMS Almanac API (limited, shared weekly quota): reuse cached data, deduplicate lookups and respect the rate-limit pause.
+- Telegram member notifications must never contain email addresses.
+- Reuse the shared components (`Tabs`, `Pagination`, `Toast`, `DetailSection`, `MessageCard`) instead of writing copies.
+- Tests live in `tests/`, mirroring the source. Verify changes with `npm test`, `npm run lint` and `npm run build`.
+- If a request conflicts with a documented domain rule, explain the conflict and ask for confirmation first.

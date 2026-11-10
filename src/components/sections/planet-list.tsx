@@ -2,8 +2,7 @@
 
 import NextLink from "next/link";
 import { DetailLink as Link } from "@/components/shared/detail-page";
-import { GalaxyIcon } from "@/components/shared/galaxy-icon";
-import { AlertTriangle, Orbit, Skull } from "lucide-react";
+import { BlackMarketIcon, GalaxyWarningIcon, MapIcon, StationIcon } from "@/components/shared/icons";
 import { galaxyLabel } from "@/lib/planets/galaxies";
 import {
   PlanetDestinationCard,
@@ -14,6 +13,7 @@ import { useLocale } from "@/components/providers/locale-provider";
 import { SystemFacts } from "@/components/shared/system-facts";
 import { SystemFeatureBadge } from "@/components/shared/system-feature-badge";
 import { stationDetailHref } from "@/lib/navigation/detail-links";
+import { isNewItem } from "@/lib/utils/limits";
 
 export function PlanetStationHeading({
   station,
@@ -30,12 +30,7 @@ export function PlanetStationHeading({
 }>) {
   const { t } = useLocale();
   const system = station ?? planets[0];
-  const createdTime = station?.createdAt ? Date.parse(station.createdAt) : Number.NaN;
-  const isNewStation =
-    Boolean(station) &&
-    !station?.hasMissions &&
-    Number.isFinite(createdTime) &&
-    renderedAt - createdTime < 7 * 24 * 60 * 60 * 1000;
+  const isNewStation = Boolean(station) && !station?.hasMissions && isNewItem(station?.createdAt, renderedAt);
   return (
     <div className="planet-station-heading">
       <div>
@@ -51,7 +46,7 @@ export function PlanetStationHeading({
               role="img"
               tabIndex={0}
             >
-              <Skull aria-hidden="true" size={15} />
+              <BlackMarketIcon aria-hidden="true" size={15} />
             </span>
           )}
           {(station ?? planets[0]) && (
@@ -66,7 +61,7 @@ export function PlanetStationHeading({
               data-tooltip={station.galaxy !== 0 ? t("missions.galaxy_portals_warning") : undefined}
               tabIndex={station.galaxy !== 0 ? 0 : undefined}
             >
-              {station.galaxy !== 0 && <AlertTriangle size={9} />}
+              {station.galaxy !== 0 && <GalaxyWarningIcon size={9} />}
               {galaxyLabel(station.galaxy)}
             </span>{" "}
             · {station.portal}
@@ -85,7 +80,7 @@ export function PlanetStationHeading({
               data-tooltip={t("planet.open_station_in_stations", { station: station.name || station.portal })}
               href={stationDetailHref(station.id, "planets")}
             >
-              <Orbit aria-hidden="true" size={15} />
+              <StationIcon aria-hidden="true" size={15} />
             </Link>
           )}
           {system && showMapLink && (
@@ -95,7 +90,7 @@ export function PlanetStationHeading({
               data-tooltip={t("stations.show_on_map")}
               href={`/map?${new URLSearchParams({ galaxy: String(system.galaxy), portal: system.portal })}`}
             >
-              <GalaxyIcon aria-hidden="true" size={15} />
+              <MapIcon aria-hidden="true" size={15} />
             </NextLink>
           )}
         </div>

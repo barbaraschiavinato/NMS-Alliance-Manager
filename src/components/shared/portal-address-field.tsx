@@ -1,9 +1,10 @@
 import { useEffect, useEffectEvent, useState } from "react";
 import Image from "next/image";
-import { ArrowLeft, Check, CircleAlert, X } from "lucide-react";
+import { AlertIcon, CheckIcon, CloseIcon, RemoveGlyphIcon } from "@/components/shared/icons";
 import { decodePortalAddress } from "@/lib/missions/missions";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useAlmanacCacheOnly } from "@/components/providers/almanac-cache-policy";
+import { almanacSiteUrl } from "@/lib/almanac/almanac-config";
 
 export type SystemAddressLookup = Readonly<{
   address: string;
@@ -120,7 +121,7 @@ export function PortalValidation({
   const { t } = useLocale();
   let statusClass = "address-incomplete";
   let statusText = t("stations.enter_a_complete_12_glyph_portal_address");
-  let statusIcon = <CircleAlert size={13} />;
+  let statusIcon = <AlertIcon size={13} />;
 
   if (decoded && decoded.errors.length > 0) {
     statusClass = "address-invalid";
@@ -128,7 +129,7 @@ export function PortalValidation({
   } else if (decoded?.kind === "portal") {
     statusClass = "address-valid";
     statusText = t("stations.valid_portal_address_decoded");
-    statusIcon = <Check size={13} />;
+    statusIcon = <CheckIcon size={13} />;
   } else if (address.length > 0) {
     statusText = t("stations.incomplete_code_count_of_12_glyphs", { count: address.length });
   }
@@ -142,13 +143,13 @@ export function PortalValidation({
     lookupLink = true;
   } else if (currentLookup?.status === "not-found") {
     statusClass = "address-incomplete";
-    statusIcon = <CircleAlert size={13} />;
+    statusIcon = <AlertIcon size={13} />;
     statusText += ` · ${t("planet.no_planet_registered_with_nms_almanac_it_may_still_exist_in_the_game")}`;
   } else if (currentLookup?.status === "not-cached") {
     statusText += ` · ${t("planet.no_cached_planet_data")}`;
   } else if (currentLookup?.status === "unavailable") {
     statusClass = "address-incomplete";
-    statusIcon = <CircleAlert size={13} />;
+    statusIcon = <AlertIcon size={13} />;
     statusText += ` · ${t("errors.nms_almanac_error_service_unavailable_or_request_limit_reached")}`;
   }
 
@@ -161,7 +162,7 @@ export function PortalValidation({
           {lookupLink && (
             <>
               {" "}
-              <a href="https://nmsalmanac.com" rel="noreferrer" target="_blank">
+              <a href={almanacSiteUrl} rel="noreferrer" target="_blank">
                 NMS Almanac
               </a>
             </>
@@ -297,7 +298,7 @@ export function SystemAddressField({
           title={t("stations.remove_last_glyph")}
           type="button"
         >
-          <ArrowLeft size={16} />
+          <RemoveGlyphIcon size={16} />
         </button>
         <button
           aria-label={t("system.clear_address")}
@@ -307,7 +308,7 @@ export function SystemAddressField({
           title={t("system.clear_address")}
           type="button"
         >
-          <X size={16} />
+          <CloseIcon size={16} />
         </button>
       </div>
       <div aria-label={t("stations.portal_glyph_keypad")} className="glyph-keypad">

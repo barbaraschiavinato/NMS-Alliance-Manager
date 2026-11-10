@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { Check, X } from "lucide-react";
+import { CheckIcon, CloseIcon } from "@/components/shared/icons";
 import { MissionMetrics } from "@/components/sections/mission-metrics";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
@@ -616,10 +616,10 @@ export function MissionDashboard({
       {associatedFirst && beforeAssociated}
       {notice && (
         <output className="toast" aria-live="polite">
-          <Check size={15} />
+          <CheckIcon size={15} />
           {t(notice)}
           <button aria-label={t("common.close_notification")} onClick={() => setNotice("")} type="button">
-            <X size={14} />
+            <CloseIcon size={14} />
           </button>
         </output>
       )}

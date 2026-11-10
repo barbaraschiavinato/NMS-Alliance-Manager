@@ -6,8 +6,8 @@
   .pet-toggle-field { grid-column: auto; }
 }
 .pet-image-preview { width: 100%; aspect-ratio: 16 / 9; max-height: 220px; padding: 0; cursor: pointer; }
-.pet-image-preview:hover, .pet-image-preview:focus-visible { border-color: #ff8fb8; color: #ff8fb8; }
-.pet-image-preview:focus-visible { outline: 2px solid #ff8fb8; outline-offset: 2px; }
+.pet-image-preview:hover, .pet-image-preview:focus-visible { border-color: var(--accent-pets); color: var(--accent-pets); }
+.pet-image-preview:focus-visible { outline: 2px solid var(--accent-pets); outline-offset: 2px; }
 .pet-image-preview-empty { aspect-ratio: auto; height: 56px; min-height: 0; }
 .pet-image-actions { display: flex; align-items: center; gap: 8px; }
 .pet-image-actions > input { flex: 1 1 auto; min-width: 0; }
@@ -18,14 +18,14 @@
 .pet-card-image { width: 72px; height: 72px; border: 1px solid #394548; border-radius: 4px; object-fit: cover; }
 .pet-card-title-copy { min-width: 0; display: grid; gap: 5px; }
 .pet-card-title-copy > span:first-child, .pet-card-title-copy > code { color: #a4adae; font-size: 8px; }
-.pet-card-title { max-width: 100%; overflow: hidden; color: #ff8fb8; font-size: 14px; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
+.pet-card-title { max-width: 100%; overflow: hidden; color: var(--accent-pets); font-size: 14px; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
 .pet-card-planet { color: #f1eee7; font-size: 11px; overflow-wrap: anywhere; }
 .pet-card-owner { min-width: 0; display: grid; justify-items: end; gap: 5px; }
 .pet-card-owner > small { color: #aab4b4; font-family: "SFMono-Regular", Consolas, monospace; font-size: 7px; letter-spacing: .5px; }
 .pet-card-owner .member-profile-link, .pet-card-owner strong { font-size: 9px; }
 .pet-card-owner-line { display: inline-flex; align-items: center; justify-content: flex-end; gap: 6px; }
 .pet-card-egg-button { position: relative; color: #ffc2d6; }
-.pet-card-egg-button:hover, .pet-card-egg-button:focus-visible { color: #ff8fb8; border-color: #ff8fb8; }
+.pet-card-egg-button:hover, .pet-card-egg-button:focus-visible { color: var(--accent-pets); border-color: var(--accent-pets); }
 .pet-card-egg-indicator { position: relative; display: inline-flex; color: #ffc2d6; line-height: 0; }
 .pet-card-egg-button[data-tooltip]::after, .pet-card-egg-indicator[data-tooltip]::after { position: absolute; z-index: 30; right: 0; bottom: calc(100% + 7px); padding: 6px 8px; color: #f1eee7; border: 1px solid #394548; border-radius: 3px; background: #111719; box-shadow: 0 4px 14px #0008; content: attr(data-tooltip); font-size: 9px; font-weight: 500; line-height: 1.2; opacity: 0; pointer-events: none; transform: translateY(-3px); transition: opacity .12s, transform .12s; white-space: nowrap; }
 .pet-card-egg-button[data-tooltip]:hover::after, .pet-card-egg-button[data-tooltip]:focus-visible::after, .pet-card-egg-indicator[data-tooltip]:hover::after { opacity: 1; transform: translateY(0); }
@@ -61,13 +61,13 @@ body:has(.sidebar-compact) .pet-toggle { --switch-w: 52px; --switch-h: 30px; --k
 body:has(.sidebar-compact) .pet-toggle > strong { font-size: 14px; }
 .pet-form .pet-toggle > input[role="switch"] { position: relative; flex: none; box-sizing: border-box; width: var(--switch-w); min-width: 0; height: var(--switch-h); min-height: 0; margin: 0; padding: 0; border: 1px solid #394548; border-radius: calc(var(--switch-h) / 2); background: #1a2124; cursor: pointer; appearance: none; transition: background-color .15s, border-color .15s; }
 .pet-form .pet-toggle > input[role="switch"]::after { content: ""; position: absolute; top: var(--knob-gap); left: var(--knob-gap); width: var(--knob); height: var(--knob); border-radius: 50%; background: #a4adae; transition: transform .15s, background-color .15s; }
-.pet-form .pet-toggle > input[role="switch"]:checked { border-color: #ff8fb8; background: #4a2a38; }
-.pet-form .pet-toggle > input[role="switch"]:checked::after { background: #ff8fb8; transform: translateX(calc(var(--switch-w) - 2px - var(--knob) - 2 * var(--knob-gap))); }
-.pet-form .pet-toggle > input[role="switch"]:focus-visible { outline: 2px solid #ff8fb8; outline-offset: 2px; }
+.pet-form .pet-toggle > input[role="switch"]:checked { border-color: var(--accent-pets); background: #4a2a38; }
+.pet-form .pet-toggle > input[role="switch"]:checked::after { background: var(--accent-pets); transform: translateX(calc(var(--switch-w) - 2px - var(--knob) - 2 * var(--knob-gap))); }
+.pet-form .pet-toggle > input[role="switch"]:focus-visible { outline: 2px solid var(--accent-pets); outline-offset: 2px; }
 .pet-form .field > span > svg { flex: none; }
 .pet-card-image-button { padding: 0; border: 0; border-radius: 4px; background: none; line-height: 0; cursor: zoom-in; }
-.pet-card-image-button:hover .pet-card-image, .pet-card-image-button:focus-visible .pet-card-image { border-color: #ff8fb8; }
-.pet-card-image-button:focus-visible { outline: 2px solid #ff8fb8; outline-offset: 2px; }
+.pet-card-image-button:hover .pet-card-image, .pet-card-image-button:focus-visible .pet-card-image { border-color: var(--accent-pets); }
+.pet-card-image-button:focus-visible { outline: 2px solid var(--accent-pets); outline-offset: 2px; }
 .pet-image-dialog { width: auto; max-width: min(94vw, 980px); }
 .pet-image-dialog .dialog-heading { margin-bottom: 14px; }
 .pet-image-dialog-image { display: block; width: auto; height: auto; max-width: 100%; max-height: 74vh; margin: 0 auto; border: 1px solid #394548; border-radius: 4px; object-fit: contain; }

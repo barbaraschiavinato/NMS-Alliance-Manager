@@ -1,9 +1,7 @@
-import { get, put } from "@vercel/blob";
-import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
-import path from "node:path";
-import { localDataPath } from "@/lib/storage/local-data-path";
 import { randomUUID } from "node:crypto";
-import { getBlobAuthOptions } from "@/lib/storage/blob-config";
+import { allianceAdminEmail } from "@/lib/auth/alliance-admin";
+import { readJsonDocument, writeJsonDocument } from "@/lib/storage/json-document";
+import { memoizedRead } from "@/lib/storage/request-memo";
 import {
   isValidNmsFriendCode,
   memberRoles,
@@ -37,8 +35,7 @@ export type AccessData = {
   alliance: AllianceSettings;
 };
 
-const blobPath = "alliance-manager/access.json";
-const localPath = localDataPath("access.json");
+const accessDocument = "access";
 const publicIdPattern = /^[\da-f]{8}-[\da-f]{4}-4[\da-f]{3}-[89ab][\da-f]{3}-[\da-f]{12}$/i;
 const defaultData: AccessData = {
   members: [],
@@ -148,52 +145,27 @@ function needsPublicIdMigration(value: unknown): boolean {
   );
 }
 
-export async function readAccessData(): Promise<AccessData> {
-  const blobAuthOptions = getBlobAuthOptions();
-  if (blobAuthOptions) {
-    const blob = await get(blobPath, { access: "private", useCache: false, ...blobAuthOptions });
-    if (!blob || blob.statusCode === 304) return defaultData;
-    const raw = JSON.parse(await new Response(blob.stream).text());
-    const data = normalizeAccessData(raw);
-    if (needsPublicIdMigration(raw)) await writeAccessData(data);
-    return data;
-  }
-
-  try {
-    const raw = JSON.parse(await readFile(localPath, "utf8"));
-    const data = normalizeAccessData(raw);
-    if (needsPublicIdMigration(raw)) await writeAccessData(data);
-    return data;
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "ENOENT") return defaultData;
-    throw error;
-  }
+export function readAccessData(): Promise<AccessData> {
+  return memoizedRead("access", readAccessDataFromStore);
 }
 
-export async function writeAccessData(data: AccessData): Promise<void> {
-  const json = `${JSON.stringify(data, null, 2)}\n`;
-  const blobAuthOptions = getBlobAuthOptions();
-  if (blobAuthOptions) {
-    await put(blobPath, json, {
-      access: "private",
-      ...blobAuthOptions,
-      addRandomSuffix: false,
-      allowOverwrite: true,
-      contentType: "application/json",
-    });
-    return;
-  }
-  await mkdir(path.dirname(localPath), { recursive: true });
-  const temporaryPath = `${localPath}.${randomUUID()}.tmp`;
-  await writeFile(temporaryPath, json, { encoding: "utf8", flag: "wx" });
-  await rename(temporaryPath, localPath);
+async function readAccessDataFromStore(): Promise<AccessData> {
+  const raw = await readJsonDocument(accessDocument);
+  if (raw === undefined) return defaultData;
+  const data = normalizeAccessData(raw);
+  if (needsPublicIdMigration(raw)) await writeAccessData(data);
+  return data;
+}
+
+export function writeAccessData(data: AccessData): Promise<void> {
+  return writeJsonDocument(accessDocument, data);
 }
 
 export async function registerMember(identity: Pick<AllianceMember, "email" | "name" | "image">) {
   const email = identity.email.trim().toLowerCase();
   const data = await readAccessData();
   const index = data.members.findIndex((member) => member.email === email);
-  const adminEmail = process.env.ALLIANCE_ADMIN_EMAIL?.trim().toLowerCase();
+  const adminEmail = allianceAdminEmail();
   const role: MemberRole = email === adminEmail ? "admin" : (data.members[index]?.role ?? "user");
   const existingMember = data.members[index];
   const membershipStatus = email === adminEmail ? "approved" : (existingMember?.membershipStatus ?? "pending");
@@ -335,7 +307,7 @@ export async function updateMemberApproval(
   actorRole: MemberRole,
 ) {
   const normalizedEmail = email.trim().toLowerCase();
-  const adminEmail = process.env.ALLIANCE_ADMIN_EMAIL?.trim().toLowerCase();
+  const adminEmail = allianceAdminEmail();
   if (!normalizedEmail || !membershipStatuses.includes(membershipStatus) || normalizedEmail === adminEmail) return null;
   const data = await readAccessData();
   const member = data.members.find((item) => item.email === normalizedEmail);
@@ -350,7 +322,7 @@ export async function updateMemberApproval(
 
 export async function deleteMember(email: string, actorRole: MemberRole, actorEmail: string) {
   const normalizedEmail = email.trim().toLowerCase();
-  const adminEmail = process.env.ALLIANCE_ADMIN_EMAIL?.trim().toLowerCase();
+  const adminEmail = allianceAdminEmail();
   const normalizedActorEmail = actorEmail.trim().toLowerCase();
   if (!normalizedEmail || normalizedEmail === adminEmail || normalizedEmail === normalizedActorEmail) return false;
   const data = await readAccessData();
@@ -435,7 +407,7 @@ export async function updateMemberProfile(email: string, profile: MemberProfileI
 
 export async function updateMemberRole(email: string, role: MemberRole) {
   const normalizedEmail = email.trim().toLowerCase();
-  const adminEmail = process.env.ALLIANCE_ADMIN_EMAIL?.trim().toLowerCase();
+  const adminEmail = allianceAdminEmail();
   if (!normalizedEmail || !memberRoles.includes(role) || normalizedEmail === adminEmail) return false;
   const data = await readAccessData();
   const member = data.members.find((item) => item.email === normalizedEmail);

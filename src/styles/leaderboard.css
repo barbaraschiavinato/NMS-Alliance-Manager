@@ -27,11 +27,11 @@
 .leaderboard-section + .leaderboard-section { margin-top: 14px; }
 .leaderboard-section h4 { margin: 0 0 8px; font-size: 12px; }
 .leaderboard-widget-ranger h3, .leaderboard-widget-ranger h4 { color: #5fd68a; }
-.leaderboard-widget-planets h3, .leaderboard-widget-planets h4 { color: #b48cf2; }
-.leaderboard-widget-stations h3, .leaderboard-widget-stations h4 { color: #6cb4ff; }
-.leaderboard-widget-missions h3, .leaderboard-widget-missions h4 { color: #72d1c4; }
-.leaderboard-widget-farms h3, .leaderboard-widget-farms h4 { color: #8fd46a; }
-.leaderboard-widget-pets h3, .leaderboard-widget-pets h4 { color: #ff8fb8; }
+.leaderboard-widget-planets h3, .leaderboard-widget-planets h4 { color: var(--accent-planets); }
+.leaderboard-widget-stations h3, .leaderboard-widget-stations h4 { color: var(--accent-stations); }
+.leaderboard-widget-missions h3, .leaderboard-widget-missions h4 { color: var(--accent-missions); }
+.leaderboard-widget-farms h3, .leaderboard-widget-farms h4 { color: var(--accent-farms); }
+.leaderboard-widget-pets h3, .leaderboard-widget-pets h4 { color: var(--accent-pets); }
 .leaderboard-widget-builder { border-color: #6a4a28; background: #2b211555; }
 .leaderboard-widget-builder h3, .leaderboard-widget-builder h4 { color: #ffb45d; }
 .leaderboard-widget-explorer { border-color: #2b538c; background: #16233a55; }
@@ -41,11 +41,11 @@
 }
 
 .leaderboard-widget-ranger .leaderboard-score { color: #5fd68a; }
-.leaderboard-widget-planets .leaderboard-score { color: #b48cf2; }
-.leaderboard-widget-stations .leaderboard-score { color: #6cb4ff; }
-.leaderboard-widget-missions .leaderboard-score { color: #72d1c4; }
-.leaderboard-widget-farms .leaderboard-score { color: #8fd46a; }
-.leaderboard-widget-pets .leaderboard-score { color: #ff8fb8; }
+.leaderboard-widget-planets .leaderboard-score { color: var(--accent-planets); }
+.leaderboard-widget-stations .leaderboard-score { color: var(--accent-stations); }
+.leaderboard-widget-missions .leaderboard-score { color: var(--accent-missions); }
+.leaderboard-widget-farms .leaderboard-score { color: var(--accent-farms); }
+.leaderboard-widget-pets .leaderboard-score { color: var(--accent-pets); }
 .leaderboard-widget-builder .leaderboard-score { color: #ffb45d; }
 .leaderboard-widget-explorer .leaderboard-score { color: #4d9bff; }
 .leaderboard-row-top-1 .leaderboard-name { color: var(--lime); }

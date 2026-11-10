@@ -7,10 +7,6 @@ description: Features and work that are still missing
 
 Things that are still missing. Remove an item once it is done.
 
-## T-t4d1as: Block path traversal in alliance image requests
-
-Fix C-rd3po4 in `src/app/api/alliance/image/route.ts` so approved members cannot retrieve unrelated private Blob objects. Reject encoded and unencoded traversal paths, preserve legitimate branding images and membership checks, and turn the pending regression in `tests/api/alliance/image.test.ts` into passing tests.
-
 ## T-cik3i5: Extend alerts to help requests and private messages
 
 Agreed scope (2026-10-22). Taxi is implemented with separate Discord/Telegram credentials, admin settings and tests, and per-member, multi-device Web Push preferences. Extend the same notification infrastructure to the remaining services:
@@ -39,10 +35,8 @@ Agreed scope (2026-10-22). Taxi is implemented with separate Discord/Telegram cr
 - Admin and moderator features are not covered: the Utenti page (approving, blocking and deleting accounts, changing roles), offline players, the Excel export of stations, alliance branding, and turning the simple view on or off.
 - Keep the in-app guide and `docs/manuale-utente.md` consistent, in both Italian and English.
 
-## T-e7flz1: Format the whole project with Prettier
 
-Prettier is configured (`prettier.config.mjs`, `npm run format`), but only the newest files and `src/components/guide/` are formatted. About 100 other files still differ.
 
-- Run `npm run format` once, in a separate commit that contains no other change.
-- Add `npm run format:check` to the `CI` workflow, and then drop the "format only the files you edit" note from `AGENTS.md` and the README.
-- Decide whether to also format the Markdown files and `src/styles/`, which are ignored now.
+## T-81euw0: Build the sidebar and the guide section table from one section list
+
+The icon registry is in place (`src/components/shared/icons/`, `sectionIcons` with the same keys as `sectionAccents`, ESLint blocks direct `lucide-react` imports) and the leaderboard already picks its icons from the maps. What is left: the sidebar links and the guide's "Sezioni" table still list every section by hand (icon, colour, label, path). Add one section list (key, icon, accent, label key, path) and render both from it, so adding or renaming a section is a single edit. Keep the sidebar counters and the per-section prefetch rules as they are.

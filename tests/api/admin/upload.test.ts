@@ -45,7 +45,7 @@ describe("POST /api/admin/upload", () => {
       signInAs(member);
       const response = await upload(imageForm());
       expect(response.status).toBe(403);
-      expect(await response.json()).toEqual({ error: "Permesso admin richiesto." });
+      expect(await response.json()).toEqual({ error: "errors.administrator_permission_required" });
     }
     expect(put).not.toHaveBeenCalled();
   });
@@ -118,7 +118,7 @@ describe("POST /api/admin/upload", () => {
       vi.mocked(put).mockRejectedValue(new Error("network down"));
       const response = await upload(imageForm("image/webp"));
       expect(response.status).toBe(503);
-      expect(await response.json()).toEqual({ error: "Caricamento immagine non riuscito." });
+      expect(await response.json()).toEqual({ error: "errors.image_upload_failed" });
     });
   });
 });

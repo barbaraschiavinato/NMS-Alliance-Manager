@@ -65,7 +65,7 @@ describe("authorization shared by every method", () => {
         signInAs(member);
         const response = await call();
         expect(response.status).toBe(403);
-        expect(await response.json()).toEqual({ error: "Permesso moderator richiesto." });
+        expect(await response.json()).toEqual({ error: "errors.moderator_permission_required" });
       }
     });
   }
@@ -111,7 +111,7 @@ describe("PATCH /api/admin/members", () => {
     expect((await patch(null)).status).toBe(400);
     const missingEmail = await patch({ role: "user" });
     expect(missingEmail.status).toBe(400);
-    expect(await missingEmail.json()).toEqual({ error: "Email non valida." });
+    expect(await missingEmail.json()).toEqual({ error: "errors.invalid_email_address" });
   });
 
   describe("action=profile", () => {
@@ -163,7 +163,7 @@ describe("PATCH /api/admin/members", () => {
       const response = await patch({ action: "profile", email: cast.user.email, ...validProfile() });
       expect(response.status).toBe(403);
       expect(await response.json()).toEqual({
-        error: "Questo account locale è fisso per i test: i profili non sono modificabili.",
+        error: "errors.fixed_test_account_profiles_cannot_be_edited",
       });
       expect(readMembers().find((member) => member.publicId === cast.user.publicId)?.nmsName).toBe(cast.user.nmsName);
     });
@@ -281,7 +281,7 @@ describe("PATCH /api/admin/members", () => {
       signInAs(cast.moderator);
       const response = await patch({ email: cast.user.email, role: "moderator" });
       expect(response.status).toBe(403);
-      expect(await response.json()).toEqual({ error: "Solo un admin può cambiare i ruoli." });
+      expect(await response.json()).toEqual({ error: "admin.only_an_administrator_can_change_roles" });
       expect(readMembers().find((member) => member.publicId === cast.user.publicId)?.role).toBe("user");
     });
 
@@ -544,7 +544,7 @@ describe("POST /api/admin/members", () => {
       ]) {
         const response = await post(body);
         expect(response.status).toBe(400);
-        expect(await response.json()).toEqual({ error: "Impossibile collegare il profilo." });
+        expect(await response.json()).toEqual({ error: "errors.unable_to_link_the_profile" });
       }
       expect(readMembers().some((member) => member.publicId === cast.offline.publicId)).toBe(true);
     });

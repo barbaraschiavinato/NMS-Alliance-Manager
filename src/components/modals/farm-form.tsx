@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, type SubmitEvent } from "react";
-import { CircleAlert, Orbit, Pencil, Plus, Search, X } from "lucide-react";
+import { AlertIcon, CloseIcon, ConfirmAddIcon, EditIcon, LoadingIcon, SearchIcon } from "@/components/shared/icons";
 import { SystemAddressField, type SystemAddressValidation } from "@/components/shared/portal-address-field";
 import { useLocale } from "@/components/providers/locale-provider";
 import type { AllianceMember } from "@/lib/members/member-types";
@@ -10,18 +10,14 @@ import { plantResourceProduct, plantResourceSearchText } from "@/lib/planets/pla
 import { generateSystemName } from "@/lib/planets/system-name";
 import { decodePortalAddress } from "@/lib/missions/missions";
 import { isSameSystem } from "@/lib/navigation/detail-links";
+import { farmMaterials, farmPlants, type Farm, type FarmResource, type FarmStationName } from "@/lib/farms/farms";
 import {
-  farmCoordinatesMaxLength,
-  farmMaterials,
-  farmNameMaxLength,
-  farmNoteMaxLength,
-  farmPlanetNameMaxLength,
-  farmPlants,
-  farmSystemNameMaxLength,
-  type Farm,
-  type FarmResource,
-  type FarmStationName,
-} from "@/lib/farms/farms";
+  coordinatesMaxLength,
+  itemNameMaxLength,
+  noteMaxLength,
+  planetNameMaxLength,
+  systemNameMaxLength,
+} from "@/lib/utils/limits";
 
 export type FarmFormValues = Readonly<{
   name: string;
@@ -61,7 +57,7 @@ export function FarmResourcePicker({
         {t("farms.resources")} <small>{t("farms.selected_count", { count: selected.length })}</small>
       </legend>
       <label className="search-field farm-resource-search">
-        <Search size={15} />
+        <SearchIcon size={15} />
         <input
           aria-label={t("farms.search_resources")}
           onChange={(event) => setFilter(event.target.value)}
@@ -169,7 +165,7 @@ export function FarmForm({
     void generateSystemName(portal, galaxy)
       .then((generated) => {
         if (!active || version !== nameResolutionVersion.current) return;
-        const name = generated?.trim().slice(0, farmSystemNameMaxLength) || null;
+        const name = generated?.trim().slice(0, systemNameMaxLength) || null;
         setResolvedSystemName({ portal, galaxy, name });
       })
       .catch((error: unknown) => {
@@ -221,7 +217,7 @@ export function FarmForm({
             <h2 id="farm-dialog-title">{t(farm ? "farms.edit_farm" : "farms.add_farm")}</h2>
           </div>
           <button aria-label={t("common.close")} className="icon-button" onClick={onClose} type="button">
-            <X size={18} />
+            <CloseIcon size={18} />
           </button>
         </div>
         <form className="station-add-form farm-form" onSubmit={submit}>
@@ -231,7 +227,7 @@ export function FarmForm({
             </span>
             <input
               aria-label={t("farms.farm_name")}
-              maxLength={farmNameMaxLength}
+              maxLength={itemNameMaxLength}
               onChange={(event) => setName(event.target.value)}
               required
               value={name}
@@ -273,7 +269,7 @@ export function FarmForm({
             </span>
             <input
               aria-label={t("farms.system_name")}
-              maxLength={farmSystemNameMaxLength}
+              maxLength={systemNameMaxLength}
               onChange={(event) => {
                 nameResolutionVersion.current += 1;
                 setSystemNameOverride(event.target.value);
@@ -283,7 +279,7 @@ export function FarmForm({
           </label>
           {systemNameUnavailable && (
             <p className="form-error full-field" role="status">
-              <CircleAlert size={15} />
+              <AlertIcon size={15} />
               {t("farms.error_system_name_unavailable")}
             </p>
           )}
@@ -293,7 +289,7 @@ export function FarmForm({
             </span>
             <input
               aria-label={t("farms.planet_name")}
-              maxLength={farmPlanetNameMaxLength}
+              maxLength={planetNameMaxLength}
               onChange={(event) => {
                 planetNameEdited.current = event.target.value.trim() !== "";
                 setPlanetName(event.target.value);
@@ -309,7 +305,7 @@ export function FarmForm({
             </span>
             <input
               aria-label={t("farms.coordinates")}
-              maxLength={farmCoordinatesMaxLength}
+              maxLength={coordinatesMaxLength}
               onChange={(event) => setCoordinates(event.target.value)}
               placeholder="+12.34, -56.78"
               value={coordinates}
@@ -321,7 +317,7 @@ export function FarmForm({
             </span>
             <textarea
               aria-label={t("farms.notes")}
-              maxLength={farmNoteMaxLength}
+              maxLength={noteMaxLength}
               onChange={(event) => setNote(event.target.value)}
               rows={3}
               value={note}
@@ -351,7 +347,7 @@ export function FarmForm({
           )}
           {error && (
             <p className="form-error">
-              <CircleAlert size={15} />
+              <AlertIcon size={15} />
               {t(error)}
             </p>
           )}
@@ -367,11 +363,11 @@ export function FarmForm({
             >
               {saving ? t("common.saving") : t(farm ? "common.save" : "common.add")}
               {lookupPending || systemNamePending ? (
-                <Orbit aria-hidden="true" className="button-spinner" size={15} />
+                <LoadingIcon aria-hidden="true" className="button-spinner" size={15} />
               ) : farm ? (
-                <Pencil size={15} />
+                <EditIcon size={15} />
               ) : (
-                <Plus size={15} />
+                <ConfirmAddIcon size={15} />
               )}
             </button>
           </div>

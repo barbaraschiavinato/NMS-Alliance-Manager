@@ -1,12 +1,14 @@
 import Image from "next/image";
 import { useEffect, useState, type SubmitEvent } from "react";
-import { Siren, X } from "lucide-react";
+import { CloseIcon, HelpRequestIcon } from "@/components/shared/icons";
 import { GlyphStrip } from "@/components/shared/portal-address-field";
 import { PlanetDiscoveryCounts } from "@/components/shared/planet-discovery-counts";
 import { almanacDiscoveryCounts } from "@/lib/almanac/almanac-discovery-counts";
 import { galaxyLabel } from "@/lib/planets/galaxies";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useAlmanacCacheOnly } from "@/components/providers/almanac-cache-policy";
+import { almanacImageUrl, almanacSiteUrl } from "@/lib/almanac/almanac-config";
+import { dispatchAppEvent } from "@/lib/navigation/app-events";
 
 type PlanetRecord = Readonly<Record<string, unknown>>;
 type PlanetEntry = Readonly<{ portal: string; planet: PlanetRecord }>;
@@ -287,7 +289,7 @@ export function PlanetCard({
       setHelpOpen(false);
       setHelpBody("");
       setHelpAcknowledged(false);
-      window.dispatchEvent(new Event("help-requests-changed"));
+      dispatchAppEvent("help-requests-changed");
     } catch (error_: unknown) {
       setHelpError(error_ instanceof Error ? error_.message : "help.request_unable_to_save");
     } finally {
@@ -302,9 +304,7 @@ export function PlanetCard({
   const title = typeof headline?.word === "string" ? headline.word : t("planet.fallback_name");
   const sky = asRecord(planet?.sky);
   const pictures = asRecord(planet?.pictures);
-  const disc = pictures?.disc;
-  const imageUrl =
-    typeof disc === "string" && disc.startsWith("/planets/") ? `https://nmsalmanac.com/api${disc}` : null;
+  const imageUrl = almanacImageUrl(pictures?.disc);
   const carries = Array.isArray(planet?.carries) ? planet.carries : [];
 
   return (
@@ -324,7 +324,7 @@ export function PlanetCard({
             {missionDescription?.trim() && <p className="planet-dialog-mission-description">{missionDescription}</p>}
           </div>
           <button aria-label={t("planet.close_planet_details")} className="icon-button" onClick={onClose} type="button">
-            <X size={18} />
+            <CloseIcon size={18} />
           </button>
         </div>
         <div className="planet-card-body">
@@ -384,7 +384,7 @@ export function PlanetCard({
                       data-tooltip={t("help.request_help")}
                       type="button"
                     >
-                      <Siren size={15} />
+                      <HelpRequestIcon size={15} />
                     </button>
                   </h3>
                   {helpSent && <p className="address-validation address-valid">{t("help.request_sent")}</p>}
@@ -441,7 +441,7 @@ export function PlanetCard({
               <PlanetResources carries={carries} />
               <div className="planet-card-attribution">
                 {t("common.data")}{" "}
-                <a href="https://nmsalmanac.com" rel="noreferrer" target="_blank">
+                <a href={almanacSiteUrl} rel="noreferrer" target="_blank">
                   NMS Almanac
                 </a>
               </div>

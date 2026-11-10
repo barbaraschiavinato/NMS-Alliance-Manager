@@ -1187,6 +1187,29 @@ export const translations: TranslationCatalog = {
       "Immagine non valida: usa PNG, JPEG, WebP o AVIF fino a 5 MB.",
     "errors.image_upload_failed": "Caricamento immagine non riuscito.",
     "errors.request_failed": "Richiesta non riuscita.",
+    "errors.invalid_data": "Dati non validi.",
+    "errors.mission_of_this_type_already_exists_for_the_station":
+      "Esiste già una missione di questo tipo per la stazione.",
+    "errors.offline_player_not_found": "Giocatore offline non trovato.",
+    "errors.rangers_can_only_create_explorer_builder_missions_from_their_own_stations":
+      "I Ranger possono creare missioni solo per le proprie stazioni, per Esploratori e Costruttori.",
+    "errors.icon_not_configured": "Icona non configurata.",
+    "errors.icon_not_found": "Icona non trovata.",
+    "errors.invalid_icon": "Icona non valida.",
+    "errors.unable_to_link_the_profile": "Impossibile collegare il profilo.",
+    "errors.unable_to_read_the_icon": "Impossibile leggere l'icona.",
+    "errors.unable_to_read_the_station_notes": "Impossibile leggere le note della stazione.",
+    "errors.unable_to_save_the_planet_visit": "Impossibile salvare la visita del pianeta.",
+    "errors.mission_already_completed": "La missione è già completata.",
+    "errors.no_access_to_this_mission": "Non hai accesso a questa missione.",
+    "errors.invalid_profile": "Profilo non valido.",
+    "errors.you_can_only_update_your_group_statuses": "Puoi aggiornare solo gli stati del tuo gruppo.",
+    "errors.you_can_only_mark_planets_of_your_stations_or_missions_as_visited":
+      "Puoi segnare come visitati solo i pianeti di una tua stazione o di una missione assegnata a te.",
+    "errors.fixed_test_account_profiles_cannot_be_edited":
+      "Questo account locale è fisso per i test: i profili non sono modificabili.",
+    "errors.fixed_test_account_profile_cannot_be_edited":
+      "Questo account locale è fisso per i test: il profilo non è modificabile.",
   },
 };
 

@@ -1,5 +1,35 @@
 import Link from "next/link";
-import { GalaxyIcon } from "@/components/shared/galaxy-icon";
+import {
+  ArchiveIcon,
+  BuilderIcon,
+  CloseIcon,
+  CreateMissionIcon,
+  DeleteIcon,
+  EditIcon,
+  ExplorerIcon,
+  FarmIcon,
+  GuideIcon,
+  HelpRequestIcon,
+  InfoIcon,
+  JoinIcon,
+  LeaderboardIcon,
+  MapIcon,
+  MarkReadIcon,
+  MessagesIcon,
+  MissionIcon,
+  NotesIcon,
+  PetIcon,
+  PlanetIcon,
+  ProfileIcon,
+  RangerIcon,
+  ReopenIcon,
+  ReplyIcon,
+  RestoreIcon,
+  SignOutIcon,
+  StationIcon,
+  TaxiIcon,
+  type IconComponent,
+} from "@/components/shared/icons";
 import { Hero } from "@/components/layout/hero";
 import { AddStationButtonExample } from "@/components/guide/add-station-button-example";
 import { MessageComposerExamples } from "@/components/guide/message-composer-examples";
@@ -9,36 +39,6 @@ import { PetExamples } from "@/components/guide/pet-examples";
 import { MessageTabsExample } from "@/components/guide/message-tabs-example";
 import { translate } from "@/lib/translations";
 import { readAccessData } from "@/lib/members/access-store";
-import {
-  Archive,
-  ArchiveRestore,
-  BookOpen,
-  CarTaxiFront,
-  CirclePlus,
-  Compass,
-  Crosshair,
-  Eclipse,
-  Factory,
-  FileText,
-  Hammer,
-  Info,
-  LogOut,
-  Mail,
-  MailCheck,
-  Orbit,
-  PawPrint,
-  Pencil,
-  Reply,
-  RotateCcw,
-  Search,
-  Siren,
-  Trash2,
-  Trophy,
-  UserRound,
-  UserRoundPlus,
-  X,
-  type LucideIcon,
-} from "lucide-react";
 import {
   BuilderOwnStationExample,
   ExplorerAvailableStationExample,
@@ -67,57 +67,63 @@ import { PlanetStationHeadingExample } from "@/components/guide/planet-station-h
 import { emptyPlanetFilterValues } from "@/components/forms/planet-filters";
 import { LocaleProvider } from "@/components/providers/locale-provider";
 import type { AllianceSettings } from "@/lib/members/access-store";
+import { sectionAccents } from "@/lib/navigation/section-accents";
 
 const specialtyIcons = {
-  ranger: { icon: Compass, color: "#5fd68a", name: "Ranger" },
-  explorer: { icon: Search, color: "#4d9bff", name: "Esploratore" },
-  builder: { icon: Hammer, color: "#ffb45d", name: "Costruttore" },
+  ranger: { icon: RangerIcon, color: "#5fd68a", name: "Ranger" },
+  explorer: { icon: ExplorerIcon, color: "#4d9bff", name: "Esploratore" },
+  builder: { icon: BuilderIcon, color: "#ffb45d", name: "Costruttore" },
 } as const;
 
-const commonButtons: { label: string; icon: LucideIcon; color: string; meaning: string }[] = [
+const commonButtons: { label: string; icon: IconComponent; color: string; meaning: string }[] = [
   {
     label: "Modifica",
-    icon: Pencil,
+    icon: EditIcon,
     color: "#d0d4d0",
     meaning: "Modifica la missione o la stazione. Compare solo se l'hai creata tu o se ti è assegnata.",
   },
   {
     label: "Elimina",
-    icon: Trash2,
+    icon: DeleteIcon,
     color: "#ef8067",
     meaning: "Elimina la missione, la stazione o il messaggio. Ti viene chiesta una conferma.",
   },
   {
     label: "Archivia",
-    icon: Archive,
+    icon: ArchiveIcon,
     color: "#d0d4d0",
     meaning:
       "Sposta una richiesta d'aiuto o di taxi e tutte le sue risposte in Archiviati. Non si può più rispondere finché non viene ripristinata. Disponibile per l'autore, i moderatori e gli amministratori.",
   },
   {
     label: "Togli dall'archivio",
-    icon: ArchiveRestore,
+    icon: RestoreIcon,
     color: "#d0d4d0",
     meaning:
       "Riporta una richiesta archiviata in In corso e permette di rispondere nuovamente. Disponibile per l'autore, i moderatori e gli amministratori.",
   },
   {
     label: "Riapri missione",
-    icon: RotateCcw,
+    icon: ReopenIcon,
     color: "#ef8067",
     meaning: "Riporta in corso una missione che avevi completato.",
   },
-  { label: "Segna come letto", icon: MailCheck, color: "#d0d4d0", meaning: "Segna un messaggio come letto." },
-  { label: "Rispondi", icon: Reply, color: "#d0d4d0", meaning: "Apre il campo per rispondere a un messaggio." },
-  { label: "Chiudi / Annulla", icon: X, color: "#d0d4d0", meaning: "Chiude una finestra o annulla l'azione in corso." },
-  { label: "Il mio profilo", icon: UserRound, color: "#d0d4d0", meaning: "Nell'header: apre il tuo profilo." },
-  { label: "Esci", icon: LogOut, color: "#d0d4d0", meaning: "Nell'header: disconnette dall'account." },
+  { label: "Segna come letto", icon: MarkReadIcon, color: "#d0d4d0", meaning: "Segna un messaggio come letto." },
+  { label: "Rispondi", icon: ReplyIcon, color: "#d0d4d0", meaning: "Apre il campo per rispondere a un messaggio." },
+  {
+    label: "Chiudi / Annulla",
+    icon: CloseIcon,
+    color: "#d0d4d0",
+    meaning: "Chiude una finestra o annulla l'azione in corso.",
+  },
+  { label: "Il mio profilo", icon: ProfileIcon, color: "#d0d4d0", meaning: "Nell'header: apre il tuo profilo." },
+  { label: "Esci", icon: SignOutIcon, color: "#d0d4d0", meaning: "Nell'header: disconnette dall'account." },
 ];
 
 const buttons: ReadonlyArray<{
   label: string;
   specialty: ReadonlyArray<"ranger" | "explorer" | "builder">;
-  icon: LucideIcon;
+  icon: IconComponent;
   color: string;
   meaning: string;
   crossed?: boolean;
@@ -125,58 +131,58 @@ const buttons: ReadonlyArray<{
   {
     label: "Vai alla stazione",
     specialty: ["ranger", "explorer", "builder"],
-    icon: Orbit,
-    color: "#6cb4ff",
+    icon: StationIcon,
+    color: sectionAccents.stations,
     meaning: "Porta alla scheda stazione collegata.",
   },
   {
     label: "Vai alle missioni collegate",
     specialty: ["ranger", "explorer", "builder"],
-    icon: Crosshair,
-    color: "#72d1c4",
+    icon: MissionIcon,
+    color: sectionAccents.missions,
     meaning:
       "Apre il dettaglio della missione per la tua specializzazione, mostrando prima tutte le missioni associate alla stazione.",
   },
   {
     label: "Mostra sulla mappa",
     specialty: ["ranger", "explorer", "builder"],
-    icon: GalaxyIcon,
-    color: "#8b8dff",
+    icon: MapIcon,
+    color: sectionAccents.map,
     meaning: "Apre la mappa sulla galassia della stazione, con il suo marker giallo e pulsante.",
   },
   {
     label: "Vai alla farm",
     specialty: ["ranger", "explorer", "builder"],
-    icon: Factory,
-    color: "#8fd46a",
+    icon: FarmIcon,
+    color: sectionAccents.farms,
     meaning: "Sulle card dei pianeti: apre il dettaglio della farm registrata su quel pianeta.",
   },
   {
     label: "Vai al pet",
     specialty: ["ranger", "explorer", "builder"],
-    icon: PawPrint,
-    color: "#ff8fb8",
+    icon: PetIcon,
+    color: sectionAccents.pets,
     meaning: "Sulle card dei pianeti: apre il dettaglio del pet trovato su quel pianeta.",
   },
   {
     label: "Crea missione dalla stazione",
     specialty: ["ranger"],
-    icon: CirclePlus,
-    color: "#72d1c4",
+    icon: CreateMissionIcon,
+    color: sectionAccents.missions,
     meaning:
       "Crea una missione per il sistema di una propria stazione, per Esploratori e/o Costruttori non preassegnata",
   },
   {
     label: "Crea missione dalla stazione",
     specialty: ["builder", "explorer"],
-    icon: CirclePlus,
-    color: "#72d1c4",
+    icon: CreateMissionIcon,
+    color: sectionAccents.missions,
     meaning: "Crea una missione per il sistema per la propria specializzazione, assegnata a se stessi.",
   },
   {
     label: "Missione già in corso per la tua categoria",
     specialty: ["ranger"],
-    icon: CirclePlus,
+    icon: CreateMissionIcon,
     color: "#4f6f6a",
     crossed: true,
     meaning:
@@ -185,7 +191,7 @@ const buttons: ReadonlyArray<{
   {
     label: "Missione già in corso per la tua categoria",
     specialty: ["explorer", "builder"],
-    icon: CirclePlus,
+    icon: CreateMissionIcon,
     color: "#4f6f6a",
     crossed: true,
     meaning:
@@ -194,49 +200,49 @@ const buttons: ReadonlyArray<{
   {
     label: "Vai al pianeta",
     specialty: ["ranger", "explorer", "builder"],
-    icon: Eclipse,
-    color: "#b48cf2",
+    icon: PlanetIcon,
+    color: sectionAccents.planets,
     meaning: "Porta al pianeta collegato.",
   },
   {
     label: "Note di missione o stazione",
     specialty: ["ranger", "explorer", "builder"],
-    icon: FileText,
+    icon: NotesIcon,
     color: "#e4b478",
     meaning: "Mostra le note scritte su una missione o una stazione.",
   },
   {
     label: "Note del pianeta",
     specialty: ["ranger", "explorer", "builder"],
-    icon: Info,
+    icon: InfoIcon,
     color: "#ff8400",
     meaning: "Mostra le note condivise sul pianeta.",
   },
   {
     label: "Richiedi intervento Ranger",
     specialty: ["builder", "explorer"],
-    icon: Compass,
+    icon: RangerIcon,
     color: "#5fd68a",
     meaning: "Sulla missione completata, crea una missione per i Ranger non assegnata.",
   },
   {
     label: "Richiedi intervento Esploratori",
     specialty: ["builder", "ranger"],
-    icon: Search,
+    icon: ExplorerIcon,
     color: "#4d9bff",
     meaning: "Sulla missione completata, crea una missione per gli Esploratori non assegnata.",
   },
   {
     label: "Richiedi intervento Costruttori",
     specialty: ["ranger", "explorer"],
-    icon: Hammer,
+    icon: BuilderIcon,
     color: "#ffb45d",
     meaning: "Sulla missione completata, crea una missione per i Costruttori non assegnata.",
   },
   {
     label: "Richiedi aiuto",
     specialty: ["ranger", "explorer", "builder"],
-    icon: Siren,
+    icon: HelpRequestIcon,
     color: "#ff4d4f",
     meaning: "Invia una richiesta d'aiuto per il pianeta.",
   },
@@ -245,88 +251,93 @@ const buttons: ReadonlyArray<{
 const specialties = [
   {
     name: "Ranger",
-    icon: Compass,
+    icon: RangerIcon,
     color: "#5fd68a",
     tasks: "Stazione aggiunta, Stazione riscattata, Sistema scansionato, Sistema rinominato, Dati sistema caricati",
   },
   {
     name: "Esploratore",
-    icon: Search,
+    icon: ExplorerIcon,
     color: "#4d9bff",
     tasks: "Stazione aggiunta, Sistema scansionato, Sistema esplorato, Dati caricati",
   },
-  { name: "Costruttore", icon: Hammer, color: "#ffb45d", tasks: "Stazione aggiunta, Edifici costruiti, Basi caricate" },
+  {
+    name: "Costruttore",
+    icon: BuilderIcon,
+    color: "#ffb45d",
+    tasks: "Stazione aggiunta, Edifici costruiti, Basi caricate",
+  },
 ];
 
 const sections = [
   {
     name: "Stazioni",
-    icon: Orbit,
-    color: "#6cb4ff",
+    icon: StationIcon,
+    color: sectionAccents.stations,
     tasks: "Consulti o aggiungi stazioni spaziali, crei le missioni per quel sistema",
   },
   {
     name: "Missioni",
-    icon: Crosshair,
-    color: "#72d1c4",
+    icon: MissionIcon,
+    color: sectionAccents.missions,
     tasks:
       "Consulti le missioni disponibili per te, prendi in carico quelle libere o inizi quelle assegnate, spunta le tue voci e completa la missione",
   },
   {
     name: "Pianeti",
-    icon: Eclipse,
-    color: "#b48cf2",
+    icon: PlanetIcon,
+    color: sectionAccents.planets,
     tasks: "Consulti e filtri per proprietà i pianeti dell'archivio e trovi la stazione associata",
   },
   {
     name: "Mappa",
-    icon: GalaxyIcon,
-    color: "#8b8dff",
+    icon: MapIcon,
+    color: sectionAccents.map,
     tasks:
       "Vedi le stazioni dell'alleanza sulla mappa della loro galassia (hub in rosso, quelle con missioni per te in verde, le tue in arancione) e arrivi qui dalle schede stazione e dai sistemi di Pianeti",
   },
   {
     name: "Farm",
-    icon: Factory,
-    color: "#8fd46a",
+    icon: FarmIcon,
+    color: sectionAccents.farms,
     tasks:
       "Registri i pianeti dove coltivi o raccogli risorse, filtri le farm dell'alleanza per piante e materiali e trovi la stazione del sistema",
   },
   {
     name: "Pet",
-    icon: PawPrint,
-    color: "#ff8fb8",
+    icon: PetIcon,
+    color: sectionAccents.pets,
     tasks:
       "Condividi dove hai trovato i tuoi pet, filtri quelli dell'alleanza per tipo, classi e altro, e scrivi allo scopritore per lo scambio uova",
   },
   {
     name: "Classifica",
-    icon: Trophy,
+    icon: LeaderboardIcon,
     color: "#e040c8",
     tasks: "Vedi la posizione dei membri e i totali dell'alleanza.",
   },
   {
     name: "Servizio taxi",
-    icon: CarTaxiFront,
+    icon: TaxiIcon,
     color: "#f5c518",
     tasks: "Richiedi un passaggio verso una galassia e concorda il punto d'incontro con gli alleati.",
   },
   {
     name: "Messaggi",
-    icon: Mail,
+    icon: MessagesIcon,
     color: "#8f9bff",
     tasks:
       "Leggi e rispondi ai messaggi privati, segnali come letti o li elimini. Si scrivono dal profilo di un membro, su una stazione o una missione",
   },
   {
     name: "Richieste d'aiuto",
-    icon: Siren,
+    icon: HelpRequestIcon,
     color: "#ff4d4f",
     tasks: "Consulti le richieste di tutti e rispondi. Le richieste si inviano dalla scheda di un pianeta",
   },
   {
     name: "Guida",
-    icon: BookOpen,
+    icon: GuideIcon,
     color: "var(--lime)",
     tasks: "Consulta questa guida per istruzioni ed esempi sull'uso dell'alleanza.",
   },
@@ -345,7 +356,7 @@ export async function GuideContent({
       {standalone && (
         <Hero settings={guideAlliance} subtitle="Cosa puoi fare, pagina per pagina" title="Guida">
           <Link className="banner-add" data-tooltip="Unisciti a noi" href="/">
-            <UserRoundPlus size={17} /> <span className="banner-add-label">Unisciti a noi</span>
+            <JoinIcon size={17} /> <span className="banner-add-label">Unisciti a noi</span>
           </Link>
         </Hero>
       )}
@@ -354,31 +365,31 @@ export async function GuideContent({
         <ul>
           <li>
             <a className="guide-index-profile" href="#primo-accesso">
-              <UserRound aria-hidden="true" size={15} />
+              <ProfileIcon aria-hidden="true" size={15} />
               Primo accesso e profilo
             </a>
           </li>
           <li>
             <a className="guide-index-specialty-ranger" href="#guida-rapida-ranger">
-              <Compass aria-hidden="true" size={15} />
+              <RangerIcon aria-hidden="true" size={15} />
               Ranger
             </a>
           </li>
           <li>
             <a className="guide-index-specialty-explorer" href="#guida-rapida-esploratore">
-              <Search aria-hidden="true" size={15} />
+              <ExplorerIcon aria-hidden="true" size={15} />
               Esploratore
             </a>
           </li>
           <li>
             <a className="guide-index-specialty-builder" href="#guida-rapida-costruttore">
-              <Hammer aria-hidden="true" size={15} />
+              <BuilderIcon aria-hidden="true" size={15} />
               Costruttore
             </a>
           </li>
           <li>
             <a className="guide-index-basics" href="#nozioni-di-base">
-              <Info aria-hidden="true" size={15} />
+              <InfoIcon aria-hidden="true" size={15} />
               Nozioni di base
             </a>
             <ul>
@@ -398,7 +409,7 @@ export async function GuideContent({
           </li>
           <li>
             <a className="guide-index-stations" href="#stazioni">
-              <Orbit aria-hidden="true" size={15} />
+              <StationIcon aria-hidden="true" size={15} />
               Stazioni
             </a>
             <ul>
@@ -431,7 +442,7 @@ export async function GuideContent({
           </li>
           <li>
             <a className="guide-index-missions" href="#missioni">
-              <Crosshair aria-hidden="true" size={15} />
+              <MissionIcon aria-hidden="true" size={15} />
               Missioni
             </a>
             <ul>
@@ -459,7 +470,7 @@ export async function GuideContent({
           </li>
           <li>
             <a className="guide-index-planets" href="#pianeti">
-              <Eclipse aria-hidden="true" size={15} />
+              <PlanetIcon aria-hidden="true" size={15} />
               Pianeti
             </a>
             <ul>
@@ -484,43 +495,43 @@ export async function GuideContent({
           </li>
           <li>
             <a className="guide-index-map" href="#mappa">
-              <GalaxyIcon aria-hidden="true" size={15} />
+              <MapIcon aria-hidden="true" size={15} />
               Mappa
             </a>
           </li>
           <li>
             <a className="guide-index-farms" href="#farm">
-              <Factory aria-hidden="true" size={15} />
+              <FarmIcon aria-hidden="true" size={15} />
               Farm
             </a>
           </li>
           <li>
             <a className="guide-index-pets" href="#pet">
-              <PawPrint aria-hidden="true" size={15} />
+              <PetIcon aria-hidden="true" size={15} />
               Pet
             </a>
           </li>
           <li>
             <a className="guide-index-leaderboard" href="#classifica">
-              <Trophy aria-hidden="true" size={15} />
+              <LeaderboardIcon aria-hidden="true" size={15} />
               Classifica
             </a>
           </li>
           <li>
             <a className="guide-index-help" href="#servizio-taxi">
-              <CarTaxiFront aria-hidden="true" size={15} />
+              <TaxiIcon aria-hidden="true" size={15} />
               Servizio taxi
             </a>
           </li>
           <li>
             <a className="guide-index-messages" href="#messaggi">
-              <Mail aria-hidden="true" size={15} />
+              <MessagesIcon aria-hidden="true" size={15} />
               Messaggi
             </a>
           </li>
           <li>
             <a className="guide-index-help" href="#richieste-aiuto">
-              <Siren aria-hidden="true" size={15} />
+              <HelpRequestIcon aria-hidden="true" size={15} />
               Richieste d&apos;aiuto
             </a>
           </li>
@@ -531,7 +542,7 @@ export async function GuideContent({
           <section>
             <section id="primo-accesso">
               <h2 style={{ color: "var(--lime)" }}>
-                <UserRound aria-hidden="true" size={20} />
+                <ProfileIcon aria-hidden="true" size={20} />
                 Primo accesso e profilo
               </h2>
               <ul>
@@ -549,7 +560,7 @@ export async function GuideContent({
               </ul>
             </section>
             <h2 id="guida-rapida-ranger" style={{ color: "#5fd68a" }}>
-              <Compass aria-hidden="true" size={20} />
+              <RangerIcon aria-hidden="true" size={20} />
               Ranger
             </h2>
             <p>
@@ -559,7 +570,7 @@ export async function GuideContent({
             <p className="guide-station-instructions">
               Per registrare il sistema, vai in{" "}
               <span className="guide-destination guide-destination-stations">
-                <Orbit aria-hidden="true" size={14} />
+                <StationIcon aria-hidden="true" size={14} />
                 Stazioni
               </span>
               , premi questo pulsante, inserisci galassia e codice portale, quindi invia il modulo:
@@ -573,14 +584,14 @@ export async function GuideContent({
               <span
                 aria-label="Crea una missione"
                 className="guide-icon guide-quick-mission-icon"
-                style={{ color: "#72d1c4", borderColor: "#72d1c4" }}
+                style={{ color: sectionAccents.missions, borderColor: sectionAccents.missions }}
                 title="Crea una missione"
               >
-                <CirclePlus aria-hidden="true" size={16} />
+                <CreateMissionIcon aria-hidden="true" size={16} />
               </span>
             </p>
             <h2 id="guida-rapida-esploratore" style={{ color: "#4d9bff" }}>
-              <Search aria-hidden="true" size={20} />
+              <ExplorerIcon aria-hidden="true" size={20} />
               Esploratore
             </h2>
             <p>L&apos;Esploratore ha più modi per crearsi una missione.</p>
@@ -588,7 +599,7 @@ export async function GuideContent({
               <li>
                 Primo metodo: vai in{" "}
                 <span className="guide-destination guide-destination-missions">
-                  <Crosshair aria-hidden="true" size={14} />
+                  <MissionIcon aria-hidden="true" size={14} />
                   Missioni
                 </span>{" "}
                 e prendi in carico una missione disponibile.
@@ -597,17 +608,17 @@ export async function GuideContent({
               <li>
                 Secondo metodo: vai in{" "}
                 <span className="guide-destination guide-destination-stations">
-                  <Orbit aria-hidden="true" size={14} />
+                  <StationIcon aria-hidden="true" size={14} />
                   Stazioni
                 </span>
                 , seleziona il tab <strong className="guide-tab-name">«In attesa»</strong> e clicca sull&apos;icona{" "}
                 <span
                   aria-label="Crea una missione"
                   className="guide-icon guide-quick-mission-icon"
-                  style={{ color: "#72d1c4", borderColor: "#72d1c4" }}
+                  style={{ color: sectionAccents.missions, borderColor: sectionAccents.missions }}
                   title="Crea una missione"
                 >
-                  <CirclePlus aria-hidden="true" size={16} />
+                  <CreateMissionIcon aria-hidden="true" size={16} />
                 </span>
                 <ExplorerAvailableStationExample allianceName={guideAlliance.name} sample={sample} />
               </li>
@@ -615,7 +626,7 @@ export async function GuideContent({
                 <p className="guide-station-instructions">
                   Terzo metodo: vai in{" "}
                   <span className="guide-destination guide-destination-stations">
-                    <Orbit aria-hidden="true" size={14} />
+                    <StationIcon aria-hidden="true" size={14} />
                     Stazioni
                   </span>
                   , premi questo pulsante, inserisci galassia e codice portale, quindi invia il modulo:
@@ -628,27 +639,27 @@ export async function GuideContent({
                   <span
                     aria-label="Crea una missione"
                     className="guide-icon guide-quick-mission-icon"
-                    style={{ color: "#72d1c4", borderColor: "#72d1c4" }}
+                    style={{ color: sectionAccents.missions, borderColor: sectionAccents.missions }}
                     title="Crea una missione"
                   >
-                    <CirclePlus aria-hidden="true" size={16} />
+                    <CreateMissionIcon aria-hidden="true" size={16} />
                   </span>
                 </p>
               </li>
               <li className="guide-numbered-list-spaced">
                 Quarto metodo: vai su{" "}
                 <span className="guide-destination guide-destination-planets">
-                  <Eclipse aria-hidden="true" size={14} />
+                  <PlanetIcon aria-hidden="true" size={14} />
                   Pianeti
                 </span>
                 , filtra in base alle caratteristiche che ti interessano e clicca sul link{" "}
                 <span
                   aria-label="Apri la stazione associata"
                   className="guide-icon guide-quick-mission-icon"
-                  style={{ color: "#6cb4ff", borderColor: "#6cb4ff" }}
+                  style={{ color: sectionAccents.stations, borderColor: sectionAccents.stations }}
                   title="Apri la stazione associata"
                 >
-                  <Orbit aria-hidden="true" size={16} />
+                  <StationIcon aria-hidden="true" size={16} />
                 </span>
                 <p>
                   Se il link pulsa, per quel sistema c&apos;è una missione disponibile per la tua specializzazione.
@@ -656,10 +667,10 @@ export async function GuideContent({
                   <span
                     aria-label="Crea una missione"
                     className="guide-icon guide-quick-mission-icon guide-quick-mission-icon-spaced-right"
-                    style={{ color: "#72d1c4", borderColor: "#72d1c4" }}
+                    style={{ color: sectionAccents.missions, borderColor: sectionAccents.missions }}
                     title="Crea una missione"
                   >
-                    <CirclePlus aria-hidden="true" size={16} />
+                    <CreateMissionIcon aria-hidden="true" size={16} />
                   </span>{" "}
                   puoi crearti una missione.
                 </p>
@@ -672,13 +683,13 @@ export async function GuideContent({
             <p>
               Dopo esserti creato la missione, la troverai nella pagina{" "}
               <span className="guide-destination guide-destination-missions">
-                <Crosshair aria-hidden="true" size={14} />
+                <MissionIcon aria-hidden="true" size={14} />
                 Missioni
               </span>
             </p>
             <ExplorerMissionProgressExamples allianceName={guideAlliance.name} sample={sample} />
             <h2 id="guida-rapida-costruttore" style={{ color: "#ffb45d" }}>
-              <Hammer aria-hidden="true" size={20} />
+              <BuilderIcon aria-hidden="true" size={20} />
               Costruttore
             </h2>
             <p>Il Costruttore ha più modi per crearsi una missione.</p>
@@ -686,7 +697,7 @@ export async function GuideContent({
               <li>
                 Primo metodo: vai in{" "}
                 <span className="guide-destination guide-destination-missions">
-                  <Crosshair aria-hidden="true" size={14} />
+                  <MissionIcon aria-hidden="true" size={14} />
                   Missioni
                 </span>{" "}
                 e prendi in carico una missione disponibile.
@@ -695,17 +706,17 @@ export async function GuideContent({
               <li>
                 Secondo metodo: vai in{" "}
                 <span className="guide-destination guide-destination-stations">
-                  <Orbit aria-hidden="true" size={14} />
+                  <StationIcon aria-hidden="true" size={14} />
                   Stazioni
                 </span>
                 , seleziona il tab <strong className="guide-tab-name">«In attesa»</strong> e clicca sull&apos;icona{" "}
                 <span
                   aria-label="Crea una missione"
                   className="guide-icon guide-quick-mission-icon"
-                  style={{ color: "#72d1c4", borderColor: "#72d1c4" }}
+                  style={{ color: sectionAccents.missions, borderColor: sectionAccents.missions }}
                   title="Crea una missione"
                 >
-                  <CirclePlus aria-hidden="true" size={16} />
+                  <CreateMissionIcon aria-hidden="true" size={16} />
                 </span>
                 <ExplorerAvailableStationExample allianceName={guideAlliance.name} sample={sample} />
               </li>
@@ -713,7 +724,7 @@ export async function GuideContent({
                 <p className="guide-station-instructions">
                   Terzo metodo: vai in{" "}
                   <span className="guide-destination guide-destination-stations">
-                    <Orbit aria-hidden="true" size={14} />
+                    <StationIcon aria-hidden="true" size={14} />
                     Stazioni
                   </span>
                   , premi questo pulsante, inserisci galassia e codice portale, quindi invia il modulo:
@@ -726,27 +737,27 @@ export async function GuideContent({
                   <span
                     aria-label="Crea una missione"
                     className="guide-icon guide-quick-mission-icon"
-                    style={{ color: "#72d1c4", borderColor: "#72d1c4" }}
+                    style={{ color: sectionAccents.missions, borderColor: sectionAccents.missions }}
                     title="Crea una missione"
                   >
-                    <CirclePlus aria-hidden="true" size={16} />
+                    <CreateMissionIcon aria-hidden="true" size={16} />
                   </span>
                 </p>
               </li>
               <li className="guide-numbered-list-spaced">
                 Quarto metodo: vai su{" "}
                 <span className="guide-destination guide-destination-planets">
-                  <Eclipse aria-hidden="true" size={14} />
+                  <PlanetIcon aria-hidden="true" size={14} />
                   Pianeti
                 </span>
                 , filtra in base alle caratteristiche che ti interessano e clicca sul link{" "}
                 <span
                   aria-label="Apri la stazione associata"
                   className="guide-icon guide-quick-mission-icon"
-                  style={{ color: "#6cb4ff", borderColor: "#6cb4ff" }}
+                  style={{ color: sectionAccents.stations, borderColor: sectionAccents.stations }}
                   title="Apri la stazione associata"
                 >
-                  <Orbit aria-hidden="true" size={16} />
+                  <StationIcon aria-hidden="true" size={16} />
                 </span>
                 <p>
                   Se il link pulsa, per quel sistema c&apos;è una missione disponibile per la tua specializzazione.
@@ -754,10 +765,10 @@ export async function GuideContent({
                   <span
                     aria-label="Crea una missione"
                     className="guide-icon guide-quick-mission-icon guide-quick-mission-icon-spaced-right"
-                    style={{ color: "#72d1c4", borderColor: "#72d1c4" }}
+                    style={{ color: sectionAccents.missions, borderColor: sectionAccents.missions }}
                     title="Crea una missione"
                   >
-                    <CirclePlus aria-hidden="true" size={16} />
+                    <CreateMissionIcon aria-hidden="true" size={16} />
                   </span>{" "}
                   puoi crearti una missione.
                 </p>
@@ -767,7 +778,7 @@ export async function GuideContent({
             <p>
               Dopo esserti creato la missione, la troverai nella pagina{" "}
               <span className="guide-destination guide-destination-missions">
-                <Crosshair aria-hidden="true" size={14} />
+                <MissionIcon aria-hidden="true" size={14} />
                 Missioni
               </span>
             </p>
@@ -776,7 +787,7 @@ export async function GuideContent({
 
           <section id="nozioni-di-base">
             <h2>
-              <Info aria-hidden="true" size={20} />
+              <InfoIcon aria-hidden="true" size={20} />
               Nozioni di base
             </h2>
 
@@ -926,8 +937,8 @@ export async function GuideContent({
 
           <section id="stazioni">
             {" "}
-            <h2 style={{ color: "#6cb4ff" }}>
-              <Orbit aria-hidden="true" size={20} />
+            <h2 style={{ color: sectionAccents.stations }}>
+              <StationIcon aria-hidden="true" size={20} />
               Stazioni
             </h2>
             <h3 id="stazioni-funzionamento">Come funziona una stazione</h3>
@@ -1084,8 +1095,8 @@ export async function GuideContent({
           </section>
 
           <section id="missioni">
-            <h2 style={{ color: "#72d1c4" }}>
-              <Crosshair aria-hidden="true" size={20} />
+            <h2 style={{ color: sectionAccents.missions }}>
+              <MissionIcon aria-hidden="true" size={20} />
               Missioni
             </h2>
             <h3 id="missioni-funzionamento">Come funziona una missione</h3>
@@ -1166,8 +1177,8 @@ export async function GuideContent({
           </section>
 
           <section id="pianeti">
-            <h2 style={{ color: "#b48cf2" }}>
-              <Eclipse aria-hidden="true" size={20} />
+            <h2 style={{ color: sectionAccents.planets }}>
+              <PlanetIcon aria-hidden="true" size={20} />
               Pianeti
             </h2>
             <h3 id="pianeti-funzionamento">Come funziona un pianeta</h3>
@@ -1274,8 +1285,8 @@ export async function GuideContent({
           </section>
 
           <section id="mappa">
-            <h2 style={{ color: "#8b8dff" }}>
-              <GalaxyIcon aria-hidden="true" size={20} />
+            <h2 style={{ color: sectionAccents.map }}>
+              <MapIcon aria-hidden="true" size={20} />
               Mappa
             </h2>
             <p>
@@ -1315,8 +1326,8 @@ export async function GuideContent({
           </section>
 
           <section id="farm">
-            <h2 style={{ color: "#8fd46a" }}>
-              <Factory aria-hidden="true" size={20} />
+            <h2 style={{ color: sectionAccents.farms }}>
+              <FarmIcon aria-hidden="true" size={20} />
               Farm
             </h2>
             <p>
@@ -1353,8 +1364,8 @@ export async function GuideContent({
           </section>
 
           <section id="pet">
-            <h2 style={{ color: "#ff8fb8" }}>
-              <PawPrint aria-hidden="true" size={20} />
+            <h2 style={{ color: sectionAccents.pets }}>
+              <PetIcon aria-hidden="true" size={20} />
               Pet
             </h2>
             <p>
@@ -1397,7 +1408,7 @@ export async function GuideContent({
 
           <section id="classifica">
             <h2 style={{ color: "#e040c8" }}>
-              <Trophy aria-hidden="true" size={20} />
+              <LeaderboardIcon aria-hidden="true" size={20} />
               Classifica
             </h2>
             <p>La pagina riunisce i risultati dei membri e i numeri complessivi dell&apos;alleanza:</p>
@@ -1423,7 +1434,7 @@ export async function GuideContent({
           </section>
           <section id="servizio-taxi">
             <h2 style={{ color: "#f5c518" }}>
-              <CarTaxiFront aria-hidden="true" size={20} />
+              <TaxiIcon aria-hidden="true" size={20} />
               Servizio taxi
             </h2>
             <p>
@@ -1472,7 +1483,7 @@ export async function GuideContent({
           </section>
           <section id="richieste-aiuto">
             <h2 style={{ color: "#ff4d4f" }}>
-              <Siren aria-hidden="true" size={20} />
+              <HelpRequestIcon aria-hidden="true" size={20} />
               Richieste d&apos;aiuto
             </h2>
             <p>
@@ -1483,7 +1494,7 @@ export async function GuideContent({
                 style={{ color: "#ff4d4f", borderColor: "#ff4d4f" }}
                 title="Richiedi aiuto"
               >
-                <Siren aria-hidden="true" size={16} />
+                <HelpRequestIcon aria-hidden="true" size={16} />
               </span>{" "}
               e inviando un messaggio. Le richieste compaiono qui a tutti gli utenti dalla più recente alla meno
               recente.
@@ -1494,10 +1505,10 @@ export async function GuideContent({
                 <span
                   aria-label="Pianeta"
                   className="guide-icon"
-                  style={{ color: "#b48cf2", borderColor: "#b48cf2" }}
+                  style={{ color: sectionAccents.planets, borderColor: sectionAccents.planets }}
                   title="Pianeta"
                 >
-                  <Eclipse aria-hidden="true" size={16} />
+                  <PlanetIcon aria-hidden="true" size={16} />
                 </span>{" "}
                 apre la scheda pianeta collegata alla richiesta d&apos;aiuto.
               </li>
@@ -1524,18 +1535,18 @@ export async function GuideContent({
           </section>
           <section id="messaggi">
             <h2 style={{ color: "var(--lime)" }}>
-              <Mail aria-hidden="true" size={20} />
+              <MessagesIcon aria-hidden="true" size={20} />
               Messaggi
             </h2>
             <p>
               Per scrivere a un alleato, clicca sul suo nome in una scheda di{" "}
               <span className="guide-destination guide-destination-stations">
-                <Orbit aria-hidden="true" size={14} />
+                <StationIcon aria-hidden="true" size={14} />
                 Stazioni
               </span>{" "}
               o di{" "}
               <span className="guide-destination guide-destination-missions">
-                <Crosshair aria-hidden="true" size={14} />
+                <MissionIcon aria-hidden="true" size={14} />
                 Missioni
               </span>
               , apri il profilo e premi «Lascia un messaggio».
@@ -1562,10 +1573,10 @@ export async function GuideContent({
                 <span
                   aria-label="Pet"
                   className="guide-icon"
-                  style={{ color: "#ff8fb8", borderColor: "#ff8fb8" }}
+                  style={{ color: sectionAccents.pets, borderColor: sectionAccents.pets }}
                   title="Pet"
                 >
-                  <PawPrint aria-hidden="true" size={16} />
+                  <PetIcon aria-hidden="true" size={16} />
                 </span>{" "}
                 che apre la scheda del pet.
               </li>
@@ -1574,19 +1585,19 @@ export async function GuideContent({
                 <span
                   aria-label="Missione"
                   className="guide-icon"
-                  style={{ color: "#72d1c4", borderColor: "#72d1c4" }}
+                  style={{ color: sectionAccents.missions, borderColor: sectionAccents.missions }}
                   title="Missione"
                 >
-                  <Crosshair aria-hidden="true" size={16} />
+                  <MissionIcon aria-hidden="true" size={16} />
                 </span>{" "}
                 apre la scheda missione collegata al messaggio; l&apos;icona{" "}
                 <span
                   aria-label="Stazione"
                   className="guide-icon"
-                  style={{ color: "#6cb4ff", borderColor: "#6cb4ff" }}
+                  style={{ color: sectionAccents.stations, borderColor: sectionAccents.stations }}
                   title="Stazione"
                 >
-                  <Orbit aria-hidden="true" size={16} />
+                  <StationIcon aria-hidden="true" size={16} />
                 </span>{" "}
                 apre la scheda stazione collegata al messaggio.
               </li>
