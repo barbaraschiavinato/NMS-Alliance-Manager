@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { readAccessData } from "@/lib/members/access-store";
 import { readImage } from "@/lib/storage/image-storage";
+import { withRequestMemo } from "@/lib/storage/request-memo";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -12,7 +13,7 @@ const iconSettings = {
   "512": "appIcon512Url",
 } as const;
 
-export async function GET(request: Request) {
+export const GET = withRequestMemo(async function GET(request: Request) {
   const size = new URL(request.url).searchParams.get("size");
   if (!size || !Object.hasOwn(iconSettings, size)) {
     return NextResponse.json({ error: "Icona non trovata." }, { status: 404 });
@@ -52,4 +53,4 @@ export async function GET(request: Request) {
     console.error("Unable to read public alliance app icon", error);
     return NextResponse.json({ error: "Impossibile leggere l'icona." }, { status: 503 });
   }
-}
+});

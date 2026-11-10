@@ -4,11 +4,12 @@ import { readAlmanacCache, readAlmanacResponse, writeAlmanacResponse } from "@/l
 import { decodePortalAddress } from "@/lib/missions/missions";
 import { normalizeAlmanacPlanet } from "@/lib/almanac/almanac-normalize";
 import { almanacRetryAfterSeconds, noteAlmanacRateLimit } from "@/lib/almanac/almanac-rate-limit";
+import { withRequestMemo } from "@/lib/storage/request-memo";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function GET(request: Request) {
+export const GET = withRequestMemo(async function GET(request: Request) {
   const member = await getCurrentMember();
   if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
 
@@ -133,7 +134,7 @@ export async function GET(request: Request) {
     console.error("Unable to verify portal address in NMS Almanac", error);
     return NextResponse.json({ error: "NMS Almanac non disponibile." }, { status: 502 });
   }
-}
+});
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value && typeof value === "object" && !Array.isArray(value));

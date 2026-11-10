@@ -5,11 +5,12 @@ import { readMissions } from "@/lib/missions/store";
 import { readAllStationPortals } from "@/lib/stations/stations-store";
 import { canMarkPlanetVisited, planetVisitKey } from "@/lib/planets/planet-visits";
 import { setPlanetVisit } from "@/lib/planets/planet-visits-store";
+import { withRequestMemo } from "@/lib/storage/request-memo";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function PATCH(request: Request) {
+export const PATCH = withRequestMemo(async function PATCH(request: Request) {
   const member = await getCurrentMember();
   if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
 
@@ -40,4 +41,4 @@ export async function PATCH(request: Request) {
     console.error("Unable to save planet visit", error instanceof Error ? error.message : "Unknown error");
     return NextResponse.json({ error: "Impossibile salvare la visita del pianeta." }, { status: 503 });
   }
-}
+});

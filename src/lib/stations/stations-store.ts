@@ -3,6 +3,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { localDataPath } from "@/lib/storage/local-data-path";
 import { getBlobAuthOptions } from "@/lib/storage/blob-config";
+import { clearRequestMemo, memoizedRead } from "@/lib/storage/request-memo";
 import { decodePortalAddress } from "@/lib/missions/missions";
 import { readAccessData } from "@/lib/members/access-store";
 
@@ -157,7 +158,11 @@ function normalizeStationList(value: unknown, fallbackOwnerId?: string): Station
 }
 
 // Lazy migration: if the flat list doesn't exist yet, build it from the legacy per-owner file (left untouched as backup).
-async function readStationList(): Promise<StationList> {
+function readStationList(): Promise<StationList> {
+  return memoizedRead("stations", readStationListFromStore);
+}
+
+async function readStationListFromStore(): Promise<StationList> {
   const current = await readJson(blobPath, localPath);
   const access = await readAccessData();
   const adminEmail = process.env.ALLIANCE_ADMIN_EMAIL?.trim().toLowerCase();
@@ -171,6 +176,14 @@ async function readStationList(): Promise<StationList> {
 }
 
 async function writeStationList(list: StationList): Promise<void> {
+  try {
+    await writeStationListToStore(list);
+  } finally {
+    clearRequestMemo();
+  }
+}
+
+async function writeStationListToStore(list: StationList): Promise<void> {
   const json = `${JSON.stringify(list, null, 2)}\n`;
   const blobAuthOptions = getBlobAuthOptions();
   if (blobAuthOptions) {

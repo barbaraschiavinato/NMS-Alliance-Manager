@@ -7,6 +7,7 @@ import { parseFarmInput, type Farm } from "@/lib/farms/farms";
 import { addFarm, readFarms, removeFarm, updateFarm } from "@/lib/farms/farms-store";
 import { isSameSystem, stationDetailHref, type SystemIdentity } from "@/lib/navigation/detail-links";
 import { readVisibleStationPortals } from "@/lib/stations/visible-stations";
+import { withRequestMemo } from "@/lib/storage/request-memo";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -96,7 +97,7 @@ async function farmViews(member: AllianceMember, scope: FarmScope = {}) {
   });
 }
 
-export async function GET(request?: Request) {
+export const GET = withRequestMemo(async function GET(request?: Request) {
   const member = await getCurrentMember();
   if (!member) return NextResponse.json({ error: "farms.error_access_required" }, { status: 401 });
   try {
@@ -121,9 +122,9 @@ export async function GET(request?: Request) {
     console.error("Unable to read farms", error);
     return NextResponse.json({ error: "farms.error_unable_to_read" }, { status: 503 });
   }
-}
+});
 
-export async function POST(request: Request) {
+export const POST = withRequestMemo(async function POST(request: Request) {
   const member = await getCurrentMember();
   if (!member) return NextResponse.json({ error: "farms.error_access_required" }, { status: 401 });
   const payload = await readPayload(request);
@@ -139,9 +140,9 @@ export async function POST(request: Request) {
     console.error("Unable to save farm", error);
     return NextResponse.json({ error: "farms.error_unable_to_save" }, { status: 503 });
   }
-}
+});
 
-export async function PATCH(request: Request) {
+export const PATCH = withRequestMemo(async function PATCH(request: Request) {
   const member = await getCurrentMember();
   if (!member) return NextResponse.json({ error: "farms.error_access_required" }, { status: 401 });
   const payload = await readPayload(request);
@@ -168,9 +169,9 @@ export async function PATCH(request: Request) {
     console.error("Unable to update farm", error);
     return NextResponse.json({ error: "farms.error_unable_to_save" }, { status: 503 });
   }
-}
+});
 
-export async function DELETE(request: Request) {
+export const DELETE = withRequestMemo(async function DELETE(request: Request) {
   const member = await getCurrentMember();
   if (!member) return NextResponse.json({ error: "farms.error_access_required" }, { status: 401 });
   const payload = await readPayload(request);
@@ -186,4 +187,4 @@ export async function DELETE(request: Request) {
     console.error("Unable to remove farm", error);
     return NextResponse.json({ error: "farms.error_unable_to_remove" }, { status: 503 });
   }
-}
+});

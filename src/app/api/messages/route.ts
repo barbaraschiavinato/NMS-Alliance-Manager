@@ -14,11 +14,12 @@ import { isSameSystem, petDetailHref, stationDetailHref } from "@/lib/navigation
 import { readMissions } from "@/lib/missions/store";
 import { isEmailAddress } from "@/lib/members/member-types";
 import { readPets } from "@/lib/pets/pets-store";
+import { withRequestMemo } from "@/lib/storage/request-memo";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function GET(request: Request) {
+export const GET = withRequestMemo(async function GET(request: Request) {
   const member = await getCurrentMember();
   if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
 
@@ -88,7 +89,7 @@ export async function GET(request: Request) {
     console.error("Unable to read private messages", error);
     return NextResponse.json({ error: "profile.message_unable_to_read" }, { status: 503 });
   }
-}
+});
 
 async function resolvePlanetSubject(recipientMemberId: string, portal: string, galaxy: number, planetNumber: number) {
   const stations = await readStationPortals(recipientMemberId);
@@ -138,7 +139,7 @@ async function getPlanetSubject(params: URLSearchParams) {
   }
 }
 
-export async function POST(request: Request) {
+export const POST = withRequestMemo(async function POST(request: Request) {
   const member = await getCurrentMember();
   if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
 
@@ -290,9 +291,9 @@ export async function POST(request: Request) {
     console.error("Unable to save private message", error);
     return NextResponse.json({ error: "profile.message_unable_to_save" }, { status: 503 });
   }
-}
+});
 
-export async function DELETE(request: Request) {
+export const DELETE = withRequestMemo(async function DELETE(request: Request) {
   const member = await getCurrentMember();
   if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
 
@@ -324,9 +325,9 @@ export async function DELETE(request: Request) {
     console.error("Unable to delete private message", error);
     return NextResponse.json({ error: "messages.error_unable_to_delete" }, { status: 503 });
   }
-}
+});
 
-export async function PATCH(request: Request) {
+export const PATCH = withRequestMemo(async function PATCH(request: Request) {
   const member = await getCurrentMember();
   if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
 
@@ -344,4 +345,4 @@ export async function PATCH(request: Request) {
     console.error("Unable to mark messages as read", error);
     return NextResponse.json({ error: "profile.message_unable_to_save" }, { status: 503 });
   }
-}
+});

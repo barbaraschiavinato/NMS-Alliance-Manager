@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
 import { readAccessData } from "@/lib/members/access-store";
 import { readImage } from "@/lib/storage/image-storage";
+import { withRequestMemo } from "@/lib/storage/request-memo";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const allowedImageTypes = new Set(["image/jpeg", "image/png", "image/webp", "image/avif"]);
 
-export async function GET() {
+export const GET = withRequestMemo(async function GET() {
   const logoUrl = (await readAccessData()).alliance.logoUrl;
   if (!logoUrl) return NextResponse.json({ error: "Logo non configurato." }, { status: 404 });
 
@@ -43,4 +44,4 @@ export async function GET() {
     console.error("Unable to read public alliance login logo", error);
     return NextResponse.json({ error: "Impossibile leggere il logo." }, { status: 503 });
   }
-}
+});

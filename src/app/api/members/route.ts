@@ -2,8 +2,9 @@ import { NextResponse } from "next/server";
 import { getCurrentMember, hasRole } from "@/lib/auth/authorization";
 import { readAccessData } from "@/lib/members/access-store";
 import { isEmailAddress, isValidNmsFriendCode } from "@/lib/members/member-types";
+import { withRequestMemo } from "@/lib/storage/request-memo";
 
-export async function GET(request: Request) {
+export const GET = withRequestMemo(async function GET(request: Request) {
   const member = await getCurrentMember();
   if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
   const data = await readAccessData();
@@ -82,4 +83,4 @@ export async function GET(request: Request) {
         }),
       ),
   );
-}
+});

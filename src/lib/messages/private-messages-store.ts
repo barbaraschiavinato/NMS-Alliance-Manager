@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import path from "node:path";
 import { localDataPath } from "@/lib/storage/local-data-path";
 import { getBlobAuthOptions } from "@/lib/storage/blob-config";
+import { clearRequestMemo, memoizedRead } from "@/lib/storage/request-memo";
 import { readAccessData } from "@/lib/members/access-store";
 
 export type MeetingStation = Readonly<{ portal: string; galaxy: number; name?: string }>;
@@ -107,7 +108,11 @@ function parseMessages(value: unknown): StoredPrivateMessage[] {
   });
 }
 
-async function readMessages(): Promise<PrivateMessage[]> {
+function readMessages(): Promise<PrivateMessage[]> {
+  return memoizedRead("private-messages", readMessagesFromStore);
+}
+
+async function readMessagesFromStore(): Promise<PrivateMessage[]> {
   const blobAuthOptions = getBlobAuthOptions();
   let stored: StoredPrivateMessage[];
   if (blobAuthOptions) {
@@ -223,6 +228,14 @@ export async function deletePrivateMessageBranch(messageId: string): Promise<num
 }
 
 async function writeMessages(messages: PrivateMessage[]): Promise<void> {
+  try {
+    await writeMessagesToStore(messages);
+  } finally {
+    clearRequestMemo();
+  }
+}
+
+async function writeMessagesToStore(messages: PrivateMessage[]): Promise<void> {
   const json = `${JSON.stringify(messages, null, 2)}\n`;
   const blobAuthOptions = getBlobAuthOptions();
   if (blobAuthOptions) {

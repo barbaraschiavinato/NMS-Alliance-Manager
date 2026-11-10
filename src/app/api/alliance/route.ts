@@ -1,14 +1,15 @@
 import { NextResponse } from "next/server";
 import { getCurrentMember, hasRole } from "@/lib/auth/authorization";
 import { readAccessData, updateAllianceSettings } from "@/lib/members/access-store";
+import { withRequestMemo } from "@/lib/storage/request-memo";
 
-export async function GET() {
+export const GET = withRequestMemo(async function GET() {
   const member = await getCurrentMember();
   if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
   return NextResponse.json((await readAccessData()).alliance);
-}
+});
 
-export async function PATCH(request: Request) {
+export const PATCH = withRequestMemo(async function PATCH(request: Request) {
   const member = await getCurrentMember();
   if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
   if (!hasRole(member, "admin")) return NextResponse.json({ error: "Permesso admin richiesto." }, { status: 403 });
@@ -62,7 +63,7 @@ export async function PATCH(request: Request) {
     appIcon512Url: value.appIcon512Url,
   });
   return NextResponse.json(settings);
-}
+});
 
 function isIconUrl(value: unknown): value is string {
   if (typeof value !== "string" || value.length > 500) return false;
