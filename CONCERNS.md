@@ -51,12 +51,6 @@ If the Blob `get` returns nothing (or a 304), `readMissions()` returns `initialM
 
 With the local backend (`data/`) these stores call `writeFile(localPath, ...)` directly. Two overlapping writes can leave a file with leftover text after the closing brace, and every later read then fails with `SyntaxError: Unexpected non-whitespace character after JSON`. This already happened to `almanac.json` when many planet thumbnails were requested at once; `almanac-store.ts` now writes a temporary file and renames it, and runs its read-modify-write cycles one at a time, and `access-store.ts` already writes through a temporary file. Apply the same to the other four (a shared helper in `src/lib/` would avoid repeating it). It is a local-development problem; production uses Blob (see C-uu5uon).
 
-## C-rd3po4: Path traversal in the alliance image route exposes private data (2026-10-11)
-
-`src/app/api/alliance/image/route.ts:10`
-
-The only check on `path` is `startsWith("alliance-manager/branding/")`. `@vercel/blob`'s `get()` builds `https://<store>.private.blob.vercel-storage.com/${path}` and passes it through `new URL()`, which resolves `..`. So `?path=alliance-manager/branding/../access.json` returns `alliance-manager/access.json` (every member's email and role) to any approved member, and the same works for `private-messages.json`. It only affects deployments with a Blob store, i.e. production. `login-logo/route.ts:26` already validates with a strict regex; use the same approach here. Test placeholder: `it.todo` in `tests/api/alliance/image.test.ts`.
-
 ## C-txcf5e: Private messages become unreadable after migrating an unknown legacy email (2026-10-11)
 
 `src/lib/messages/private-messages-store.ts:96-112`

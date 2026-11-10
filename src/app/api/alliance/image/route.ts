@@ -3,11 +3,15 @@ import { getCurrentMember } from "@/lib/auth/authorization";
 import { readImage } from "@/lib/storage/image-storage";
 import { withRequestMemo } from "@/lib/storage/request-memo";
 
+// A single file name inside the branding folder: no further slashes, dots, "%" or other characters
+// that could let Blob's URL resolution or the local path step outside it (e.g. "branding/../access.json").
+const brandingImagePathPattern = /^alliance-manager\/branding\/[a-z0-9_-]+\.(jpg|png|webp|avif)$/i;
+
 export const GET = withRequestMemo(async function GET(request: Request) {
   const member = await getCurrentMember();
   if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
   const path = new URL(request.url).searchParams.get("path");
-  if (!path || !path.startsWith("alliance-manager/branding/")) {
+  if (!path || !brandingImagePathPattern.test(path)) {
     return NextResponse.json({ error: "Immagine non trovata." }, { status: 404 });
   }
 
