@@ -43,7 +43,7 @@
 .station-owner-card > small { color: #aab4b4; font-family: "SFMono-Regular", Consolas, monospace; font-size: 7px; letter-spacing: .5px; }
 .station-owner-link { min-width: 0; max-width: 100%; font-size: 9px; }
 .station-actions .station-notes-action { color: #e4b478; }
-.station-actions .station-map-link { color: #8b8dff; }
+.station-actions .station-map-link { color: var(--accent-map); }
 .station-notes-dialog { width: min(460px, 100%); }
 .station-notes-content { margin: 0; color: #d4dad6; font-size: 11px; line-height: 1.6; text-align: left; white-space: pre-wrap; overflow-wrap: anywhere; }
 .station-list code { color: var(--lime); font-family: "SFMono-Regular", Consolas, monospace; font-size: 9px; }
@@ -65,17 +65,17 @@
   0%, 100% { box-shadow: 0 0 0 0 #ff840000; transform: scale(1); }
   50% { box-shadow: 0 0 0 6px #ff840033; transform: scale(1.035); }
 }
-.station-missions-link { color: #72d1c4; }
+.station-missions-link { color: var(--accent-missions); }
 .member-icon-action.create-station-mission:not(.station-mission-disabled) {
-  color: #72d1c4;
+  color: var(--accent-missions);
 }
 .member-icon-action.station-create-mission-pulse:not(.station-mission-disabled) {
   animation: station-create-mission-pulse 1.8s ease-in-out infinite;
 }
-.member-icon-action.create-station-mission:not(.station-mission-disabled):hover { border-color: #72d1c4; background: #1f3a37; }
+.member-icon-action.create-station-mission:not(.station-mission-disabled):hover { border-color: var(--accent-missions); background: #1f3a37; }
 @keyframes station-create-mission-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 #72d1c400; transform: scale(1); }
-  50% { box-shadow: 0 0 0 4px #72d1c433; transform: scale(1.08); }
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent-missions) 0%, transparent); transform: scale(1); }
+  50% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent-missions) 20%, transparent); transform: scale(1.08); }
 }
 @media (prefers-reduced-motion: reduce) {
   .member-icon-action.station-create-mission-pulse:not(.station-mission-disabled) {
@@ -85,8 +85,8 @@
 .station-actions .member-icon-action.delete-member { color: #ef8067; }
 .station-actions .member-icon-action.delete-member:hover:not(:disabled) { border-color: #ef8067; background: #3a2724; }
 /* Each action keeps its own colour on hover (icon, border and a dark tint), like the create-mission and delete buttons. */
-.station-actions .member-icon-action.station-missions-link:hover { color: #72d1c4; border-color: #72d1c4; background: #1f3a37; }
-.station-actions .member-icon-action.station-map-link:hover { color: #8b8dff; border-color: #8b8dff; background: #25264a; }
+.station-actions .member-icon-action.station-missions-link:hover { color: var(--accent-missions); border-color: var(--accent-missions); background: #1f3a37; }
+.station-actions .member-icon-action.station-map-link:hover { color: var(--accent-map); border-color: var(--accent-map); background: #25264a; }
 .station-actions .member-icon-action.station-notes-action:hover { color: #e4b478; border-color: #e4b478; background: #3a2f1f; }
 .station-actions [data-tooltip] { position: relative; }
 .station-actions [data-tooltip]::after { position: absolute; z-index: 30; right: 0; bottom: calc(100% + 7px); padding: 6px 8px; color: #f1eee7; border: 1px solid #394548; border-radius: 3px; background: #111719; box-shadow: 0 4px 14px #0008; content: attr(data-tooltip); font-size: 9px; font-weight: 500; line-height: 1.2; opacity: 0; pointer-events: none; text-transform: none; transform: translateY(3px); transition: opacity .12s, transform .12s; white-space: nowrap; }
@@ -179,7 +179,7 @@ body:has(.sidebar-compact) .station-dialog textarea { min-height: 110px; }
 .station-new-ribbon { position: absolute; top: 10px; left: -26px; width: 90px; padding: 2px 0; color: #10130f; background: var(--lime); font-size: 10px; font-weight: 750; letter-spacing: 0.06em; text-align: center; text-transform: uppercase; transform: rotate(-45deg); pointer-events: none; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35); }
 .station-list li.station-can-create-mission { position: relative; }
 .station-mission-ribbon-clip { position: absolute; z-index: 2; top: 0; right: 0; width: 96px; height: 96px; overflow: hidden; border-radius: 0 4px 0 0; pointer-events: none; }
-.station-mission-create-ribbon { position: absolute; top: 14px; right: -30px; width: 110px; padding: 2px 0; color: #10211e; background: #72d1c4; font-size: 8px; font-weight: 750; letter-spacing: 0.04em; text-align: center; text-transform: uppercase; transform: rotate(45deg); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35); }
+.station-mission-create-ribbon { position: absolute; top: 14px; right: -30px; width: 110px; padding: 2px 0; color: #10211e; background: var(--accent-missions); font-size: 8px; font-weight: 750; letter-spacing: 0.04em; text-align: center; text-transform: uppercase; transform: rotate(45deg); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35); }
 .sidebar-compact ~ .main-panel .station-new-ribbon { top: 19px; left: -27px; width: 110px; font-size: 12px; }
 .sidebar-compact ~ .main-panel .station-mission-create-ribbon { top: 19px; right: -32px; width: 125px; font-size: 10px; }
 .station-mission-disabled { position: relative; color: #4f6f6a; cursor: default; }

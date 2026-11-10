@@ -7,7 +7,7 @@
 .station-map-ring { fill: none; stroke: #26313a; stroke-width: 1; stroke-dasharray: 4 6; }
 .station-map-centre line { stroke: #f2c94c; stroke-width: 1.5; }
 .station-map-marker { cursor: pointer; outline: none; }
-.station-map-marker-other { --marker: #6cb4ff; }
+.station-map-marker-other { --marker: var(--accent-stations); }
 .station-map-marker-mine { --marker: var(--lime); }
 .station-map-marker-available { --marker: #4cd37d; }
 .station-map-marker-hub { --marker: #ff4d4f; }
@@ -30,7 +30,7 @@
 .station-map-side { min-width: 0; padding: 14px; border: 1px solid #4a4f8a; border-radius: 4px; background: #1c1e3a55; }
 .station-map-galaxy { margin-bottom: 14px; }
 .station-map-galaxy select { width: 100%; }
-.station-map-side h3 { margin: 0 0 8px; color: #8b8dff; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; }
+.station-map-side h3 { margin: 0 0 8px; color: var(--accent-map); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; }
 .station-map-side .station-map-hint:first-of-type { margin-top: 12px; }
 .station-map-legend { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; color: #c0c8c6; font-size: 11px; }
 .station-map-legend li { display: flex; align-items: center; gap: 6px; }

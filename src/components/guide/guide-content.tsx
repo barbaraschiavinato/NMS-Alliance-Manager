@@ -67,6 +67,7 @@ import { PlanetStationHeadingExample } from "@/components/guide/planet-station-h
 import { emptyPlanetFilterValues } from "@/components/forms/planet-filters";
 import { LocaleProvider } from "@/components/providers/locale-provider";
 import type { AllianceSettings } from "@/lib/members/access-store";
+import { sectionAccents } from "@/lib/navigation/section-accents";
 
 const specialtyIcons = {
   ranger: { icon: Compass, color: "#5fd68a", name: "Ranger" },
@@ -126,14 +127,14 @@ const buttons: ReadonlyArray<{
     label: "Vai alla stazione",
     specialty: ["ranger", "explorer", "builder"],
     icon: Orbit,
-    color: "#6cb4ff",
+    color: sectionAccents.stations,
     meaning: "Porta alla scheda stazione collegata.",
   },
   {
     label: "Vai alle missioni collegate",
     specialty: ["ranger", "explorer", "builder"],
     icon: Crosshair,
-    color: "#72d1c4",
+    color: sectionAccents.missions,
     meaning:
       "Apre il dettaglio della missione per la tua specializzazione, mostrando prima tutte le missioni associate alla stazione.",
   },
@@ -141,28 +142,28 @@ const buttons: ReadonlyArray<{
     label: "Mostra sulla mappa",
     specialty: ["ranger", "explorer", "builder"],
     icon: GalaxyIcon,
-    color: "#8b8dff",
+    color: sectionAccents.map,
     meaning: "Apre la mappa sulla galassia della stazione, con il suo marker giallo e pulsante.",
   },
   {
     label: "Vai alla farm",
     specialty: ["ranger", "explorer", "builder"],
     icon: Factory,
-    color: "#8fd46a",
+    color: sectionAccents.farms,
     meaning: "Sulle card dei pianeti: apre il dettaglio della farm registrata su quel pianeta.",
   },
   {
     label: "Vai al pet",
     specialty: ["ranger", "explorer", "builder"],
     icon: PawPrint,
-    color: "#ff8fb8",
+    color: sectionAccents.pets,
     meaning: "Sulle card dei pianeti: apre il dettaglio del pet trovato su quel pianeta.",
   },
   {
     label: "Crea missione dalla stazione",
     specialty: ["ranger"],
     icon: CirclePlus,
-    color: "#72d1c4",
+    color: sectionAccents.missions,
     meaning:
       "Crea una missione per il sistema di una propria stazione, per Esploratori e/o Costruttori non preassegnata",
   },
@@ -170,7 +171,7 @@ const buttons: ReadonlyArray<{
     label: "Crea missione dalla stazione",
     specialty: ["builder", "explorer"],
     icon: CirclePlus,
-    color: "#72d1c4",
+    color: sectionAccents.missions,
     meaning: "Crea una missione per il sistema per la propria specializzazione, assegnata a se stessi.",
   },
   {
@@ -195,7 +196,7 @@ const buttons: ReadonlyArray<{
     label: "Vai al pianeta",
     specialty: ["ranger", "explorer", "builder"],
     icon: Eclipse,
-    color: "#b48cf2",
+    color: sectionAccents.planets,
     meaning: "Porta al pianeta collegato.",
   },
   {
@@ -262,40 +263,40 @@ const sections = [
   {
     name: "Stazioni",
     icon: Orbit,
-    color: "#6cb4ff",
+    color: sectionAccents.stations,
     tasks: "Consulti o aggiungi stazioni spaziali, crei le missioni per quel sistema",
   },
   {
     name: "Missioni",
     icon: Crosshair,
-    color: "#72d1c4",
+    color: sectionAccents.missions,
     tasks:
       "Consulti le missioni disponibili per te, prendi in carico quelle libere o inizi quelle assegnate, spunta le tue voci e completa la missione",
   },
   {
     name: "Pianeti",
     icon: Eclipse,
-    color: "#b48cf2",
+    color: sectionAccents.planets,
     tasks: "Consulti e filtri per proprietà i pianeti dell'archivio e trovi la stazione associata",
   },
   {
     name: "Mappa",
     icon: GalaxyIcon,
-    color: "#8b8dff",
+    color: sectionAccents.map,
     tasks:
       "Vedi le stazioni dell'alleanza sulla mappa della loro galassia (hub in rosso, quelle con missioni per te in verde, le tue in arancione) e arrivi qui dalle schede stazione e dai sistemi di Pianeti",
   },
   {
     name: "Farm",
     icon: Factory,
-    color: "#8fd46a",
+    color: sectionAccents.farms,
     tasks:
       "Registri i pianeti dove coltivi o raccogli risorse, filtri le farm dell'alleanza per piante e materiali e trovi la stazione del sistema",
   },
   {
     name: "Pet",
     icon: PawPrint,
-    color: "#ff8fb8",
+    color: sectionAccents.pets,
     tasks:
       "Condividi dove hai trovato i tuoi pet, filtri quelli dell'alleanza per tipo, classi e altro, e scrivi allo scopritore per lo scambio uova",
   },
@@ -573,7 +574,7 @@ export async function GuideContent({
               <span
                 aria-label="Crea una missione"
                 className="guide-icon guide-quick-mission-icon"
-                style={{ color: "#72d1c4", borderColor: "#72d1c4" }}
+                style={{ color: sectionAccents.missions, borderColor: sectionAccents.missions }}
                 title="Crea una missione"
               >
                 <CirclePlus aria-hidden="true" size={16} />
@@ -604,7 +605,7 @@ export async function GuideContent({
                 <span
                   aria-label="Crea una missione"
                   className="guide-icon guide-quick-mission-icon"
-                  style={{ color: "#72d1c4", borderColor: "#72d1c4" }}
+                  style={{ color: sectionAccents.missions, borderColor: sectionAccents.missions }}
                   title="Crea una missione"
                 >
                   <CirclePlus aria-hidden="true" size={16} />
@@ -628,7 +629,7 @@ export async function GuideContent({
                   <span
                     aria-label="Crea una missione"
                     className="guide-icon guide-quick-mission-icon"
-                    style={{ color: "#72d1c4", borderColor: "#72d1c4" }}
+                    style={{ color: sectionAccents.missions, borderColor: sectionAccents.missions }}
                     title="Crea una missione"
                   >
                     <CirclePlus aria-hidden="true" size={16} />
@@ -645,7 +646,7 @@ export async function GuideContent({
                 <span
                   aria-label="Apri la stazione associata"
                   className="guide-icon guide-quick-mission-icon"
-                  style={{ color: "#6cb4ff", borderColor: "#6cb4ff" }}
+                  style={{ color: sectionAccents.stations, borderColor: sectionAccents.stations }}
                   title="Apri la stazione associata"
                 >
                   <Orbit aria-hidden="true" size={16} />
@@ -656,7 +657,7 @@ export async function GuideContent({
                   <span
                     aria-label="Crea una missione"
                     className="guide-icon guide-quick-mission-icon guide-quick-mission-icon-spaced-right"
-                    style={{ color: "#72d1c4", borderColor: "#72d1c4" }}
+                    style={{ color: sectionAccents.missions, borderColor: sectionAccents.missions }}
                     title="Crea una missione"
                   >
                     <CirclePlus aria-hidden="true" size={16} />
@@ -702,7 +703,7 @@ export async function GuideContent({
                 <span
                   aria-label="Crea una missione"
                   className="guide-icon guide-quick-mission-icon"
-                  style={{ color: "#72d1c4", borderColor: "#72d1c4" }}
+                  style={{ color: sectionAccents.missions, borderColor: sectionAccents.missions }}
                   title="Crea una missione"
                 >
                   <CirclePlus aria-hidden="true" size={16} />
@@ -726,7 +727,7 @@ export async function GuideContent({
                   <span
                     aria-label="Crea una missione"
                     className="guide-icon guide-quick-mission-icon"
-                    style={{ color: "#72d1c4", borderColor: "#72d1c4" }}
+                    style={{ color: sectionAccents.missions, borderColor: sectionAccents.missions }}
                     title="Crea una missione"
                   >
                     <CirclePlus aria-hidden="true" size={16} />
@@ -743,7 +744,7 @@ export async function GuideContent({
                 <span
                   aria-label="Apri la stazione associata"
                   className="guide-icon guide-quick-mission-icon"
-                  style={{ color: "#6cb4ff", borderColor: "#6cb4ff" }}
+                  style={{ color: sectionAccents.stations, borderColor: sectionAccents.stations }}
                   title="Apri la stazione associata"
                 >
                   <Orbit aria-hidden="true" size={16} />
@@ -754,7 +755,7 @@ export async function GuideContent({
                   <span
                     aria-label="Crea una missione"
                     className="guide-icon guide-quick-mission-icon guide-quick-mission-icon-spaced-right"
-                    style={{ color: "#72d1c4", borderColor: "#72d1c4" }}
+                    style={{ color: sectionAccents.missions, borderColor: sectionAccents.missions }}
                     title="Crea una missione"
                   >
                     <CirclePlus aria-hidden="true" size={16} />
@@ -926,7 +927,7 @@ export async function GuideContent({
 
           <section id="stazioni">
             {" "}
-            <h2 style={{ color: "#6cb4ff" }}>
+            <h2 style={{ color: sectionAccents.stations }}>
               <Orbit aria-hidden="true" size={20} />
               Stazioni
             </h2>
@@ -1084,7 +1085,7 @@ export async function GuideContent({
           </section>
 
           <section id="missioni">
-            <h2 style={{ color: "#72d1c4" }}>
+            <h2 style={{ color: sectionAccents.missions }}>
               <Crosshair aria-hidden="true" size={20} />
               Missioni
             </h2>
@@ -1166,7 +1167,7 @@ export async function GuideContent({
           </section>
 
           <section id="pianeti">
-            <h2 style={{ color: "#b48cf2" }}>
+            <h2 style={{ color: sectionAccents.planets }}>
               <Eclipse aria-hidden="true" size={20} />
               Pianeti
             </h2>
@@ -1274,7 +1275,7 @@ export async function GuideContent({
           </section>
 
           <section id="mappa">
-            <h2 style={{ color: "#8b8dff" }}>
+            <h2 style={{ color: sectionAccents.map }}>
               <GalaxyIcon aria-hidden="true" size={20} />
               Mappa
             </h2>
@@ -1315,7 +1316,7 @@ export async function GuideContent({
           </section>
 
           <section id="farm">
-            <h2 style={{ color: "#8fd46a" }}>
+            <h2 style={{ color: sectionAccents.farms }}>
               <Factory aria-hidden="true" size={20} />
               Farm
             </h2>
@@ -1353,7 +1354,7 @@ export async function GuideContent({
           </section>
 
           <section id="pet">
-            <h2 style={{ color: "#ff8fb8" }}>
+            <h2 style={{ color: sectionAccents.pets }}>
               <PawPrint aria-hidden="true" size={20} />
               Pet
             </h2>
@@ -1494,7 +1495,7 @@ export async function GuideContent({
                 <span
                   aria-label="Pianeta"
                   className="guide-icon"
-                  style={{ color: "#b48cf2", borderColor: "#b48cf2" }}
+                  style={{ color: sectionAccents.planets, borderColor: sectionAccents.planets }}
                   title="Pianeta"
                 >
                   <Eclipse aria-hidden="true" size={16} />
@@ -1562,7 +1563,7 @@ export async function GuideContent({
                 <span
                   aria-label="Pet"
                   className="guide-icon"
-                  style={{ color: "#ff8fb8", borderColor: "#ff8fb8" }}
+                  style={{ color: sectionAccents.pets, borderColor: sectionAccents.pets }}
                   title="Pet"
                 >
                   <PawPrint aria-hidden="true" size={16} />
@@ -1574,7 +1575,7 @@ export async function GuideContent({
                 <span
                   aria-label="Missione"
                   className="guide-icon"
-                  style={{ color: "#72d1c4", borderColor: "#72d1c4" }}
+                  style={{ color: sectionAccents.missions, borderColor: sectionAccents.missions }}
                   title="Missione"
                 >
                   <Crosshair aria-hidden="true" size={16} />
@@ -1583,7 +1584,7 @@ export async function GuideContent({
                 <span
                   aria-label="Stazione"
                   className="guide-icon"
-                  style={{ color: "#6cb4ff", borderColor: "#6cb4ff" }}
+                  style={{ color: sectionAccents.stations, borderColor: sectionAccents.stations }}
                   title="Stazione"
                 >
                   <Orbit aria-hidden="true" size={16} />

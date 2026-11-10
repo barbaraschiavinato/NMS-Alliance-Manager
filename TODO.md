@@ -36,7 +36,3 @@ Agreed scope (2026-10-22). Taxi is implemented with separate Discord/Telegram cr
 - Keep the in-app guide and `docs/manuale-utente.md` consistent, in both Italian and English.
 
 
-## T-txg89r: Section accent colours as tokens
-
-Section accents (stations `#6cb4ff`, missions `#72d1c4`, planets `#b48cf2`, map `#8b8dff`, farms `#8fd46a`, pets `#ff8fb8`) are hard-coded about 34 times in `src/styles/` and about 50 times in TSX, mostly inline styles in `guide-content.tsx`. `--green` already equals `#72d1c4` but is barely used; `--lime` and `--amber` share `#ff8400`. Add `--accent-<section>` CSS variables and a `sectionAccents` TS object, and replace the literals.
-

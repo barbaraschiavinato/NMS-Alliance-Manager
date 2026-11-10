@@ -21,7 +21,7 @@
 .primary-button { height: 37px; position: relative; z-index: 2; display: inline-flex; align-items: center; justify-content: center; gap: 9px; padding: 0 13px; color: #213329; border: 0; background: var(--lime); cursor: pointer; font-size: 10px; font-weight: 700; }
 .primary-button { font-family: var(--font-accent); letter-spacing: .148em; text-transform: uppercase; }
 .primary-button:hover { background: #ff9b33; }
-.marker-green { background: #72d1c4; }
+.marker-green { background: var(--green); }
 .marker-coral { background: var(--coral); }
 .marker-yellow { background: var(--amber); }
 .section-heading { display: flex; align-items: end; justify-content: space-between; margin-bottom: 15px; }
@@ -96,7 +96,7 @@
 .address-validation > svg { flex: none; margin-top: 1px; }
 .address-validation-text { min-width: 0; }
 .address-incomplete { color: #e4b478; }
-.address-valid { color: #72d1c4; }
+.address-valid { color: var(--green); }
 .address-invalid { color: #ef8067; }
 .portal-decode { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); margin-top: 7px; overflow: hidden; border: 1px solid #354044; }
 .portal-decode-segment { min-width: 0; padding: 7px 5px; border-right: 1px solid #354044; }
@@ -106,7 +106,7 @@
 .portal-decode-incomplete { background: #1a2124; }
 .portal-decode-valid { background: #1a2124; }
 .portal-decode-valid .portal-decode-progress { background: #23352c; }
-.portal-decode-valid .portal-decode-progress > span { background: #72d1c4; }
+.portal-decode-valid .portal-decode-progress > span { background: var(--green); }
 .portal-decode-invalid { background: #1a2124; }
 .portal-decode-invalid .portal-decode-progress { background: #3b2928; }
 .portal-decode-invalid .portal-decode-progress > span { background: #ef8067; }
@@ -150,17 +150,17 @@
 .station-add-form .portal-field { margin: 14px 0; }
 .planet-mission-card-copy .glyph-strip { max-width: max-content; }
 .station-list-cards .station-portal-code > .glyph-strip { grid-column: 1; grid-row: 1; }
-.create-station-mission { color: #72d1c4; }
+.create-station-mission { color: var(--accent-missions); }
 .badge--member-status { padding: 4px 7px; }
 .badge--member-status-pending { color: #e4b478; border-color: #655536; background: #2b261b; }
-.badge--member-status-approved { color: #72d1c4; border-color: #315b55; background: #192a29; }
+.badge--member-status-approved { color: var(--green); border-color: #315b55; background: #192a29; }
 .badge--member-status-blocked { color: #ef8067; border-color: #70413b; background: #2b1e1d; }
 .system-status-fieldset { grid-column: 1 / -1; min-width: 0; margin: 0; padding: 0; border: 0; }
 .system-status-fieldset legend { margin-bottom: 7px; color: var(--muted); font-size: 10px; }
 .system-task-tooltip-ranger { --system-task-tooltip-color: #5fd68a; }
 .system-task-tooltip-explorer { --system-task-tooltip-color: #4d9bff; }
 .system-task-tooltip-builder { --system-task-tooltip-color: #ffb45d; }
-.system-task-tooltip-discoverer { --system-task-tooltip-color: #6cb4ff; }
+.system-task-tooltip-discoverer { --system-task-tooltip-color: var(--accent-stations); }
 .system-task-tooltip-error { --system-task-tooltip-color: #ef8067; }
 .system-status-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
 .system-status-option { min-height: 35px; display: flex; align-items: center; gap: 8px; padding: 0 9px; color: var(--ink); border: 1px solid #354044; background: #1a2124; cursor: pointer; font-size: 9px; transition: border-color .15s, background-color .15s; }
@@ -172,8 +172,8 @@
 .system-status-option[data-tooltip]:is(:hover, :focus-visible, :focus-within)::after { opacity: 1; visibility: visible; transform: translateY(0); }
 .system-status-option[data-tooltip]:is(:hover, :focus-visible, :focus-within)::before { opacity: 1; visibility: visible; transform: translate(-50%, 0) rotate(45deg); }
 .system-status-option:has(input:checked) { border-color: #315b55; background: #192a29; }
-.system-status-option input { width: 14px; height: 14px; flex: 0 0 14px; margin: 0; accent-color: #72d1c4; }
-.system-status-option:focus-within { outline: 1px solid #72d1c4; outline-offset: 1px; }
+.system-status-option input { width: 14px; height: 14px; flex: 0 0 14px; margin: 0; accent-color: var(--accent-missions); }
+.system-status-option:focus-within { outline: 1px solid var(--accent-missions); outline-offset: 1px; }
 .system-status-option-ranger { border-color: #2f6a43; }
 .system-status-option-ranger:has(input:checked) { border-color: #5fd68a; background: #17291e; }
 .system-status-option-ranger input { accent-color: #5fd68a; }
@@ -183,7 +183,7 @@
 .system-status-option-covered input { position: absolute; opacity: 0; pointer-events: none; }
 .system-status-option-explorer-box, .system-status-option-ranger-box, .system-status-option-discoverer-box { width: 14px; height: 14px; flex: 0 0 14px; display: grid; place-items: center; padding: 2px; border-radius: 2px; background: #4d9bff; color: #0d1a2b; }
 .system-status-option-ranger-box { background: #5fd68a; }
-.system-status-option-discoverer-box { background: #6cb4ff; }
+.system-status-option-discoverer-box { background: var(--accent-stations); }
 .system-status-option-explorer-box svg, .system-status-option-ranger-box svg, .system-status-option-discoverer-box svg { width: 100%; height: 100%; }
 .system-status-option-explorer input { accent-color: #4d9bff; }
 .system-status-option-error { border-color: #7a3a2f; }
@@ -233,11 +233,11 @@
 .mission-dialog .portal-decode-invalid { background: #1a2124; }
 .mission-dialog .portal-decode-progress { background: #352719; }
 .mission-dialog .portal-decode-valid .portal-decode-progress { background: #23352c; }
-.mission-dialog .portal-decode-valid .portal-decode-progress > span { background: #72d1c4; }
+.mission-dialog .portal-decode-valid .portal-decode-progress > span { background: var(--green); }
 .mission-dialog .portal-decode-invalid .portal-decode-progress { background: #3b2928; }
 .mission-dialog .portal-decode-progress > span { background: var(--lime); }
 .mission-dialog .address-incomplete { color: #e4b478; }
-.mission-dialog .address-valid { color: #72d1c4; }
+.mission-dialog .address-valid { color: var(--green); }
 .mission-dialog .address-invalid { color: #ef8067; }
 .mission-dialog .badge--protected { color: #a4adae; border-color: #354044; background: #1a2124; }
 @media (max-width: 1080px) {

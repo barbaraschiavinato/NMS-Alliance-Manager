@@ -148,3 +148,7 @@ These branches can't be reached with the current types and call sites, so they a
 ## C-cjougf: Duplicated paragraphs in AGENTS.md (2026-11-10)
 
 `AGENTS.md` ("Persistence" and "Taxi service and member profiles"): the "Store reads are memoized per request" bullet and the "All sidebar counters ... come from one request" bullet each appear twice, word for word. One copy of each should go (the first memo bullet is the one in the right place, before "Derived fields"; the duplicated one sits after it, glued to the next heading).
+
+## C-alsv38: `--lime` and `--amber` are the same orange (2026-11-10)
+
+`src/styles/base.css:40` and `:42`: both variables are `#ff8400`. `--lime` is used as the primary accent (own stations, focus outlines) and `--amber` elsewhere, but the names no longer describe the colour and nothing tells which one new code should use. Either merge them into one token or give `--lime` its own value again. Left alone while moving the section colours to `--accent-*` tokens, because changing either would change the look.

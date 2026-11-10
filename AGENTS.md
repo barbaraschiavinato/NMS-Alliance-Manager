@@ -158,6 +158,7 @@ Each `src/app/<section>/page.tsx` is a thin server component. It loads access da
 ### Shared UI components
 
 - Reuse the single shared component instead of writing a copy: `Tabs` (`components/layout/tabs.tsx`, the only tab bar; it scrolls horizontally only, so keep the tab row free of vertical overflow on touch screens), `Pagination` (`components/shared/pagination.tsx`, icon-only buttons on mobile, text kept as `aria-label`), `Toast` (`components/shared/toast.tsx`, closable success/error feedback with optional auto-close) and `DetailSection` (borderless on mobile). New pages should report action feedback with `Toast`, not inline text.
+- Section accent colours are CSS variables in `src/styles/base.css` (`--accent-stations`, `--accent-missions`, `--accent-planets`, `--accent-map`, `--accent-farms`, `--accent-pets`); inline styles use `sectionAccents` (`lib/navigation/section-accents.ts`), which points to the same variables. Never write the hex values again. `--green` has the same value as the missions accent but means success/valid (approved, valid address, toasts): pick the token by meaning, not by colour.
 - The Users page filters members by status and by a **Moderators** tab that includes admins (`role` is `moderator` or `admin`).
 
 ### Notifications
