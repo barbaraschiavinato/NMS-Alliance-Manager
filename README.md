@@ -100,9 +100,9 @@ npm run build          # production build, includes the TypeScript type check
 npm run audit:prod     # npm audit on the production dependencies only
 ```
 
-All tests live in `tests/`, mirroring the source: pure logic, stores, API routes, components and pages. `src/lib/nms-core/` is vendored third-party code and is excluded from tests, coverage and formatting. The existing code is not fully formatted with Prettier yet, so format only the files you create or edit.
+All tests live in `tests/`, mirroring the source: pure logic, stores, API routes, components and pages. `src/lib/nms-core/` is vendored third-party code and is excluded from tests, coverage and formatting. The code is formatted with Prettier: run `npm run format` before committing.
 
-GitHub CI runs lint, tests with coverage and the build on every push to `main` and every pull request, plus `npm run audit:prod`. The coverage summary appears on the job page and the HTML report is uploaded as the `coverage-report` artifact.
+GitHub CI checks formatting and runs lint, tests with coverage and the build on every push to `main` and every pull request, plus `npm run audit:prod`. The coverage summary appears on the job page and the HTML report is uploaded as the `coverage-report` artifact.
 
 The `CI` GitHub Actions workflow (`.github/workflows/ci.yml`) runs the tests and `npm run audit:prod` on every pull request.
 

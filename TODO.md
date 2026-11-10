@@ -35,14 +35,6 @@ Agreed scope (2026-10-22). Taxi is implemented with separate Discord/Telegram cr
 - Admin and moderator features are not covered: the Utenti page (approving, blocking and deleting accounts, changing roles), offline players, the Excel export of stations, alliance branding, and turning the simple view on or off.
 - Keep the in-app guide and `docs/manuale-utente.md` consistent, in both Italian and English.
 
-## T-e7flz1: Format the whole project with Prettier
-
-Prettier is configured (`prettier.config.mjs`, `npm run format`), but only the newest files and `src/components/guide/` are formatted. About 100 other files still differ.
-
-- Run `npm run format` once, in a separate commit that contains no other change.
-- Add `npm run format:check` to the `CI` workflow, and then drop the "format only the files you edit" note from `AGENTS.md` and the README.
-- Decide whether to also format the Markdown files and `src/styles/`, which are ignored now.
-
 
 ## T-txg89r: Section accent colours as tokens
 
