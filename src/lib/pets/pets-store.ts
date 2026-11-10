@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { readJsonDocument, writeJsonDocument } from "@/lib/storage/json-document";
 import { memoizedRead } from "@/lib/storage/request-memo";
+import { reassignOwnedItems } from "@/lib/members/owned-items";
 import { normalizeStoredPet, type Pet, type PetInput } from "@/lib/pets/pets";
 
 export function readPets(): Promise<Pet[]> {
@@ -92,13 +93,6 @@ export async function removePet(id: string): Promise<Pet | null> {
 }
 
 export async function reassignPetOwner(fromMemberId: string, toMemberId: string): Promise<void> {
-  const pets = await readPets();
-  if (!pets.some((pet) => pet.ownerId === fromMemberId || pet.createdByMemberId === fromMemberId)) return;
-  await writePets(
-    pets.map((pet) => ({
-      ...pet,
-      ownerId: pet.ownerId === fromMemberId ? toMemberId : pet.ownerId,
-      ...(pet.createdByMemberId === fromMemberId ? { createdByMemberId: toMemberId } : {}),
-    })),
-  );
+  const reassigned = reassignOwnedItems(await readPets(), fromMemberId, toMemberId);
+  if (reassigned) await writePets(reassigned);
 }

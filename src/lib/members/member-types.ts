@@ -61,3 +61,10 @@ export type AllianceSettings = {
   appIcon192Url: string;
   appIcon512Url: string;
 };
+
+const roleLevel: Record<MemberRole, number> = { user: 0, moderator: 1, admin: 2 };
+
+/** True when the member's effective role is at least `minimumRole` (simple view already lowers `role`). */
+export function hasRole(member: Pick<AllianceMember, "role"> | null, minimumRole: MemberRole) {
+  return Boolean(member && roleLevel[member.role] >= roleLevel[minimumRole]);
+}

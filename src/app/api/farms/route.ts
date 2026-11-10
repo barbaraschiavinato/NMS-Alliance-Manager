@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { getCurrentMember, hasRole } from "@/lib/auth/authorization";
 import { readAccessData, type AllianceMember } from "@/lib/members/access-store";
-import { isEmailAddress } from "@/lib/members/member-types";
+import { canManageOwnedItem, findApprovedOwner, ownerDisplayName, resolveOwner } from "@/lib/members/owned-items";
 import { readAlmanacResponses } from "@/lib/almanac/almanac-store";
-import { parseFarmInput, type Farm } from "@/lib/farms/farms";
+import { parseFarmInput } from "@/lib/farms/farms";
 import { addFarm, readFarms, removeFarm, updateFarm } from "@/lib/farms/farms-store";
 import { isSameSystem, stationDetailHref, type SystemIdentity } from "@/lib/navigation/detail-links";
 import { readVisibleStationPortals } from "@/lib/stations/visible-stations";
@@ -21,30 +21,10 @@ async function readPayload(request: Request): Promise<Payload> {
   return body && typeof body === "object" && !Array.isArray(body) ? (body as Payload) : {};
 }
 
-function canManageFarm(member: AllianceMember, farm: Farm) {
-  return hasRole(member, "moderator") || (farm.ownerId !== null && farm.ownerId === member.publicId);
-}
-
-function resolveOwner(
-  member: AllianceMember,
-  members: readonly AllianceMember[],
-  requested: unknown,
-  fallbackOwnerId: Farm["ownerId"],
-): { ownerId: Farm["ownerId"] } | { error: string; status: number } {
-  // Null clears the owner; omitted or empty values retain the existing default.
-  const requestedId =
-    requested === null ? null : typeof requested === "string" && requested.trim() ? requested.trim() : fallbackOwnerId;
-  if (!hasRole(member, "moderator")) {
-    return requestedId === member.publicId
-      ? { ownerId: member.publicId }
-      : { error: "farms.error_cannot_assign_another_owner", status: 403 };
-  }
-  if (requestedId === null || requestedId === fallbackOwnerId) return { ownerId: requestedId };
-  const owner = members.find(
-    (candidate) => candidate.publicId === requestedId && candidate.membershipStatus === "approved",
-  );
-  return owner ? { ownerId: owner.publicId } : { error: "farms.error_owner_must_be_approved", status: 400 };
-}
+const farmOwnerErrors = {
+  cannotAssignAnother: "farms.error_cannot_assign_another_owner",
+  mustBeApproved: "farms.error_owner_must_be_approved",
+} as const;
 
 // `samePlanet` widens a detail request to every farm of the same planet (portal and galaxy), newest first.
 type FarmScope = Readonly<{ detailId?: string; system?: SystemIdentity; samePlanet?: boolean }>;
@@ -78,9 +58,7 @@ async function farmViews(member: AllianceMember, scope: FarmScope = {}) {
     farms.length > 0 ? readVisibleStationPortals(member) : Promise.resolve([]),
   ]);
   return farms.map((farm) => {
-    const owner = access.members.find(
-      (candidate) => candidate.publicId === farm.ownerId && candidate.membershipStatus === "approved",
-    );
+    const owner = findApprovedOwner(access.members, farm.ownerId);
     const station = stations.find((entry) => isSameSystem(entry, farm));
     const response = almanac[farm.portal]?.find((entry) => entry.galaxy === farm.galaxy)?.response;
     const pictures = response?.pictures;
@@ -89,12 +67,12 @@ async function farmViews(member: AllianceMember, scope: FarmScope = {}) {
     );
     return {
       ...farm,
-      ownerName: [owner?.nmsName, owner?.name].find((value) => value && !isEmailAddress(value)) || "",
+      ownerName: ownerDisplayName(owner),
       ...(owner ? { ownerMemberId: owner.publicId } : {}),
       ...(owner?.image ? { ownerImage: owner.image } : {}),
       ...(station ? { stationHref: stationDetailHref(station, "farms") } : {}),
       ...(planetImageUrl ? { planetImageUrl } : {}),
-      canManage: canManageFarm(member, farm),
+      canManage: canManageOwnedItem(member, farm),
     };
   });
 }
@@ -132,7 +110,7 @@ export const POST = withRequestMemo(async function POST(request: Request) {
   if ("error" in parsed) return NextResponse.json({ error: parsed.error }, { status: 400 });
   try {
     const access = await readAccessData();
-    const owner = resolveOwner(member, access.members, payload.ownerId, member.publicId);
+    const owner = resolveOwner(member, access.members, payload.ownerId, member.publicId, farmOwnerErrors);
     if ("error" in owner) return NextResponse.json({ error: owner.error }, { status: owner.status });
     const farm = await addFarm(parsed.input, owner.ownerId, member.publicId);
     return NextResponse.json({ farm, farms: await farmViews(member) }, { status: 201 });
@@ -154,8 +132,8 @@ export const PATCH = withRequestMemo(async function PATCH(request: Request) {
     const [farms, access] = await Promise.all([readFarms(), readAccessData()]);
     const current = farms.find((farm) => farm.id === id);
     if (!current) return notFound("farms.error_not_found");
-    if (!canManageFarm(member, current)) return forbidden("farms.error_cannot_edit_another_member_s_farm");
-    const owner = resolveOwner(member, access.members, payload.ownerId, current.ownerId);
+    if (!canManageOwnedItem(member, current)) return forbidden("farms.error_cannot_edit_another_member_s_farm");
+    const owner = resolveOwner(member, access.members, payload.ownerId, current.ownerId, farmOwnerErrors);
     if ("error" in owner) return NextResponse.json({ error: owner.error }, { status: owner.status });
     const input =
       !("systemName" in payload) && current.systemName && isSameSystem(parsed.input, current)
@@ -178,7 +156,7 @@ export const DELETE = withRequestMemo(async function DELETE(request: Request) {
   try {
     const current = (await readFarms()).find((farm) => farm.id === id);
     if (!current) return notFound("farms.error_not_found");
-    if (!canManageFarm(member, current)) return forbidden("farms.error_cannot_remove_another_member_s_farm");
+    if (!canManageOwnedItem(member, current)) return forbidden("farms.error_cannot_remove_another_member_s_farm");
     await removeFarm(id);
     return NextResponse.json({ farms: await farmViews(member) });
   } catch (error) {

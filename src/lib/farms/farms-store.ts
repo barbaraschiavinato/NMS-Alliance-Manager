@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { readJsonDocument, writeJsonDocument } from "@/lib/storage/json-document";
 import { memoizedRead } from "@/lib/storage/request-memo";
+import { reassignOwnedItems } from "@/lib/members/owned-items";
 import { normalizeStoredFarm, type Farm, type FarmInput } from "@/lib/farms/farms";
 
 export function readFarms(): Promise<Farm[]> {
@@ -74,13 +75,6 @@ export async function removeFarm(id: string): Promise<boolean> {
 }
 
 export async function reassignFarmOwner(fromMemberId: string, toMemberId: string): Promise<void> {
-  const farms = await readFarms();
-  if (!farms.some((farm) => farm.ownerId === fromMemberId || farm.createdByMemberId === fromMemberId)) return;
-  await writeFarms(
-    farms.map((farm) => ({
-      ...farm,
-      ownerId: farm.ownerId === fromMemberId ? toMemberId : farm.ownerId,
-      ...(farm.createdByMemberId === fromMemberId ? { createdByMemberId: toMemberId } : {}),
-    })),
-  );
+  const reassigned = reassignOwnedItems(await readFarms(), fromMemberId, toMemberId);
+  if (reassigned) await writeFarms(reassigned);
 }
