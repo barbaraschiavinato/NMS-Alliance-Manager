@@ -40,10 +40,6 @@ Agreed scope (2026-10-22). Taxi is implemented with separate Discord/Telegram cr
 
 Section accents (stations `#6cb4ff`, missions `#72d1c4`, planets `#b48cf2`, map `#8b8dff`, farms `#8fd46a`, pets `#ff8fb8`) are hard-coded about 34 times in `src/styles/` and about 50 times in TSX, mostly inline styles in `guide-content.tsx`. `--green` already equals `#72d1c4` but is barely used; `--lime` and `--amber` share `#ff8400`. Add `--accent-<section>` CSS variables and a `sectionAccents` TS object, and replace the literals.
 
-## T-bgxtqv: Shared time and size limits
-
-The "New" window (7 days) is computed three times (`station-card/simple.tsx`, `station-card/extended.tsx`, `planet-list.tsx`); the 5 MB upload limit appears three times (`api/admin/upload`, `admin-panel.tsx`, `pets.ts`); farm and pet field length limits are identical under different names. Extract shared constants and an `isNewItem(createdAt, now)` helper.
-
 ## T-mxu22f: Typed client event names
 
 `farms-changed`, `pets-changed`, `taxi-requests-changed`, `help-requests-changed`, `messages-unread-changed` and `planet-count-changed` are string literals on both the dispatch and listen side. Add `src/lib/navigation/app-events.ts` with the names and typed `dispatchAppEvent` / `onAppEvent` helpers.

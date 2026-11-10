@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { getCurrentMember, hasRole } from "@/lib/auth/authorization";
 import { readAccessData, type AllianceMember } from "@/lib/members/access-store";
 import { isEmailAddress } from "@/lib/members/member-types";
-import { parsePetInput, petImageMaxBytes, petImageTypes, type Pet } from "@/lib/pets/pets";
+import { parsePetInput, petImageTypes, type Pet } from "@/lib/pets/pets";
+import { imageUploadMaxBytes } from "@/lib/utils/limits";
 import { addPet, readPets, removePet, updatePet } from "@/lib/pets/pets-store";
 import { deleteImage, storeImage } from "@/lib/storage/image-storage";
 import { isSameSystem, stationDetailHref, type SystemIdentity } from "@/lib/navigation/detail-links";
@@ -37,7 +38,7 @@ async function readSubmission(request: Request): Promise<Submission> {
 }
 
 function isValidImage(file: File) {
-  return (petImageTypes as readonly string[]).includes(file.type) && file.size <= petImageMaxBytes;
+  return (petImageTypes as readonly string[]).includes(file.type) && file.size <= imageUploadMaxBytes;
 }
 
 function canManagePet(member: AllianceMember, pet: Pet) {

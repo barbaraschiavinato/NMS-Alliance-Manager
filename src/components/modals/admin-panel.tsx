@@ -7,8 +7,7 @@ import { useLocale } from "@/components/providers/locale-provider";
 import { galaxyNames } from "@/lib/planets/galaxies";
 import { TaxiNotificationAdmin } from "@/components/shared/taxi-notification-controls";
 import { MemberNotificationAdmin } from "@/components/shared/member-notification-controls";
-
-const maxIconSourceBytes = 5 * 1024 * 1024;
+import { imageUploadMaxBytes } from "@/lib/utils/limits";
 
 export function AdminPanel({
   onClose,
@@ -80,7 +79,7 @@ export function AdminPanel({
     setMessage("");
     let bitmap: ImageBitmap | undefined;
     try {
-      if (file.size > maxIconSourceBytes) throw new Error(t("admin.icon_source_too_large"));
+      if (file.size > imageUploadMaxBytes) throw new Error(t("admin.icon_source_too_large"));
       bitmap = await createImageBitmap(file);
       if (bitmap.width > 4096 || bitmap.height > 4096) throw new Error(t("admin.icon_source_too_large"));
       const generated: Pick<AllianceSettings, "faviconUrl" | "appleIconUrl" | "appIcon192Url" | "appIcon512Url"> = {

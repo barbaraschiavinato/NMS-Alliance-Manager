@@ -18,13 +18,8 @@ import {
   petClassGrades,
   petClassKeys,
   petHabitats,
-  petImageMaxBytes,
   petImageTypes,
   petRarities,
-  petCoordinatesMaxLength,
-  petNameMaxLength,
-  petNoteMaxLength,
-  petPlanetNameMaxLength,
   petTypes,
   type PetActivity,
   type PetClassGrade,
@@ -33,6 +28,13 @@ import {
   type PetRarity,
   type PetType,
 } from "@/lib/pets/pets";
+import {
+  coordinatesMaxLength,
+  imageUploadMaxBytes,
+  itemNameMaxLength,
+  noteMaxLength,
+  planetNameMaxLength,
+} from "@/lib/utils/limits";
 
 export type PetFormValues = Readonly<{
   name: string;
@@ -123,7 +125,7 @@ export function PetForm({
     const file = event.target.files?.[0];
     if (!file) return;
     setError("");
-    if (!(petImageTypes as readonly string[]).includes(file.type) || file.size > petImageMaxBytes) {
+    if (!(petImageTypes as readonly string[]).includes(file.type) || file.size > imageUploadMaxBytes) {
       replaceImage(null);
       setError("pets.error_image_invalid");
       return;
@@ -197,7 +199,7 @@ export function PetForm({
             </span>
             <input
               aria-label={t("pets.pet_name")}
-              maxLength={petNameMaxLength}
+              maxLength={itemNameMaxLength}
               onChange={(event) => setName(event.target.value)}
               required
               value={name}
@@ -357,7 +359,7 @@ export function PetForm({
             </span>
             <textarea
               aria-label={t("pets.notes")}
-              maxLength={petNoteMaxLength}
+              maxLength={noteMaxLength}
               onChange={(event) => setNote(event.target.value)}
               rows={3}
               value={note}
@@ -399,7 +401,7 @@ export function PetForm({
             </span>
             <input
               aria-label={t("farms.planet_name")}
-              maxLength={petPlanetNameMaxLength}
+              maxLength={planetNameMaxLength}
               onChange={(event) => {
                 planetNameEdited.current = event.target.value.trim() !== "";
                 setPlanetName(event.target.value);
@@ -414,7 +416,7 @@ export function PetForm({
             </span>
             <input
               aria-label={t("farms.coordinates")}
-              maxLength={petCoordinatesMaxLength}
+              maxLength={coordinatesMaxLength}
               onChange={(event) => setCoordinates(event.target.value)}
               placeholder="+12.34, -56.78"
               value={coordinates}

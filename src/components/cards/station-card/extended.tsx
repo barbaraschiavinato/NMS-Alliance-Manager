@@ -24,6 +24,7 @@ import {
   CachedPlanetInfo,
 } from "@/components/cards/station-card/parts";
 import type { StationCardProps } from "@/components/cards/station-card/parts";
+import { isNewItem } from "@/lib/utils/limits";
 
 export function StationCardExtended({
   allianceName,
@@ -53,9 +54,7 @@ export function StationCardExtended({
   const stationDisplayName =
     station.name || cachedPlanetType(station.planet) || cachedPlanetTitle(station.planet) || t("planet.unnamed_planet");
   const statusKey = planetSystemStatusKey(station.portal, station.galaxy);
-  const createdTime = station.createdAt ? Date.parse(station.createdAt) : Number.NaN;
-  const isNewStation =
-    !station.hasMissions && Number.isFinite(createdTime) && renderedAt - createdTime < 7 * 24 * 60 * 60 * 1000;
+  const isNewStation = !station.hasMissions && isNewItem(station.createdAt, renderedAt);
   const canEditStation = canSeeAll || station.ownerId === member.publicId;
   const canCreateMission = canCreateMissionFromStation(station, member, canCreateMissions);
   const showCreateMissionPrompt = canCreateMission && member.specialty !== "ranger";

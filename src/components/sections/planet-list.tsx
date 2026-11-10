@@ -14,6 +14,7 @@ import { useLocale } from "@/components/providers/locale-provider";
 import { SystemFacts } from "@/components/shared/system-facts";
 import { SystemFeatureBadge } from "@/components/shared/system-feature-badge";
 import { stationDetailHref } from "@/lib/navigation/detail-links";
+import { isNewItem } from "@/lib/utils/limits";
 
 export function PlanetStationHeading({
   station,
@@ -30,12 +31,7 @@ export function PlanetStationHeading({
 }>) {
   const { t } = useLocale();
   const system = station ?? planets[0];
-  const createdTime = station?.createdAt ? Date.parse(station.createdAt) : Number.NaN;
-  const isNewStation =
-    Boolean(station) &&
-    !station?.hasMissions &&
-    Number.isFinite(createdTime) &&
-    renderedAt - createdTime < 7 * 24 * 60 * 60 * 1000;
+  const isNewStation = Boolean(station) && !station?.hasMissions && isNewItem(station?.createdAt, renderedAt);
   return (
     <div className="planet-station-heading">
       <div>

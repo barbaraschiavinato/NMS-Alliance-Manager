@@ -10,18 +10,14 @@ import { plantResourceProduct, plantResourceSearchText } from "@/lib/planets/pla
 import { generateSystemName } from "@/lib/planets/system-name";
 import { decodePortalAddress } from "@/lib/missions/missions";
 import { isSameSystem } from "@/lib/navigation/detail-links";
+import { farmMaterials, farmPlants, type Farm, type FarmResource, type FarmStationName } from "@/lib/farms/farms";
 import {
-  farmCoordinatesMaxLength,
-  farmMaterials,
-  farmNameMaxLength,
-  farmNoteMaxLength,
-  farmPlanetNameMaxLength,
-  farmPlants,
-  farmSystemNameMaxLength,
-  type Farm,
-  type FarmResource,
-  type FarmStationName,
-} from "@/lib/farms/farms";
+  coordinatesMaxLength,
+  itemNameMaxLength,
+  noteMaxLength,
+  planetNameMaxLength,
+  systemNameMaxLength,
+} from "@/lib/utils/limits";
 
 export type FarmFormValues = Readonly<{
   name: string;
@@ -169,7 +165,7 @@ export function FarmForm({
     void generateSystemName(portal, galaxy)
       .then((generated) => {
         if (!active || version !== nameResolutionVersion.current) return;
-        const name = generated?.trim().slice(0, farmSystemNameMaxLength) || null;
+        const name = generated?.trim().slice(0, systemNameMaxLength) || null;
         setResolvedSystemName({ portal, galaxy, name });
       })
       .catch((error: unknown) => {
@@ -231,7 +227,7 @@ export function FarmForm({
             </span>
             <input
               aria-label={t("farms.farm_name")}
-              maxLength={farmNameMaxLength}
+              maxLength={itemNameMaxLength}
               onChange={(event) => setName(event.target.value)}
               required
               value={name}
@@ -273,7 +269,7 @@ export function FarmForm({
             </span>
             <input
               aria-label={t("farms.system_name")}
-              maxLength={farmSystemNameMaxLength}
+              maxLength={systemNameMaxLength}
               onChange={(event) => {
                 nameResolutionVersion.current += 1;
                 setSystemNameOverride(event.target.value);
@@ -293,7 +289,7 @@ export function FarmForm({
             </span>
             <input
               aria-label={t("farms.planet_name")}
-              maxLength={farmPlanetNameMaxLength}
+              maxLength={planetNameMaxLength}
               onChange={(event) => {
                 planetNameEdited.current = event.target.value.trim() !== "";
                 setPlanetName(event.target.value);
@@ -309,7 +305,7 @@ export function FarmForm({
             </span>
             <input
               aria-label={t("farms.coordinates")}
-              maxLength={farmCoordinatesMaxLength}
+              maxLength={coordinatesMaxLength}
               onChange={(event) => setCoordinates(event.target.value)}
               placeholder="+12.34, -56.78"
               value={coordinates}
@@ -321,7 +317,7 @@ export function FarmForm({
             </span>
             <textarea
               aria-label={t("farms.notes")}
-              maxLength={farmNoteMaxLength}
+              maxLength={noteMaxLength}
               onChange={(event) => setNote(event.target.value)}
               rows={3}
               value={note}
