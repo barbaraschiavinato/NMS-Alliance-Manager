@@ -39,12 +39,6 @@ Since 2026-11-10 store reads are memoized per request (`src/lib/storage/request-
 
 If the Blob `get` returns nothing (or a 304), `readMissions()` returns `initialMissions` from `seed.ts`. In production, a missing or misconfigured blob would show demo missions instead of an error. The next write would then persist the seed data. Check that this is intended.
 
-## C-qto0bo: Docs disagree on accepted mission address formats (2026-10-11)
-
-`.github/copilot-instructions.md:5` vs `README.md` ("Indirizzi dei sistemi")
-
-The Copilot instructions allow either an 8-glyph system code or a 12-glyph portal address. The README only mentions the 12-glyph portal address plus a galaxy index. Check what `isMissionInput` in `src/lib/missions/missions.ts` actually accepts and align the docs.
-
 ## C-1yjcy9: Missions for "Explorers and Builders" are read back as "all" (2026-10-12)
 
 `src/lib/missions/store.ts:112`

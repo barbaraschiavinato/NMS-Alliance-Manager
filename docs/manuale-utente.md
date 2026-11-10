@@ -1,13 +1,13 @@
 ---
 title: Manuale utente – Vista semplice
-description: Guida per gli utenti che usano la vista semplice dell app
+description: Guida per gli utenti che usano la vista semplice dell'app
 ---
 
 # Manuale utente – Vista semplice
 
 ## Legenda dei pulsanti
 
-Le icone sono indicate con il nome della libreria Lucide, i colori sono quelli dei pulsanti nell'app. I pulsanti portano da una sezione all'altra o aprono un dettaglio.
+Le icone sono indicate con il nome della libreria Lucide (tranne `Galaxy`, disegnata per l'app), i colori sono quelli dei pulsanti nell'app. I pulsanti portano da una sezione all'altra o aprono un dettaglio.
 
 | Pulsante | Icona |
 |---|---|
@@ -23,6 +23,7 @@ Le icone sono indicate con il nome della libreria Lucide, i colori sono quelli d
 | Richiedi intervento Costruttori | `Hammer` |
 | Richiedi [aiuto](#richieste-daiuto) per il pianeta | `Siren` |
 | Apri la [farm](#farm) del pianeta | `Factory` |
+| Vai al [pet](#pet) | `PawPrint` |
 
 Note e richieste d'aiuto **non** hanno lo stesso colore: le note sono arancioni, la richiesta d'aiuto è gialla.
 
@@ -40,7 +41,7 @@ Colori delle specializzazioni:
 
 **Vista semplice e ruoli.** In vista semplice tutti hanno gli stessi permessi, anche moderatori e admin, che vengono trattati come utenti normali. Quello che cambia è la **specializzazione** scelta nel profilo: Ranger, Costruttore o Esploratore. Per questo il manuale è organizzato per specializzazione, non per ruolo.
 
-**Pagine non disponibili in vista semplice.** Utenti, Giocatori offline, Pianeti e Missioni (la gestione completa) sono nascosti, come le impostazioni dell'alleanza e l'export Excel. Moderatori e admin le vedono passando a "vista admin" con il toggle nell'header o con la casella "Vista semplice" nel profilo.
+**Pagine non disponibili in vista semplice.** Utenti e Giocatori offline sono nascosti, come le impostazioni dell'alleanza, l'export Excel e la gestione completa delle missioni (crearle, modificarle o assegnarle ad altri). Stazioni, Missioni e Pianeti restano visibili con i permessi da utente. Moderatori e admin le vedono passando a "vista admin" con il toggle nell'header o con la casella "Vista semplice" nel profilo.
 
 **Primo accesso.**
 1. Accedi con Google.
@@ -59,11 +60,11 @@ Colori delle specializzazioni:
 
 Senza profilo completo non puoi prendere missioni né ricevere assegnazioni. Un banner ti avvisa.
 
-**Navigazione.** Dalla sidebar vedi Classifica, Servizio taxi, Messaggi, Richieste d'aiuto e Missioni/Stazioni se visibili per la tua specializzazione. I contatori mostrano i messaggi e le richieste non letti. Sono presenti anche i link alla community (Discord/Telegram). Nell'header trovi lingua, profilo, vista (solo per moderatori/admin) ed esci.
+**Navigazione.** Dalla sidebar vedi Stazioni, Missioni, Pianeti, Mappa, Farm, Pet, Classifica, Servizio taxi, Messaggi, Richieste d'aiuto e Guida. Accanto ad alcune voci un contatore mostra, per esempio, i messaggi non letti e le richieste in corso. Sono presenti anche i link alla community (Discord/Telegram). Nell'header trovi lingua, profilo, vista (solo per moderatori/admin) ed esci.
 
 ## 2. Come funziona una missione
 
-Una missione riguarda un pianeta/sistema, identificato da un indirizzo portale (12 glifi esadecimali) o da un codice di 8 glifi, più la galassia (0-255). Stati: **In attesa → In corso → Completata**.
+Una missione riguarda un pianeta/sistema, identificato da un indirizzo portale (12 glifi esadecimali) più la galassia (0-255). Stati: **In attesa → In corso → Completata**.
 
 Ogni specializzazione ha le sue voci di avanzamento da spuntare:
 - **Ranger:** Stazione riscattata, Sistema scansionato, Sistema rinominato, Dati sistema caricati.
@@ -133,16 +134,18 @@ Sotto il nome della stazione, la scheda indica quanti **pianeti** e quante **lun
 
 Se il sistema della stazione ospita un **buco nero**, un'**Interfaccia Atlas** o è un sistema viola ridotto a un **gigante gassoso** (un solo pianeta con cinque lune), sulla scheda compare un'etichetta apposita (viola per il buco nero, rossa con il logo di No Man's Sky per l'Atlas, ambra con un pianeta ad anello per il gigante gassoso). La stessa etichetta appare accanto al nome nell'intestazione del sistema nella pagina Pianeti. Il dato è calcolato dall'indirizzo portale, quindi è sempre disponibile e non dipende da Almanac.
 
+Le card stazione dello stesso sistema e della stessa galassia dell'hub configurato dall'amministratore mostrano il ribbon rosso **Hub alleanza** in alto a sinistra, al posto di **New**. Il confronto ignora il primo glifo del portale, che identifica il pianeta.
+
 Per i codici portale che iniziano con `0`, le immagini e le caratteristiche Almanac possono provenire dal pianeta 1 dello stesso sistema e della stessa galassia; il codice registrato resta invariato. L'elenco riutilizza i dati già archiviati, senza richiedere nuovamente quelli completi. Quando Almanac impone una pausa per il limite di richieste, i dati già disponibili restano utilizzabili e quelli mancanti possono essere temporaneamente non disponibili.
 
-Il **titolo** della scheda stazione (nome, galassia e dati del sistema) apre una pagina dedicata con i blocchi **Stazione**, **Missioni associate**, **Sistema e pianeti**. Il blocco **Missioni associate** appare solo se ci sono missioni e le mostra direttamente, senza tab, ricerca o paginazione. Solo in questo dettaglio sono visibili tutte le missioni dello stesso sistema e della stessa galassia, anche di altre specializzazioni o assegnate ad altri. **Inizia** e **Completa** sono disponibili solo sulle missioni assegnate a te; **Prendi in carico** compare sulle missioni libere per la tua specializzazione o per tutti. Le missioni di altre specializzazioni o assegnate ad altri non mostrano azioni operative. Le azioni di gestione di moderatori e admin restano invariate. Nella pagina **Missioni** restano i consueti filtri di visibilità e la possibilità di prendere in carico le missioni compatibili. **Torna alle stazioni** riapre l'elenco principale.
+Il **titolo** della scheda stazione (nome, galassia e dati del sistema) apre una pagina dedicata con i blocchi **Stazione**, **Missioni associate**, **Sistema e pianeti**, **Farm collegate** e **Pet collegati** (questi ultimi solo se nel sistema ci sono farm o pet). Il blocco **Missioni associate** appare solo se ci sono missioni e le mostra direttamente, senza tab, ricerca o paginazione. Solo in questo dettaglio sono visibili tutte le missioni dello stesso sistema e della stessa galassia, anche di altre specializzazioni o assegnate ad altri. **Inizia** e **Completa** sono disponibili solo sulle missioni assegnate a te; **Prendi in carico** compare sulle missioni libere per la tua specializzazione o per tutti. Le missioni di altre specializzazioni o assegnate ad altri non mostrano azioni operative. Le azioni di gestione di moderatori e admin restano invariate. Nella pagina **Missioni** restano i consueti filtri di visibilità e la possibilità di prendere in carico le missioni compatibili. **Torna alle stazioni** riapre l'elenco principale.
 
 Il collegamento usa proprietario, portale e galassia: se questi cambiano, cambia anche il link. Dopo una modifica vieni indirizzato al dettaglio aggiornato; dopo l'eliminazione torni all'elenco.
-I collegamenti a una stazione specifica da Pianeti, Missioni, Messaggi e Servizio taxi aprono direttamente questo dettaglio, nella galassia corretta. Se la stazione non è più disponibile, nei messaggi e nelle richieste taxi non viene mostrato un link non valido. I collegamenti alle stazioni di un membro continuano invece ad aprire l'elenco filtrato.
-Il link di ritorno indica la pagina di provenienza: **Torna ai pianeti**, **Torna alle missioni**, **Torna ai messaggi** o **Torna al servizio taxi**. Se apri il dettaglio direttamente o dall'elenco stazioni, trovi **Torna alle stazioni**. La provenienza resta nel collegamento anche dopo una modifica delle coordinate o del proprietario.
+I collegamenti a una stazione specifica da Pianeti, Missioni, Farm, Pet, Mappa, Messaggi e Servizio taxi aprono direttamente questo dettaglio, nella galassia corretta. Se la stazione non è più disponibile, nei messaggi e nelle richieste taxi non viene mostrato un link non valido. I collegamenti alle stazioni di un membro continuano invece ad aprire l'elenco filtrato.
+Il link di ritorno indica la pagina di provenienza: **Torna ai pianeti**, **Torna alle missioni**, **Torna alle farm**, **Torna ai pet**, **Torna alla mappa**, **Torna ai messaggi** o **Torna al servizio taxi**. Se apri il dettaglio direttamente o dall'elenco stazioni, trovi **Torna alle stazioni**. La provenienza resta nel collegamento anche dopo una modifica delle coordinate o del proprietario.
 
 Nel blocco **Sistema e pianeti** del dettaglio non viene mostrato il collegamento alla stazione, perché sei già nella sua pagina.
-Se il sistema ha richieste d'aiuto, il dettaglio mostra anche **Richieste d'aiuto** come ultimo blocco, dopo **Sistema e pianeti**. Sono incluse le richieste per qualsiasi pianeta dello stesso sistema e della stessa galassia, con le risposte e le consuete azioni consentite. Il blocco non appare se non ci sono richieste associate.
+Se il sistema ha richieste d'aiuto, il dettaglio mostra anche **Richieste d'aiuto** come ultimo blocco, dopo **Sistema e pianeti** e gli eventuali **Farm collegate** e **Pet collegati**. Sono incluse le richieste per qualsiasi pianeta dello stesso sistema e della stessa galassia, con le risposte e le consuete azioni consentite. Il blocco non appare se non ci sono richieste associate.
 La scheda stazione nel dettaglio occupa tutta la larghezza del blocco.
 Il titolo è un normale link, quindi si può aprire anche in una nuova scheda. Nella pagina di dettaglio il titolo non è un link: apre invece il dettaglio del pianeta; il modale del pianeta resta raggiungibile anche dalle schede del blocco **Sistema e pianeti**.
 Nel dettaglio è nascosta anche l'azione **Apri missioni associate**, perché le missioni sono già elencate sotto la stazione. Il pulsante **+** per creare una missione resta disponibile quando consentito dal ruolo e dalla specializzazione.
@@ -182,8 +185,6 @@ Valgono gli stessi permessi del dettaglio stazione: puoi prendere in carico miss
 Se la stazione collegata non è più disponibile, compare un avviso e la pagina resta accessibile secondo i normali permessi di visibilità delle missioni, senza rendere visibili missioni altrui normalmente nascoste.
 Il link di ritorno indica la sezione di provenienza; eliminando la missione selezionata si torna a **Missioni**.
 
-Le card stazione dello stesso sistema e della stessa galassia dell'hub configurato dall'amministratore mostrano il ribbon rosso **Hub alleanza** in alto a sinistra, al posto di **New**. Il confronto ignora il primo glifo del portale, che identifica il pianeta.
-
 <a id="mappa"></a>
 
 ### `Galaxy` Mappa
@@ -221,7 +222,7 @@ Il contatore nel menu mostra il numero di richieste taxi in corso (senza contare
 - Per creare una richiesta serve un codice amico NMS valido in **Il mio profilo NMS**. Se manca, il pulsante apre il profilo per completarlo. Puoi comunque leggere e rispondere.
 - Il punto d'incontro parte da **Offline**. Puoi scegliere **Da concordare nelle risposte**, **Hub dell'alleanza** (se configurato) o una stazione. Clicca sul campo o sulla freccia per aprire l'elenco e scrivi per cercare.
 - **Clicca sul nome del richiedente o di chi risponde** per aprire la scheda NMS e trovare il suo **codice amico**.
-- Il link del punto d'incontro apre la pagina Stazioni. Per l'hub compare se esiste una stazione nello stesso sistema e nella stessa galassia.
+- Il link del punto d'incontro apre la scheda della stazione. Per l'hub compare se esiste una stazione nello stesso sistema e nella stessa galassia.
 - Tutti i membri approvati possono vedere le richieste e rispondere.
 - Puoi eliminare le tue richieste e risposte; moderatori/admin possono eliminare anche quelle altrui. Eliminando una richiesta vengono eliminate tutte le sue risposte.
 - Le richieste taxi restano separate dalle Richieste d'aiuto e dai messaggi privati.
@@ -265,7 +266,7 @@ Gli admin, fuori dalla vista semplice, gestiscono i canali e il chat ID del grup
 - Elenco delle richieste di tutti gli alleati, con eventuali risposte.
 - Si invia dalla scheda di un pianeta: scrivi il messaggio (max 2000 caratteri), spunta la conferma e premi "Invia richiesta".
 - Tutti possono rispondere alle richieste in corso.
-- Si può eliminare solo la propria richiesta (con le risposte). Chi ha il ruolo moderatore/admin può eliminare quelle altrui.
+- Si possono eliminare solo le proprie richieste (insieme alle loro risposte) e le proprie risposte. Chi ha il ruolo moderatore/admin può eliminare quelle altrui.
 - I tab **In corso** e **Archiviati** funzionano come nel Servizio taxi, anche nel dettaglio stazione: **Archivia** conserva richiesta e risposte senza consentirne altre; **Ripristina** riapre la conversazione. Entrambe le azioni sono disponibili all'autore della richiesta e ai moderatori/admin (in vista semplice valgono i permessi da utente). Il contatore nel menu include solo le richieste in corso.
 
 <a id="profilo"></a>
