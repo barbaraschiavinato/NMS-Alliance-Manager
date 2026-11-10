@@ -7,6 +7,7 @@ import { almanacDiscoveryCounts } from "@/lib/almanac/almanac-discovery-counts";
 import { galaxyLabel } from "@/lib/planets/galaxies";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useAlmanacCacheOnly } from "@/components/providers/almanac-cache-policy";
+import { almanacImageUrl, almanacSiteUrl } from "@/lib/almanac/almanac-config";
 
 type PlanetRecord = Readonly<Record<string, unknown>>;
 type PlanetEntry = Readonly<{ portal: string; planet: PlanetRecord }>;
@@ -302,9 +303,7 @@ export function PlanetCard({
   const title = typeof headline?.word === "string" ? headline.word : t("planet.fallback_name");
   const sky = asRecord(planet?.sky);
   const pictures = asRecord(planet?.pictures);
-  const disc = pictures?.disc;
-  const imageUrl =
-    typeof disc === "string" && disc.startsWith("/planets/") ? `https://nmsalmanac.com/api${disc}` : null;
+  const imageUrl = almanacImageUrl(pictures?.disc);
   const carries = Array.isArray(planet?.carries) ? planet.carries : [];
 
   return (
@@ -441,7 +440,7 @@ export function PlanetCard({
               <PlanetResources carries={carries} />
               <div className="planet-card-attribution">
                 {t("common.data")}{" "}
-                <a href="https://nmsalmanac.com" rel="noreferrer" target="_blank">
+                <a href={almanacSiteUrl} rel="noreferrer" target="_blank">
                   NMS Almanac
                 </a>
               </div>

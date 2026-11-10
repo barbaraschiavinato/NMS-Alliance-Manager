@@ -17,6 +17,7 @@ export { canCreateMissionFromStation } from "@/lib/missions/station-mission-avai
 import { useLocale } from "@/components/providers/locale-provider";
 import { SystemFacts } from "@/components/shared/system-facts";
 import { almanacStarCount, almanacSystemFacts } from "@/lib/almanac/almanac-facts";
+import { almanacImageUrl } from "@/lib/almanac/almanac-config";
 
 export type CachedPlanet = Readonly<{ galaxy: number; response: Record<string, unknown> }>;
 export type StationMissionStatus = "none" | "in_progress" | "completed";
@@ -191,9 +192,7 @@ export function cachedPlanetTitle(planet: CachedPlanet | null) {
 }
 
 export function cachedPlanetImageUrl(planet: CachedPlanet | null) {
-  const pictures = asRecord(planet?.response.pictures);
-  const disc = pictures?.disc;
-  return typeof disc === "string" && disc.startsWith("/planets/") ? `https://nmsalmanac.com/api${disc}` : null;
+  return almanacImageUrl(asRecord(planet?.response.pictures)?.disc);
 }
 
 export function CachedPlanetInfo({ planet, onOpen }: Readonly<{ planet: CachedPlanet; onOpen: () => void }>) {

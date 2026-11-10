@@ -15,6 +15,7 @@ import type { OwnedStationPortal } from "@/lib/stations/stations-store";
 import { readMissions, writeMissions } from "@/lib/missions/store";
 import { almanacDiscoveryCounts, type AlmanacDiscoveryCounts } from "@/lib/almanac/almanac-discovery-counts";
 import { almanacStarCount, almanacSystemFacts, almanacWealth, almanacWord } from "@/lib/almanac/almanac-facts";
+import { almanacImageUrl } from "@/lib/almanac/almanac-config";
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   return value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : null;
@@ -51,15 +52,13 @@ export function planetDestinationDetails(almanac: Record<string, unknown>) {
   const lines = asRecord(almanac.lines);
   const band = asRecord(lines?.band);
   const headline = asRecord(lines?.headline);
-  const disc = asRecord(almanac.pictures)?.disc;
+  const imageUrl = almanacImageUrl(asRecord(almanac.pictures)?.disc);
   const planetType = almanacWord(band?.type);
   const economyStars = almanacStarCount(band?.economy);
   const wealth = almanacWealth(band?.economy);
   const almanacName = typeof headline?.word === "string" ? headline.word : undefined;
   return {
-    ...(typeof disc === "string" && disc.startsWith("/planets/")
-      ? { imageUrl: `https://nmsalmanac.com/api${disc}` }
-      : {}),
+    ...(imageUrl ? { imageUrl } : {}),
     ...(almanacName ? { almanacName } : {}),
     almanacSearchIndex: almanacSearchValues(almanac).join(" "),
     almanacFacts: (

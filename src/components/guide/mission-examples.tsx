@@ -4,6 +4,7 @@ import { MissionCardSimple } from "@/components/cards/mission-card/simple";
 import type { AllianceMember } from "@/lib/members/member-types";
 import type { Mission } from "@/lib/missions/missions";
 import { planetSystemStatusKey, type MissionSystemStatus } from "@/lib/planets/planet-system-status";
+import { almanacImageUrl } from "@/lib/almanac/almanac-config";
 
 type Sample = Readonly<{
   portal: string;
@@ -285,7 +286,7 @@ function MissionExamples({
 }>) {
   const name = typeof sample.response.name === "string" ? sample.response.name : sample.portal;
   const disc = (sample.response.pictures as { disc?: unknown } | undefined)?.disc;
-  const planetImageUrl = typeof disc === "string" ? `https://nmsalmanac.com/api${disc}` : "";
+  const planetImageUrl = almanacImageUrl(disc) ?? "";
   return (
     <div className="guide-examples">
       {scenarios.map((scenario, index) => {

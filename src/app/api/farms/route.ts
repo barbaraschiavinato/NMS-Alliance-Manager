@@ -8,6 +8,7 @@ import { addFarm, readFarms, removeFarm, updateFarm } from "@/lib/farms/farms-st
 import { isSameSystem, stationDetailHref, type SystemIdentity } from "@/lib/navigation/detail-links";
 import { readVisibleStationPortals } from "@/lib/stations/visible-stations";
 import { withRequestMemo } from "@/lib/storage/request-memo";
+import { almanacImageUrl } from "@/lib/almanac/almanac-config";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -82,16 +83,16 @@ async function farmViews(member: AllianceMember, scope: FarmScope = {}) {
     const station = stations.find((entry) => isSameSystem(entry, farm));
     const response = almanac[farm.portal]?.find((entry) => entry.galaxy === farm.galaxy)?.response;
     const pictures = response?.pictures;
-    const disc = pictures && typeof pictures === "object" ? (pictures as Record<string, unknown>).disc : undefined;
+    const planetImageUrl = almanacImageUrl(
+      pictures && typeof pictures === "object" ? (pictures as Record<string, unknown>).disc : undefined,
+    );
     return {
       ...farm,
       ownerName: [owner?.nmsName, owner?.name].find((value) => value && !isEmailAddress(value)) || "",
       ...(owner ? { ownerMemberId: owner.publicId } : {}),
       ...(owner?.image ? { ownerImage: owner.image } : {}),
       ...(station ? { stationHref: stationDetailHref(station, "farms") } : {}),
-      ...(typeof disc === "string" && disc.startsWith("/planets/")
-        ? { planetImageUrl: `https://nmsalmanac.com/api${disc}` }
-        : {}),
+      ...(planetImageUrl ? { planetImageUrl } : {}),
       canManage: canManageFarm(member, farm),
     };
   });

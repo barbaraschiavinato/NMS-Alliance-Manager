@@ -46,3 +46,32 @@ Prettier is configured (`prettier.config.mjs`, `npm run format`), but only the n
 - Run `npm run format` once, in a separate commit that contains no other change.
 - Add `npm run format:check` to the `CI` workflow, and then drop the "format only the files you edit" note from `AGENTS.md` and the README.
 - Decide whether to also format the Markdown files and `src/styles/`, which are ignored now.
+
+
+## T-hyszuj: Share the JSON document read/write in the stores
+
+The 13 `*-store.ts` modules repeat the same Blob-or-local read (missing file = empty) and the same `put(..., allowOverwrite: true, contentType: "application/json")` write with `clearRequestMemo()` in a `finally`. Add `src/lib/storage/json-document.ts` (`readJsonDocument` / `writeJsonDocument`, deriving `alliance-manager/<name>.json` and the local path) and keep only normalisation and migrations in each store.
+
+## T-txg89r: Section accent colours as tokens
+
+Section accents (stations `#6cb4ff`, missions `#72d1c4`, planets `#b48cf2`, map `#8b8dff`, farms `#8fd46a`, pets `#ff8fb8`) are hard-coded about 34 times in `src/styles/` and about 50 times in TSX, mostly inline styles in `guide-content.tsx`. `--green` already equals `#72d1c4` but is barely used; `--lime` and `--amber` share `#ff8400`. Add `--accent-<section>` CSS variables and a `sectionAccents` TS object, and replace the literals.
+
+## T-bgxtqv: Shared time and size limits
+
+The "New" window (7 days) is computed three times (`station-card/simple.tsx`, `station-card/extended.tsx`, `planet-list.tsx`); the 5 MB upload limit appears three times (`api/admin/upload`, `admin-panel.tsx`, `pets.ts`); farm and pet field length limits are identical under different names. Extract shared constants and an `isNewItem(createdAt, now)` helper.
+
+## T-1crna2: Typed environment configuration
+
+`process.env.ALLIANCE_ADMIN_EMAIL?.trim().toLowerCase()` is repeated eight times (`access-store.ts`, `stations-store.ts`, `api/admin/members`). Add an `allianceAdminEmail()` helper, and consider a `src/lib/config/env.ts` module that groups all environment variables (Blob, Telegram, Resend, VAPID, Discord) with one missing-configuration check.
+
+## T-mxu22f: Typed client event names
+
+`farms-changed`, `pets-changed`, `taxi-requests-changed`, `help-requests-changed`, `messages-unread-changed` and `planet-count-changed` are string literals on both the dispatch and listen side. Add `src/lib/navigation/app-events.ts` with the names and typed `dispatchAppEvent` / `onAppEvent` helpers.
+
+## T-uwwspc: Share owner rules between farms and pets
+
+Farm and pet stores differ in roughly 100 of 274 lines, mostly type names, and repeat the same owner rules (regular users own what they save, staff may pick an approved owner or leave it unassigned) and offline-profile reassignment. Extract a shared owned-item helper, after T-hyszuj.
+
+## T-3ob0r7: Shared API error responses
+
+`"Accesso richiesto."` is returned 34 times, `"Permesso moderator richiesto."` 7 and `"Permesso admin richiesto."` 4, and routes mix Italian strings with translation keys. Add helpers such as `forbidden()` / `notFound(key)` and move to translation keys.

@@ -5,6 +5,7 @@ import { decodePortalAddress } from "@/lib/missions/missions";
 import { normalizeAlmanacPlanet } from "@/lib/almanac/almanac-normalize";
 import { almanacRetryAfterSeconds, noteAlmanacRateLimit } from "@/lib/almanac/almanac-rate-limit";
 import { withRequestMemo } from "@/lib/storage/request-memo";
+import { almanacPlanetUrl } from "@/lib/almanac/almanac-config";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -83,9 +84,7 @@ export const GET = withRequestMemo(async function GET(request: Request) {
     }
 
     for (const lookupAddress of planetOneAddress ? [address, planetOneAddress] : [address]) {
-      const url = new URL(`https://nmsalmanac.com/api/planets/${lookupAddress}`);
-      url.searchParams.set("galaxy", String(galaxy + 1));
-      const response = await fetch(url, {
+      const response = await fetch(almanacPlanetUrl(lookupAddress, galaxy + 1), {
         headers: { Accept: "application/json" },
         signal: AbortSignal.timeout(6000),
         cache: "no-store",

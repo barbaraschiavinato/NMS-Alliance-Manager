@@ -4,6 +4,7 @@ import { ArrowLeft, Check, CircleAlert, X } from "lucide-react";
 import { decodePortalAddress } from "@/lib/missions/missions";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useAlmanacCacheOnly } from "@/components/providers/almanac-cache-policy";
+import { almanacSiteUrl } from "@/lib/almanac/almanac-config";
 
 export type SystemAddressLookup = Readonly<{
   address: string;
@@ -161,7 +162,7 @@ export function PortalValidation({
           {lookupLink && (
             <>
               {" "}
-              <a href="https://nmsalmanac.com" rel="noreferrer" target="_blank">
+              <a href={almanacSiteUrl} rel="noreferrer" target="_blank">
                 NMS Almanac
               </a>
             </>

@@ -33,6 +33,7 @@ import {
   stationDetailHref,
   type DetailOrigin,
 } from "@/lib/navigation/detail-links";
+import { almanacImageUrl } from "@/lib/almanac/almanac-config";
 
 export function asRecord(value: unknown): Record<string, unknown> | null {
   return value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : null;
@@ -601,8 +602,7 @@ export function useMissionAlmanacPlanet(
 }
 
 export function almanacDiscImageUrl(planet: Record<string, unknown> | null): string {
-  const disc = asRecord(planet?.pictures)?.disc;
-  return typeof disc === "string" && disc.startsWith("/planets/") ? `https://nmsalmanac.com/api${disc}` : "";
+  return almanacImageUrl(asRecord(planet?.pictures)?.disc) ?? "";
 }
 
 export function MissionPlanetThumbnail({
