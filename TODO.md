@@ -48,10 +48,6 @@ Prettier is configured (`prettier.config.mjs`, `npm run format`), but only the n
 - Decide whether to also format the Markdown files and `src/styles/`, which are ignored now.
 
 
-## T-hyszuj: Share the JSON document read/write in the stores
-
-The 13 `*-store.ts` modules repeat the same Blob-or-local read (missing file = empty) and the same `put(..., allowOverwrite: true, contentType: "application/json")` write with `clearRequestMemo()` in a `finally`. Add `src/lib/storage/json-document.ts` (`readJsonDocument` / `writeJsonDocument`, deriving `alliance-manager/<name>.json` and the local path) and keep only normalisation and migrations in each store.
-
 ## T-txg89r: Section accent colours as tokens
 
 Section accents (stations `#6cb4ff`, missions `#72d1c4`, planets `#b48cf2`, map `#8b8dff`, farms `#8fd46a`, pets `#ff8fb8`) are hard-coded about 34 times in `src/styles/` and about 50 times in TSX, mostly inline styles in `guide-content.tsx`. `--green` already equals `#72d1c4` but is barely used; `--lime` and `--amber` share `#ff8400`. Add `--accent-<section>` CSS variables and a `sectionAccents` TS object, and replace the literals.
@@ -70,7 +66,7 @@ The "New" window (7 days) is computed three times (`station-card/simple.tsx`, `s
 
 ## T-uwwspc: Share owner rules between farms and pets
 
-Farm and pet stores differ in roughly 100 of 274 lines, mostly type names, and repeat the same owner rules (regular users own what they save, staff may pick an approved owner or leave it unassigned) and offline-profile reassignment. Extract a shared owned-item helper, after T-hyszuj.
+Farm and pet stores differ in roughly 100 of 274 lines, mostly type names, and repeat the same owner rules (regular users own what they save, staff may pick an approved owner or leave it unassigned) and offline-profile reassignment. Extract a shared owned-item helper (the JSON read/write is already shared through `storage/json-document.ts`).
 
 ## T-3ob0r7: Shared API error responses
 

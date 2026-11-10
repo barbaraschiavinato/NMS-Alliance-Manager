@@ -1,10 +1,5 @@
-import { get, put } from "@vercel/blob";
-import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
-import { randomUUID } from "node:crypto";
-import path from "node:path";
 import type { PushSubscription } from "web-push";
-import { getBlobAuthOptions } from "@/lib/storage/blob-config";
-import { localDataPath } from "@/lib/storage/local-data-path";
+import { readJsonDocument, writeJsonDocument } from "@/lib/storage/json-document";
 import {
   defaultTaxiNotificationSettings,
   isTaxiNotificationSettings,
@@ -17,7 +12,6 @@ type NotificationData = {
   disabledMembers: string[];
   devices: Device[];
 };
-const blobPath = "alliance-manager/taxi-notifications.json";
 
 export function isPushSubscription(value: unknown): value is PushSubscription {
   if (!value || typeof value !== "object") return false;
@@ -77,21 +71,10 @@ function parseData(value: unknown): NotificationData {
 }
 
 export async function readTaxiNotifications(): Promise<NotificationData> {
-  const options = getBlobAuthOptions();
-  let json: string | undefined;
-  if (options) {
-    const blob = await get(blobPath, { access: "private", useCache: false, ...options });
-    if (blob && blob.statusCode !== 304) json = await new Response(blob.stream).text();
-  } else {
-    try {
-      json = await readFile(localDataPath("taxi-notifications.json"), "utf8");
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
-    }
-  }
+  const value = await readJsonDocument("taxi-notifications");
   // Existing installations have no notification document: all channels start disabled.
-  if (json === undefined) return { settings: { ...defaultTaxiNotificationSettings }, disabledMembers: [], devices: [] };
-  const value: unknown = JSON.parse(json);
+  if (value === undefined)
+    return { settings: { ...defaultTaxiNotificationSettings }, disabledMembers: [], devices: [] };
   let migrated = false;
   if (
     value &&
@@ -109,24 +92,8 @@ export async function readTaxiNotifications(): Promise<NotificationData> {
   return data;
 }
 
-async function writeData(data: NotificationData) {
-  const json = `${JSON.stringify(data, null, 2)}\n`;
-  const options = getBlobAuthOptions();
-  if (options) {
-    await put(blobPath, json, {
-      access: "private",
-      addRandomSuffix: false,
-      allowOverwrite: true,
-      contentType: "application/json",
-      ...options,
-    });
-    return;
-  }
-  const file = localDataPath("taxi-notifications.json");
-  await mkdir(path.dirname(file), { recursive: true });
-  const temporary = `${file}.${randomUUID()}.tmp`;
-  await writeFile(temporary, json, "utf8");
-  await rename(temporary, file);
+function writeData(data: NotificationData): Promise<void> {
+  return writeJsonDocument("taxi-notifications", data);
 }
 
 let writeQueue: Promise<unknown> = Promise.resolve();

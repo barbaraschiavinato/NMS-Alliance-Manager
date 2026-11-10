@@ -150,3 +150,7 @@ These branches can't be reached with the current types and call sites, so they a
 - `src/app/leaderboard/page.tsx:93`: `?? 0` after a `counts.has()` filter. `src/app/api/messages/route.ts:84`: `?? ""` after `params.has("recipientId")`. `src/app/api/stations/export/route.ts:53`: `codePointAt(0) ?? 0` on a non-empty character. `src/lib/messages/private-messages-store.ts:101`: the `undefined` side, already rejected by `parseMessages`.
 
 `src/lib/members/access-store.ts:280` also shows as uncovered in the full-suite report although `tests/stores/access-store.test.ts` runs it; it is 100% when that file is measured alone (a V8 coverage merge artefact).
+
+## C-cjougf: Duplicated paragraphs in AGENTS.md (2026-11-10)
+
+`AGENTS.md` ("Persistence" and "Taxi service and member profiles"): the "Store reads are memoized per request" bullet and the "All sidebar counters ... come from one request" bullet each appear twice, word for word. One copy of each should go (the first memo bullet is the one in the right place, before "Derived fields"; the duplicated one sits after it, glued to the next heading).

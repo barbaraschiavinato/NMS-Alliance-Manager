@@ -161,7 +161,10 @@ describe("reading (local filesystem)", () => {
     const error = vi.spyOn(console, "error").mockImplementation(() => undefined);
     const { readAlmanacResponse, writeAlmanacResponse } = await load();
     expect(await readAlmanacResponse("0123456789AB", 0)).toBeNull();
-    expect(error).toHaveBeenCalledWith("Unreadable Almanac cache, starting from an empty one", expect.any(SyntaxError));
+    expect(error).toHaveBeenCalledWith(
+      "Unreadable almanac.json, starting from an empty document",
+      expect.any(SyntaxError),
+    );
     expect(dataFileExists(fileName)).toBe(false);
     expect(readdirSync(dataDir()).some((name) => name.startsWith(`${fileName}.corrupt-`))).toBe(true);
 

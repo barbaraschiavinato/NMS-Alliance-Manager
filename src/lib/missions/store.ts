@@ -1,9 +1,5 @@
-import { get, put } from "@vercel/blob";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
-import path from "node:path";
-import { localDataPath } from "@/lib/storage/local-data-path";
-import { getBlobAuthOptions } from "@/lib/storage/blob-config";
-import { clearRequestMemo, memoizedRead } from "@/lib/storage/request-memo";
+import { readJsonDocument, writeJsonDocument } from "@/lib/storage/json-document";
+import { memoizedRead } from "@/lib/storage/request-memo";
 import {
   isMissionPriority,
   isMissionStatus,
@@ -15,8 +11,7 @@ import { migrateLegacyPlanetSystemStatuses } from "@/lib/planets/planet-system-s
 import { readAccessData } from "@/lib/members/access-store";
 import { initialMissions } from "@/lib/missions/seed";
 
-const blobPath = "alliance-manager/missions.json";
-const localPath = localDataPath("missions.json");
+const missionsDocument = "missions";
 
 function migrateMissions(
   value: unknown,
@@ -136,30 +131,11 @@ export function readMissions(): Promise<Mission[]> {
 }
 
 async function readMissionsFromStore(): Promise<Mission[]> {
-  const blobAuthOptions = getBlobAuthOptions();
-  if (blobAuthOptions) {
-    const blob = await get(blobPath, { access: "private", useCache: false, ...blobAuthOptions });
-    if (!blob || blob.statusCode === 304) return initialMissions;
-    return readAndMigrateMissions(JSON.parse(await new Response(blob.stream).text()));
-  }
-
-  try {
-    return await readAndMigrateMissions(JSON.parse(await readFile(localPath, "utf8")));
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "ENOENT") return initialMissions;
-    throw error;
-  }
+  const raw = await readJsonDocument(missionsDocument);
+  return raw === undefined ? initialMissions : readAndMigrateMissions(raw);
 }
 
 export async function writeMissions(missions: Mission[]): Promise<void> {
-  try {
-    await writeMissionsToStore(missions);
-  } finally {
-    clearRequestMemo();
-  }
-}
-
-async function writeMissionsToStore(missions: Mission[]): Promise<void> {
   const derivedFields = new Set([
     "stationOwnerEmail",
     "createdByEmail",
@@ -171,19 +147,5 @@ async function writeMissionsToStore(missions: Mission[]): Promise<void> {
   const persistentMissions = missions.map((mission) =>
     Object.fromEntries(Object.entries(mission).filter(([key]) => !derivedFields.has(key))),
   );
-  const json = `${JSON.stringify(persistentMissions, null, 2)}\n`;
-  const blobAuthOptions = getBlobAuthOptions();
-  if (blobAuthOptions) {
-    await put(blobPath, json, {
-      access: "private",
-      ...blobAuthOptions,
-      addRandomSuffix: false,
-      allowOverwrite: true,
-      contentType: "application/json",
-    });
-    return;
-  }
-
-  await mkdir(path.dirname(localPath), { recursive: true });
-  await writeFile(localPath, json, "utf8");
+  await writeJsonDocument(missionsDocument, persistentMissions);
 }

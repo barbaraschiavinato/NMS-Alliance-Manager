@@ -1,9 +1,5 @@
-import { get, put } from "@vercel/blob";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
-import path from "node:path";
-import { localDataPath } from "@/lib/storage/local-data-path";
-import { getBlobAuthOptions } from "@/lib/storage/blob-config";
-import { clearRequestMemo, memoizedRead } from "@/lib/storage/request-memo";
+import { readJsonDocument, writeJsonDocument } from "@/lib/storage/json-document";
+import { memoizedRead } from "@/lib/storage/request-memo";
 import { decodePortalAddress } from "@/lib/missions/missions";
 import { readAccessData } from "@/lib/members/access-store";
 
@@ -20,10 +16,8 @@ type StationIndex = Record<string, StationPortal[]>;
 type StationList = OwnedStationPortal[];
 type NormalizedStation = StationPortal & Readonly<{ createdByEmail?: string }>;
 
-const legacyBlobPath = "alliance-manager/stations.json";
-const legacyLocalPath = localDataPath("stations.json");
-const blobPath = "alliance-manager/stations-v2.json";
-const localPath = localDataPath("stations-v2.json");
+const legacyDocument = "stations";
+const stationsDocument = "stations-v2";
 
 function normalizeStationEntries(entries: unknown[]): NormalizedStation[] {
   const stations = entries.flatMap((entry) => {
@@ -111,21 +105,6 @@ function normalizeStationIndex(
   return { index, migrated };
 }
 
-async function readJson(blobName: string, filePath: string): Promise<unknown | undefined> {
-  const blobAuthOptions = getBlobAuthOptions();
-  if (blobAuthOptions) {
-    const blob = await get(blobName, { access: "private", useCache: false, ...blobAuthOptions });
-    if (!blob || blob.statusCode === 304) return undefined;
-    return JSON.parse(await new Response(blob.stream).text());
-  }
-  try {
-    return JSON.parse(await readFile(filePath, "utf8"));
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "ENOENT") return undefined;
-    throw error;
-  }
-}
-
 function flattenIndex(index: StationIndex): StationList {
   return Object.entries(index).flatMap(([ownerId, stations]) => stations.map((station) => ({ ...station, ownerId })));
 }
@@ -163,42 +142,20 @@ function readStationList(): Promise<StationList> {
 }
 
 async function readStationListFromStore(): Promise<StationList> {
-  const current = await readJson(blobPath, localPath);
+  const current = await readJsonDocument(stationsDocument);
   const access = await readAccessData();
   const adminEmail = process.env.ALLIANCE_ADMIN_EMAIL?.trim().toLowerCase();
   const fallbackOwnerId = access.members.find((candidate) => candidate.email.toLowerCase() === adminEmail)?.publicId;
   if (current !== undefined) return normalizeStationList(current, fallbackOwnerId);
-  const legacy = await readJson(legacyBlobPath, legacyLocalPath);
+  const legacy = await readJsonDocument(legacyDocument);
   if (legacy === undefined) return [];
   const list = normalizeStationList(flattenIndex(normalizeStationIndex(legacy, access.members).index), fallbackOwnerId);
   await writeStationList(list);
   return list;
 }
 
-async function writeStationList(list: StationList): Promise<void> {
-  try {
-    await writeStationListToStore(list);
-  } finally {
-    clearRequestMemo();
-  }
-}
-
-async function writeStationListToStore(list: StationList): Promise<void> {
-  const json = `${JSON.stringify(list, null, 2)}\n`;
-  const blobAuthOptions = getBlobAuthOptions();
-  if (blobAuthOptions) {
-    await put(blobPath, json, {
-      access: "private",
-      ...blobAuthOptions,
-      addRandomSuffix: false,
-      allowOverwrite: true,
-      contentType: "application/json",
-    });
-    return;
-  }
-
-  await mkdir(path.dirname(localPath), { recursive: true });
-  await writeFile(localPath, json, "utf8");
+function writeStationList(list: StationList): Promise<void> {
+  return writeJsonDocument(stationsDocument, list);
 }
 
 function stripOwner(station: OwnedStationPortal): StationPortal {
