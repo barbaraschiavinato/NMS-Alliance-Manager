@@ -5,30 +5,29 @@ import { isValidNmsFriendCode } from "@/lib/members/member-types";
 import type { Mission } from "@/lib/missions/missions";
 import { readAccessData } from "@/lib/members/access-store";
 import { serializeMission } from "@/lib/missions/mission-view";
+import { withRequestMemo } from "@/lib/storage/request-memo";
+import { apiError, conflict, forbidden, notFound, unauthorized } from "@/lib/utils/api-responses";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
-export async function POST(_request: Request, context: RouteContext) {
+export const POST = withRequestMemo(async function POST(_request: Request, context: RouteContext) {
   const member = await getCurrentMember();
-  if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
+  if (!member) return unauthorized();
   if (!member.nmsName.trim() || !isValidNmsFriendCode(member.nmsCode) || !member.specialty) {
-    return NextResponse.json(
-      { error: "Completa prima il tuo profilo NMS con nome, codice amico, piattaforme e specializzazione." },
-      { status: 409 },
-    );
+    return conflict("errors.complete_your_nms_profile_with_a_name_friend_code_platforms_and_specialty_first");
   }
 
   try {
     const { id } = await context.params;
     const missions = await readMissions();
     const index = missions.findIndex((mission) => mission.id === id);
-    if (index === -1) return NextResponse.json({ error: "Missione non trovata." }, { status: 404 });
+    if (index === -1) return notFound("errors.mission_not_found");
     const mission = missions[index];
     if (mission.targetSpecialty !== "all" && mission.targetSpecialty !== member.specialty) {
-      return NextResponse.json({ error: "Questa missione è riservata a un’altra specializzazione." }, { status: 403 });
+      return forbidden("profile.this_mission_is_reserved_for_another_specialty");
     }
     if (mission.assignedMemberId || mission.assignedTo.trim()) {
-      return NextResponse.json({ error: "Questa missione è già assegnata." }, { status: 409 });
+      return conflict("missions.this_mission_is_already_assigned");
     }
     const claimed: Mission = {
       ...mission,
@@ -42,6 +41,6 @@ export async function POST(_request: Request, context: RouteContext) {
     return NextResponse.json(serializeMission(claimed, accessData.members));
   } catch (error) {
     console.error("Unable to claim mission", error);
-    return NextResponse.json({ error: "Impossibile prendere la missione." }, { status: 503 });
+    return apiError("errors.unable_to_claim_the_mission", 503);
   }
-}
+});

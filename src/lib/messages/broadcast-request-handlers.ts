@@ -14,6 +14,8 @@ import { readAllStationPortals } from "@/lib/stations/stations-store";
 import { galaxyLabel } from "@/lib/planets/galaxies";
 import { isValidNmsFriendCode } from "@/lib/members/member-types";
 import { notifyTaxi } from "@/lib/notifications/taxi-notification-delivery";
+import { withRequestMemo } from "@/lib/storage/request-memo";
+import { apiError, badRequest, conflict, forbidden, unauthorized } from "@/lib/utils/api-responses";
 
 function scheduleTaxiNotification(requestId: string, authorId: string, reply: boolean) {
   try {
@@ -29,7 +31,7 @@ export function createBroadcastRequestHandlers(kind: BroadcastKind) {
 
   async function GET(request: Request) {
     const member = await getCurrentMember();
-    if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
+    if (!member) return unauthorized();
 
     try {
       if (new URL(request.url).searchParams.has("count")) {
@@ -74,22 +76,22 @@ export function createBroadcastRequestHandlers(kind: BroadcastKind) {
 
   async function POST(request: Request) {
     const member = await getCurrentMember();
-    if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
+    if (!member) return unauthorized();
 
     const body: unknown = await request.json().catch(() => null);
     if (!body || typeof body !== "object" || Array.isArray(body)) {
-      return NextResponse.json({ error: "profile.message_text_required" }, { status: 400 });
+      return badRequest("profile.message_text_required");
     }
     const payload = body as Record<string, unknown>;
     const message = typeof payload.message === "string" ? payload.message.trim() : "";
     const replyToId = typeof payload.replyToId === "string" ? payload.replyToId.trim() : "";
     if (replyToId) {
-      if (!message) return NextResponse.json({ error: "profile.message_text_required" }, { status: 400 });
-      if (message.length > 2000) return NextResponse.json({ error: "profile.message_text_too_long" }, { status: 400 });
+      if (!message) return badRequest("profile.message_text_required");
+      if (message.length > 2000) return badRequest("profile.message_text_too_long");
       try {
         const saved = await saveHelpReply(member.publicId, message, replyToId, kind);
         if (saved === "archived") {
-          return NextResponse.json({ error: "broadcast.archived_read_only" }, { status: 409 });
+          return conflict("broadcast.archived_read_only");
         }
         if (!saved) return NextResponse.json({ error: errorKey("request_not_found") }, { status: 404 });
         if (kind === "taxi") scheduleTaxiNotification(replyToId, member.publicId, true);
@@ -100,13 +102,13 @@ export function createBroadcastRequestHandlers(kind: BroadcastKind) {
       }
     }
     if (kind === "taxi" && !isValidNmsFriendCode(member.nmsCode)) {
-      return NextResponse.json({ error: "taxi.friend_code_required" }, { status: 403 });
+      return forbidden("taxi.friend_code_required");
     }
     const subject = typeof payload.subject === "string" ? payload.subject.trim() : "";
     const portal = typeof payload.portal === "string" ? payload.portal.toUpperCase() : "";
     const galaxy = payload.galaxy;
-    if (!message) return NextResponse.json({ error: "profile.message_text_required" }, { status: 400 });
-    if (message.length > 2000) return NextResponse.json({ error: "profile.message_text_too_long" }, { status: 400 });
+    if (!message) return badRequest("profile.message_text_required");
+    if (message.length > 2000) return badRequest("profile.message_text_too_long");
     if (
       (kind === "help" && (!subject || subject.length > 160)) ||
       typeof galaxy !== "number" ||
@@ -168,7 +170,7 @@ export function createBroadcastRequestHandlers(kind: BroadcastKind) {
     }
     const decoded = decodePortalAddress(portal);
     if (!decoded || decoded.errors.length > 0) {
-      return NextResponse.json({ error: "help.request_invalid" }, { status: 400 });
+      return badRequest("help.request_invalid");
     }
 
     try {
@@ -176,13 +178,13 @@ export function createBroadcastRequestHandlers(kind: BroadcastKind) {
       return NextResponse.json({ ok: true }, { status: 201 });
     } catch (error) {
       console.error("Unable to save help request", error);
-      return NextResponse.json({ error: "help.request_unable_to_save" }, { status: 503 });
+      return apiError("help.request_unable_to_save", 503);
     }
   }
 
   async function DELETE(request: Request) {
     const member = await getCurrentMember();
-    if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
+    if (!member) return unauthorized();
 
     const body: unknown = await request.json().catch(() => null);
     const id = body && typeof body === "object" && "id" in body && typeof body.id === "string" ? body.id : "";
@@ -192,7 +194,7 @@ export function createBroadcastRequestHandlers(kind: BroadcastKind) {
       const existing = (await readHelpRequests(kind)).find((entry) => entry.id === id);
       if (!existing) return NextResponse.json({ error: errorKey("request_not_found") }, { status: 404 });
       if (existing.senderMemberId !== member.publicId && !hasRole(member, "moderator")) {
-        return NextResponse.json({ error: "messages.delete_not_allowed" }, { status: 403 });
+        return forbidden("messages.delete_not_allowed");
       }
       await deleteHelpRequest(id, kind);
       return NextResponse.json({ ok: true });
@@ -203,7 +205,7 @@ export function createBroadcastRequestHandlers(kind: BroadcastKind) {
   }
   async function PATCH(request: Request) {
     const member = await getCurrentMember();
-    if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
+    if (!member) return unauthorized();
     const body: unknown = await request.json().catch(() => null);
     if (
       !body ||
@@ -220,7 +222,7 @@ export function createBroadcastRequestHandlers(kind: BroadcastKind) {
       const existing = (await readHelpRequests(kind)).find((entry) => entry.id === body.id && !entry.replyToId);
       if (!existing) return NextResponse.json({ error: errorKey("request_not_found") }, { status: 404 });
       if (existing.senderMemberId !== member.publicId && !hasRole(member, "moderator")) {
-        return NextResponse.json({ error: "broadcast.archive_not_allowed" }, { status: 403 });
+        return forbidden("broadcast.archive_not_allowed");
       }
       if (!(await setHelpRequestArchived(existing.id, body.archived, kind))) {
         return NextResponse.json({ error: errorKey("request_not_found") }, { status: 404 });
@@ -228,8 +230,13 @@ export function createBroadcastRequestHandlers(kind: BroadcastKind) {
       return NextResponse.json({ ok: true });
     } catch (error) {
       console.error(`Unable to update ${kind} request archive status`, error);
-      return NextResponse.json({ error: "broadcast.archive_failed" }, { status: 503 });
+      return apiError("broadcast.archive_failed", 503);
     }
   }
-  return { GET, POST, DELETE, PATCH };
+  return {
+    GET: withRequestMemo(GET),
+    POST: withRequestMemo(POST),
+    DELETE: withRequestMemo(DELETE),
+    PATCH: withRequestMemo(PATCH),
+  };
 }

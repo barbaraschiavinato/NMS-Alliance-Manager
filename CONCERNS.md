@@ -25,6 +25,8 @@ The production build succeeds but warns that resolving `NMS_DATA_DIR` relative t
 
 Every store reads the full JSON, modifies it in memory and writes it back with `allowOverwrite: true`. Two concurrent requests (e.g. two members claiming missions at the same time) can lose one of the updates. Check whether the Blob SDK supports conditional writes (ETag / `ifMatch`) or whether a lock or retry is needed.
 
+Since 2026-11-10 store reads are memoized per request (`src/lib/storage/request-memo.ts`): a read-modify-write inside a route can start from the copy read earlier in the same request rather than a fresh read, which widens the window by the time between the two reads (the Almanac cache still reads the store directly inside its serialized writes). Any write clears the memo.
+
 ## C-kl5mdm: Migration on read writes during GET requests (2026-10-11)
 
 `src/lib/missions/store.ts:114`
@@ -37,12 +39,6 @@ Every store reads the full JSON, modifies it in memory and writes it back with `
 
 If the Blob `get` returns nothing (or a 304), `readMissions()` returns `initialMissions` from `seed.ts`. In production, a missing or misconfigured blob would show demo missions instead of an error. The next write would then persist the seed data. Check that this is intended.
 
-## C-qto0bo: Docs disagree on accepted mission address formats (2026-10-11)
-
-`.github/copilot-instructions.md:5` vs `README.md` ("Indirizzi dei sistemi")
-
-The Copilot instructions allow either an 8-glyph system code or a 12-glyph portal address. The README only mentions the 12-glyph portal address plus a galaxy index. Check what `isMissionInput` in `src/lib/missions/missions.ts` actually accepts and align the docs.
-
 ## C-1yjcy9: Missions for "Explorers and Builders" are read back as "all" (2026-10-12)
 
 `src/lib/missions/store.ts:112`
@@ -54,18 +50,6 @@ The Copilot instructions allow either an 8-glyph system code or a 12-glyph porta
 `src/lib/missions/store.ts:175`, `src/lib/stations/stations-store.ts:188`, `src/lib/messages/private-messages-store.ts:189`, `src/lib/planets/planet-system-status-store.ts:83`
 
 With the local backend (`data/`) these stores call `writeFile(localPath, ...)` directly. Two overlapping writes can leave a file with leftover text after the closing brace, and every later read then fails with `SyntaxError: Unexpected non-whitespace character after JSON`. This already happened to `almanac.json` when many planet thumbnails were requested at once; `almanac-store.ts` now writes a temporary file and renames it, and runs its read-modify-write cycles one at a time, and `access-store.ts` already writes through a temporary file. Apply the same to the other four (a shared helper in `src/lib/` would avoid repeating it). It is a local-development problem; production uses Blob (see C-uu5uon).
-
-## C-rd3po4: Path traversal in the alliance image route exposes private data (2026-10-11)
-
-`src/app/api/alliance/image/route.ts:10`
-
-The only check on `path` is `startsWith("alliance-manager/branding/")`. `@vercel/blob`'s `get()` builds `https://<store>.private.blob.vercel-storage.com/${path}` and passes it through `new URL()`, which resolves `..`. So `?path=alliance-manager/branding/../access.json` returns `alliance-manager/access.json` (every member's email and role) to any approved member, and the same works for `private-messages.json`. It only affects deployments with a Blob store, i.e. production. `login-logo/route.ts:26` already validates with a strict regex; use the same approach here. Test placeholder: `it.todo` in `tests/api/alliance/image.test.ts`.
-
-## C-1tpyag: Shared default access data is mutated by callers (2026-10-11)
-
-`src/lib/members/access-store.ts:43` (returned at lines 58, 146 and 159), `src/lib/missions/store.ts:137`, `:144`
-
-When the file or blob is missing (or Blob returns 304, or the payload is not an object), `readAccessData()` returns the module-level `defaultData` object itself, not a copy. `registerMember`, `updateAllianceSettings` and the others then mutate it, so in a long-lived process a later missing read brings back stale members and settings and writes them to storage. `readMissions()` returns the shared `initialMissions` array the same way (harmless while it is empty).
 
 ## C-txcf5e: Private messages become unreadable after migrating an unknown legacy email (2026-10-11)
 
@@ -160,3 +144,11 @@ These branches can't be reached with the current types and call sites, so they a
 - `src/app/leaderboard/page.tsx:93`: `?? 0` after a `counts.has()` filter. `src/app/api/messages/route.ts:84`: `?? ""` after `params.has("recipientId")`. `src/app/api/stations/export/route.ts:53`: `codePointAt(0) ?? 0` on a non-empty character. `src/lib/messages/private-messages-store.ts:101`: the `undefined` side, already rejected by `parseMessages`.
 
 `src/lib/members/access-store.ts:280` also shows as uncovered in the full-suite report although `tests/stores/access-store.test.ts` runs it; it is 100% when that file is measured alone (a V8 coverage merge artefact).
+
+## C-cjougf: Duplicated paragraphs in AGENTS.md (2026-11-10)
+
+`AGENTS.md` ("Persistence" and "Taxi service and member profiles"): the "Store reads are memoized per request" bullet and the "All sidebar counters ... come from one request" bullet each appear twice, word for word. One copy of each should go (the first memo bullet is the one in the right place, before "Derived fields"; the duplicated one sits after it, glued to the next heading).
+
+## C-alsv38: `--lime` and `--amber` are the same orange (2026-11-10)
+
+`src/styles/base.css:40` and `:42`: both variables are `#ff8400`. `--lime` is used as the primary accent (own stations, focus outlines) and `--amber` elsewhere, but the names no longer describe the colour and nothing tells which one new code should use. Either merge them into one token or give `--lime` its own value again. Left alone while moving the section colours to `--accent-*` tokens, because changing either would change the look.

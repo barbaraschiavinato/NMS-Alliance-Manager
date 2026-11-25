@@ -1,7 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { Ban, Check, CircleX, Crosshair, Orbit, Pencil, Trash2, UserRoundCheck } from "lucide-react";
+import {
+  ApproveIcon,
+  BlockIcon,
+  DeleteIcon,
+  EditIcon,
+  MissionIcon,
+  RevokeApprovalIcon,
+  StationIcon,
+  UnblockIcon,
+} from "@/components/shared/icons";
 import { formatNmsFriendCode } from "@/lib/members/member-types";
 import type { AllianceMember, MemberRole, MemberSpecialty, MembershipStatus } from "@/lib/members/member-types";
 import { useLocale } from "@/components/providers/locale-provider";
@@ -54,7 +63,7 @@ function MemberActions({
       onClick={() => onEdit(member)}
       type="button"
     >
-      <Pencil size={14} />
+      <EditIcon size={14} />
     </button>
   );
 
@@ -80,7 +89,7 @@ function MemberActions({
           onClick={() => onDelete(member)}
           type="button"
         >
-          <Trash2 size={14} />
+          <DeleteIcon size={14} />
         </button>
       </div>
     );
@@ -108,7 +117,7 @@ function MemberActions({
           onClick={() => onStatus(member.email, "approved")}
           type="button"
         >
-          <Check size={14} />
+          <ApproveIcon size={14} />
         </button>
       )}
       {member.membershipStatus === "approved" && (
@@ -119,7 +128,7 @@ function MemberActions({
           onClick={() => onStatus(member.email, "pending")}
           type="button"
         >
-          <CircleX size={14} />
+          <RevokeApprovalIcon size={14} />
         </button>
       )}
       {member.membershipStatus === "blocked" ? (
@@ -130,7 +139,7 @@ function MemberActions({
           onClick={() => onStatus(member.email, "pending")}
           type="button"
         >
-          <UserRoundCheck size={14} />
+          <UnblockIcon size={14} />
         </button>
       ) : (
         <button
@@ -140,7 +149,7 @@ function MemberActions({
           onClick={() => onStatus(member.email, "blocked")}
           type="button"
         >
-          <Ban size={14} />
+          <BlockIcon size={14} />
         </button>
       )}
       {editButton}
@@ -151,7 +160,7 @@ function MemberActions({
         onClick={() => onDelete(member)}
         type="button"
       >
-        <Trash2 size={14} />
+        <DeleteIcon size={14} />
       </button>
     </div>
   );
@@ -236,7 +245,7 @@ export function MemberCard({
               data-tooltip={t("members.user_missions")}
               href={`/missions?search=${encodeURIComponent(member.nmsName)}`}
             >
-              <Crosshair size={14} />
+              <MissionIcon size={14} />
             </Link>
           )}
           {member.nmsName && memberActivity.stationOwnerIds.includes(member.publicId) && (
@@ -246,7 +255,7 @@ export function MemberCard({
               data-tooltip={t("stations.user_stations")}
               href={`/stations?search=${encodeURIComponent(member.nmsName)}`}
             >
-              <Orbit size={14} />
+              <StationIcon size={14} />
             </Link>
           )}
         </div>

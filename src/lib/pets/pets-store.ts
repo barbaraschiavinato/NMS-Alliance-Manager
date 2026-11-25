@@ -1,29 +1,15 @@
-import { get, put } from "@vercel/blob";
 import { randomUUID } from "node:crypto";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
-import path from "node:path";
-import { localDataPath } from "@/lib/storage/local-data-path";
-import { getBlobAuthOptions } from "@/lib/storage/blob-config";
+import { readJsonDocument, writeJsonDocument } from "@/lib/storage/json-document";
+import { memoizedRead } from "@/lib/storage/request-memo";
+import { reassignOwnedItems } from "@/lib/members/owned-items";
 import { normalizeStoredPet, type Pet, type PetInput } from "@/lib/pets/pets";
 
-const blobPath = "alliance-manager/pets.json";
-const localPath = () => localDataPath("pets.json");
+export function readPets(): Promise<Pet[]> {
+  return memoizedRead("pets", readPetsFromStore);
+}
 
-export async function readPets(): Promise<Pet[]> {
-  let raw: unknown;
-  const blobAuthOptions = getBlobAuthOptions();
-  if (blobAuthOptions) {
-    const blob = await get(blobPath, { access: "private", useCache: false, ...blobAuthOptions });
-    if (!blob || blob.statusCode === 304) return [];
-    raw = JSON.parse(await new Response(blob.stream).text());
-  } else {
-    try {
-      raw = JSON.parse(await readFile(localPath(), "utf8"));
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code === "ENOENT") return [];
-      throw error;
-    }
-  }
+async function readPetsFromStore(): Promise<Pet[]> {
+  const raw = await readJsonDocument("pets");
   if (!Array.isArray(raw)) return [];
   const seen = new Set<string>();
   return raw.flatMap((entry) => {
@@ -34,22 +20,8 @@ export async function readPets(): Promise<Pet[]> {
   });
 }
 
-async function writePets(pets: readonly Pet[]): Promise<void> {
-  const json = `${JSON.stringify(pets, null, 2)}\n`;
-  const blobAuthOptions = getBlobAuthOptions();
-  if (blobAuthOptions) {
-    await put(blobPath, json, {
-      access: "private",
-      ...blobAuthOptions,
-      addRandomSuffix: false,
-      allowOverwrite: true,
-      contentType: "application/json",
-    });
-    return;
-  }
-  const filePath = localPath();
-  await mkdir(path.dirname(filePath), { recursive: true });
-  await writeFile(filePath, json, "utf8");
+function writePets(pets: readonly Pet[]): Promise<void> {
+  return writeJsonDocument("pets", pets);
 }
 
 function petFields(input: PetInput) {
@@ -121,13 +93,6 @@ export async function removePet(id: string): Promise<Pet | null> {
 }
 
 export async function reassignPetOwner(fromMemberId: string, toMemberId: string): Promise<void> {
-  const pets = await readPets();
-  if (!pets.some((pet) => pet.ownerId === fromMemberId || pet.createdByMemberId === fromMemberId)) return;
-  await writePets(
-    pets.map((pet) => ({
-      ...pet,
-      ownerId: pet.ownerId === fromMemberId ? toMemberId : pet.ownerId,
-      ...(pet.createdByMemberId === fromMemberId ? { createdByMemberId: toMemberId } : {}),
-    })),
-  );
+  const reassigned = reassignOwnedItems(await readPets(), fromMemberId, toMemberId);
+  if (reassigned) await writePets(reassigned);
 }

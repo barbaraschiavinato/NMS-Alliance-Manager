@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type SubmitEvent } from "react";
-import { Compass, Hammer, Search, Check, CircleAlert, X } from "lucide-react";
+import { AlertIcon, BuilderIcon, CheckIcon, CloseIcon, ExplorerIcon, RangerIcon } from "@/components/shared/icons";
 import {
   formatNmsFriendCode,
   isValidNmsFriendCode,
@@ -118,7 +118,7 @@ export function MemberProfilePanel({
             </h2>
           </div>
           <button aria-label={t("common.close")} className="icon-button" onClick={close} type="button">
-            <X size={18} />
+            <CloseIcon size={18} />
           </button>
         </div>
         <form onSubmit={submit}>
@@ -215,7 +215,7 @@ export function MemberProfilePanel({
             </legend>
             <div className="specialty-options" role="radiogroup" aria-label={t("profile.nms_specialty")}>
               {memberSpecialties.map((item) => {
-                const Icon = item === "builder" ? Hammer : item === "ranger" ? Compass : Search;
+                const Icon = item === "builder" ? BuilderIcon : item === "ranger" ? RangerIcon : ExplorerIcon;
                 return (
                   <label className={`specialty-option ${specialty === item ? "selected" : ""}`} key={item}>
                     <input
@@ -250,13 +250,13 @@ export function MemberProfilePanel({
           )}
           {error && (
             <p className="form-error">
-              <CircleAlert size={15} />
+              <AlertIcon size={15} />
               {t(error)}
             </p>
           )}
           {saved && (
             <p className="address-validation address-valid">
-              <Check size={14} />
+              <CheckIcon size={14} />
               {t("profile.profile_saved")}
             </p>
           )}

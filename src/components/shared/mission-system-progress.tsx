@@ -1,6 +1,6 @@
 "use client";
 
-import { Compass, Orbit, Search } from "lucide-react";
+import { ExplorerIcon, RangerIcon, StationIcon } from "@/components/shared/icons";
 import { useId } from "react";
 import { useLocale } from "@/components/providers/locale-provider";
 import {
@@ -20,7 +20,7 @@ const statusRoles = missionSystemStatusRoles;
 
 export const roleOrder = ["ranger", "explorer", "builder"];
 
-const coverIcons = { explorer: Search, ranger: Compass, discoverer: Orbit } as const;
+const coverIcons = { explorer: ExplorerIcon, ranger: RangerIcon, discoverer: StationIcon } as const;
 
 export function MissionSystemProgress({
   statuses,
@@ -78,7 +78,7 @@ export function MissionSystemProgress({
                 const coveredBy = crossCoveredBy ?? lockedBy;
                 const covered = coveredBy !== null;
                 if (!editable && covered) return null;
-                const CoveredIcon = coveredBy ? coverIcons[coveredBy] : Search;
+                const CoveredIcon = coveredBy ? coverIcons[coveredBy] : ExplorerIcon;
                 const isChecked = covered || statuses.includes(status);
                 const shouldPulse =
                   itemEditable && pulseRoles?.includes(statusRoles[status]) && !disabled && !isChecked;

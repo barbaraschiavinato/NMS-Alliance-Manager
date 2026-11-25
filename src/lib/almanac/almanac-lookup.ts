@@ -6,10 +6,11 @@ import {
 } from "@/lib/almanac/almanac-store";
 import { normalizeAlmanacPlanet } from "@/lib/almanac/almanac-normalize";
 import { almanacRetryAfterSeconds, noteAlmanacRateLimit } from "@/lib/almanac/almanac-rate-limit";
+import { almanacPlanetUrl } from "@/lib/almanac/almanac-config";
 
 async function fetchAlmanacPlanet(address: string, galaxy: number): Promise<Record<string, unknown> | null> {
   if (almanacRetryAfterSeconds() > 0) throw new Error("planet.almanac_lookup_failed");
-  const response = await fetch(`https://nmsalmanac.com/api/planets/${address}?galaxy=${galaxy + 1}`, {
+  const response = await fetch(almanacPlanetUrl(address, galaxy + 1), {
     headers: { Accept: "application/json" },
     signal: AbortSignal.timeout(6000),
     cache: "no-store",

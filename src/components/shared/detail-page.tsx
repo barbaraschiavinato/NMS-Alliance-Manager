@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { BackIcon } from "@/components/shared/icons";
 import { type ComponentProps, type ReactNode, useSyncExternalStore } from "react";
 import { usePathname } from "next/navigation";
 import { contextualDetailHref, detailReturnDestination, detailOrigins } from "@/lib/navigation/detail-links";
@@ -46,7 +46,7 @@ export function DetailBackLink({ href, label }: Readonly<{ href: string; label: 
             )?.label;
   return (
     <Link className="detail-back-link" href={destination}>
-      <ArrowLeft aria-hidden="true" size={18} />
+      <BackIcon aria-hidden="true" size={18} />
       {t(destinationLabel ?? label)}
     </Link>
   );

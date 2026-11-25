@@ -1,4 +1,4 @@
-import { Eye, EyeOff, Search, X } from "lucide-react";
+import { CloseIcon, SearchIcon, ShowingAllIcon, ShowingMineIcon } from "@/components/shared/icons";
 import { Tabs } from "@/components/layout/tabs";
 import { MissionCard } from "@/components/cards/mission-card";
 import { isMissionAssignee, type PlanetNotes } from "@/components/cards/mission-card/parts";
@@ -175,7 +175,7 @@ export function MissionList({
           />
           <div className="toolbar-actions mission-toolbar-actions">
             <label className="search-field">
-              <Search size={15} />
+              <SearchIcon size={15} />
               <input
                 aria-label={t("planet.search_missions_planets_users_or_mission_type")}
                 onChange={(event) => onSearchChange(event.target.value)}
@@ -193,7 +193,7 @@ export function MissionList({
                 onClick={() => onScopeChange(!showAll)}
                 type="button"
               >
-                {showAll ? <Eye size={15} /> : <EyeOff size={15} />}
+                {showAll ? <ShowingAllIcon size={15} /> : <ShowingMineIcon size={15} />}
               </button>
             )}
           </div>
@@ -276,7 +276,7 @@ export function MissionList({
                 onClick={() => setMissionNoteView(null)}
                 type="button"
               >
-                <X size={18} />
+                <CloseIcon size={18} />
               </button>
             </div>
             <p className="mission-notes-content">{missionNoteView.notes}</p>
@@ -302,7 +302,7 @@ export function MissionList({
                 onClick={() => setPlanetNoteView(null)}
                 type="button"
               >
-                <X size={18} />
+                <CloseIcon size={18} />
               </button>
             </div>
             <ul className="planet-notes-list">

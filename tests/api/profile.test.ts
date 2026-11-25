@@ -157,7 +157,7 @@ describe("PATCH /api/profile", () => {
         const response = await patch(unchangedProfile(member, overrides));
         expect(response.status).toBe(403);
         expect(await response.json()).toEqual({
-          error: "Questo account locale è fisso per i test: il profilo non è modificabile.",
+          error: "errors.fixed_test_account_profile_cannot_be_edited",
         });
       }
       expect(readMembers().find((item) => item.publicId === member.publicId)).toMatchObject({

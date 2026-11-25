@@ -1,6 +1,15 @@
 import { useEffect, useId, useRef, useState, type SubmitEvent } from "react";
 import { generateSystemName } from "@/lib/planets/system-name";
-import { ArrowUpRight, CircleAlert, Compass, Orbit, Search, Trash2, X } from "lucide-react";
+import {
+  AlertIcon,
+  CloseIcon,
+  DeleteIcon,
+  ExplorerIcon,
+  LoadingIcon,
+  RangerIcon,
+  StationIcon,
+  SubmitIcon,
+} from "@/components/shared/icons";
 import {
   decodePortalAddress,
   missionPriorities,
@@ -314,7 +323,7 @@ export function MissionForm({
             <h2 id="dialog-title">{t(mission ? "missions.edit_mission" : "missions.new_mission")}</h2>
           </div>
           <button aria-label={t("common.close")} className="icon-button" onClick={onClose} type="button">
-            <X size={18} />
+            <CloseIcon size={18} />
           </button>
         </div>
         <form
@@ -525,7 +534,7 @@ export function MissionForm({
                 {systemStatusesLoading && <p className="field-hint">{t("planet.loading_planet_status")}</p>}
                 {systemStatusesError && (
                   <p className="form-error">
-                    <CircleAlert size={14} />
+                    <AlertIcon size={14} />
                     {t(systemStatusesError)}
                   </p>
                 )}
@@ -543,7 +552,7 @@ export function MissionForm({
                         const coveredBy = crossCoveredBy ?? lockedBy;
                         const covered = coveredBy !== null;
                         const CoveredIcon =
-                          coveredBy === "discoverer" ? Orbit : coveredBy === "ranger" ? Compass : Search;
+                          coveredBy === "discoverer" ? StationIcon : coveredBy === "ranger" ? RangerIcon : ExplorerIcon;
                         const label = t(status);
                         const description = covered ? null : systemTaskTooltip(status, locale, allianceName);
                         const accessibleLabel = covered
@@ -603,14 +612,14 @@ export function MissionForm({
           </label>
           {error && (
             <p className="form-error">
-              <CircleAlert size={15} />
+              <AlertIcon size={15} />
               {t(error)}
             </p>
           )}
           <div className="dialog-actions">
             {mission && (
               <button className="delete-button" disabled={saving} onClick={remove} type="button">
-                <Trash2 size={15} /> {t("common.delete")}
+                <DeleteIcon size={15} /> {t("common.delete")}
               </button>
             )}
             <span className="action-spacer" />
@@ -624,9 +633,9 @@ export function MissionForm({
             >
               {submitLabel}
               {generatingNames > 0 || systemLookup?.status === "checking" ? (
-                <Orbit aria-hidden="true" className="button-spinner" size={15} />
+                <LoadingIcon aria-hidden="true" className="button-spinner" size={15} />
               ) : (
-                <ArrowUpRight size={15} />
+                <SubmitIcon size={15} />
               )}
             </button>
           </div>

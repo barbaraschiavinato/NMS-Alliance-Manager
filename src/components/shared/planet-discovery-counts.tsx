@@ -1,6 +1,6 @@
 "use client";
 
-import { Gem, Leaf, PawPrint } from "lucide-react";
+import { FaunaIcon, FloraIcon, MineralsIcon } from "@/components/shared/icons";
 import { useLocale } from "@/components/providers/locale-provider";
 import type { AlmanacDiscoveryCounts } from "@/lib/almanac/almanac-discovery-counts";
 
@@ -12,9 +12,9 @@ export function PlanetDiscoveryCounts({ counts = {} }: Readonly<{ counts?: Alman
     <span className="planet-discovery-counts">
       {(
         [
-          { key: "flora", label: "planet.flora", Icon: Leaf },
-          { key: "fauna", label: "planet.fauna", Icon: PawPrint },
-          { key: "minerals", label: "planet.minerals", Icon: Gem },
+          { key: "flora", label: "planet.flora", Icon: FloraIcon },
+          { key: "fauna", label: "planet.fauna", Icon: FaunaIcon },
+          { key: "minerals", label: "planet.minerals", Icon: MineralsIcon },
         ] as const
       ).map(({ key, label, Icon }) => {
         const count = counts[key];

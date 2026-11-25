@@ -4,7 +4,7 @@ import { Tabs } from "@/components/layout/tabs";
 import { StationCard } from "@/components/cards/station-card";
 import type { StationEntry, StationFilter } from "@/components/cards/station-card/parts";
 
-import { FileSpreadsheet, Search } from "lucide-react";
+import { ExportIcon, SearchIcon } from "@/components/shared/icons";
 import { LoadingSpinner } from "@/components/shared/loading-spinner";
 import { type MemberMessageContext } from "@/components/modals/member-card-dialog";
 import type { AllianceMember } from "@/lib/members/access-store";
@@ -151,7 +151,7 @@ export function StationList({
           {
             <div className="toolbar-actions station-toolbar-actions">
               <label className="search-field member-search station-search">
-                <Search size={15} />
+                <SearchIcon size={15} />
                 <input
                   aria-label={t("stations.search_stations_by_portal_owner_or_galaxy_or_notes")}
                   onChange={(event) => onSearchChange(event.target.value)}
@@ -173,7 +173,7 @@ export function StationList({
                   title={t(exportingStations ? "stations.exporting_stations" : "stations.export_stations_to_excel")}
                   type="button"
                 >
-                  <FileSpreadsheet aria-hidden="true" size={15} />
+                  <ExportIcon aria-hidden="true" size={15} />
                 </button>
               )}
             </div>

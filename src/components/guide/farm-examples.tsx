@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, SlidersHorizontal } from "lucide-react";
+import { FiltersIcon, SearchIcon } from "@/components/shared/icons";
 import { HeroAddButton } from "@/components/layout/hero";
 import { FarmCard, type FarmEntry } from "@/components/cards/farm-card";
 import { GlyphStrip } from "@/components/shared/portal-address-field";
@@ -145,11 +145,11 @@ export function FarmExamples() {
         <figcaption>Ricerca e filtri per piante e materiali</figcaption>
         <div className="guide-farm-toolbar-example" inert>
           <label className="search-field member-search station-search">
-            <Search size={15} />
+            <SearchIcon size={15} />
             <input placeholder="Cerca farm" readOnly value="" />
           </label>
           <button aria-expanded="true" aria-label="Filtri" className="planet-filters-toggle" data-active type="button">
-            <SlidersHorizontal aria-hidden="true" size={14} />
+            <FiltersIcon aria-hidden="true" size={14} />
           </button>
         </div>
         <div className="planet-controls guide-farm-filters-example" inert>

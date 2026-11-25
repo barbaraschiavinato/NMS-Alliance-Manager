@@ -3,7 +3,16 @@
 import Image from "next/image";
 import { useId } from "react";
 import { usePathname } from "next/navigation";
-import { AudioWaveform, Factory, Globe2, Moon, PawPrint, Palmtree, Siren } from "lucide-react";
+import {
+  DissonantIcon,
+  FarmIcon,
+  HelpRequestIcon,
+  MoonIcon,
+  ParadiseIcon,
+  PetIcon,
+  PlanetPlaceholderIcon,
+  WaterLevelIcon,
+} from "@/components/shared/icons";
 import { DetailLink } from "@/components/shared/detail-page";
 import { farmDetailHref, petDetailHref } from "@/lib/navigation/detail-links";
 import type { SystemFeature } from "@/lib/planets/system-feature";
@@ -61,7 +70,7 @@ function PlanetSizeIndicator({ size, label }: Readonly<{ size?: string; label: (
   if (size === "Moon") {
     return (
       <span aria-label={label(size)} className="planet-size-indicator" data-tooltip={label(size)} role="img">
-        <Moon aria-hidden="true" size={14} />
+        <MoonIcon aria-hidden="true" size={14} />
       </span>
     );
   }
@@ -81,9 +90,6 @@ export const conflictLevels: Record<string, number> = { None: 0, Low: 1, Medium:
 // One drop that fills up with the amount of water: empty when dry, a third for Shallow, two thirds for Ocean and full
 // for Deep. An unknown word shows a third, so a planet with some water never looks dry.
 const planetWaterLevels: Record<string, number> = { None: 0, Shallow: 1, Ocean: 2, Deep: 3 };
-const dropPath =
-  "M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z";
-
 function PlanetWaterIndicator({ water, label }: Readonly<{ water?: string; label: (value: string) => string }>) {
   const clipId = `water-${useId().replace(/[^a-zA-Z0-9]/g, "")}`;
   if (!water) return null;
@@ -95,17 +101,7 @@ function PlanetWaterIndicator({ water, label }: Readonly<{ water?: string; label
       data-tooltip={label(water)}
       role="img"
     >
-      <svg aria-hidden="true" height={14} viewBox="0 0 24 24" width={14}>
-        {level > 0 && (
-          <>
-            <clipPath id={clipId}>
-              <rect height="24" width="24" x="0" y={22 - (20 * level) / 3} />
-            </clipPath>
-            <path className="planet-water-fill" clipPath={`url(#${clipId})`} d={dropPath} />
-          </>
-        )}
-        <path className="planet-water-outline" d={dropPath} />
-      </svg>
+      <WaterLevelIcon clipId={clipId} level={level} />
     </span>
   );
 }
@@ -146,7 +142,7 @@ export function PlanetDestinationCard({
         {planet.imageUrl ? (
           <Image alt="" className="planet-mission-image" height={96} src={planet.imageUrl} unoptimized width={96} />
         ) : (
-          <Globe2 aria-hidden="true" className="planet-mission-icon" size={19} />
+          <PlanetPlaceholderIcon aria-hidden="true" className="planet-mission-icon" size={19} />
         )}
         <span className="planet-mission-card-copy">
           <strong>{planet.almanacName || t("planet.planet_number", { number: planet.planetNumber })}</strong>
@@ -173,7 +169,7 @@ export function PlanetDestinationCard({
               data-tooltip={t("planet.paradise")}
               role="img"
             >
-              <Palmtree aria-hidden="true" size={14} />
+              <ParadiseIcon aria-hidden="true" size={14} />
             </span>
           )}
           {planet.dissonant && (
@@ -183,7 +179,7 @@ export function PlanetDestinationCard({
               data-tooltip={t("planet.dissonant")}
               role="img"
             >
-              <AudioWaveform aria-hidden="true" size={14} />
+              <DissonantIcon aria-hidden="true" size={14} />
             </span>
           )}
           <PlanetSizeIndicator
@@ -204,7 +200,7 @@ export function PlanetDestinationCard({
           href={farmHref}
           prefetch={false}
         >
-          <Factory aria-hidden="true" size={14} />
+          <FarmIcon aria-hidden="true" size={14} />
         </DetailLink>
       )}
       {showPetLink && petHref && (
@@ -215,7 +211,7 @@ export function PlanetDestinationCard({
           href={petHref}
           prefetch={false}
         >
-          <PawPrint aria-hidden="true" size={14} />
+          <PetIcon aria-hidden="true" size={14} />
         </DetailLink>
       )}
       {planet.canMarkVisited && visits && (
@@ -226,7 +222,7 @@ export function PlanetDestinationCard({
           onClick={() => visits.onRequestHelp(planet)}
           type="button"
         >
-          <Siren aria-hidden="true" size={14} />
+          <HelpRequestIcon aria-hidden="true" size={14} />
         </button>
       )}
       {planet.canMarkVisited && visits && (

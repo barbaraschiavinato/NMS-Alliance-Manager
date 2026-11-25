@@ -2,7 +2,8 @@
 
 import { useEffect, useState, type SubmitEvent } from "react";
 import { DetailLink as Link, useDetailReturn } from "@/components/shared/detail-page";
-import { Archive, ArchiveRestore, Crosshair, Eclipse, Orbit } from "lucide-react";
+import { ArchiveIcon, MissionIcon, PlanetIcon, RestoreIcon, StationIcon } from "@/components/shared/icons";
+import { broadcastRequestsEvent, dispatchAppEvent } from "@/lib/navigation/app-events";
 
 import { MessageCard, MessageReplyForm } from "@/components/cards/message-card";
 import { MessageList } from "@/components/sections/message-list";
@@ -174,7 +175,7 @@ export function HelpRequestsPage({
           .filter((entry) => entry.id !== id)
           .map((entry) => ({ ...entry, replies: entry.replies.filter((reply) => reply.id !== id) })),
       );
-      window.dispatchEvent(new Event(`${kind}-requests-changed`));
+      dispatchAppEvent(broadcastRequestsEvent(kind));
       if (id === detailRootId) router.replace(returnDestination);
     } catch (error_: unknown) {
       setError(error_ instanceof Error ? error_.message : `${kind}.request_unable_to_delete`);
@@ -205,7 +206,7 @@ export function HelpRequestsPage({
         return next;
       });
       if (replyingTo === request.id) setReplyingTo("");
-      window.dispatchEvent(new Event(`${kind}-requests-changed`));
+      dispatchAppEvent(broadcastRequestsEvent(kind));
     } catch (error_: unknown) {
       setError(error_ instanceof Error ? error_.message : "broadcast.archive_failed");
     } finally {
@@ -397,7 +398,7 @@ export function HelpRequestsPage({
                             onClick={() => void archiveRequest(request)}
                             type="button"
                           >
-                            {request.archived ? <ArchiveRestore size={14} /> : <Archive size={14} />}
+                            {request.archived ? <RestoreIcon size={14} /> : <ArchiveIcon size={14} />}
                           </button>
                         ) : undefined
                       }
@@ -487,7 +488,7 @@ export function HelpRequestsPage({
                               aria-label={t("taxi.open_meeting_station")}
                               data-tooltip={t("taxi.open_meeting_station")}
                             >
-                              <Orbit size={15} />
+                              <StationIcon size={15} />
                               {t("taxi.meeting_at", {
                                 station:
                                   request.meetingPoint === "hub"
@@ -508,7 +509,7 @@ export function HelpRequestsPage({
                               href={missionDetailHref(request.missionCode, systemScope ? "stations" : kind)}
                               title={t("messages.open_mission")}
                             >
-                              <Crosshair size={15} />
+                              <MissionIcon size={15} />
                             </Link>
                           )}
                           {kind === "help" && request.portal && request.galaxy !== undefined && (
@@ -519,7 +520,7 @@ export function HelpRequestsPage({
                               title={t("planet.open_planet_details")}
                               type="button"
                             >
-                              <Eclipse size={15} />
+                              <PlanetIcon size={15} />
                             </button>
                           )}
                         </>
@@ -545,7 +546,7 @@ export function HelpRequestsPage({
               setTaxiOpen(false);
               setError("");
               setRevision((current) => current + 1);
-              window.dispatchEvent(new Event("taxi-requests-changed"));
+              dispatchAppEvent("taxi-requests-changed");
             }}
           />
         )}

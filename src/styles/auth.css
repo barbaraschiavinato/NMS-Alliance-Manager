@@ -20,8 +20,8 @@
 .pending-signout { display: inline-flex; align-items: center; gap: 7px; margin-top: 15px; padding: 0; color: #b7c3b8; border: 0; background: none; cursor: pointer; font-size: 10px; }
 .pending-signout:hover { color: #fff; }
 .branding-grid { display: grid; grid-template-columns: 120px 1fr; gap: 13px; }
-.approval-button { min-height: 29px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 0 8px; color: #72d1c4; border: 1px solid #315b55; border-radius: 3px; background: #192a29; cursor: pointer; font-size: 9px; font-weight: 700; transition: color .15s, border-color .15s, background-color .15s; }
-.approval-button:hover { border-color: #72d1c4; background: #203835; }
+.approval-button { min-height: 29px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 0 8px; color: var(--green); border: 1px solid #315b55; border-radius: 3px; background: #192a29; cursor: pointer; font-size: 9px; font-weight: 700; transition: color .15s, border-color .15s, background-color .15s; }
+.approval-button:hover { border-color: var(--green); background: #203835; }
 @media (max-width: 720px) {
   .login-panel { padding: 25px 21px; }
 }

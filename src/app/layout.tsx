@@ -3,6 +3,7 @@ import { LocaleProvider } from "@/components/providers/locale-provider";
 import { NavigationSearchResetProvider } from "@/components/shared/navigation-search-reset";
 import { readAccessData } from "@/lib/members/access-store";
 import "./globals.css";
+import { defaultAppIconPath } from "@/components/shared/icons";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +18,7 @@ export async function generateMetadata(): Promise<Metadata> {
             { url: "/api/alliance/app-icon?size=32", sizes: "32x32", type: "image/png" },
             { url: "/api/alliance/app-icon?size=192", sizes: "192x192", type: "image/png" },
           ]
-        : "/icons/nms-gek.svg",
+        : defaultAppIconPath,
       apple: alliance.appleIconUrl ? "/api/alliance/app-icon?size=180" : "/glyphs/glyph-mask-0.png",
     },
   };

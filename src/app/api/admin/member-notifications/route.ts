@@ -10,15 +10,16 @@ import {
   sendMemberEmailTest,
   sendMemberNotificationTest,
 } from "@/lib/notifications/member-notification-delivery";
+import { withRequestMemo } from "@/lib/storage/request-memo";
+import { adminRequired, apiError, badRequest, unauthorized } from "@/lib/utils/api-responses";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 async function authorize() {
   const member = await getCurrentMember();
-  if (!member) return { error: NextResponse.json({ error: "Accesso richiesto." }, { status: 401 }) };
-  if (!hasRole(member, "admin"))
-    return { error: NextResponse.json({ error: "Permesso admin richiesto." }, { status: 403 }) };
+  if (!member) return { error: unauthorized() };
+  if (!hasRole(member, "admin")) return { error: adminRequired() };
   return { member };
 }
 
@@ -37,13 +38,10 @@ function failure(error: unknown) {
   const resendStatus = /^Resend: HTTP (\d+)/.exec(message)?.[1];
   if (resendStatus && resendErrors[resendStatus])
     return NextResponse.json({ error: resendErrors[resendStatus] }, { status: 502 });
-  return NextResponse.json(
-    { error: "Unable to configure or send member notifications. Check the channel configuration and server logs." },
-    { status: 503 },
-  );
+  return apiError("member_notifications.admin_error", 503);
 }
 
-export async function GET() {
+export const GET = withRequestMemo(async function GET() {
   const auth = await authorize();
   if (auth.error) return auth.error;
   try {
@@ -54,39 +52,34 @@ export async function GET() {
   } catch (error) {
     return failure(error);
   }
-}
+});
 
-export async function PATCH(request: Request) {
+export const PATCH = withRequestMemo(async function PATCH(request: Request) {
   const auth = await authorize();
   if (auth.error) return auth.error;
   const value: unknown = await request.json().catch(() => null);
-  if (!isMemberNotificationSettings(value))
-    return NextResponse.json({ error: "Invalid member notification settings." }, { status: 400 });
+  if (!isMemberNotificationSettings(value)) return badRequest("member_notifications.invalid_settings");
   const readiness = memberNotificationReadiness();
   if (
     (value.telegramEnabled && !readiness.telegram) ||
     (value.approvalEmailEnabled && !readiness.email) ||
     ((value.telegramEnabled || value.approvalEmailEnabled) && !readiness.links)
   )
-    return NextResponse.json(
-      { error: "Configure the environment credentials before enabling this channel." },
-      { status: 400 },
-    );
+    return badRequest("taxi_notifications.configure_credentials");
   try {
     await saveMemberNotificationSettings(value);
     return NextResponse.json({ settings: await readMemberNotificationSettings(), readiness });
   } catch (error) {
     return failure(error);
   }
-}
+});
 
-export async function POST(request?: Request) {
+export const POST = withRequestMemo(async function POST(request?: Request) {
   const auth = await authorize();
   if (auth.error) return auth.error;
   const value: unknown = await request?.json().catch(() => null);
   const channel = value && typeof value === "object" && "channel" in value ? value.channel : "telegram";
-  if (channel !== "telegram" && channel !== "email")
-    return NextResponse.json({ error: "Invalid notification channel." }, { status: 400 });
+  if (channel !== "telegram" && channel !== "email") return badRequest("taxi_notifications.invalid_channel");
   try {
     // The email test goes only to the administrator who asked for it.
     if (channel === "email") await sendMemberEmailTest(auth.member.email);
@@ -95,4 +88,4 @@ export async function POST(request?: Request) {
   } catch (error) {
     return failure(error);
   }
-}
+});

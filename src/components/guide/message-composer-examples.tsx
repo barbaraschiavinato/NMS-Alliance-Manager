@@ -1,4 +1,4 @@
-import { MessageSquareText, Send } from "lucide-react";
+import { SendIcon, WriteMessageIcon } from "@/components/shared/icons";
 
 export function MemberProfileExample({
   highlightFriendCode = false,
@@ -37,7 +37,7 @@ export function MemberProfileExample({
         </dl>
         {!readOnly && (
           <button className="primary-button member-message-open" type="button">
-            <MessageSquareText aria-hidden="true" size={15} />
+            <WriteMessageIcon aria-hidden="true" size={15} />
             Lascia un messaggio
           </button>
         )}
@@ -74,7 +74,7 @@ export function MessageComposerExamples() {
               <span>Confermo di voler inviare un messaggio relativo alla missione o al pianeta indicato.</span>
             </label>
             <button className="primary-button" type="button">
-              <Send aria-hidden="true" size={15} />
+              <SendIcon aria-hidden="true" size={15} />
               Invia messaggio
             </button>
           </div>

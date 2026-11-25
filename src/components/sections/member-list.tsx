@@ -2,7 +2,7 @@
 
 import { Tabs } from "@/components/layout/tabs";
 import { useMemo } from "react";
-import { Search } from "lucide-react";
+import { SearchIcon } from "@/components/shared/icons";
 import type { AllianceMember, MemberRole, MembershipStatus } from "@/lib/members/member-types";
 import { LoadingSpinner } from "@/components/shared/loading-spinner";
 import { useLocale } from "@/components/providers/locale-provider";
@@ -89,7 +89,7 @@ export function MemberList({
         />
         <div className="toolbar-actions member-toolbar-actions">
           <label className="search-field member-search">
-            <Search size={15} />
+            <SearchIcon size={15} />
             <input
               aria-label={t("members.search_users")}
               onChange={(event) => onSearchChange(event.target.value)}

@@ -11,13 +11,13 @@
 .guide-index > ul > li > a { font-size: 14px; font-weight: 600; }
 .guide-index > ul > li > .guide-index-profile { color: var(--lime); }
 .guide-index > ul > li > .guide-index-basics { color: var(--ink); }
-.guide-index > ul > li > .guide-index-stations { color: #6cb4ff; }
-.guide-index > ul > li > .guide-index-missions { color: #72d1c4; }
-.guide-index > ul > li > .guide-index-planets { color: #b48cf2; }
-.guide-index > ul > li > .guide-index-map { color: #8b8dff; }
+.guide-index > ul > li > .guide-index-stations { color: var(--accent-stations); }
+.guide-index > ul > li > .guide-index-missions { color: var(--accent-missions); }
+.guide-index > ul > li > .guide-index-planets { color: var(--accent-planets); }
+.guide-index > ul > li > .guide-index-map { color: var(--accent-map); }
 .guide-index > ul > li > .guide-index-leaderboard { color: #e040c8; }
-.guide-index > ul > li > .guide-index-farms { color: #8fd46a; }
-.guide-index > ul > li > .guide-index-pets { color: #ff8fb8; }
+.guide-index > ul > li > .guide-index-farms { color: var(--accent-farms); }
+.guide-index > ul > li > .guide-index-pets { color: var(--accent-pets); }
 .guide-index > ul > li > .guide-index-help { color: #f5c518; }
 .guide-index > ul > li > .guide-index-help[href="#richieste-aiuto"] { color: #ff4d4f; }
 .guide-index > ul > li > .guide-index-messages { color: #8f9bff; }
@@ -35,9 +35,9 @@
 .guide-numbered-list { margin: 8px 0 20px; padding-left: 32px; list-style: decimal; }
 .guide-numbered-list-spaced { margin-top: 16px; }
 .guide-destination { display: inline-flex; align-items: baseline; gap: 4px; font-weight: 600; white-space: nowrap; }
-.guide-destination-stations { color: #6cb4ff; }
-.guide-destination-missions { color: #72d1c4; }
-.guide-destination-planets { color: #b48cf2; }
+.guide-destination-stations { color: var(--accent-stations); }
+.guide-destination-missions { color: var(--accent-missions); }
+.guide-destination-planets { color: var(--accent-planets); }
 .guide-help-icon { margin: 0 5px; }
 .guide-page code { color: var(--muted); font-size: 12px; }
 .guide-table-wrap { overflow-x: auto; }

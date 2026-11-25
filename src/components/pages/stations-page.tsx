@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, type SubmitEvent } from "react";
-import { CircleAlert, Orbit, Pencil, Plus, X } from "lucide-react";
+import { AlertIcon, CloseIcon, ConfirmAddIcon, EditIcon, LoadingIcon } from "@/components/shared/icons";
 
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
@@ -753,7 +753,7 @@ export function StationsPage({
               />
             ) : (
               <p className={error ? "form-error" : "address-validation address-valid"}>
-                {error ? <CircleAlert size={15} /> : null}
+                {error ? <AlertIcon size={15} /> : null}
                 {t(error || notice)}
               </p>
             ))}
@@ -810,7 +810,7 @@ export function StationsPage({
                 </h2>
               </div>
               <button aria-label={t("common.close")} className="icon-button" onClick={closeStationDialog} type="button">
-                <X size={18} />
+                <CloseIcon size={18} />
               </button>
             </div>
             <form className="station-add-form" onSubmit={addStation}>
@@ -894,7 +894,7 @@ export function StationsPage({
               )}
               {error && (
                 <p className="form-error">
-                  <CircleAlert size={15} />
+                  <AlertIcon size={15} />
                   {t(error)}
                 </p>
               )}
@@ -915,11 +915,11 @@ export function StationsPage({
                 >
                   {saving ? t("common.saving") : t(editingStation ? "common.save" : "common.add")}
                   {generatingNames > 0 || (!editingStation && validation.valid && !validation.lookup) ? (
-                    <Orbit aria-hidden="true" className="button-spinner" size={15} />
+                    <LoadingIcon aria-hidden="true" className="button-spinner" size={15} />
                   ) : editingStation ? (
-                    <Pencil size={15} />
+                    <EditIcon size={15} />
                   ) : (
-                    <Plus size={15} />
+                    <ConfirmAddIcon size={15} />
                   )}
                 </button>
               </div>
@@ -963,7 +963,7 @@ export function StationsPage({
                 onClick={() => setStationNoteView(null)}
                 type="button"
               >
-                <X size={18} />
+                <CloseIcon size={18} />
               </button>
             </div>
             <p className="station-notes-content">{stationNoteView.note}</p>

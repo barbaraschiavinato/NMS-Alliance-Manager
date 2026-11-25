@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, Orbit, Send } from "lucide-react";
+import { DropdownIcon, SendIcon, StationIcon } from "@/components/shared/icons";
 import Link from "next/link";
 import { HeroAddButton } from "@/components/layout/hero";
 import { MessageCard } from "@/components/cards/message-card";
@@ -30,7 +30,7 @@ export function TaxiExamples() {
               <div className="taxi-combobox">
                 <input readOnly value="10 · Eissentam" />
                 <button className="taxi-combobox-toggle" type="button" aria-label="Apri o chiudi le galassie">
-                  <ChevronDown size={18} aria-hidden="true" />
+                  <DropdownIcon size={18} aria-hidden="true" />
                 </button>
               </div>
             </label>
@@ -39,7 +39,7 @@ export function TaxiExamples() {
               <div className="taxi-combobox">
                 <input readOnly value="Hub dell'alleanza · Euclide · 0123456789AB" />
                 <button className="taxi-combobox-toggle" type="button" aria-label="Apri o chiudi i punti d'incontro">
-                  <ChevronDown size={18} aria-hidden="true" />
+                  <DropdownIcon size={18} aria-hidden="true" />
                 </button>
               </div>
             </label>
@@ -52,7 +52,7 @@ export function TaxiExamples() {
               <span>Confermo che il messaggio riguarda la richiesta di taxi.</span>
             </label>
             <button className="primary-button" type="button">
-              <Send size={15} aria-hidden="true" />
+              <SendIcon size={15} aria-hidden="true" />
               Invia richiesta
             </button>
           </div>
@@ -71,7 +71,7 @@ export function TaxiExamples() {
                 className="message-meeting-station"
                 href={stationDetailHref({ ownerId: "example", portal: "0123456789AB", galaxy: 0 })}
               >
-                <Orbit size={15} aria-hidden="true" />
+                <StationIcon size={15} aria-hidden="true" />
                 Incontro: Hub dell&apos;alleanza · Euclide
               </Link>
             }

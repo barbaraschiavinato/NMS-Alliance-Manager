@@ -1,4 +1,5 @@
 import { almanacRetryAfterSeconds, noteAlmanacRateLimit } from "@/lib/almanac/almanac-rate-limit";
+import { almanacDocumentUrl, almanacPlanetUrl, almanacSystemUrl } from "@/lib/almanac/almanac-config";
 
 type AlmanacRecord = Record<string, unknown>;
 
@@ -96,14 +97,14 @@ export async function normalizeAlmanacPlanet(planet: AlmanacRecord, allowRefresh
   ) {
     throw new Error("NMS Almanac returned invalid structured planet metadata");
   }
-  const dictionaryUrl = `https://nmsalmanac.com/api/${planet.words}`;
+  const dictionaryUrl = almanacDocumentUrl(planet.words);
   let words: AlmanacRecord;
   try {
     words = await readDocument(dictionaryUrl);
   } catch (error) {
     if (!(error instanceof AlmanacDocumentError) || error.status !== 404 || !allowRefresh) throw error;
     if (typeof planet.portal !== "string" || !/^[0-9a-f]{12}$/i.test(planet.portal)) throw error;
-    const url = `https://nmsalmanac.com/api/planets/${planet.portal.toUpperCase()}?galaxy=${planet.galaxy}`;
+    const url = almanacPlanetUrl(planet.portal, planet.galaxy);
     // An old word table cannot decode current phrase indexes: refresh the planet and table together.
     const fresh = await readDocument(url, true);
     if (
@@ -121,11 +122,9 @@ export async function normalizeAlmanacPlanet(planet: AlmanacRecord, allowRefresh
     });
     return normalizeAlmanacPlanet(fresh, false);
   }
-  const system = await readDocument(
-    `https://nmsalmanac.com/api/systems/${planet.system.toUpperCase()}?galaxy=${planet.galaxy}`,
-  );
+  const system = await readDocument(almanacSystemUrl(planet.system, planet.galaxy));
   if (["size", "biome", "life", "items"].some((key) => Object.keys(record(words[key])).length === 0)) {
-    documents.delete(`https://nmsalmanac.com/api/${planet.words}`);
+    documents.delete(dictionaryUrl);
     throw new Error("NMS Almanac returned an invalid dictionary");
   }
   if (

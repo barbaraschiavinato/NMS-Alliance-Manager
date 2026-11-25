@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import { AlertTriangle } from "lucide-react";
+import { GalaxyWarningIcon } from "@/components/shared/icons";
 import { type MemberMessageContext } from "@/components/modals/member-card-dialog";
 import type { AllianceMember } from "@/lib/members/access-store";
 import { galaxyLabel } from "@/lib/planets/galaxies";
@@ -17,6 +17,7 @@ export { canCreateMissionFromStation } from "@/lib/missions/station-mission-avai
 import { useLocale } from "@/components/providers/locale-provider";
 import { SystemFacts } from "@/components/shared/system-facts";
 import { almanacStarCount, almanacSystemFacts } from "@/lib/almanac/almanac-facts";
+import { almanacImageUrl } from "@/lib/almanac/almanac-config";
 
 export type CachedPlanet = Readonly<{ galaxy: number; response: Record<string, unknown> }>;
 export type StationMissionStatus = "none" | "in_progress" | "completed";
@@ -51,7 +52,7 @@ export function GalaxyLabel({ galaxy }: Readonly<{ galaxy: number }>) {
       data-tooltip={foreign ? t("missions.galaxy_portals_warning") : undefined}
       tabIndex={foreign ? 0 : undefined}
     >
-      {foreign && <AlertTriangle size={9} />}
+      {foreign && <GalaxyWarningIcon size={9} />}
       {galaxyLabel(galaxy)}
     </span>
   );
@@ -191,9 +192,7 @@ export function cachedPlanetTitle(planet: CachedPlanet | null) {
 }
 
 export function cachedPlanetImageUrl(planet: CachedPlanet | null) {
-  const pictures = asRecord(planet?.response.pictures);
-  const disc = pictures?.disc;
-  return typeof disc === "string" && disc.startsWith("/planets/") ? `https://nmsalmanac.com/api${disc}` : null;
+  return almanacImageUrl(asRecord(planet?.response.pictures)?.disc);
 }
 
 export function CachedPlanetInfo({ planet, onOpen }: Readonly<{ planet: CachedPlanet; onOpen: () => void }>) {

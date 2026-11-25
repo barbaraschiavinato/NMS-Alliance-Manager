@@ -24,9 +24,9 @@
 .planet-system-status li { min-height: 34px; display: flex; align-items: center; gap: 7px; padding: 0 9px; color: var(--muted); border: 1px solid #354044; background: #1a2124; font-size: 9px; }
 .planet-system-status li > svg { flex: 0 0 auto; color: #849088; }
 .planet-system-status li > small { margin-left: auto; color: #849088; font-size: 7px; white-space: nowrap; }
-.planet-system-status li.planet-system-status-done { color: #72d1c4; border-color: #315b55; background: #192a29; }
+.planet-system-status li.planet-system-status-done { color: var(--accent-missions); border-color: #315b55; background: #192a29; }
 .planet-system-status li.planet-system-status-done > svg,
-.planet-system-status li.planet-system-status-done > small { color: #72d1c4; }
+.planet-system-status li.planet-system-status-done > small { color: var(--accent-missions); }
 .planet-fact-list { display: grid; margin: 0; }
 .planet-fact-row { min-height: 32px; display: grid; grid-template-columns: 130px minmax(0, 1fr); align-items: center; gap: 12px; border-bottom: 1px solid #edf0ea; }
 .planet-fact-row:last-child { border-bottom: 0; }
@@ -269,8 +269,8 @@ body:has(.sidebar-compact) .planet-notes-list li { font-size: 17px; }
 .sidebar-compact ~ .main-panel .planet-card-with-help > .planet-card-help { width: 30px; height: 30px; }
 .sidebar-compact ~ .main-panel .planet-card-with-help > .planet-card-help svg { width: 17px; height: 17px; }
 .sidebar-compact ~ .main-panel .planet-card-with-help .planet-card-indicators { right: 41px; }
-.planet-card-with-farm > .planet-card-farm { position: absolute; z-index: 3; right: 5px; bottom: 5px; width: 24px; height: 24px; color: #8fd46a; }
-.planet-card-with-farm > .planet-card-farm:hover, .planet-card-with-farm > .planet-card-farm:focus-visible { border-color: #8fd46a; }
+.planet-card-with-farm > .planet-card-farm { position: absolute; z-index: 3; right: 5px; bottom: 5px; width: 24px; height: 24px; color: var(--accent-farms); }
+.planet-card-with-farm > .planet-card-farm:hover, .planet-card-with-farm > .planet-card-farm:focus-visible { border-color: var(--accent-farms); }
 .planet-card-with-farm .planet-card-indicators { right: 35px; }
 .planet-card-with-farm.planet-card-with-help > .planet-card-farm { right: 35px; }
 .planet-card-with-farm.planet-card-with-help .planet-card-indicators { right: 65px; }
@@ -279,8 +279,8 @@ body:has(.sidebar-compact) .planet-notes-list li { font-size: 17px; }
 .sidebar-compact ~ .main-panel .planet-card-with-farm .planet-card-indicators { right: 41px; }
 .sidebar-compact ~ .main-panel .planet-card-with-farm.planet-card-with-help > .planet-card-farm { right: 41px; }
 .sidebar-compact ~ .main-panel .planet-card-with-farm.planet-card-with-help .planet-card-indicators { right: 77px; }
-.planet-card-with-pet > .planet-card-pet { position: absolute; z-index: 3; right: 5px; bottom: 5px; width: 24px; height: 24px; color: #ff8fb8; }
-.planet-card-with-pet > .planet-card-pet:hover, .planet-card-with-pet > .planet-card-pet:focus-visible { border-color: #ff8fb8; }
+.planet-card-with-pet > .planet-card-pet { position: absolute; z-index: 3; right: 5px; bottom: 5px; width: 24px; height: 24px; color: var(--accent-pets); }
+.planet-card-with-pet > .planet-card-pet:hover, .planet-card-with-pet > .planet-card-pet:focus-visible { border-color: var(--accent-pets); }
 .planet-card-with-pet .planet-card-indicators { right: 35px; }
 .planet-card-with-pet:is(.planet-card-with-help, .planet-card-with-farm) > .planet-card-pet { right: 35px; }
 .planet-card-with-pet:is(.planet-card-with-help, .planet-card-with-farm) .planet-card-indicators { right: 65px; }

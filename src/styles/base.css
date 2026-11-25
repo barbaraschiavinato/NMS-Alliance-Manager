@@ -29,6 +29,13 @@
   --line: #354044;
   --paper: #0d1215;
   --white: #181f22;
+  --accent-stations: #6cb4ff;
+  --accent-missions: #72d1c4;
+  --accent-planets: #b48cf2;
+  --accent-map: #8b8dff;
+  --accent-farms: #8fd46a;
+  --accent-pets: #ff8fb8;
+  /* Success and "valid" states; same value as the missions accent, but not tied to the section. */
   --green: #72d1c4;
   --lime: #ff8400;
   --coral: #ef8067;

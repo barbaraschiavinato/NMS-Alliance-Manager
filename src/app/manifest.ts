@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { readAccessData } from "@/lib/members/access-store";
+import { defaultAppIconPath } from "@/components/shared/icons";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +20,7 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
             { src: "/api/alliance/app-icon?size=512", sizes: "512x512", type: "image/png" },
           ]
         : [
-            { src: "/icons/nms-gek.svg", sizes: "any", type: "image/svg+xml" },
+            { src: defaultAppIconPath, sizes: "any", type: "image/svg+xml" },
             { src: "/glyphs/glyph-mask-0.png", sizes: "256x256", type: "image/png" },
           ],
   };

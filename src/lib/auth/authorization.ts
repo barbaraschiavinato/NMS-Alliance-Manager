@@ -1,6 +1,6 @@
 import { auth } from "@/auth";
 import { getMissingAuthConfiguration } from "@/lib/auth/local-auth";
-import { registerMember, type AllianceMember, type MemberRole } from "@/lib/members/access-store";
+import { registerMember, type AllianceMember } from "@/lib/members/access-store";
 import { notifyMemberRegistered, scheduleMemberNotification } from "@/lib/notifications/member-notification-delivery";
 
 export async function getCurrentMember(
@@ -23,8 +23,5 @@ export async function getCurrentMember(
   return member.simpleView && member.role !== "user" ? { ...member, role: "user", displayRole: member.role } : member;
 }
 
-const roleLevel: Record<MemberRole, number> = { user: 0, moderator: 1, admin: 2 };
-
-export function hasRole(member: AllianceMember | null, minimumRole: MemberRole) {
-  return Boolean(member && roleLevel[member.role] >= roleLevel[minimumRole]);
-}
+// Re-exported so existing callers keep importing it from here; the check itself is pure.
+export { hasRole } from "@/lib/members/member-types";

@@ -2,7 +2,15 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Check, CircleAlert, Crosshair, Orbit, Pencil, Search, Trash2 } from "lucide-react";
+import {
+  AlertIcon,
+  CheckIcon,
+  DeleteIcon,
+  EditIcon,
+  MissionIcon,
+  SearchIcon,
+  StationIcon,
+} from "@/components/shared/icons";
 import { formatNmsFriendCode } from "@/lib/members/member-types";
 import type { AllianceMember, AllianceSettings, MemberSpecialty } from "@/lib/members/member-types";
 
@@ -166,7 +174,7 @@ export function OfflinePlayersPage({
             <div className="members-toolbar offline-toolbar">
               <span />
               <label className="search-field member-search">
-                <Search size={15} />
+                <SearchIcon size={15} />
                 <input
                   aria-label={t("members.search_offline_players")}
                   onChange={(event) => setSearch(event.target.value)}
@@ -177,13 +185,13 @@ export function OfflinePlayersPage({
             </div>
             {error && (
               <p className="form-error">
-                <CircleAlert size={15} />
+                <AlertIcon size={15} />
                 {t(error)}
               </p>
             )}
             {notice && (
               <p className="address-validation address-valid">
-                <Check size={14} />
+                <CheckIcon size={14} />
                 {t(notice)}
               </p>
             )}
@@ -225,7 +233,7 @@ export function OfflinePlayersPage({
                                 data-tooltip={t("members.user_missions")}
                                 href={`/missions?search=${encodeURIComponent(player.nmsName)}`}
                               >
-                                <Crosshair size={14} />
+                                <MissionIcon size={14} />
                               </Link>
                             )}
                             {memberActivity.stationOwnerIds.includes(player.publicId) && (
@@ -235,7 +243,7 @@ export function OfflinePlayersPage({
                                 data-tooltip={t("stations.user_stations")}
                                 href={`/stations?search=${encodeURIComponent(player.nmsName)}`}
                               >
-                                <Orbit size={14} />
+                                <StationIcon size={14} />
                               </Link>
                             )}
                             <select
@@ -261,7 +269,7 @@ export function OfflinePlayersPage({
                               onClick={() => setEditing(player)}
                               type="button"
                             >
-                              <Pencil size={14} />
+                              <EditIcon size={14} />
                             </button>
                             <button
                               aria-label={t("common.delete_email", { email: player.nmsName })}
@@ -270,7 +278,7 @@ export function OfflinePlayersPage({
                               onClick={() => void remove(player)}
                               type="button"
                             >
-                              <Trash2 size={14} />
+                              <DeleteIcon size={14} />
                             </button>
                           </div>
                         </td>

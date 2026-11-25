@@ -5,7 +5,8 @@ import { MessageList } from "@/components/sections/message-list";
 import { Tabs } from "@/components/layout/tabs";
 import { useEffect, useState, type ReactNode, type SubmitEvent } from "react";
 import { DetailLink as Link, useDetailReturn } from "@/components/shared/detail-page";
-import { Crosshair, MailCheck, Orbit, PawPrint } from "lucide-react";
+import { MarkReadIcon, MissionIcon, PetIcon, StationIcon } from "@/components/shared/icons";
+import { dispatchAppEvent } from "@/lib/navigation/app-events";
 
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
@@ -143,7 +144,7 @@ export function MessagesPage({
         method: "PATCH",
       });
     } finally {
-      window.dispatchEvent(new Event("messages-unread-changed"));
+      dispatchAppEvent("messages-unread-changed");
     }
   }
 
@@ -296,7 +297,7 @@ export function MessagesPage({
                 href={missionDetailHref(message.missionCode, "messages")}
                 title={t("messages.open_mission")}
               >
-                <Crosshair size={15} />
+                <MissionIcon size={15} />
               </Link>
             )}
             {!isReply && message.subjectType === "pet" && message.petHref && (
@@ -307,7 +308,7 @@ export function MessagesPage({
                 href={message.petHref}
                 title={t("messages.open_pet")}
               >
-                <PawPrint size={15} />
+                <PetIcon size={15} />
               </Link>
             )}
             {!isReply && message.subjectType === "planet" && message.stationHref && (
@@ -318,7 +319,7 @@ export function MessagesPage({
                 href={message.stationHref}
                 title={t("messages.open_planet_station")}
               >
-                <Orbit size={15} />
+                <StationIcon size={15} />
               </Link>
             )}
           </>
@@ -356,7 +357,7 @@ export function MessagesPage({
               title={t("messages.mark_read")}
               type="button"
             >
-              <MailCheck size={14} />
+              <MarkReadIcon size={14} />
             </button>
           ) : undefined
         }

@@ -10,6 +10,7 @@ import {
   normalizeMissionPriority,
   normalizeMissionStatus,
   portalSearchMatches,
+  sortMissionsByPriority,
   specialtyAlreadyCovered,
   type Mission,
   type MissionViewer,
@@ -94,6 +95,49 @@ describe("type guards", () => {
     expect(isMissionPriority("high")).toBe(true);
     expect(isMissionPriority("Alta")).toBe(false);
     expect(isMissionPriority({})).toBe(false);
+  });
+});
+
+describe("sortMissionsByPriority", () => {
+  it("puts urgent, then high-priority missions first and keeps the incoming order otherwise", () => {
+    const missions = [
+      makeMission({ id: "normal-new" }),
+      makeMission({ id: "high-new", priority: "high" }),
+      makeMission({ id: "urgent", priority: "urgent" }),
+      makeMission({ id: "normal-old" }),
+      makeMission({ id: "high-old", priority: "high" }),
+    ];
+    expect(sortMissionsByPriority(missions).map((mission) => mission.id)).toEqual([
+      "urgent",
+      "high-new",
+      "high-old",
+      "normal-new",
+      "normal-old",
+    ]);
+  });
+
+  it("ranks completed missions like normal ones whatever their priority", () => {
+    const missions = [
+      makeMission({ id: "normal" }),
+      makeMission({ id: "done-urgent", priority: "urgent", status: "completed" }),
+      makeMission({ id: "high", priority: "high", status: "in_progress" }),
+    ];
+    expect(sortMissionsByPriority(missions).map((mission) => mission.id)).toEqual(["high", "normal", "done-urgent"]);
+  });
+
+  it("ranks an unknown priority like a normal one", () => {
+    const missions = [
+      makeMission({ id: "unknown", priority: "legacy" as Mission["priority"] }),
+      makeMission({ id: "normal" }),
+      makeMission({ id: "high", priority: "high" }),
+    ];
+    expect(sortMissionsByPriority(missions).map((mission) => mission.id)).toEqual(["high", "unknown", "normal"]);
+  });
+
+  it("does not mutate the input", () => {
+    const missions = [makeMission({ id: "a" }), makeMission({ id: "b", priority: "urgent" })];
+    sortMissionsByPriority(missions);
+    expect(missions.map((mission) => mission.id)).toEqual(["a", "b"]);
   });
 });
 

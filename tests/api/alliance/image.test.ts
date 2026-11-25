@@ -57,10 +57,6 @@ describe("GET /api/alliance/image", () => {
     expect(get).not.toHaveBeenCalledWith("alliance-manager/access.json", expect.anything());
   });
 
-  it.todo(
-    "rejects path traversal such as alliance-manager/branding/../access.json (currently forwarded to Blob get, see report)",
-  );
-
   it("returns 404 when no Blob store is configured", async () => {
     signInAs(cast.user);
     expect((await fetchImage(imagePath)).status).toBe(404);
@@ -102,6 +98,54 @@ describe("GET /api/alliance/image", () => {
         imagePath,
         expect.objectContaining({ access: "private", useCache: false, token: "blob-token" }),
       );
+    });
+
+    it("rejects path traversal and non-image names without calling Blob", async () => {
+      signInAs(cast.user);
+      const paths = [
+        "alliance-manager/branding/../access.json",
+        "alliance-manager/branding/../private-messages.json",
+        "alliance-manager/branding/..%2Faccess.json",
+        "alliance-manager/branding/%2e%2e/access.json",
+        "alliance-manager/branding/..\\access.json",
+        "alliance-manager/branding/./1234abcd-0000-4000-8000-000000000000.png",
+        "alliance-manager/branding/sub/image.png",
+        "alliance-manager/branding/notes.json",
+        "alliance-manager/branding/",
+        "/alliance-manager/branding/1234abcd-0000-4000-8000-000000000000.png",
+      ];
+      for (const path of paths) {
+        expect((await fetchImage(path)).status, path).toBe(404);
+      }
+      // The query string is decoded once: a doubly encoded traversal must be rejected as well.
+      const { GET } = await import("@/app/api/alliance/image/route");
+      const encoded = await GET(
+        new Request(
+          "http://localhost:3000/api/alliance/image?path=alliance-manager%2Fbranding%2F%252e%252e%252Faccess.json",
+        ),
+      );
+      expect(encoded.status).toBe(404);
+      // Blob is only read for the session's member document, never for the requested paths.
+      const requested = new Set(vi.mocked(get).mock.calls.map(([pathname]) => pathname));
+      expect([...requested]).toEqual(["alliance-manager/access.json"]);
+    });
+
+    it("serves legitimate branding images with any supported extension", async () => {
+      const names = ["1234abcd-0000-4000-8000-000000000000.jpg", "logo.webp", "app_icon-192.AVIF"];
+      vi.mocked(get).mockImplementation(
+        blobFiles({
+          ...accessBlob(cast),
+          ...Object.fromEntries(
+            names.map((name) => [`alliance-manager/branding/${name}`, { body: name, contentType: "image/png" }]),
+          ),
+        }),
+      );
+      signInAs(cast.user);
+      for (const name of names) {
+        const response = await fetchImage(`alliance-manager/branding/${name}`);
+        expect(response.status, name).toBe(200);
+        expect(await response.text()).toBe(name);
+      }
     });
 
     it("returns 404 for missing or not-modified blobs", async () => {

@@ -44,6 +44,12 @@ function renderDashboard(member = explorer, props: Partial<Parameters<typeof Mis
   );
 }
 
+function cardTitles(container: HTMLElement, titles: readonly string[]) {
+  return [...container.querySelectorAll("article.mission-card")].map(
+    (card) => titles.find((title) => card.textContent?.includes(title)) ?? "",
+  );
+}
+
 afterEach(() => {
   window.history.replaceState(null, "", "/");
   vi.unstubAllGlobals();
@@ -299,6 +305,46 @@ describe("MissionDashboard as a normal user", () => {
 
     await user.click(screen.getByRole("button", { name: t("common.close_notification") }));
     expect(screen.queryByText(t("Mission claimed."))).not.toBeInTheDocument();
+  });
+
+  it("lists urgent and high-priority missions before newer ones inside each status group", async () => {
+    const missions = [
+      makeMission({ id: "m-new", title: "Newest normal", createdAt: "2026-03-04T00:00:00.000Z" }),
+      makeMission({ id: "m-high", title: "Older high", priority: "high", createdAt: "2026-03-02T00:00:00.000Z" }),
+      makeMission({
+        id: "m-urgent",
+        title: "Oldest urgent",
+        priority: "urgent",
+        createdAt: "2026-03-01T00:00:00.000Z",
+      }),
+      makeMission({
+        id: "m-mine",
+        title: "My normal",
+        status: "in_progress",
+        assignedMemberId: explorer.publicId,
+        assignedTo: "Scout",
+        createdAt: "2026-02-01T00:00:00.000Z",
+      }),
+      makeMission({
+        id: "m-done",
+        title: "Done urgent",
+        priority: "urgent",
+        status: "completed",
+        assignedMemberId: explorer.publicId,
+        assignedTo: "Scout",
+        createdAt: "2026-03-05T00:00:00.000Z",
+      }),
+    ];
+    mockFetch(dashboardRoutes(missions));
+    renderDashboard();
+
+    await screen.findByRole("link", { name: "Newest normal" });
+    const titles = missions.map((mission) => mission.title);
+    const order = screen
+      .getAllByRole("link")
+      .map((link) => link.textContent ?? "")
+      .filter((text) => titles.includes(text));
+    expect(order).toEqual(["My normal", "Oldest urgent", "Older high", "Newest normal", "Done urgent"]);
   });
 
   it("shows the API error when claiming fails", async () => {
@@ -559,6 +605,72 @@ describe("MissionDashboard as a moderator", () => {
     await user.click(screen.getByRole("button", { name: t("missions.showing_all") }));
     expect(screen.queryByText("Other")).not.toBeInTheDocument();
     expect(screen.getByText("Mine")).toBeInTheDocument();
+  });
+
+  it("lists urgent and high-priority missions first, newest first otherwise, without status groups", async () => {
+    const missions = [
+      makeMission({ id: "m-new", title: "Newest normal", createdAt: "2026-03-05T00:00:00.000Z" }),
+      makeMission({
+        id: "m-progress",
+        title: "Running normal",
+        status: "in_progress",
+        assignedMemberId: moderator.publicId,
+        assignedTo: "Warden",
+        createdAt: "2026-03-04T00:00:00.000Z",
+      }),
+      makeMission({ id: "m-high", title: "Older high", priority: "high", createdAt: "2026-03-02T00:00:00.000Z" }),
+      makeMission({
+        id: "m-urgent",
+        title: "Oldest urgent",
+        priority: "urgent",
+        createdAt: "2026-03-01T00:00:00.000Z",
+      }),
+      makeMission({
+        id: "m-done",
+        title: "Done urgent",
+        priority: "urgent",
+        status: "completed",
+        createdAt: "2026-03-06T00:00:00.000Z",
+      }),
+    ];
+    mockFetch(dashboardRoutes(missions));
+    const { container } = renderDashboard(moderator);
+    await screen.findByText("Newest normal");
+    expect(
+      cardTitles(
+        container,
+        missions.map((mission) => mission.title),
+      ),
+    ).toEqual(["Oldest urgent", "Older high", "Done urgent", "Newest normal", "Running normal"]);
+  });
+
+  it("orders the associated missions of a system by priority too", async () => {
+    const missions = [
+      makeMission({ id: "a-new", title: "Associated newest", createdAt: "2026-03-05T00:00:00.000Z" }),
+      makeMission({
+        id: "a-urgent",
+        title: "Associated urgent",
+        priority: "urgent",
+        createdAt: "2026-03-01T00:00:00.000Z",
+      }),
+    ];
+    mockFetch(dashboardRoutes(missions));
+    const { container } = renderDashboard(moderator, { systemScope: { portal: "1234567890AB", galaxy: 0 } });
+    await screen.findByText("Associated newest");
+    expect(
+      cardTitles(
+        container,
+        missions.map((mission) => mission.title),
+      ),
+    ).toEqual(["Associated urgent", "Associated newest"]);
+  });
+
+  it("turns off pulse animations when the member disabled them", async () => {
+    mockFetch(dashboardRoutes([makeMission({ priority: "urgent" })]));
+    const { container } = renderDashboard({ ...moderator, pulseEffectsEnabled: false });
+    await screen.findByText("Survey Alpha");
+    expect(container.querySelector("main.app-shell")).toHaveClass("pulse-effects-disabled");
+    expect(container.querySelector("article.mission-card")).toHaveClass("mission-card-pulse-urgent");
   });
 
   it("deletes a mission only after confirmation", async () => {

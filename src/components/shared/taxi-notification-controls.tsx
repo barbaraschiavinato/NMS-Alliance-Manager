@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, type SubmitEvent } from "react";
-import { Bell, CheckCircle2, CircleAlert, Send } from "lucide-react";
+import { AlertIcon, NotificationsIcon, ReadyIcon, SendIcon } from "@/components/shared/icons";
 import { useLocale } from "@/components/providers/locale-provider";
 import type { TaxiNotificationChannel, TaxiNotificationSettings } from "@/lib/notifications/taxi-notifications";
 
@@ -76,7 +76,7 @@ export function TaxiNotificationAdmin() {
   return (
     <section className="admin-section taxi-notification-admin">
       <h3>
-        <Bell size={15} />
+        <NotificationsIcon size={15} />
         {t("Taxi notifications")}
       </h3>
       {!data && !error && <p>{t("Loading notification settings…")}</p>}
@@ -102,7 +102,7 @@ export function TaxiNotificationAdmin() {
                 </span>
               </label>
               <p className={`taxi-notification-status ${data.readiness[channel] ? "is-ready" : "is-missing"}`}>
-                {data.readiness[channel] ? <CheckCircle2 size={14} /> : <CircleAlert size={14} />}
+                {data.readiness[channel] ? <ReadyIcon size={14} /> : <AlertIcon size={14} />}
                 {t(data.readiness[channel] ? "Credentials configured" : "Credentials missing or invalid")}
               </p>
               <button
@@ -113,7 +113,7 @@ export function TaxiNotificationAdmin() {
                 }
                 onClick={() => void test(channel)}
               >
-                <Send size={14} />
+                <SendIcon size={14} />
                 {t("Send test")} — {channel === "push" ? "Web Push" : channel === "discord" ? "Discord" : "Telegram"}
               </button>
               {channel === "telegram" && (
@@ -209,7 +209,7 @@ export function TaxiPushPreferences() {
       }
     }
     load().catch((error: unknown) => {
-      if (active) setError(error instanceof Error ? error.message : "Unable to configure taxi push notifications.");
+      if (active) setError(error instanceof Error ? error.message : "taxi_notifications.push_error");
     });
     return () => {
       active = false;
@@ -225,7 +225,7 @@ export function TaxiPushPreferences() {
       setData({ ...current, enabled });
       setFeedback("Taxi notification settings saved.");
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Unable to configure taxi push notifications.");
+      setError(error instanceof Error ? error.message : "taxi_notifications.push_error");
     } finally {
       setBusy(false);
     }
@@ -257,7 +257,7 @@ export function TaxiPushPreferences() {
       await requestJson(url, "POST", current.toJSON());
       setFeedback("This browser is connected for taxi notifications.");
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Unable to configure taxi push notifications.");
+      setError(error instanceof Error ? error.message : "taxi_notifications.push_error");
     } finally {
       setBusy(false);
     }
@@ -273,7 +273,7 @@ export function TaxiPushPreferences() {
       setSubscription(null);
       setFeedback("This browser is disconnected.");
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Unable to configure taxi push notifications.");
+      setError(error instanceof Error ? error.message : "taxi_notifications.push_error");
     } finally {
       setBusy(false);
     }

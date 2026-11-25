@@ -1,7 +1,7 @@
 "use client";
 
 import { useLocale } from "@/components/providers/locale-provider";
-import { RotateCcw, Search, SlidersHorizontal, X } from "lucide-react";
+import { CloseIcon, FiltersIcon, ResetIcon, SearchIcon } from "@/components/shared/icons";
 import { plantResourceKey, plantResourceLabel } from "@/lib/planets/plant-products";
 import type { SystemFeature } from "@/lib/planets/system-feature";
 
@@ -124,7 +124,7 @@ export function PlanetFilters({
     <>
       <div className="planet-search-row">
         <label className="search-field planet-search">
-          <Search aria-hidden="true" size={15} />
+          <SearchIcon aria-hidden="true" size={15} />
           <input
             aria-label={t("planet.search_almanac_values")}
             onChange={(event) => onSearchChange(event.target.value)}
@@ -143,7 +143,7 @@ export function PlanetFilters({
           onClick={onToggle}
           type="button"
         >
-          <SlidersHorizontal aria-hidden="true" size={14} />
+          <FiltersIcon aria-hidden="true" size={14} />
         </button>
       </div>
       {open && (
@@ -541,7 +541,7 @@ export function PlanetActiveFilters({
         <span className="planet-filter-tag" key={tag.key}>
           {tag.label}
           <button aria-label={`${t("planet.remove_filter")}: ${tag.label}`} onClick={tag.clear} type="button">
-            <X aria-hidden="true" size={11} />
+            <CloseIcon aria-hidden="true" size={11} />
           </button>
         </span>
       ))}
@@ -552,7 +552,7 @@ export function PlanetActiveFilters({
         onClick={onReset}
         type="button"
       >
-        <RotateCcw aria-hidden="true" size={14} />
+        <ResetIcon aria-hidden="true" size={14} />
       </button>
     </div>
   );

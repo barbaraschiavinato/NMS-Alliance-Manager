@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import { CirclePlus, Orbit, X } from "lucide-react";
+import { AddIcon, AllianceLogoIcon, CloseIcon } from "@/components/shared/icons";
 import { useLocale } from "@/components/providers/locale-provider";
 import { GlyphStrip } from "@/components/shared/portal-address-field";
 import type { AllianceSettings } from "@/lib/members/access-store";
@@ -42,7 +42,7 @@ export function Hero({
                 style={settings.logoUrl ? { backgroundImage: `url("${settings.logoUrl}")` } : undefined}
                 type="button"
               >
-                {!settings.logoUrl && <Orbit size={27} />}
+                {!settings.logoUrl && <AllianceLogoIcon size={27} />}
               </button>
             ) : (
               <span
@@ -50,7 +50,7 @@ export function Hero({
                 className="banner-alliance-logo"
                 style={settings.logoUrl ? { backgroundImage: `url("${settings.logoUrl}")` } : undefined}
               >
-                {!settings.logoUrl && <Orbit size={27} />}
+                {!settings.logoUrl && <AllianceLogoIcon size={27} />}
               </span>
             )}
             <div className="banner-heading-copy">
@@ -83,7 +83,7 @@ export function Hero({
                 onClick={() => setPortalOpen(false)}
                 type="button"
               >
-                <X size={18} />
+                <CloseIcon size={18} />
               </button>
             </div>
             <div className="portal-dialog-details">
@@ -118,7 +118,7 @@ export function HeroAddButton({
       onClick={onClick}
       type="button"
     >
-      <CirclePlus size={17} /> <span className="banner-add-label">{t(label)}</span>
+      <AddIcon size={17} /> <span className="banner-add-label">{t(label)}</span>
     </button>
   );
 }

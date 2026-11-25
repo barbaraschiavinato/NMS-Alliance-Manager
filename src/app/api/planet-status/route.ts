@@ -18,13 +18,15 @@ import {
 } from "@/lib/planets/planet-system-status-store";
 import { readMissions } from "@/lib/missions/store";
 import { readAllStationPortals, readStationPortals } from "@/lib/stations/stations-store";
+import { withRequestMemo } from "@/lib/storage/request-memo";
+import { apiError, badRequest, forbidden, unauthorized } from "@/lib/utils/api-responses";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function GET(request: Request) {
+export const GET = withRequestMemo(async function GET(request: Request) {
   const member = await getCurrentMember();
-  if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
+  if (!member) return unauthorized();
 
   try {
     const missions = await readMissions();
@@ -59,7 +61,7 @@ export async function GET(request: Request) {
       galaxy < 0 ||
       galaxy > 255
     ) {
-      return NextResponse.json({ error: "Pianeta non valido." }, { status: 400 });
+      return badRequest("errors.invalid_planet");
     }
     const canViewAllStations = member.specialty === "explorer" || member.specialty === "builder";
     const hasVisibleStation = canViewAllStations
@@ -80,7 +82,7 @@ export async function GET(request: Request) {
           canViewMission(mission, member),
       )
     ) {
-      return NextResponse.json({ error: "Non puoi visualizzare lo stato di questo pianeta." }, { status: 403 });
+      return forbidden("errors.you_cannot_view_the_status_of_this_planet");
     }
     const [systemStatuses, systemStatusAuthors] = await Promise.all([
       readPlanetSystemStatus(portal, galaxy),
@@ -89,17 +91,17 @@ export async function GET(request: Request) {
     return NextResponse.json({ systemStatuses, systemStatusAuthors });
   } catch (error) {
     console.error("Unable to read planet system status", error);
-    return NextResponse.json({ error: "Impossibile leggere lo stato del pianeta." }, { status: 503 });
+    return apiError("errors.unable_to_read_planet_status", 503);
   }
-}
+});
 
-export async function PATCH(request: Request) {
+export const PATCH = withRequestMemo(async function PATCH(request: Request) {
   const member = await getCurrentMember();
-  if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
+  if (!member) return unauthorized();
 
   const input: unknown = await request.json().catch(() => null);
   if (!isPlanetStatusUpdate(input)) {
-    return NextResponse.json({ error: "Dati dello stato pianeta non validi." }, { status: 400 });
+    return badRequest("errors.invalid_planet_status_data");
   }
   try {
     let ownsStationForRanger = false;
@@ -116,10 +118,7 @@ export async function PATCH(request: Request) {
       );
       ownsStationForRanger = ownsStation;
       if (!assignedToMember && !ownsStation) {
-        return NextResponse.json(
-          { error: "Puoi aggiornare lo stato solo di un pianeta con una missione assegnata a te." },
-          { status: 403 },
-        );
+        return forbidden("planet.you_can_only_update_the_status_of_a_planet_with_a_mission_assigned_to_you");
       }
     }
     const [current, currentAuthors] = await Promise.all([
@@ -136,7 +135,7 @@ export async function PATCH(request: Request) {
             !(ownsStationForRanger && missionSystemStatusRoles[status] === "ranger"),
         )
       ) {
-        return NextResponse.json({ error: "Puoi aggiornare solo gli stati del tuo gruppo." }, { status: 403 });
+        return forbidden("errors.you_can_only_update_your_group_statuses");
       }
       // The discoverer and the assigned Ranger share the Ranger tasks: whoever checks one first owns it.
       if (
@@ -145,10 +144,7 @@ export async function PATCH(request: Request) {
           return author && current.includes(status) && author.memberId !== member.publicId;
         })
       ) {
-        return NextResponse.json(
-          { error: "Questo task è già stato preso in carico da un altro membro." },
-          { status: 403 },
-        );
+        return forbidden("errors.system_task_taken_by_another_member");
       }
     }
     const systemStatuses = await writePlanetSystemStatus(input.portal, input.galaxy, input.systemStatuses);
@@ -177,9 +173,9 @@ export async function PATCH(request: Request) {
     });
   } catch (error) {
     console.error("Unable to save planet system status", error);
-    return NextResponse.json({ error: "Impossibile salvare lo stato del pianeta." }, { status: 503 });
+    return apiError("errors.unable_to_save_planet_status", 503);
   }
-}
+});
 
 function isPlanetStatusUpdate(value: unknown): value is {
   portal: string;

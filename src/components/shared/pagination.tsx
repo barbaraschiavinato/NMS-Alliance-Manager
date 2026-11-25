@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { NextPageIcon, PreviousPageIcon } from "@/components/shared/icons";
 import { useLocale } from "@/components/providers/locale-provider";
 
 export function usePagination<T>(items: readonly T[], pageSize: number, resetKey: string) {
@@ -35,7 +35,7 @@ export function Pagination({
         onClick={() => onPageChange(page - 1)}
         type="button"
       >
-        <ChevronLeft aria-hidden="true" size={16} />
+        <PreviousPageIcon aria-hidden="true" size={16} />
         <span aria-hidden="true" className="pagination-label">
           {t("common.previous_page")}
         </span>
@@ -53,7 +53,7 @@ export function Pagination({
         <span aria-hidden="true" className="pagination-label">
           {t("common.next_page")}
         </span>
-        <ChevronRight aria-hidden="true" size={16} />
+        <NextPageIcon aria-hidden="true" size={16} />
       </button>
     </nav>
   );

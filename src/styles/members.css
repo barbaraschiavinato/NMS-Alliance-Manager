@@ -116,7 +116,7 @@
 .mission-dialog .platform-option input,
 .mission-dialog .specialty-option input { accent-color: var(--lime); }
 .mission-dialog .member-pending { color: #e4b478 !important; }
-.mission-dialog .member-approved { color: #72d1c4 !important; }
+.mission-dialog .member-approved { color: var(--green) !important; }
 .mission-dialog .member-blocked { color: #ef8067 !important; }
 @media (max-width: 1080px) {
   .member-card-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -152,12 +152,12 @@
 
 .member-icon-action.member-link-action { color: var(--green); border-color: #315b55; background: #192a29; }
 .member-icon-action.member-link-action:hover { color: var(--green); border-color: var(--green); background: #203835; }
-.member-icon-action.member-station-filter { color: #6cb4ff; border-color: #2f4c6b; background: #16222e; }
-.member-icon-action.member-station-filter:hover { color: #6cb4ff; border-color: #6cb4ff; background: #1c2d3f; }
-.member-icon-action.planet-map-link { color: #8b8dff; border-color: #3a3d7a; background: #1b1c33; }
-.member-icon-action.planet-map-link:hover { color: #8b8dff; border-color: #8b8dff; background: #25264a; }
-.member-icon-action.member-planet-action { color: #b48cf2; border-color: #4f3d73; background: #221b30; }
-.member-icon-action.member-planet-action:hover { color: #b48cf2; border-color: #b48cf2; background: #2c2340; }
+.member-icon-action.member-station-filter { color: var(--accent-stations); border-color: #2f4c6b; background: #16222e; }
+.member-icon-action.member-station-filter:hover { color: var(--accent-stations); border-color: var(--accent-stations); background: #1c2d3f; }
+.member-icon-action.planet-map-link { color: var(--accent-map); border-color: #3a3d7a; background: #1b1c33; }
+.member-icon-action.planet-map-link:hover { color: var(--accent-map); border-color: var(--accent-map); background: #25264a; }
+.member-icon-action.member-planet-action { color: var(--accent-planets); border-color: #4f3d73; background: #221b30; }
+.member-icon-action.member-planet-action:hover { color: var(--accent-planets); border-color: var(--accent-planets); background: #2c2340; }
 body:has(.sidebar-compact) .member-card-dialog { width: min(760px, 100%); padding: 32px; }
 body:has(.sidebar-compact) .member-card-dialog .member-card-details > div { padding: 14px 2px; font-size: 16px; }
 body:has(.sidebar-compact) .member-card-dialog .member-message-subject { font-size: 15px; }

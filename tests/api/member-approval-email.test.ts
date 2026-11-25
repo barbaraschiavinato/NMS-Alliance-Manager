@@ -286,7 +286,7 @@ describe("approval email administration", () => {
     fetch.mockResolvedValue(new Response("{}", { status: 500 }));
     const response = await admin.POST(jsonRequest(adminUrl, "POST", { channel: "email" }));
     expect(response.status).toBe(503);
-    expect((await response.json()).error).toContain("Unable to configure or send member notifications");
+    expect((await response.json()).error).toBe("member_notifications.admin_error");
   });
 
   it.each([{ channel: "sms" }, { channel: 1 }])("rejects the unknown test channel %j", async (value) => {

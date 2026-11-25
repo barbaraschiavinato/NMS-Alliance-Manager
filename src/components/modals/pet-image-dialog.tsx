@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import Image from "next/image";
-import { X } from "lucide-react";
+import { CloseIcon } from "@/components/shared/icons";
 import { useLocale } from "@/components/providers/locale-provider";
 
 // Large view of a pet image; closes with the X button, Escape or a click on the backdrop.
@@ -34,7 +34,7 @@ export function PetImageDialog({
             <h2 id="pet-image-title">{name}</h2>
           </div>
           <button aria-label={t("common.close")} autoFocus className="icon-button" onClick={onClose} type="button">
-            <X size={18} />
+            <CloseIcon size={18} />
           </button>
         </div>
         <Image

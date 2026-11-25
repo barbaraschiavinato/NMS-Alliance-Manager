@@ -1,6 +1,6 @@
 "use client";
 
-import { Languages } from "lucide-react";
+import { LanguageIcon } from "@/components/shared/icons";
 import { useLocale } from "@/components/providers/locale-provider";
 import type { Locale } from "@/lib/translations";
 
@@ -8,7 +8,7 @@ export function LanguageSelector() {
   const { locale, setLocale, t } = useLocale();
   return (
     <label className="language-selector">
-      <Languages aria-hidden="true" size={14} />
+      <LanguageIcon aria-hidden="true" size={14} />
       <span className="sr-only">{t("navigation.language")}</span>
       <select
         aria-label={t("navigation.language")}

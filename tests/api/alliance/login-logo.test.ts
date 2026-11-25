@@ -40,7 +40,7 @@ describe("GET /api/alliance/login-logo", () => {
     seedMembers(castMembers(cast));
     const response = await fetchLogo();
     expect(response.status).toBe(404);
-    expect(await response.json()).toEqual({ error: "Logo non configurato." });
+    expect(await response.json()).toEqual({ error: "admin.logo_is_not_configured" });
   });
 
   it.each([
@@ -60,7 +60,7 @@ describe("GET /api/alliance/login-logo", () => {
     seedMembers(castMembers(cast), { ...defaultAlliance, logoUrl: "http://[broken" });
     const response = await fetchLogo();
     expect(response.status).toBe(404);
-    expect(await response.json()).toEqual({ error: "Logo non valido." });
+    expect(await response.json()).toEqual({ error: "errors.invalid_logo" });
   });
 
   it("returns 404 when no Blob store is configured", async () => {
@@ -104,6 +104,6 @@ describe("GET /api/alliance/login-logo", () => {
     });
     const response = await fetchLogo();
     expect(response.status).toBe(503);
-    expect(await response.json()).toEqual({ error: "Impossibile leggere il logo." });
+    expect(await response.json()).toEqual({ error: "errors.unable_to_read_the_logo" });
   });
 });

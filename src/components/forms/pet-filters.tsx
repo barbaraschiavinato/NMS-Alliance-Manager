@@ -1,6 +1,6 @@
 "use client";
 
-import { RotateCcw, X } from "lucide-react";
+import { CloseIcon, ResetIcon } from "@/components/shared/icons";
 import { useLocale } from "@/components/providers/locale-provider";
 import {
   petActivities,
@@ -112,7 +112,7 @@ export function PetActiveFilters({
             onClick={() => onChange(tag.key, "")}
             type="button"
           >
-            <X aria-hidden="true" size={11} />
+            <CloseIcon aria-hidden="true" size={11} />
           </button>
         </span>
       ))}
@@ -123,7 +123,7 @@ export function PetActiveFilters({
         onClick={onReset}
         type="button"
       >
-        <RotateCcw aria-hidden="true" size={14} />
+        <ResetIcon aria-hidden="true" size={14} />
       </button>
     </div>
   );

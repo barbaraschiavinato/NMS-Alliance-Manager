@@ -1,11 +1,19 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type SubmitEvent } from "react";
-import { CircleAlert, ImagePlus, Orbit, Pencil, Plus, Trash2, X } from "lucide-react";
+import {
+  AddImageIcon,
+  AlertIcon,
+  CloseIcon,
+  ConfirmAddIcon,
+  DeleteIcon,
+  EditIcon,
+  LoadingIcon,
+  PetTypeIcon,
+} from "@/components/shared/icons";
 import { SystemAddressField, type SystemAddressValidation } from "@/components/shared/portal-address-field";
 import { useLocale } from "@/components/providers/locale-provider";
 import type { PetEntry } from "@/components/cards/pet-card";
-import { PetTypeIcon } from "@/components/shared/pet-type-icon";
 import type { AllianceMember } from "@/lib/members/member-types";
 import { galaxyNames } from "@/lib/planets/galaxies";
 import {
@@ -18,13 +26,8 @@ import {
   petClassGrades,
   petClassKeys,
   petHabitats,
-  petImageMaxBytes,
   petImageTypes,
   petRarities,
-  petCoordinatesMaxLength,
-  petNameMaxLength,
-  petNoteMaxLength,
-  petPlanetNameMaxLength,
   petTypes,
   type PetActivity,
   type PetClassGrade,
@@ -33,6 +36,13 @@ import {
   type PetRarity,
   type PetType,
 } from "@/lib/pets/pets";
+import {
+  coordinatesMaxLength,
+  imageUploadMaxBytes,
+  itemNameMaxLength,
+  noteMaxLength,
+  planetNameMaxLength,
+} from "@/lib/utils/limits";
 
 export type PetFormValues = Readonly<{
   name: string;
@@ -123,7 +133,7 @@ export function PetForm({
     const file = event.target.files?.[0];
     if (!file) return;
     setError("");
-    if (!(petImageTypes as readonly string[]).includes(file.type) || file.size > petImageMaxBytes) {
+    if (!(petImageTypes as readonly string[]).includes(file.type) || file.size > imageUploadMaxBytes) {
       replaceImage(null);
       setError("pets.error_image_invalid");
       return;
@@ -187,7 +197,7 @@ export function PetForm({
             <h2 id="pet-dialog-title">{t(pet ? "pets.edit_pet" : "pets.add_pet")}</h2>
           </div>
           <button aria-label={t("common.close")} className="icon-button" onClick={onClose} type="button">
-            <X size={18} />
+            <CloseIcon size={18} />
           </button>
         </div>
         <form className="station-add-form pet-form" onSubmit={submit}>
@@ -197,7 +207,7 @@ export function PetForm({
             </span>
             <input
               aria-label={t("pets.pet_name")}
-              maxLength={petNameMaxLength}
+              maxLength={itemNameMaxLength}
               onChange={(event) => setName(event.target.value)}
               required
               value={name}
@@ -325,7 +335,7 @@ export function PetForm({
               style={displayedImageUrl ? { backgroundImage: `url("${displayedImageUrl}")` } : undefined}
               type="button"
             >
-              {!displayedImageUrl && <ImagePlus aria-hidden="true" size={20} />}
+              {!displayedImageUrl && <AddImageIcon aria-hidden="true" size={20} />}
             </button>
             <div className="pet-image-actions">
               <input
@@ -346,7 +356,7 @@ export function PetForm({
                   title={t("pets.remove_image")}
                   type="button"
                 >
-                  <Trash2 size={16} />
+                  <DeleteIcon size={16} />
                 </button>
               )}
             </div>
@@ -357,7 +367,7 @@ export function PetForm({
             </span>
             <textarea
               aria-label={t("pets.notes")}
-              maxLength={petNoteMaxLength}
+              maxLength={noteMaxLength}
               onChange={(event) => setNote(event.target.value)}
               rows={3}
               value={note}
@@ -399,7 +409,7 @@ export function PetForm({
             </span>
             <input
               aria-label={t("farms.planet_name")}
-              maxLength={petPlanetNameMaxLength}
+              maxLength={planetNameMaxLength}
               onChange={(event) => {
                 planetNameEdited.current = event.target.value.trim() !== "";
                 setPlanetName(event.target.value);
@@ -414,7 +424,7 @@ export function PetForm({
             </span>
             <input
               aria-label={t("farms.coordinates")}
-              maxLength={petCoordinatesMaxLength}
+              maxLength={coordinatesMaxLength}
               onChange={(event) => setCoordinates(event.target.value)}
               placeholder="+12.34, -56.78"
               value={coordinates}
@@ -444,7 +454,7 @@ export function PetForm({
           )}
           {error && (
             <p className="form-error">
-              <CircleAlert size={15} />
+              <AlertIcon size={15} />
               {t(error)}
             </p>
           )}
@@ -456,11 +466,11 @@ export function PetForm({
             <button className="primary-button" disabled={saving || lookupPending || !validation.valid} type="submit">
               {saving ? t("common.saving") : t(pet ? "common.save" : "common.add")}
               {lookupPending ? (
-                <Orbit aria-hidden="true" className="button-spinner" size={15} />
+                <LoadingIcon aria-hidden="true" className="button-spinner" size={15} />
               ) : pet ? (
-                <Pencil size={15} />
+                <EditIcon size={15} />
               ) : (
-                <Plus size={15} />
+                <ConfirmAddIcon size={15} />
               )}
             </button>
           </div>

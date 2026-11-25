@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { Settings2, LayoutList, LogOut, UserRound } from "lucide-react";
+import { AllianceSettingsIcon, ProfileIcon, SignOutIcon, SimpleViewIcon } from "@/components/shared/icons";
 import type { AllianceMember, AllianceSettings } from "@/lib/members/access-store";
 import { getViewSwitchDestination } from "@/lib/navigation/view-navigation";
 import { useLocale } from "@/components/providers/locale-provider";
@@ -98,7 +98,7 @@ export function Header({
             data-tooltip={t(viewToggleLabel)}
             type="button"
           >
-            <LayoutList size={16} />
+            <SimpleViewIcon size={16} />
           </button>
         )}
 
@@ -110,7 +110,7 @@ export function Header({
             data-tooltip={t("admin.alliance_settings")}
             type="button"
           >
-            <Settings2 size={16} />
+            <AllianceSettingsIcon size={16} />
           </button>
         )}
         {onProfileOpen && (
@@ -121,7 +121,7 @@ export function Header({
             data-tooltip={t("profile.my_profile")}
             type="button"
           >
-            <UserRound size={16} />
+            <ProfileIcon size={16} />
           </button>
         )}
         <button
@@ -131,7 +131,7 @@ export function Header({
           data-tooltip={t("navigation.sign_out")}
           type="button"
         >
-          <LogOut size={16} />
+          <SignOutIcon size={16} />
         </button>
         <span className="top-avatar-tooltip" data-tooltip={accountLabel}>
           <span aria-label={accountLabel} className="top-avatar" role="img">

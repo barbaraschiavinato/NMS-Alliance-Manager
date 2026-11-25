@@ -1,17 +1,12 @@
-import { get, put } from "@vercel/blob";
-import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
-import { randomUUID } from "node:crypto";
-import path from "node:path";
-import { localDataPath } from "@/lib/storage/local-data-path";
-import { getBlobAuthOptions } from "@/lib/storage/blob-config";
+import { readJsonDocument, writeJsonDocument } from "@/lib/storage/json-document";
+import { memoizedRead } from "@/lib/storage/request-memo";
 import { normalizeAlmanacPictures, normalizeAlmanacPlanet } from "@/lib/almanac/almanac-normalize";
 
 type AlmanacResponse = Record<string, unknown>;
 type AlmanacResponseIndex = Record<string, Record<string, AlmanacResponse>>;
 export type CachedAlmanacPlanet = Readonly<{ galaxy: number; response: AlmanacResponse }>;
 
-const blobPath = "alliance-manager/almanac.json";
-const localPath = localDataPath("almanac.json");
+const almanacDocument = "almanac";
 
 function normalizeAlmanacIndex(value: unknown): AlmanacResponseIndex {
   if (!value || typeof value !== "object" || Array.isArray(value)) return {};
@@ -30,47 +25,19 @@ function normalizeAlmanacIndex(value: unknown): AlmanacResponseIndex {
   return index;
 }
 
-async function readAlmanacIndex(): Promise<AlmanacResponseIndex> {
-  const blobAuthOptions = getBlobAuthOptions();
-  if (blobAuthOptions) {
-    const blob = await get(blobPath, { access: "private", useCache: false, ...blobAuthOptions });
-    if (!blob || blob.statusCode === 304) return {};
-    return normalizeAlmanacIndex(JSON.parse(await new Response(blob.stream).text()));
-  }
-
-  try {
-    return normalizeAlmanacIndex(JSON.parse(await readFile(localPath, "utf8")));
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "ENOENT") return {};
-    if (error instanceof SyntaxError) {
-      // The cache can be rebuilt, so an unreadable file must not break every lookup. Keep a copy for inspection.
-      console.error("Unreadable Almanac cache, starting from an empty one", error);
-      await rename(localPath, `${localPath}.corrupt-${Date.now()}`).catch(() => undefined);
-      return {};
-    }
-    throw error;
-  }
+// Plain reads share one copy per request; the serialized read-modify-write cycles below read the store directly, so a
+// write never starts from a copy older than the one it replaces.
+function readAlmanacIndex(): Promise<AlmanacResponseIndex> {
+  return memoizedRead("almanac", readAlmanacIndexFromStore);
 }
 
-async function writeAlmanacIndex(index: AlmanacResponseIndex): Promise<void> {
-  const json = `${JSON.stringify(index, null, 2)}\n`;
-  const blobAuthOptions = getBlobAuthOptions();
-  if (blobAuthOptions) {
-    await put(blobPath, json, {
-      access: "private",
-      ...blobAuthOptions,
-      addRandomSuffix: false,
-      allowOverwrite: true,
-      contentType: "application/json",
-    });
-    return;
-  }
+async function readAlmanacIndexFromStore(): Promise<AlmanacResponseIndex> {
+  // The cache can be rebuilt, so an unreadable local file must not break every lookup (a copy is kept for inspection).
+  return normalizeAlmanacIndex(await readJsonDocument(almanacDocument, { quarantineCorruptLocalFile: true }));
+}
 
-  await mkdir(path.dirname(localPath), { recursive: true });
-  // Write a temporary file and rename it, so a reader never sees a half-written cache.
-  const temporaryPath = `${localPath}.${randomUUID()}.tmp`;
-  await writeFile(temporaryPath, json, "utf8");
-  await rename(temporaryPath, localPath);
+function writeAlmanacIndex(index: AlmanacResponseIndex): Promise<void> {
+  return writeJsonDocument(almanacDocument, index);
 }
 
 // Read-modify-write cycles on the cache run one at a time, otherwise concurrent requests overwrite each other's entries.
@@ -161,7 +128,7 @@ export async function writeAlmanacResponse(
 ): Promise<void> {
   const normalized = cacheOnly ? normalizeAlmanacPictures(response) : await normalizeAlmanacPlanet(response);
   await serialized(async () => {
-    const index = await readAlmanacIndex();
+    const index = await readAlmanacIndexFromStore();
     const canonicalCode = portalCode.toUpperCase();
     index[canonicalCode] ??= {};
     index[canonicalCode][String(galaxy)] = normalized;
@@ -189,7 +156,7 @@ export async function writeAlmanacResponses(
     })),
   );
   await serialized(async () => {
-    const index = await readAlmanacIndex();
+    const index = await readAlmanacIndexFromStore();
     for (const { portalCode, galaxy, response } of normalizedEntries) {
       const canonicalCode = portalCode.toUpperCase();
       index[canonicalCode] ??= {};

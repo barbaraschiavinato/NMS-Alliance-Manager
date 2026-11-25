@@ -8,18 +8,20 @@ import {
   setTaxiPushPreference,
 } from "@/lib/notifications/taxi-notifications-store";
 import { taxiNotificationReadiness, taxiPushPublicKey } from "@/lib/notifications/taxi-notification-delivery";
+import { withRequestMemo } from "@/lib/storage/request-memo";
+import { apiError, badRequest, conflict, unauthorized } from "@/lib/utils/api-responses";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 function failure(error: unknown) {
   console.error("Taxi push configuration failed", error instanceof Error ? error.message : "Unknown error");
-  return NextResponse.json({ error: "Unable to configure taxi push notifications." }, { status: 503 });
+  return apiError("taxi_notifications.push_error", 503);
 }
 
-export async function GET() {
+export const GET = withRequestMemo(async function GET() {
   const member = await getCurrentMember();
-  if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
+  if (!member) return unauthorized();
   try {
     const data = await readTaxiNotifications();
     const configured = taxiNotificationReadiness().push;
@@ -34,44 +36,40 @@ export async function GET() {
   } catch (error) {
     return failure(error);
   }
-}
+});
 
-export async function PATCH(request: Request) {
+export const PATCH = withRequestMemo(async function PATCH(request: Request) {
   const member = await getCurrentMember();
-  if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
+  if (!member) return unauthorized();
   const value: unknown = await request.json().catch(() => null);
   if (!value || typeof value !== "object" || !("enabled" in value) || typeof value.enabled !== "boolean")
-    return NextResponse.json({ error: "Invalid taxi notification settings." }, { status: 400 });
+    return badRequest("taxi_notifications.invalid_settings");
   try {
     await setTaxiPushPreference(member.publicId, value.enabled);
     return NextResponse.json({ ok: true });
   } catch (error) {
     return failure(error);
   }
-}
+});
 
-export async function POST(request: Request) {
+export const POST = withRequestMemo(async function POST(request: Request) {
   const member = await getCurrentMember();
-  if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
+  if (!member) return unauthorized();
   const value: unknown = await request.json().catch(() => null);
-  if (!isPushSubscription(value))
-    return NextResponse.json({ error: "Invalid browser push subscription." }, { status: 400 });
+  if (!isPushSubscription(value)) return badRequest("taxi_notifications.invalid_subscription");
   try {
     if (!(await readTaxiNotifications()).settings.pushEnabled || !taxiNotificationReadiness().push)
-      return NextResponse.json(
-        { error: "Taxi push notifications are disabled by the administrator." },
-        { status: 409 },
-      );
+      return conflict("taxi_notifications.admin_disabled");
     await saveTaxiPushDevice(member.publicId, value);
     return NextResponse.json({ ok: true }, { status: 201 });
   } catch (error) {
     return failure(error);
   }
-}
+});
 
-export async function DELETE(request: Request) {
+export const DELETE = withRequestMemo(async function DELETE(request: Request) {
   const member = await getCurrentMember();
-  if (!member) return NextResponse.json({ error: "Accesso richiesto." }, { status: 401 });
+  if (!member) return unauthorized();
   const value: unknown = await request.json().catch(() => null);
   if (
     !value ||
@@ -81,11 +79,11 @@ export async function DELETE(request: Request) {
     !value.endpoint ||
     value.endpoint.length > 2048
   )
-    return NextResponse.json({ error: "Invalid browser push subscription." }, { status: 400 });
+    return badRequest("taxi_notifications.invalid_subscription");
   try {
     await removeTaxiPushDevice(value.endpoint, member.publicId);
     return NextResponse.json({ ok: true });
   } catch (error) {
     return failure(error);
   }
-}
+});
