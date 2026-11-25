@@ -602,7 +602,8 @@ export async function GuideContent({
                   <MissionIcon aria-hidden="true" size={14} />
                   Missioni
                 </span>{" "}
-                e prendi in carico una missione disponibile.
+                e prendi in carico una missione disponibile, privilegiando quelle urgenti (nastro rosso) o prioritarie
+                (nastro giallo), che compaiono per prime tra le missioni libere.
                 <ExplorerAvailableMissionExample allianceName={guideAlliance.name} sample={sample} />
               </li>
               <li>
@@ -700,7 +701,8 @@ export async function GuideContent({
                   <MissionIcon aria-hidden="true" size={14} />
                   Missioni
                 </span>{" "}
-                e prendi in carico una missione disponibile.
+                e prendi in carico una missione disponibile, privilegiando quelle urgenti (nastro rosso) o prioritarie
+                (nastro giallo), che compaiono per prime tra le missioni libere.
                 <BuilderAvailableMissionExample allianceName={guideAlliance.name} sample={sample} />
               </li>
               <li>

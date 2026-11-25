@@ -13,6 +13,7 @@ import {
   canViewMission,
   coveredSpecialties,
   portalSearchMatches,
+  sortMissionsByPriority,
   specialtyAlreadyCovered,
   type Mission,
   type MissionInput,
@@ -229,7 +230,7 @@ export function MissionDashboard({
   }, [availableMissions]);
 
   const visibleMissions = useMemo(() => {
-    if (systemScope) return sortByCreatedAtDescending(availableMissions);
+    if (systemScope) return sortMissionsByPriority(sortByCreatedAtDescending(availableMissions));
     const chronological = sortByCreatedAtDescending(
       availableMissions
         .filter((mission) => {
@@ -259,13 +260,14 @@ export function MissionDashboard({
           return textMatches || portalSearchMatches(mission.systemAddress, search);
         }),
     );
-    if (filter !== "all" || (canManage && !member.simpleView)) return chronological;
+    const prioritized = sortMissionsByPriority(chronological);
+    if (filter !== "all" || (canManage && !member.simpleView)) return prioritized;
     const rank = (mission: Mission) => {
       if (mission.status === "completed") return 3;
       if (mission.status === "in_progress") return 0;
       return mission.assignedMemberId || mission.assignedTo.trim() ? 1 : 2;
     };
-    return chronological
+    return prioritized
       .map((mission, index) => ({ mission, index }))
       .sort((first, second) => rank(first.mission) - rank(second.mission) || first.index - second.index)
       .map(({ mission }) => mission);

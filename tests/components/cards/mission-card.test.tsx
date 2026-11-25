@@ -231,7 +231,7 @@ describe.each([
     const { props } = renderMissionCard({ currentMember: viewer(), mission: target });
     expect(screen.getByText("Map it all")).toBeInTheDocument();
     expect(screen.getByText("Builders")).toBeInTheDocument();
-    expect(screen.getByText("Urgent")).toBeInTheDocument();
+    expect(screen.getByText("Urgent", { selector: ".badge--priority *, .badge--priority" })).toBeInTheDocument();
     expect(screen.getByText("Euclide")).not.toHaveClass("mission-galaxy-alert");
     expect(screen.getByRole("link", { name: "Deep Survey" })).toHaveAttribute(
       "href",
@@ -277,12 +277,65 @@ describe.each([
     expect(props.onClaim).toHaveBeenCalledWith(target);
   });
 
+  it.each([
+    ["urgent", "Urgent", "station-urgent-ribbon"],
+    ["high", "Priority", "station-priority-ribbon"],
+    ["normal", "Available", "station-available-ribbon"],
+  ] as const)("shows the %s ribbon on a free mission", (priority, label, className) => {
+    const { container } = renderMissionCard({ currentMember: viewer(), mission: mission({ priority }) });
+    const ribbons = container.querySelectorAll(".station-new-ribbon");
+    expect(ribbons).toHaveLength(1);
+    expect(ribbons[0]).toHaveClass(className);
+    expect(ribbons[0]).toHaveTextContent(label);
+  });
+
+  it.each([
+    ["urgent", "mission-card-pulse-urgent"],
+    ["high", "mission-card-pulse-high"],
+  ] as const)("makes the border of a free %s mission pulse", (priority, className) => {
+    const { container } = renderMissionCard({ currentMember: viewer(), mission: mission({ priority }) });
+    expect(container.querySelector("article.mission-card")).toHaveClass("mission-card-pulse", className);
+  });
+
+  it("does not pulse normal, assigned or completed missions", () => {
+    for (const target of [
+      mission(),
+      assignedToMe({ priority: "urgent" }),
+      mission({ priority: "high", status: "completed" }),
+    ]) {
+      const { container, unmount } = renderMissionCard({ currentMember: viewer(), mission: target });
+      expect(container.querySelector("article.mission-card")).not.toHaveClass("mission-card-pulse");
+      unmount();
+    }
+  });
+
+  it("shows no priority ribbon on assigned or completed missions", () => {
+    const assigned = renderMissionCard({ mission: assignedToMe({ priority: "urgent" }) });
+    expect(assigned.container.querySelector(".station-new-ribbon")).toBeNull();
+    assigned.unmount();
+    const { container } = renderMissionCard({
+      currentMember: viewer(),
+      mission: mission({ priority: "urgent", status: "completed" }),
+    });
+    expect(container.querySelectorAll(".station-new-ribbon")).toHaveLength(1);
+    expect(container.querySelector(".station-new-ribbon")).toHaveClass("station-completed-ribbon");
+  });
+
+  it("translates the priority ribbons into Italian", () => {
+    const { container } = renderMissionCard(
+      { currentMember: viewer(), mission: mission({ priority: "urgent" }) },
+      "it",
+    );
+    expect(container.querySelector(".station-urgent-ribbon")).toHaveTextContent("Urgente");
+  });
+
   it("translates the card into Italian", () => {
     renderMissionCard(
       { currentMember: viewer(), mission: mission({ title: "T", targetSpecialty: "all", priority: "high" }) },
       "it",
     );
-    expect(screen.getByText("Disponibile")).toBeInTheDocument();
+    expect(screen.getByText("Prioritaria")).toBeInTheDocument();
+    expect(screen.queryByText("Disponibile")).not.toBeInTheDocument();
     expect(screen.getByText("Tutti")).toBeInTheDocument();
     expect(screen.getByText("Alta")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Prendi in carico" })).toBeInTheDocument();

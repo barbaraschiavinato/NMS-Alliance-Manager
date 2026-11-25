@@ -26,6 +26,7 @@ import {
   MissionNotesButton,
   PlanetNotesButton,
   MissionPlanetThumbnail,
+  missionPriorityCardClass,
   NewMissionRibbon,
 } from "@/components/cards/mission-card/parts";
 import type { MissionCardProps } from "@/components/cards/mission-card/parts";
@@ -73,7 +74,7 @@ export function MissionCardExtended({
   const canUpdateProgress = !canManage && canUpdateSystemStatus;
   const canViewNotes = canManage || isMissionAssignee(mission, currentMember);
   return (
-    <article className="mission-card mission-card-ribbon mission-card-extended">
+    <article className={`mission-card mission-card-ribbon mission-card-extended${missionPriorityCardClass(mission)}`}>
       <NewMissionRibbon mission={mission} />
       <div className="mission-card-heading">
         <div className="mission-name-cell">

@@ -447,6 +447,8 @@ export const translations: TranslationCatalog = {
     "missions.complete_mission": "Completa missione",
     "missions.start_mission": "Inizia missione",
     "missions.available_ribbon": "Disponibile",
+    "missions.urgent_ribbon": "Urgente",
+    "missions.priority_ribbon": "Prioritaria",
     "missions.reopen_mission": "Riapri missione",
   },
   messages: {

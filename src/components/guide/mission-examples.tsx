@@ -53,6 +53,7 @@ type Scenario = Readonly<{
   statuses: readonly MissionSystemStatus[];
   request?: boolean;
   notes?: boolean;
+  priority?: Mission["priority"];
 }>;
 
 const explorerScenarios: Scenario[] = [
@@ -174,6 +175,15 @@ const builderScenarios: Scenario[] = [
   },
 ];
 
+/** Free missions shown together in "first method": available, urgent and high priority. */
+function availableScenarios(available: Scenario): Scenario[] {
+  return [
+    available,
+    { ...available, title: "Missione urgente: prendila in carico per prima", priority: "urgent" },
+    { ...available, title: "Missione prioritaria: da preferire a quelle disponibili", priority: "high" },
+  ];
+}
+
 const noop = () => undefined;
 const asyncNoop = () => Promise.resolve();
 
@@ -195,7 +205,7 @@ export function ExplorerAvailableMissionExample({ sample, allianceName }: GuideE
       allianceName={allianceName}
       member={explorer}
       sample={sample}
-      scenarios={[explorerScenarios[0]]}
+      scenarios={availableScenarios(explorerScenarios[0])}
       showCaptions={false}
     />
   );
@@ -207,7 +217,7 @@ export function BuilderAvailableMissionExample({ sample, allianceName }: GuideEx
       allianceName={allianceName}
       member={builder}
       sample={sample}
-      scenarios={[builderScenarios[0]]}
+      scenarios={availableScenarios(builderScenarios[0])}
       showCaptions={false}
     />
   );
@@ -307,7 +317,7 @@ function MissionExamples({
           targetSpecialty: member.specialty as Mission["targetSpecialty"],
           dueDate: "",
           status: scenario.status,
-          priority: "normal",
+          priority: scenario.priority ?? "normal",
           progress: scenario.progress,
         };
         return (

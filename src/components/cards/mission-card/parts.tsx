@@ -635,6 +635,18 @@ export function MissionPlanetThumbnail({
   );
 }
 
+/** Priority highlight of a free (unassigned, not completed) mission, or null. */
+export function freeMissionPriority(mission: Mission): "urgent" | "high" | null {
+  if (mission.status === "completed" || mission.assignedMemberId?.trim() || mission.assignedTo.trim()) return null;
+  return mission.priority === "urgent" || mission.priority === "high" ? mission.priority : null;
+}
+
+/** Card class that makes the border pulse for free urgent or high-priority missions. */
+export function missionPriorityCardClass(mission: Mission): string {
+  const priority = freeMissionPriority(mission);
+  return priority ? ` mission-card-pulse mission-card-pulse-${priority}` : "";
+}
+
 export function NewMissionRibbon({ mission }: Readonly<{ mission: Mission }>) {
   const { t } = useLocale();
   if (mission.status === "completed")
@@ -643,12 +655,21 @@ export function NewMissionRibbon({ mission }: Readonly<{ mission: Mission }>) {
         <span className="station-new-ribbon station-completed-ribbon">{t("missions.status_completed")}</span>
       </span>
     );
-  if (!mission.assignedMemberId?.trim() && !mission.assignedTo.trim())
+  if (!mission.assignedMemberId?.trim() && !mission.assignedTo.trim()) {
+    // A free urgent or high-priority mission shows its priority instead of "Available".
+    const priority = freeMissionPriority(mission);
+    const [className, label] =
+      priority === "urgent"
+        ? ["station-urgent-ribbon", "missions.urgent_ribbon"]
+        : priority === "high"
+          ? ["station-priority-ribbon", "missions.priority_ribbon"]
+          : ["station-available-ribbon", "missions.available_ribbon"];
     return (
       <span className="station-new-ribbon-clip">
-        <span className="station-new-ribbon station-available-ribbon">{t("missions.available_ribbon")}</span>
+        <span className={`station-new-ribbon ${className}`}>{t(label)}</span>
       </span>
     );
+  }
   return null;
 }
 

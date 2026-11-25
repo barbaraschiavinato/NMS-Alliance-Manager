@@ -25,6 +25,16 @@
 .mission-table-wrap { overflow-x: auto; }
 .mission-card-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 12px; }
 .mission-card { min-width: 0; display: grid; gap: 13px; padding: 15px; border: 1px solid #394548; border-radius: 4px; background: #171e21; }
+/* Free urgent (red) and high-priority (yellow) missions: pulsing border, matching their ribbon. */
+.mission-card.mission-card-pulse-urgent { --mission-card-pulse: #e0464c; border-color: #e0464c; }
+.mission-card.mission-card-pulse-high { --mission-card-pulse: #f2c94c; border-color: #f2c94c; }
+.mission-card.mission-card-pulse { animation: mission-card-border-pulse 1.6s ease-in-out infinite; }
+@keyframes mission-card-border-pulse {
+  0%, 100% { border-color: color-mix(in srgb, var(--mission-card-pulse) 55%, #394548); box-shadow: 0 0 0 0 color-mix(in srgb, var(--mission-card-pulse) 0%, transparent); }
+  50% { border-color: var(--mission-card-pulse); box-shadow: 0 0 0 3px color-mix(in srgb, var(--mission-card-pulse) 30%, transparent); }
+}
+.pulse-effects-disabled .mission-card.mission-card-pulse { animation: none; }
+@media (prefers-reduced-motion: reduce) { .mission-card.mission-card-pulse { animation: none; } }
 .mission-card-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
 .mission-card-heading .mission-name-cell { min-width: 0; }
 .mission-card-planet-thumb { width: 58px; height: 58px; display: grid; flex: 0 0 58px; place-items: center; overflow: hidden; border: 1px solid #394548; border-radius: 3px; background: #1a2124; }

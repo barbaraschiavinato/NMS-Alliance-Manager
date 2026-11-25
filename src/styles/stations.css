@@ -243,6 +243,10 @@ body:has(.sidebar-compact) .station-dialog textarea { min-height: 110px; }
 .sidebar-compact ~ .main-panel .station-new-ribbon.station-completed-ribbon { font-size: 10px; }
 .station-new-ribbon.station-available-ribbon { color: #10130f; background: var(--lime); font-size: 8px; letter-spacing: .04em; }
 .sidebar-compact ~ .main-panel .station-new-ribbon.station-available-ribbon { font-size: 10px; }
+.station-new-ribbon.station-urgent-ribbon { color: #fff; background: #c83238; font-size: 8px; letter-spacing: .04em; }
+.station-new-ribbon.station-priority-ribbon { color: #10130f; background: #f2c94c; font-size: 8px; letter-spacing: .04em; }
+.sidebar-compact ~ .main-panel .station-new-ribbon.station-urgent-ribbon,
+.sidebar-compact ~ .main-panel .station-new-ribbon.station-priority-ribbon { font-size: 10px; }
 .station-owner-link > span:last-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .station-owner-card { grid-template-columns: minmax(0, 1fr); max-width: 100%; }
 .station-card-owner { min-width: 0; }

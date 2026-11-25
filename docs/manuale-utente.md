@@ -155,7 +155,9 @@ L'azione di eliminazione, quando consentita, è sempre l'ultima, dopo modifica e
 
 ### `Crosshair` Missioni
 - Filtri per stato: Tutte, In corso, In attesa, Completate (assegnate o libere).
+- Ordine: le missioni con priorità **Urgente** compaiono per prime, poi quelle con priorità **Alta**, poi le altre; a parità di priorità la più recente viene prima. Nella scheda **Tutte** della vista semplice le missioni restano raggruppate per stato (in corso, in attesa assegnate, in attesa libere, completate) e la priorità ordina le missioni dentro ogni gruppo. Le missioni completate non vengono più anticipate per la loro priorità.
 - Ogni scheda mostra pianeta e galassia, specializzazione richiesta, scopritore, assegnatario, priorità e avanzamento.
+- Il nastro in alto a sinistra delle missioni libere indica **Disponibile**; se la missione è urgente diventa rosso con la scritta **Urgente**, se ha priorità alta diventa giallo con la scritta **Prioritaria**. In questi due casi anche il bordo della scheda pulsa nello stesso colore (se disattivi **Mostra le animazioni** nel profilo il bordo resta colorato ma non pulsa). Le missioni completate mostrano **Completata**.
 - Il titolo apre il **dettaglio missione**; subito sotto compare il codice alfanumerico del portale (anche sulle schede stazione, sotto il titolo).
 - Il nome di scopritore e assegnatario apre il profilo del membro, da cui si può scrivere un messaggio.
 - Una missione completata non si modifica più. Chi l'ha completata può riaprirla.

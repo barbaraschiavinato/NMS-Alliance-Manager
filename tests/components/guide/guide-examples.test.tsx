@@ -8,7 +8,9 @@ import { MessageTabsExample } from "@/components/guide/message-tabs-example";
 import { MessageComposerExamples } from "@/components/guide/message-composer-examples";
 import { TaxiExamples } from "@/components/guide/taxi-examples";
 import {
+  BuilderAvailableMissionExample,
   BuilderMissionProgressExamples,
+  ExplorerAvailableMissionExample,
   ExplorerMissionExamples,
   ExplorerMissionProgressExamples,
 } from "@/components/guide/mission-examples";
@@ -172,6 +174,21 @@ describe("mission examples", () => {
       }
     },
   );
+
+  it.each([
+    ["explorer", ExplorerAvailableMissionExample],
+    ["builder", BuilderAvailableMissionExample],
+  ] as const)("shows available, urgent and high-priority free missions for the %s", (_specialty, Example) => {
+    const { container } = renderWithLocale(<Example sample={guideStationInit} />);
+    const ribbons = [...container.querySelectorAll(".station-new-ribbon")].map((ribbon) => ribbon.className);
+    expect(ribbons).toEqual([
+      expect.stringContaining("station-available-ribbon"),
+      expect.stringContaining("station-urgent-ribbon"),
+      expect.stringContaining("station-priority-ribbon"),
+    ]);
+    expect(container.querySelectorAll(".mission-card-pulse-urgent")).toHaveLength(1);
+    expect(container.querySelectorAll(".mission-card-pulse-high")).toHaveLength(1);
+  });
 
   it("falls back to the portal as title and the default thumbnail without Almanac name and image", () => {
     const { container } = renderWithLocale(

@@ -44,6 +44,24 @@ export function isMissionPriority(value: unknown): value is MissionPriority {
   return typeof value === "string" && missionPriorities.some((priority) => priority === value);
 }
 
+/**
+ * Stable sort that moves urgent, then high-priority missions ahead of the others, keeping the
+ * incoming order (usually newest first) inside each priority. Completed missions no longer need
+ * attention, so they rank like normal ones.
+ */
+export function sortMissionsByPriority<T extends Pick<Mission, "priority" | "status">>(missions: readonly T[]): T[] {
+  const lowest = missionPriorities.length - 1;
+  const rank = (mission: T) => {
+    if (mission.status === "completed") return lowest;
+    const index = missionPriorities.indexOf(mission.priority);
+    return index === -1 ? lowest : index;
+  };
+  return missions
+    .map((mission, index) => ({ mission, index }))
+    .sort((first, second) => rank(first.mission) - rank(second.mission) || first.index - second.index)
+    .map(({ mission }) => mission);
+}
+
 export type Mission = {
   id: string;
   title: string;
