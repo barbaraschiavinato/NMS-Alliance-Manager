@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { getCurrentMember } from "@/lib/auth/authorization";
 import { readAccessData, type AllianceMember } from "@/lib/members/access-store";
-import { parseEventCoordinates, parseEventInput, type EventLocation } from "@/lib/events/events";
+import { hasRole } from "@/lib/members/member-types";
+import { hasReachedEventLimit, parseEventCoordinates, parseEventInput, type EventLocation } from "@/lib/events/events";
 import { canManageEvent, eventViews } from "@/lib/events/event-views";
 import { addEvent, readEvents, removeEvent, updateEvent } from "@/lib/events/events-store";
 import { scheduleEventNotification } from "@/lib/notifications/event-notification-delivery";
@@ -106,6 +107,9 @@ export const POST = withRequestMemo(async function POST(request: Request) {
   if (image && !isValidImage(image)) return badRequest("events.error_image_invalid");
   let imagePath: string | undefined;
   try {
+    if (!hasRole(member, "moderator") && hasReachedEventLimit(await readEvents(), member.publicId, Date.now())) {
+      return apiError("events.error_weekly_limit", 429);
+    }
     const resolved = await resolveLocation(member, payload);
     if ("error" in resolved) return badRequest(resolved.error);
     if (image) {

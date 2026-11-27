@@ -105,6 +105,26 @@ describe("events", () => {
     expect(await list()).toEqual([]);
   });
 
+  it("limits regular members to three new events in seven days, staff excluded", async () => {
+    signInAs(cast.user);
+    for (let index = 0; index < 3; index += 1) expect((await create()).status).toBe(201);
+    const refused = await create({}, pngFile());
+    expect(refused.status).toBe(429);
+    expect(await refused.json()).toEqual({ error: "events.error_weekly_limit" });
+    expect(uploadCount()).toBe(0);
+    // The limit is per member.
+    signInAs(other);
+    expect((await create()).status).toBe(201);
+    for (const staff of [cast.moderator, cast.admin]) {
+      signInAs(staff);
+      for (let index = 0; index < 4; index += 1) expect((await create()).status).toBe(201);
+    }
+    // Seven days later the member may create again.
+    signInAs(cast.user);
+    vi.spyOn(Date, "now").mockReturnValue(Date.now() + 7 * 24 * hour + 1000);
+    expect((await create()).status).toBe(201);
+  });
+
   it("saves the hub coordinates, so later changes do not move the event", async () => {
     signInAs(cast.user);
     expect((await create({ locationKind: "hub" })).status).toBe(400);

@@ -349,6 +349,7 @@ export const translations: TranslationCatalog = {
     "events.error_image_invalid": "Usa un'immagine JPEG, PNG, WebP o AVIF fino a 5 MB.",
     "events.error_hub_unavailable": "L'hub dell'alleanza non è configurato.",
     "events.error_station_not_found": "Stazione non trovata.",
+    "events.error_weekly_limit": "Hai già creato 3 eventi negli ultimi 7 giorni.",
     "events.error_invalid_location": "Inserisci un luogo valido.",
     "event_notifications.title": "Notifiche eventi",
     "event_notifications.description": "Avviso Telegram nel gruppo quando viene creato un nuovo evento.",

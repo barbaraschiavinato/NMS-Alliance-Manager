@@ -24,6 +24,10 @@ export const eventMessageMaxLength = 2000;
 /** How long an event without an end time stays ongoing. */
 export const eventDefaultDurationMs = 3 * 60 * 60 * 1000;
 
+/** Events a regular member may create within the window; moderators and admins have no limit. */
+export const eventWeeklyLimit = 3;
+const eventLimitWindowMs = 7 * 24 * 60 * 60 * 1000;
+
 export const eventImagePathPattern = /^alliance-manager\/events\/[a-f0-9-]{36}\.(jpg|png|webp|avif)$/i;
 
 // A snapshot taken when the event is saved: later changes to the hub or the station do not move the meeting.
@@ -73,6 +77,17 @@ export function isPastEvent(event: EventTimes, now: number): boolean {
 
 export function isOngoingEvent(event: EventTimes, now: number): boolean {
   return Date.parse(event.startsAt) <= now && !isPastEvent(event, now);
+}
+
+/** Counts the stored events the member created in the last seven days, whenever they take place. */
+export function hasReachedEventLimit(
+  events: readonly Pick<AllianceEvent, "creatorId" | "createdAt">[],
+  memberId: string,
+  now: number,
+): boolean {
+  const since = now - eventLimitWindowMs;
+  const recent = events.filter((event) => event.creatorId === memberId && Date.parse(event.createdAt) > since);
+  return recent.length >= eventWeeklyLimit;
 }
 
 function text(value: unknown) {

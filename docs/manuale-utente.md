@@ -214,7 +214,7 @@ Se lo scambio uova è disponibile, accanto al nome dello scopritore compare un p
 <a id="eventi"></a>
 
 ### `CalendarDays` Eventi
-Raccoglie gli appuntamenti in gioco: **Mercatino**, **Raduno** e **Altro**. Tutti i membri approvati vedono tutti gli eventi e possono crearne.
+Raccoglie gli appuntamenti in gioco: **Mercatino**, **Raduno** e **Altro**. Tutti i membri approvati vedono tutti gli eventi e possono crearne: fino a **3 negli ultimi 7 giorni** (duplicati compresi, contati dal giorno di creazione), senza limiti per moderatori e admin.
 
 Con **Aggiungi evento** inserisci tipo, titolo, descrizione, inizio, **fine** (facoltativa), un'immagine facoltativa e il luogo: **Hub alleanza**, una stazione tra quelle che vedi oppure un indirizzo portale. Il luogo viene salvato con l'evento: se l'hub o la stazione cambiano, l'appuntamento resta dov'era. Giorni e ore sono mostrati nel tuo fuso orario.
 

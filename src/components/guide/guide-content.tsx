@@ -1430,7 +1430,7 @@ export async function GuideContent({
             </h2>
             <p>
               Gli eventi sono appuntamenti in gioco: mercatini, raduni e altro. Ogni membro approvato li vede tutti e
-              può crearne.
+              può crearne: fino a 3 negli ultimi 7 giorni, senza limiti per moderatori e admin.
             </p>
             <ul>
               <li>

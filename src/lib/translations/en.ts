@@ -346,6 +346,7 @@ export const translations: TranslationCatalog = {
     "events.error_image_invalid": "Use a JPEG, PNG, WebP or AVIF image up to 5 MB.",
     "events.error_hub_unavailable": "The alliance hub is not configured.",
     "events.error_station_not_found": "Station not found.",
+    "events.error_weekly_limit": "You have already created 3 events in the last 7 days.",
     "events.error_invalid_location": "Enter a valid location.",
     "event_notifications.title": "Event notifications",
     "event_notifications.description": "Telegram alert in the group when a new event is created.",
