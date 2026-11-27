@@ -12,6 +12,7 @@ import {
   contextualDetailHref,
   detailReturnDestination,
   internalDetailDestination,
+  eventDetailHref,
 } from "@/lib/navigation/detail-links";
 
 describe("contextual detail navigation", () => {
@@ -173,5 +174,13 @@ describe("station detail links", () => {
     expect(isSameSystem(station, { portal: "0234567890AB", galaxy: 255 })).toBe(true);
     expect(isSameSystem(station, { portal: "1234567890AB", galaxy: 254 })).toBe(false);
     expect(isSameSystem(station, { portal: "1234567890AC", galaxy: 255 })).toBe(false);
+  });
+});
+
+describe("event detail links", () => {
+  it("allows events as origin and return destination", () => {
+    expect(eventDetailHref("a b")).toBe("/events/a%20b?from=events");
+    expect(internalDetailDestination("/events/e1?from=events")).toBe("/events/e1?from=events");
+    expect(parseDetailOrigin("events")).toBe("events");
   });
 });

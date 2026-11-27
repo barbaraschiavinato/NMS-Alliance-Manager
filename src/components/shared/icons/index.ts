@@ -14,6 +14,7 @@ export const PlanetIcon = sectionIcons.planets;
 export const MapIcon = sectionIcons.map;
 export const FarmIcon = sectionIcons.farms;
 export const PetIcon = sectionIcons.pets;
+export const EventIcon = sectionIcons.events;
 export {
   Trophy as LeaderboardIcon,
   CarTaxiFront as TaxiIcon,
@@ -95,6 +96,17 @@ export { AtlasIcon, GasGiantIcon, WaterLevelIcon } from "./custom-icons";
 export { Sprout as PlantsIcon, Pickaxe as MaterialsIcon, Egg as EggTradeIcon } from "lucide-react";
 export { PetTypeIcon } from "./pet-type-icon";
 export { petTypeIcons, type PetTypeIconDefinition, type PetTypeIconPath } from "./pet-type-icons";
+
+// Events
+export {
+  Store as MarketIcon,
+  Tent as GatheringIcon,
+  Sparkles as OtherEventIcon,
+  Copy as DuplicateIcon,
+  MapPin as EventLocationIcon,
+  Rows3 as CompactViewIcon,
+  LayoutGrid as ExtendedViewIcon,
+} from "lucide-react";
 
 // Members, account and administration
 export {

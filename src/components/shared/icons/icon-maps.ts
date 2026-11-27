@@ -1,4 +1,4 @@
-import { Compass, Crosshair, Eclipse, Factory, Hammer, Orbit, PawPrint, Search } from "lucide-react";
+import { CalendarDays, Compass, Crosshair, Eclipse, Factory, Hammer, Orbit, PawPrint, Search } from "lucide-react";
 import { MapIcon } from "./custom-icons";
 
 // Icons picked by key. `sectionIcons` uses the keys of `sectionAccents` (lib/navigation/section-accents.ts),
@@ -11,6 +11,7 @@ export const sectionIcons = {
   map: MapIcon,
   farms: Factory,
   pets: PawPrint,
+  events: CalendarDays,
 } as const;
 
 export const specialtyIcons = {

@@ -150,6 +150,12 @@ In **Administration → User notifications**, admins can enable a Telegram alert
 - Set `TELEGRAM_MEMBERS_BOT_TOKEN` to a Telegram bot token (it may be the same bot as Taxi) and add the bot to the target group with permission to send messages. `AUTH_URL` is required for the link, as for Taxi.
 - **Approval email (Resend).** The same panel has an **Email** switch: when an account goes from pending to approved the member gets one email (Italian and English, name and alliance name, a link to the app) at the address they signed in with. No other status change, role change or removal sends email, and offline players and placeholder (`@offline.invalid`) or malformed addresses are skipped. Set `RESEND_API_KEY` and `RESEND_FROM_EMAIL` (`name@domain` or `Name <name@domain>`, on a domain verified in Resend) plus `AUTH_URL`; the panel shows whether the credentials are valid and can send a test email to the administrator's own address. A free mailbox address (for example `@gmail.com`) cannot be verified and is refused with HTTP 403; `onboarding@resend.dev` only delivers tests to the Resend account's own address. When a test email is refused with 401, 403 or 422 the panel explains whether the key or the sender is at fault, without forwarding the provider's message. The email is a service message with no personal opt-out; the API key is never stored, and a failed send is only logged.
 - Settings live in `data/member-notifications.json` locally or `alliance-manager/member-notifications.json` in private Blob storage; the token is never stored there.
+
+### Event notifications
+
+- Set `TELEGRAM_EVENTS_BOT_TOKEN` (it may be the same bot as another alert), add the bot to the target group with permission to send messages, and keep `AUTH_URL` configured for the link.
+- In Administration → Event notifications enter the group chat ID (and optionally the topic ID), enable Telegram, save and send a test. The channel starts disabled.
+- Each newly created event is announced once; there are no retries. Settings live in `data/event-notifications.json` locally or `alliance-manager/event-notifications.json` in private Blob storage; the token is never stored there.
 - Delivery is best-effort through Next `after()`, scheduled only when alerts are enabled, and a failed alert never affects the registration, status change, role change or removal. Registration alerts are sent when the account is first created, so two simultaneous first requests (the store has no locking) could rarely produce a duplicate alert.
 
 ## System addresses

@@ -41,9 +41,11 @@ export function DetailBackLink({ href, label }: Readonly<{ href: string; label: 
         ? "details.back_to_farm_detail"
         : destination.startsWith("/pets/")
           ? "details.back_to_pet_detail"
-          : Object.values(detailOrigins).find(
-              (origin) => destination.split("?")[0] === origin.href || destination.startsWith(`${origin.href}/`),
-            )?.label;
+          : destination.startsWith("/events/")
+            ? "details.back_to_event_detail"
+            : Object.values(detailOrigins).find(
+                (origin) => destination.split("?")[0] === origin.href || destination.startsWith(`${origin.href}/`),
+              )?.label;
   return (
     <Link className="detail-back-link" href={destination}>
       <BackIcon aria-hidden="true" size={18} />

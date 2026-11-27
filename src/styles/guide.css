@@ -18,6 +18,7 @@
 .guide-index > ul > li > .guide-index-leaderboard { color: #e040c8; }
 .guide-index > ul > li > .guide-index-farms { color: var(--accent-farms); }
 .guide-index > ul > li > .guide-index-pets { color: var(--accent-pets); }
+.guide-index > ul > li > .guide-index-events { color: var(--accent-events); }
 .guide-index > ul > li > .guide-index-help { color: #f5c518; }
 .guide-index > ul > li > .guide-index-help[href="#richieste-aiuto"] { color: #ff4d4f; }
 .guide-index > ul > li > .guide-index-messages { color: #8f9bff; }

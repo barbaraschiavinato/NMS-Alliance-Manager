@@ -3,6 +3,7 @@
 export const appEvents = [
   "farms-changed",
   "pets-changed",
+  "events-changed",
   "taxi-requests-changed",
   "help-requests-changed",
   "messages-unread-changed",

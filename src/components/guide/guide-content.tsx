@@ -6,6 +6,7 @@ import {
   CreateMissionIcon,
   DeleteIcon,
   EditIcon,
+  EventIcon,
   ExplorerIcon,
   FarmIcon,
   GuideIcon,
@@ -35,6 +36,7 @@ import { AddStationButtonExample } from "@/components/guide/add-station-button-e
 import { MessageComposerExamples } from "@/components/guide/message-composer-examples";
 import { TaxiExamples } from "@/components/guide/taxi-examples";
 import { FarmExamples } from "@/components/guide/farm-examples";
+import { EventExamples } from "@/components/guide/event-examples";
 import { PetExamples } from "@/components/guide/pet-examples";
 import { MessageTabsExample } from "@/components/guide/message-tabs-example";
 import { translate } from "@/lib/translations";
@@ -311,6 +313,13 @@ const sections = [
       "Condividi dove hai trovato i tuoi pet, filtri quelli dell'alleanza per tipo, classi e altro, e scrivi allo scopritore per lo scambio uova",
   },
   {
+    name: "Eventi",
+    icon: EventIcon,
+    color: sectionAccents.events,
+    tasks:
+      "Organizzi appuntamenti in gioco (mercatini, raduni e altro), dici se ci sei o forse e scrivi messaggi agli altri partecipanti",
+  },
+  {
     name: "Classifica",
     icon: LeaderboardIcon,
     color: "#e040c8",
@@ -509,6 +518,12 @@ export async function GuideContent({
             <a className="guide-index-pets" href="#pet">
               <PetIcon aria-hidden="true" size={15} />
               Pet
+            </a>
+          </li>
+          <li>
+            <a className="guide-index-events" href="#eventi">
+              <EventIcon aria-hidden="true" size={15} />
+              Eventi
             </a>
           </li>
           <li>
@@ -1406,6 +1421,41 @@ export async function GuideContent({
               </li>
             </ul>
             <PetExamples />
+          </section>
+
+          <section id="eventi">
+            <h2 style={{ color: sectionAccents.events }}>
+              <EventIcon aria-hidden="true" size={20} />
+              Eventi
+            </h2>
+            <p>
+              Gli eventi sono appuntamenti in gioco: mercatini, raduni e altro. Ogni membro approvato li vede tutti e
+              può crearne.
+            </p>
+            <ul>
+              <li>
+                Con «Aggiungi evento» inserisci tipo, titolo, descrizione, data e ora di inizio, ora di fine
+                facoltativa, un&apos;immagine facoltativa e il luogo: hub dell&apos;alleanza, una stazione o un
+                indirizzo portale. Orari e giorni sono mostrati nel tuo fuso orario.
+              </li>
+              <li>
+                «In programma» e «Passati» dividono gli eventi; senza ora di fine un evento passa 3 ore dopo
+                l&apos;inizio. Puoi filtrare per tipo e scegliere la vista compatta, per giorno, o quella estesa.
+              </li>
+              <li>
+                Nella pagina dell&apos;evento rispondi «Ci sono» o «Forse» e scrivi messaggi, anche in risposta a un
+                messaggio preciso. I messaggi li leggono tutti i membri approvati.
+              </li>
+              <li>
+                Il creatore, i moderatori e gli admin possono modificare o eliminare l&apos;evento. «Duplica» ne prepara
+                uno nuovo con gli stessi dati.
+              </li>
+              <li>
+                Mentre un evento è in corso, nel menu l&apos;icona del calendario diventa bianca e compare un pallino
+                arancione che pulsa.
+              </li>
+            </ul>
+            <EventExamples />
           </section>
 
           <section id="classifica">

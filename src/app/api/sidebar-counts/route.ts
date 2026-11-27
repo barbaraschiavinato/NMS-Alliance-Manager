@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentMember, hasRole } from "@/lib/auth/authorization";
+import { isOngoingEvent } from "@/lib/events/events";
+import { readEvents } from "@/lib/events/events-store";
 import { readFarms } from "@/lib/farms/farms-store";
 import { readPrivateMessages } from "@/lib/messages/private-messages-store";
 import { readPets } from "@/lib/pets/pets-store";
@@ -12,7 +14,7 @@ export const dynamic = "force-dynamic";
 // All sidebar counters in one request, so the sidebar sends one request instead of five on every page.
 // A counter whose document cannot be read is null: the sidebar keeps its previous value. Farms and pets are only
 // counted for moderators and admins (effective role, so simple view hides them), like ?count=1 on their own routes.
-async function countOrNull(count: () => Promise<number>): Promise<number | null> {
+async function countOrNull<T>(count: () => Promise<T>): Promise<T | null> {
   try {
     return await count();
   } catch (error) {
@@ -30,7 +32,7 @@ export const GET = withRequestMemo(async function GET() {
     (await readPrivateMessages()).filter(
       (message) => message.subjectType === kind && !message.replyToId && !message.archived,
     ).length;
-  const [unread, help, taxi, farms, pets] = await Promise.all([
+  const [unread, help, taxi, eventOngoing, farms, pets] = await Promise.all([
     countOrNull(
       async () =>
         (await readPrivateMessages()).filter(
@@ -39,11 +41,12 @@ export const GET = withRequestMemo(async function GET() {
     ),
     countOrNull(openRequests("help")),
     countOrNull(openRequests("taxi")),
+    countOrNull(async () => (await readEvents()).some((event) => isOngoingEvent(event, Date.now()))),
     isStaff ? countOrNull(async () => (await readFarms()).length) : null,
     isStaff ? countOrNull(async () => (await readPets()).length) : null,
   ]);
   return NextResponse.json(
-    { unread, help, taxi, ...(isStaff ? { farms, pets } : {}) },
+    { unread, help, taxi, eventOngoing, ...(isStaff ? { farms, pets } : {}) },
     { headers: { "Cache-Control": "no-store" } },
   );
 });

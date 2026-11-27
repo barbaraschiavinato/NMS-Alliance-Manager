@@ -6,6 +6,7 @@ export const detailOrigins = {
   map: { href: "/map", label: "details.back_to_map" },
   farms: { href: "/farms", label: "details.back_to_farms" },
   pets: { href: "/pets", label: "details.back_to_pets" },
+  events: { href: "/events", label: "details.back_to_events" },
   missions: { href: "/missions", label: "details.back_to_missions" },
   messages: { href: "/messages", label: "details.back_to_messages" },
   help: { href: "/help-requests", label: "details.back_to_help" },
@@ -15,7 +16,11 @@ export type DetailOrigin = keyof typeof detailOrigins;
 
 export function internalDetailDestination(value: unknown): string | undefined {
   if (typeof value !== "string" || value.length > 8192 || /[\\\s#]/.test(value)) return undefined;
-  if (!/^\/(stations|missions|planets|map|messages|help-requests|taxi|farms|pets)(\/[^/?]+)?(?:\?[^#]*)?$/.test(value))
+  if (
+    !/^\/(stations|missions|planets|map|messages|help-requests|taxi|farms|pets|events)(\/[^/?]+)?(?:\?[^#]*)?$/.test(
+      value,
+    )
+  )
     return undefined;
   if (
     value
@@ -66,6 +71,10 @@ export function farmDetailHref(id: string, origin: DetailOrigin = "farms") {
 
 export function petDetailHref(id: string, origin: DetailOrigin = "pets") {
   return `/pets/${encodeURIComponent(id)}?from=${origin}`;
+}
+
+export function eventDetailHref(id: string, origin: DetailOrigin = "events") {
+  return `/events/${encodeURIComponent(id)}?from=${origin}`;
 }
 
 export function taxiDetailHref(id: string) {

@@ -20,6 +20,7 @@ import {
   TelegramIcon,
   UsersIcon,
   DiscordIcon,
+  EventIcon,
 } from "@/components/shared/icons";
 import type { AllianceMember, AllianceSettings } from "@/lib/members/access-store";
 import { useLocale } from "@/components/providers/locale-provider";
@@ -39,6 +40,7 @@ const sidebarCountEvents = [
   "taxi-requests-changed",
   "farms-changed",
   "pets-changed",
+  "events-changed",
 ] as const satisfies readonly AppEvent[];
 const planetCountKey = "nms-planet-count";
 
@@ -92,6 +94,7 @@ export function Sidebar({
     | "mappa"
     | "farm"
     | "pet"
+    | "eventi"
     | "utenti"
     | "offline"
     | "stazioni"
@@ -110,7 +113,14 @@ export function Sidebar({
     () => readSidebarCounts(currentMember.publicId),
     readServerSidebarCounts,
   );
-  const { unread: unreadCount, help: helpCount, taxi: taxiCount, farms: farmCount, pets: petCount } = counts;
+  const {
+    unread: unreadCount,
+    help: helpCount,
+    taxi: taxiCount,
+    farms: farmCount,
+    pets: petCount,
+    eventOngoing,
+  } = counts;
   const isStaff = currentMember.role === "admin" || currentMember.role === "moderator";
   useEffect(() => {
     const memberId = currentMember.publicId;
@@ -210,6 +220,23 @@ export function Sidebar({
           <PetIcon size={17} />
           <span>{t("navigation.pets")}</span>
           {isStaff && petCount !== null && <span className="nav-count">{petCount}</span>}
+        </Link>
+        <Link
+          className={`nav-item ${activeSection === "eventi" ? "active" : ""}${eventOngoing ? " nav-item-event-ongoing" : ""}`}
+          href="/events"
+          data-tooltip={t("events.title")}
+          onClick={resetSearch}
+        >
+          <EventIcon size={17} />
+          <span>{t("events.title")}</span>
+          {eventOngoing && (
+            <span
+              aria-label={t("events.ongoing_now")}
+              className={`nav-event-dot${currentMember.pulseEffectsEnabled === false ? " nav-event-dot-still" : ""}`}
+              role="img"
+              title={t("events.ongoing_now")}
+            />
+          )}
         </Link>
         {(currentMember.role === "admin" || currentMember.role === "moderator") && (
           <Link

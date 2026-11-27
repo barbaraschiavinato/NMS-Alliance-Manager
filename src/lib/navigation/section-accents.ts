@@ -6,6 +6,7 @@ export const sectionAccents = {
   map: "var(--accent-map)",
   farms: "var(--accent-farms)",
   pets: "var(--accent-pets)",
+  events: "var(--accent-events)",
 } as const;
 
 export type SectionAccent = keyof typeof sectionAccents;
