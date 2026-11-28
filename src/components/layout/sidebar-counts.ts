@@ -7,9 +7,10 @@ export type SidebarCounts = Readonly<{
   taxi: number;
   farms: number | null;
   pets: number | null;
+  eventOngoing: boolean;
 }>;
 
-const emptyCounts: SidebarCounts = { unread: 0, help: 0, taxi: 0, farms: null, pets: null };
+const emptyCounts: SidebarCounts = { unread: 0, help: 0, taxi: 0, farms: null, pets: null, eventOngoing: false };
 const reuseMs = 30 * 1000;
 
 let memberId = "";
@@ -50,6 +51,7 @@ async function fetchCounts(forMemberId: string) {
       taxi: numberOr(record.taxi, counts.taxi),
       farms: numberOr(record.farms, counts.farms),
       pets: numberOr(record.pets, counts.pets),
+      eventOngoing: typeof record.eventOngoing === "boolean" ? record.eventOngoing : counts.eventOngoing,
     };
     loadedAt = Date.now();
     for (const listener of listeners) listener();

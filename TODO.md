@@ -40,3 +40,14 @@ Agreed scope (2026-10-22). Taxi is implemented with separate Discord/Telegram cr
 ## T-81euw0: Build the sidebar and the guide section table from one section list
 
 The icon registry is in place (`src/components/shared/icons/`, `sectionIcons` with the same keys as `sectionAccents`, ESLint blocks direct `lucide-react` imports) and the leaderboard already picks its icons from the maps. What is left: the sidebar links and the guide's "Sezioni" table still list every section by hand (icon, colour, label, path). Add one section list (key, icon, accent, label key, path) and render both from it, so adding or renaming a section is a single edit. Keep the sidebar counters and the per-section prefetch rules as they are.
+
+## T-131era: Browser notification when an event starts (optional)
+
+Optional, not scheduled (discussed 2026-11-27). Events only have the sidebar dot and the Telegram alert for new events.
+
+- Web Push when an event is about to start or starts, reusing the Taxi service worker, VAPID keys and connected devices.
+- Needs a trigger at the right time, which the app does not have: an external timer (Vercel Cron or another scheduler) calling an endpoint protected by a secret every few minutes. Check the current limits of the hosting plan first.
+- Proposed recipients: members who answered Going or Maybe, plus the creator.
+- A separate preference in **My NMS Profile** and an admin switch, disabled by default.
+- One notification per event and start time (a moved event notifies again); opening it leads to the event page.
+- Still to decide: at the start, some time before (for example 30 minutes), or both; and whether to send the same reminder on Telegram.

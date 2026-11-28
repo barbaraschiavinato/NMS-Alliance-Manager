@@ -55,7 +55,7 @@ describe("GET /api/sidebar-counts", () => {
     const response = await getCounts();
     expect(response.status).toBe(200);
     expect(response.headers.get("cache-control")).toBe("no-store");
-    expect(await response.json()).toEqual({ unread: 2, help: 1, taxi: 2 });
+    expect(await response.json()).toEqual({ unread: 2, help: 1, taxi: 2, eventOngoing: false });
   });
 
   it("adds the farm and pet totals for staff, but not in simple view", async () => {
@@ -64,9 +64,16 @@ describe("GET /api/sidebar-counts", () => {
     vi.spyOn(farms, "readFarms").mockResolvedValue([{}, {}, {}] as Awaited<ReturnType<typeof farms.readFarms>>);
     vi.spyOn(pets, "readPets").mockResolvedValue([{}] as Awaited<ReturnType<typeof pets.readPets>>);
     signInAs(cast.moderator);
-    expect(await (await getCounts()).json()).toEqual({ unread: 1, help: 1, taxi: 2, farms: 3, pets: 1 });
+    expect(await (await getCounts()).json()).toEqual({
+      unread: 1,
+      help: 1,
+      taxi: 2,
+      eventOngoing: false,
+      farms: 3,
+      pets: 1,
+    });
     signInAs(cast.simpleAdmin);
-    expect(await (await getCounts()).json()).toEqual({ unread: 0, help: 1, taxi: 2 });
+    expect(await (await getCounts()).json()).toEqual({ unread: 0, help: 1, taxi: 2, eventOngoing: false });
   });
 
   it("returns null for the counters it cannot compute", async () => {
@@ -76,7 +83,14 @@ describe("GET /api/sidebar-counts", () => {
     signInAs(cast.admin);
     const response = await getCounts();
     expect(response.status).toBe(200);
-    expect(await response.json()).toEqual({ unread: null, help: null, taxi: null, farms: null, pets: 0 });
+    expect(await response.json()).toEqual({
+      unread: null,
+      help: null,
+      taxi: null,
+      eventOngoing: false,
+      farms: null,
+      pets: 0,
+    });
     expect(errors).toHaveBeenCalled();
   });
 });

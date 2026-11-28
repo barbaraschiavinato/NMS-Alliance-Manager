@@ -51,6 +51,7 @@ describe("Sidebar", () => {
       "/map",
       "/farms",
       "/pets",
+      "/events",
       "/leaderboard",
       "/taxi",
       "/messages",
@@ -387,5 +388,30 @@ describe("Sidebar", () => {
     renderWithLocale(<Sidebar {...baseProps} currentMember={makeMember({ simpleView: false })} />);
     expect(screen.queryByRole("link", { name: /Discord|Telegram/ })).not.toBeInTheDocument();
     expect(screen.getByRole("complementary")).not.toHaveClass("sidebar-compact");
+  });
+});
+
+describe("Sidebar ongoing event dot", () => {
+  const dot = () => screen.queryByRole("img", { name: "An event is ongoing" });
+
+  it("shows a pulsing dot only while an event is ongoing", async () => {
+    stubCounters({ unread: 0, help: 0, taxi: 0, eventOngoing: true });
+    renderWithLocale(<Sidebar {...baseProps} currentMember={makeMember()} />);
+    await waitFor(() => expect(dot()).toBeInTheDocument());
+    expect(screen.getByRole("link", { name: /Events/ })).toHaveClass("nav-item-event-ongoing");
+    expect(dot()).not.toHaveClass("nav-event-dot-still");
+  });
+
+  it("keeps the dot still when the member disabled pulse effects", async () => {
+    stubCounters({ unread: 0, help: 0, taxi: 0, eventOngoing: true });
+    renderWithLocale(<Sidebar {...baseProps} currentMember={makeMember({ pulseEffectsEnabled: false })} />);
+    await waitFor(() => expect(dot()).toHaveClass("nav-event-dot-still"));
+  });
+
+  it("shows nothing without an ongoing event", async () => {
+    const fetchMock = stubCounters({ unread: 0, help: 0, taxi: 0, eventOngoing: false });
+    renderWithLocale(<Sidebar {...baseProps} currentMember={makeMember()} />);
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    expect(dot()).not.toBeInTheDocument();
   });
 });

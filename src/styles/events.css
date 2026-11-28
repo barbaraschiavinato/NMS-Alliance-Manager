@@ -1,0 +1,89 @@
+.events-page .station-list-empty { margin-top: 12px; }
+.event-toolbar-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+.event-type-filter { min-height: 37px; padding: 0 29px 0 10px; color: var(--ink); border: 1px solid #394548; border-radius: 3px; background-color: #171e21; font-size: 11px; }
+.event-view-switch { display: inline-flex; }
+.event-view-switch button { width: 37px; height: 37px; display: grid; place-items: center; color: var(--muted); border: 1px solid #394548; background: #171e21; cursor: pointer; }
+.event-view-switch button[aria-pressed="true"] { color: var(--accent-events); border-color: var(--accent-events); }
+
+.event-days { display: grid; gap: 18px; margin-top: 12px; }
+.event-day > h2 { margin: 0 0 8px; color: var(--accent-events); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }
+.event-day > ul { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.event-row { display: grid; grid-template-columns: 44px 18px minmax(0, 1fr) auto auto 16px; align-items: center; gap: 12px; padding: 10px 14px; color: var(--ink); border: 1px solid #394548; border-radius: 4px; background: #171e21; font-size: 11px; }
+.event-row:hover, .event-row:focus-visible { border-color: var(--accent-events); }
+.event-row > time { grid-column: 1; font-family: "SFMono-Regular", Consolas, monospace; }
+.event-row-type { grid-column: 2; display: inline-flex; color: var(--accent-events); }
+.event-row-copy { grid-column: 3; min-width: 0; display: grid; gap: 2px; }
+.event-row-copy > * { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.event-row-copy > strong { font-size: 13px; }
+.event-row-copy > small { color: var(--muted); }
+.event-row > .event-card-ongoing { grid-column: 4; }
+.event-row-counts { grid-column: 5; display: flex; gap: 10px; color: var(--muted); font-size: 10px; white-space: nowrap; }
+.event-row-answered { grid-column: 6; display: inline-flex; color: var(--accent-events); }
+
+.event-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 12px 0 0; padding: 0; list-style: none; }
+.event-detail-list { grid-template-columns: minmax(0, 1fr); margin: 0 0 24px; }
+.event-card { min-width: 0; display: flex; flex-direction: column; gap: 10px; padding: 14px; color: var(--ink); border: 1px solid #394548; border-radius: 4px; background: #171e21; }
+.event-card-heading { display: flex; align-items: center; gap: 10px; }
+.event-card-type { display: inline-flex; align-items: center; gap: 5px; color: var(--accent-events); font-size: 10px; font-weight: 600; }
+.event-card-ongoing { padding: 2px 6px; color: #111719; border-radius: 3px; background: var(--accent-events); font-size: 9px; font-weight: 700; text-transform: uppercase; }
+.event-card-creator { display: grid; justify-items: end; gap: 3px; margin-left: auto; font-size: 9px; }
+.event-card-creator > small { color: var(--muted); font-size: 8px; }
+.event-card-title { color: var(--accent-events); font-size: 15px; font-weight: 650; overflow-wrap: anywhere; }
+a.event-card-title:hover, a.event-card-title:focus-visible { text-decoration: underline; text-underline-offset: 3px; }
+.event-card-period { font-size: 11px; }
+.event-card-location { display: flex; align-items: center; gap: 5px; margin: 0; color: var(--muted); font-size: 11px; }
+.event-card-image-button { padding: 0; border: 0; background: none; line-height: 0; cursor: zoom-in; }
+.event-card-image { width: 100%; height: 160px; border: 1px solid #394548; border-radius: 4px; object-fit: cover; }
+.event-card-full .event-card-image { height: auto; max-height: 360px; object-fit: contain; }
+.event-card-description { margin: 0; color: #d8dcd9; font-size: 11px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+.event-card:not(.event-card-full) .event-card-description { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
+.event-card-footer { margin-top: auto; }
+.event-card-counts { color: var(--muted); font-size: 10px; }
+
+.event-field-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+
+/* Location and own answer side by side on wide screens, with the same height. */
+.event-detail-pair { display: grid; grid-template-columns: minmax(0, 1fr); column-gap: 16px; }
+@media (min-width: 951px) {
+  .event-detail-pair { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+.event-location-block { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; font-size: 11px; }
+.event-location-block > span, .event-location-block > code { color: var(--muted); }
+.event-hint { display: flex; align-items: center; gap: 6px; margin: 0; color: var(--muted); font-size: 11px; }
+.event-answers { display: flex; flex-wrap: wrap; gap: 8px; }
+.event-answer { min-width: 110px; min-height: 37px; color: var(--ink); border: 1px solid #394548; border-radius: 3px; background: #1a2124; cursor: pointer; font-size: 11px; font-weight: 600; }
+.event-answer[aria-pressed="true"] { color: #111719; border-color: var(--accent-events); background: var(--accent-events); }
+.event-participants + .event-participants { margin-top: 14px; }
+.event-participants > h3 { margin: 0 0 8px; color: var(--muted); font-size: 11px; }
+.event-participants > ul { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.event-participants li { display: inline-flex; align-items: center; gap: 6px; padding: 4px 9px; border: 1px solid #394548; border-radius: 3px; background: #1a2124; font-size: 11px; }
+.event-participants li > button:not(.member-profile-link) { display: inline-grid; padding: 0; color: var(--coral); border: 0; background: none; cursor: pointer; }
+.event-messages { display: grid; gap: 8px; margin: 0 0 14px; padding: 0; list-style: none; }
+.event-message-form { display: grid; justify-items: start; gap: 8px; margin-top: 12px; }
+.event-message-form > .field { justify-self: stretch; }
+
+/* Ongoing event: white icon (also on the active entry), with the pulsing dot in the default app accent. The dot stays
+   visible in the compact sidebar, which hides the other spans. */
+.nav-item.nav-item-event-ongoing svg { color: #fff; }
+.sidebar .nav-item > span.nav-event-dot { width: 9px; height: 9px; display: block; flex: none; margin-left: auto; border-radius: 50%; background: var(--lime); animation: nav-event-pulse 1.6s ease-in-out infinite; }
+.sidebar-compact.sidebar .nav-item > span.nav-event-dot { position: absolute; top: 7px; right: 10px; }
+@keyframes nav-event-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--lime) 60%, transparent); }
+  50% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--lime) 0%, transparent); }
+}
+.sidebar .nav-item > span.nav-event-dot-still, .pulse-effects-disabled .sidebar .nav-item > span.nav-event-dot { animation: none; }
+@media (prefers-reduced-motion: reduce) { .sidebar .nav-item > span.nav-event-dot { animation: none; } }
+
+@media (max-width: 820px) {
+  .sidebar .nav-item > span.nav-event-dot { position: absolute; top: 7px; right: 10px; }
+}
+@media (max-width: 950px) {
+  .sidebar-compact ~ .main-panel .event-list { grid-template-columns: 1fr; }
+}
+@media (max-width: 720px) {
+  .event-list, .event-field-row { grid-template-columns: 1fr; }
+  .event-row { grid-template-columns: 44px 18px minmax(0, 1fr) 16px; row-gap: 4px; }
+  .event-row > .event-card-ongoing { grid-column: 3; grid-row: 2; justify-self: start; }
+  .event-row-counts { grid-column: 3; grid-row: 3; }
+  .event-row-answered { grid-column: 4; grid-row: 1; }
+}

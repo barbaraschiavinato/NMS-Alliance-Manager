@@ -189,3 +189,16 @@ describe("guide examples", () => {
     expect(screen.getByRole("dialog")).toBeInTheDocument();
   });
 });
+
+describe("events chapter", () => {
+  it("is listed in the index and shows inert examples", async () => {
+    mockFetch({});
+    const { container } = renderPage(await GuideContent({ alliance: defaultAlliance, standalone: false }));
+    const section = container.querySelector("#eventi")!;
+    expect(section.querySelector(".guide-examples")).toHaveAttribute("inert");
+    expect(section.textContent).toContain("Mercatino d'inverno");
+    expect(container.querySelector('a[href="#eventi"]')).toHaveClass("guide-index-events");
+    const sections = within(container.querySelector("#sezioni") as HTMLElement);
+    expect(sections.getByText("Eventi").closest("tr")!.querySelector(".lucide-calendar-days")).toBeInTheDocument();
+  });
+});

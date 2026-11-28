@@ -8,6 +8,9 @@ import LeaderboardRoute from "@/app/leaderboard/page";
 import FarmsRoute from "@/app/farms/page";
 import FarmDetailRoute from "@/app/farms/[id]/page";
 import PetsRoute from "@/app/pets/page";
+import EventsRoute from "@/app/events/page";
+import EventDetailRoute from "@/app/events/[id]/page";
+import { EventsPage } from "@/components/pages/events-page";
 import PetDetailRoute from "@/app/pets/[id]/page";
 import StationMapRoute from "@/app/map/page";
 import Loading from "@/app/loading";
@@ -202,6 +205,7 @@ const sectionRoutes: [string, () => Promise<ReactElement>, unknown][] = [
   ["leaderboard", () => LeaderboardRoute(), LeaderboardPage],
   ["farms", () => FarmsRoute(), FarmsPage],
   ["pets", () => PetsRoute(), PetsPage],
+  ["events", () => EventsRoute(), EventsPage],
   ["station map", () => StationMapRoute(), StationMapPage],
   ["users", () => UsersPage(), MembersPage],
   ["offline players", () => OfflinePlayersRoute(), OfflinePlayersPage],
@@ -1780,5 +1784,47 @@ describe("leaderboard route", () => {
     expect(section("station_claimed").entries.map((entry) => entry.publicId)).toEqual([id.user]);
     expect(section("system_scanned").entries).toEqual([]);
     vi.mocked(readPlanetSystemStatusAuthors).mockResolvedValue({});
+  });
+});
+
+describe("events routes", () => {
+  const storedEvent = {
+    id: "e1",
+    type: "market",
+    title: "Market",
+    description: "Eggs",
+    startsAt: "2026-12-05T20:00:00.000Z",
+    location: { kind: "portal", portal: "1234567890AB", galaxy: 0 },
+    creatorId: id.user,
+    createdAt: "2026-11-01T00:00:00.000Z",
+  };
+
+  it("passes the visible stations and the sidebar counters by role", async () => {
+    signIn(user);
+    expect(props(await EventsRoute())).toMatchObject({
+      detail: undefined,
+      stationCount: 1,
+      userCount: undefined,
+      offlineCount: undefined,
+      stations: [
+        { id: stationId(stationList[0]), portal: "1234567890AB", galaxy: 0, name: "Home Base" },
+        { id: stationId(stationList[1]), portal: "1234567890AC", galaxy: 0 },
+      ],
+    });
+    signIn(moderator);
+    expect(props(await EventsRoute())).toMatchObject({ stationCount: 2, userCount: 7, offlineCount: 1 });
+  });
+
+  it("opens an existing event with its origin and returns 404 otherwise", async () => {
+    writeDataFile("events.json", [storedEvent]);
+    signIn(user);
+    const element = await EventDetailRoute({
+      params: Promise.resolve({ id: "e1" }),
+      searchParams: Promise.resolve({ from: "stations" }),
+    });
+    expect(props(element).detail).toEqual({ id: "e1", origin: "stations" });
+    const direct = await EventDetailRoute({ params: Promise.resolve({ id: "e1" }) });
+    expect(props(direct).detail).toEqual({ id: "e1", origin: "events" });
+    await expect(EventDetailRoute({ params: Promise.resolve({ id: "missing" }) })).rejects.toThrow("NEXT_NOT_FOUND");
   });
 });
