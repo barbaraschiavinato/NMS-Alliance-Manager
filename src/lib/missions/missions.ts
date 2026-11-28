@@ -75,6 +75,8 @@ export type Mission = {
   createdByName?: string;
   createdByMemberId?: string;
   createdAt?: string;
+  /** Server-set when the mission becomes completed. Missing on missions completed before it was recorded. */
+  completedAt?: string;
   stationOwnerName?: string;
   stationOwnerMemberId?: string;
   assignedTo: string;
@@ -85,6 +87,16 @@ export type Mission = {
   priority: MissionPriority;
   progress: number;
 };
+
+// The only writer of completedAt: any value sent by a client is discarded.
+export function withCompletedAt(mission: Mission, previous?: Mission, now = new Date().toISOString()): Mission {
+  const next = { ...mission };
+  delete next.completedAt;
+  if (next.status !== "completed") return next;
+  // An already completed mission keeps its date, or stays without one: never date it at a later edit.
+  const completedAt = previous?.status === "completed" ? previous.completedAt : now;
+  return completedAt ? { ...next, completedAt } : next;
+}
 
 export function coveredSpecialties(specialty: MissionSpecialty): MissionSpecialty[] {
   if (specialty === "all") return ["builder", "ranger", "explorer"];

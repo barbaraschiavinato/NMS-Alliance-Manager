@@ -269,6 +269,32 @@ describe("PATCH /api/missions/[id]", () => {
   });
 });
 
+describe("PATCH /api/missions/[id] completedAt", () => {
+  const completedAt = "2026-03-01T10:00:00.000Z";
+
+  it("is set on completion and removed on reopen", async () => {
+    signInAs(explorer);
+    await patch(mission.id, { status: "completed", progress: 100 });
+    expect(Date.parse(String(readStoredMissions()[0].completedAt))).not.toBeNaN();
+    await patch(mission.id, { status: "in_progress", progress: 50 });
+    expect(readStoredMissions()[0]).not.toHaveProperty("completedAt");
+  });
+
+  it("keeps the stored date on a moderator edit and ignores the client one", async () => {
+    seedMissions([{ ...mission, status: "completed", completedAt }]);
+    signInAs(moderator);
+    await patch(mission.id, editInput({ status: "completed", completedAt: "2030-01-01T00:00:00.000Z" }));
+    expect(readStoredMissions()[0].completedAt).toBe(completedAt);
+  });
+
+  it("does not date a mission completed before the field existed", async () => {
+    seedMissions([{ ...mission, status: "completed" }]);
+    signInAs(moderator);
+    await patch(mission.id, editInput({ status: "completed", completedAt }));
+    expect(readStoredMissions()[0]).not.toHaveProperty("completedAt");
+  });
+});
+
 describe("DELETE /api/missions/[id]", () => {
   it("requires a session", async () => {
     expect((await remove(mission.id)).status).toBe(401);
