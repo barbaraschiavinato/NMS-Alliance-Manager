@@ -4,6 +4,7 @@ import {
   isMissionInput,
   isMissionStatus,
   specialtyAlreadyCovered,
+  withCompletedAt,
   type MissionStatus,
 } from "@/lib/missions/missions";
 import { readMissions, writeMissions } from "@/lib/missions/store";
@@ -102,6 +103,7 @@ export const PATCH = withRequestMemo(async function PATCH(request: Request, cont
       }
       updated = { ...missions[index], ...input };
     }
+    updated = withCompletedAt(updated, missions[index]);
     missions[index] = updated;
     await writeMissions(missions);
     const accessData = await readAccessData();

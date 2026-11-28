@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentMember } from "@/lib/auth/authorization";
 import { readMissions, writeMissions } from "@/lib/missions/store";
 import { isValidNmsFriendCode } from "@/lib/members/member-types";
-import type { Mission } from "@/lib/missions/missions";
+import { withCompletedAt, type Mission } from "@/lib/missions/missions";
 import { readAccessData } from "@/lib/members/access-store";
 import { serializeMission } from "@/lib/missions/mission-view";
 import { withRequestMemo } from "@/lib/storage/request-memo";
@@ -29,12 +29,12 @@ export const POST = withRequestMemo(async function POST(_request: Request, conte
     if (mission.assignedMemberId || mission.assignedTo.trim()) {
       return conflict("missions.this_mission_is_already_assigned");
     }
-    const claimed: Mission = {
+    const claimed: Mission = withCompletedAt({
       ...mission,
       assignedTo: member.nmsName,
       assignedMemberId: member.publicId,
       status: "in_progress",
-    };
+    });
     missions[index] = claimed;
     await writeMissions(missions);
     const accessData = await readAccessData();

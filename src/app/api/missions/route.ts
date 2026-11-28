@@ -4,6 +4,7 @@ import {
   isDifferentPlanetInSameSystem,
   isMissionInput,
   specialtyAlreadyCovered,
+  withCompletedAt,
   type Mission,
 } from "@/lib/missions/missions";
 import { readMissions, writeMissions } from "@/lib/missions/store";
@@ -163,7 +164,7 @@ export const POST = withRequestMemo(async function POST(request: Request) {
         (input.targetSpecialty !== "all" && input.targetSpecialty !== "explorer_builder") ||
         assignedMember?.specialty === targetSpecialty;
       const assignee = assignedMemberMatches ? assignedMember : null;
-      return {
+      return withCompletedAt({
         ...input,
         targetSpecialty,
         createdAt: new Date().toISOString(),
@@ -175,7 +176,7 @@ export const POST = withRequestMemo(async function POST(request: Request) {
         assignedMemberId: assignee?.publicId,
         systemAddress: input.systemAddress.toUpperCase(),
         id: crypto.randomUUID(),
-      };
+      });
     });
     await writeMissions([...createdMissions, ...missions]);
     const accessData = await readAccessData();
